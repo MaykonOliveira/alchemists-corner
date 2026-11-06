@@ -10,6 +10,7 @@ describe('migrateSave', () => {
     expect(migrateSave('oi')).toBeNull();
     expect(migrateSave({ day: 3 })).toBeNull();
     expect(migrateSave({ saveVersion: 99 })).toBeNull();
+    expect(migrateSave({ saveVersion: 0 })).toBeNull();
   });
 
   it('preenche campos ausentes com valores padrão', () => {

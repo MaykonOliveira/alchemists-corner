@@ -1,42 +1,90 @@
+import { useState } from 'react';
 import { INGREDIENTS_BY_ID } from '../../domain/data/ingredients';
 import { RECIPES_BY_ID } from '../../domain/data/recipes';
 import type { GameSave } from '../../domain/models/types';
+import { brewDurationMs, maxBatches, POTIONS_PER_BATCH } from '../../domain/rules/alchemy';
+import { recipeCost } from '../../domain/rules/economy';
+import { useGameStore } from '../../store/gameStore';
 import { FlaskIcon } from '../../ui/icons';
+import { Meter, PotionName, Stepper } from '../../ui/widgets';
+
+const secs = (ms: number) => `${Math.ceil(ms / 1000)}s`;
 
 export function ProductionPanel({ save }: { save: GameSave }) {
+  const dispatch = useGameStore((s) => s.dispatch);
+  const [selected, setSelected] = useState(save.knownRecipes[0]);
+  const [batches, setBatches] = useState(1);
+  const r = RECIPES_BY_ID[selected];
+  const max = maxBatches(save, selected);
+  const b = Math.max(1, Math.min(batches, Math.max(1, max)));
+
   return (
     <>
-      <p className="panel-lead">Escolha uma receita conhecida. O preparo em lotes chega na próxima fase.</p>
-      <ul className="list">
+      {save.brew ? (
+        <div className="card brewing">
+          <div className="card-head">
+            <FlaskIcon color={RECIPES_BY_ID[save.brew.recipeId].color} size={20} />
+            <span className="row-title">Fervendo: {RECIPES_BY_ID[save.brew.recipeId].name}</span>
+          </div>
+          <Meter ratio={save.brew.elapsedMs / save.brew.totalMs} tone="potion" label="Progresso do preparo" />
+          <p className="card-text muted">
+            {save.brew.batches * POTIONS_PER_BATCH} poções · faltam {secs(save.brew.totalMs - save.brew.elapsedMs)}
+            {save.phase === 'preparacao' ? '. Você pode abrir a loja enquanto isso.' : ''}
+          </p>
+        </div>
+      ) : (
+        <p className="panel-lead">Escolha uma receita. Cada lote rende {POTIONS_PER_BATCH} poções.</p>
+      )}
+
+      <div className="recipe-picker" role="radiogroup" aria-label="Receitas conhecidas">
         {save.knownRecipes.map((id) => {
-          const r = RECIPES_BY_ID[id];
-          const canBrew = r.ingredients.every((i) => (save.ingredients[i.ingredientId] ?? 0) >= i.qty);
+          const can = maxBatches(save, id) > 0;
           return (
-            <li key={id} className="card">
-              <div className="card-head">
-                <FlaskIcon color={r.color} size={20} />
-                <span className="row-title">{r.name}</span>
-                <span className={`tag ${canBrew ? 'tag-ok' : 'tag-warn'}`}>{canBrew ? 'pode preparar' : 'faltam ingredientes'}</span>
-              </div>
-              <ul className="needs">
-                {r.ingredients.map((i) => {
-                  const have = save.ingredients[i.ingredientId] ?? 0;
-                  return (
-                    <li key={i.ingredientId} className={have >= i.qty ? '' : 'missing'}>
-                      {have >= i.qty ? '✓' : '✗'} {i.qty}× {INGREDIENTS_BY_ID[i.ingredientId].name}{' '}
-                      <span className="muted">(tem {have})</span>
-                    </li>
-                  );
-                })}
-              </ul>
-              <div className="card-foot">
-                <span className="muted">{r.durationMin} min de preparo</span>
-                <button className="btn btn-small" disabled title="Disponível na Fase 2">Preparar</button>
-              </div>
-            </li>
+            <button
+              key={id}
+              role="radio"
+              aria-checked={selected === id}
+              className={`recipe-chip ${selected === id ? 'on' : ''} ${can ? '' : 'dim'}`}
+              onClick={() => { setSelected(id); setBatches(1); }}
+            >
+              <FlaskIcon color={RECIPES_BY_ID[id].color} size={18} />
+              <span>{RECIPES_BY_ID[id].shortName}</span>
+              {can ? <span className="dot-ok" aria-label="pode preparar">●</span> : null}
+            </button>
           );
         })}
-      </ul>
+      </div>
+
+      <div className="card">
+        <div className="card-head"><PotionName id={selected} size={20} /></div>
+        <ul className="needs">
+          {r.ingredients.map((i) => {
+            const have = save.ingredients[i.ingredientId] ?? 0;
+            const need = i.qty * b;
+            return (
+              <li key={i.ingredientId} className={have >= need ? '' : 'missing'}>
+                {have >= need ? '✓' : '✗'} {need}× {INGREDIENTS_BY_ID[i.ingredientId].name} <span className="muted">(tem {have})</span>
+              </li>
+            );
+          })}
+        </ul>
+        <div className="brew-facts">
+          <span>Rende <strong>{b * POTIONS_PER_BATCH}</strong></span>
+          <span>Custo ≈ <strong>{recipeCost(selected) * b}</strong></span>
+          <span>Venda ≈ <strong>{(save.prices[selected] ?? r.basePrice) * b * POTIONS_PER_BATCH}</strong></span>
+          <span>Tempo <strong>{secs(brewDurationMs(save, selected, b))}</strong></span>
+        </div>
+        <div className="card-foot">
+          <Stepper value={b} min={1} max={Math.max(1, max)} onChange={setBatches} label="Lotes" />
+          <button
+            className="btn btn-primary"
+            disabled={!!save.brew || max < 1 || save.phase === 'fechamento'}
+            onClick={() => dispatch({ type: 'START_BREW', recipeId: selected, batches: b })}
+          >
+            {save.brew ? 'Caldeirão ocupado' : max < 1 ? 'Faltam ingredientes' : `Preparar ${b} lote${b > 1 ? 's' : ''}`}
+          </button>
+        </div>
+      </div>
     </>
   );
 }

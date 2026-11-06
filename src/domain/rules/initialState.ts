@@ -1,24 +1,27 @@
+import { RECIPES } from '../data/recipes';
 import { SAVE_VERSION, type GameSave } from '../models/types';
+import { freshStats } from './day';
+import { supplierStock } from './economy';
 import { OPEN_MIN } from './time';
 
 /** Estado de uma partida nova: a loja herdada do antigo proprietário. */
 export function createNewGame(now: number = Date.now()): GameSave {
-  return {
+  const s: GameSave = {
     saveVersion: SAVE_VERSION,
     createdAt: now,
     updatedAt: now,
     day: 1,
     phase: 'preparacao',
     clockMin: OPEN_MIN,
-    coins: 120,
-    reputation: 10,
+    coins: 100,
+    reputation: 5,
     level: 1,
     xp: 0,
     ingredients: {
-      'folha-lunar': 6,
-      'hortela-brava': 4,
-      'cristal-ambar': 2,
-      'po-de-pedra': 5,
+      'folha-lunar': 4,
+      'hortela-brava': 2,
+      'cristal-ambar': 1,
+      'po-de-pedra': 4,
       'orvalho-feerico': 1,
       'essencia-azul': 0,
       'escama-salamandra': 0,
@@ -28,9 +31,23 @@ export function createNewGame(now: number = Date.now()): GameSave {
       { recipeId: 'cura-simples', quantity: 3, quality: 1, forSale: true },
       { recipeId: 'tonico-energia', quantity: 2, quality: 1, forSale: true },
     ],
+    prices: Object.fromEntries(RECIPES.map((r) => [r.id, r.basePrice])),
     knownRecipes: ['cura-simples', 'tonico-energia', 'elixir-concentracao'],
     upgrades: [],
+    brew: null,
+    customers: [],
+    spawnInMs: 2500,
+    supplier: {},
+    order: null,
+    event: null,
+    stats: null as unknown as GameSave['stats'],
     reports: [],
-    settings: { volume: 0.7, muted: false, reduceMotion: false },
+    researchPoints: 0,
+    tutorialStep: 0,
+    seq: 0,
+    settings: { volume: 0.7, muted: false, music: true, reduceMotion: false },
   };
+  s.supplier = supplierStock(s);
+  s.stats = freshStats(s);
+  return s;
 }

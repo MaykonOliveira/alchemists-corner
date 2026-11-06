@@ -5,6 +5,8 @@ import type { CustomerArchetype } from '../../../domain/models/types';
 import { CUSTOMER_FRAMES, CUSTOMER_H, CUSTOMER_W, drawCustomerSheet } from '../art/customers';
 import { outlineOf } from '../art/painter';
 import {
+  drawAngry, drawBadge, drawCabinetLabels, drawCauldronBands, drawDisplayStand, drawGarland, drawHeart, drawLiquid,
+  drawSad, drawShopSign, drawSparkle,
   drawBoard, drawBubble, drawCabinet, drawCauldron, drawCoin, drawCounter, drawDoor, drawDot, drawEmptyJar,
   drawFire, drawGlow, drawMarker, drawPotion, drawRegister, drawRoom, drawShelf, drawSign,
 } from '../art/shop';
@@ -41,7 +43,20 @@ export class BootScene extends Phaser.Scene {
     add('coin', drawCoin());
     add('glow-warm', drawGlow(24, [255, 200, 110]));
     add('glow-fire', drawGlow(18, [255, 140, 60]));
-    add('dot-bubble', drawDot(3, '#8ae0c8'));
+    add('dot-bubble', drawDot(3, '#ffffff'));
+    add('heart', drawHeart());
+    add('angry', drawAngry());
+    add('sad', drawSad());
+    add('sparkle', drawSparkle());
+    add('liquid', drawLiquid());
+    add('cauldron-bands', drawCauldronBands());
+    add('cabinet-labels', drawCabinetLabels());
+    add('shop-sign', drawShopSign());
+    add('display-stand', drawDisplayStand(), true);
+    add('garland', drawGarland());
+    add('badge', drawBadge());
+    add('glow-small', drawGlow(6, [255, 230, 170]));
+    add('px', drawDot(2, '#ffffff'));
     add('dot-steam', drawDot(5, '#f3e6c8'));
     for (let f = 0; f < 3; f++) add(`fire-${f}`, drawFire(f));
     for (const r of RECIPES) add(`potion-${r.id}`, drawPotion(r.color));

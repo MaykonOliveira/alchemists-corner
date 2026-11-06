@@ -1,37 +1,119 @@
 import { ARCHETYPES } from '../../domain/data/customers';
 import { RECIPES_BY_ID } from '../../domain/data/recipes';
-import type { GameSave } from '../../domain/models/types';
+import type { Customer, GameSave } from '../../domain/models/types';
+import { suits } from '../../domain/rules/customers';
+import { getPrice } from '../../domain/rules/economy';
 import { useGameStore } from '../../store/gameStore';
-import { FlaskIcon } from '../../ui/icons';
+import { CoinIcon, FlaskIcon } from '../../ui/icons';
+import { Meter } from '../../ui/widgets';
+
+/** Quão "cheio" parece o bolso do cliente (dica, não o valor exato). */
+function wallet(c: Customer) {
+  return c.budgetFactor >= 1.22 ? 3 : c.budgetFactor >= 1.08 ? 2 : 1;
+}
 
 export function CounterPanel({ save }: { save: GameSave }) {
-  const visitor = useGameStore((s) => s.ui.selectedVisitor);
-  if (!visitor) {
-    return (
-      <p className="empty">
-        {save.phase === 'expediente'
-          ? 'Clique em um cliente no balcão para ver o pedido.'
-          : 'A loja está fechada. Abra a porta para receber clientes.'}
-      </p>
-    );
+  const selectedId = useGameStore((s) => s.ui.selectedCustomerId);
+  const dispatch = useGameStore((s) => s.dispatch);
+
+  if (save.phase !== 'expediente') {
+    return <p className="empty">A loja está fechada. Abra a porta para receber clientes.</p>;
   }
-  const a = ARCHETYPES[visitor.archetype];
-  const r = RECIPES_BY_ID[visitor.wantedRecipeId];
-  const stock = save.potions.find((p) => p.recipeId === r.id && p.forSale)?.quantity ?? 0;
+  if (save.customers.length === 0) {
+    return <p className="empty">Ninguém no balcão agora. Logo alguém entra pela porta…</p>;
+  }
+  const selected = save.customers.find((c) => c.id === selectedId) ?? null;
+
   return (
-    <div className="card">
+    <>
+      <div className="queue" role="listbox" aria-label="Clientes no balcão">
+        {save.customers.map((c) => {
+          const r = RECIPES_BY_ID[c.wantedRecipeId];
+          const left = 1 - c.waitedMs / c.patienceMs;
+          return (
+            <button
+              key={c.id}
+              role="option"
+              aria-selected={selected?.id === c.id}
+              className={`queue-item ${selected?.id === c.id ? 'on' : ''}`}
+              onClick={() => dispatch({ type: 'SELECT_CUSTOMER', id: c.id })}
+            >
+              <span className="row-title">{ARCHETYPES[c.archetype].label}</span>
+              <span className="queue-want"><FlaskIcon color={r.color} size={14} /> {r.shortName}{c.offer ? ' · negociando' : ''}</span>
+              <Meter ratio={left} tone={left > 0.5 ? 'ok' : left > 0.25 ? 'gold' : 'warn'} label="Paciência" />
+            </button>
+          );
+        })}
+      </div>
+      {selected ? <Serve save={save} c={selected} /> : <p className="empty">Toque em um cliente para atender.</p>}
+    </>
+  );
+}
+
+function Serve({ save, c }: { save: GameSave; c: Customer }) {
+  const dispatch = useGameStore((s) => s.dispatch);
+  const a = ARCHETYPES[c.archetype];
+  const wanted = RECIPES_BY_ID[c.wantedRecipeId];
+  const options = save.potions.filter((p) => p.forSale && p.quantity > 0);
+  const sorted = [...options].sort((x, y) => Number(y.recipeId === c.wantedRecipeId) - Number(x.recipeId === c.wantedRecipeId));
+
+  return (
+    <div className="card serve">
       <div className="card-head">
         <span className="row-title">{a.label}</span>
-        <span className="tag">{a.description}</span>
+        <span className="wallet" title="Disposição para pagar" aria-label={`Bolso: ${wallet(c)} de 3`}>
+          {Array.from({ length: 3 }, (_, i) => (
+            <span key={i} className={i < wallet(c) ? '' : 'faded'}><CoinIcon size={12} /></span>
+          ))}
+        </span>
       </div>
-      <p className="card-text">
-        Procura: <FlaskIcon color={r.color} size={14} /> <strong>{r.name}</strong> — {r.need.toLowerCase()}.
+      <p className="speech">“{c.remark ?? wanted.request}”</p>
+      <p className="card-text small">
+        Quer: <strong>{wanted.name}</strong> · {a.description}
       </p>
-      <p className="card-text muted">Você tem {stock} na prateleira.</p>
-      <div className="card-foot">
-        <span className="muted">O atendimento chega na Fase 3.</span>
-        <button className="btn btn-small" disabled>Vender</button>
-      </div>
+
+      {c.offer ? (
+        <div className="offer">
+          <p className="card-text">
+            Contraproposta: <strong>{c.offer.price} moedas</strong> por {RECIPES_BY_ID[c.offer.recipeId].name}
+          </p>
+          <div className="btn-row">
+            <button className="btn btn-primary" onClick={() => dispatch({ type: 'ACCEPT_OFFER', customerId: c.id })}>Aceitar {c.offer.price}</button>
+            <button className="btn" onClick={() => dispatch({ type: 'DECLINE_OFFER', customerId: c.id })}>Recusar</button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <h3 className="mini-title">Oferecer</h3>
+          {sorted.length === 0 ? (
+            <p className="empty">Nada nas prateleiras. Prepare poções no caldeirão.</p>
+          ) : (
+            <ul className="offer-list">
+              {sorted.map((p) => {
+                const r = RECIPES_BY_ID[p.recipeId];
+                const exact = p.recipeId === c.wantedRecipeId;
+                const ok = suits(c, p.recipeId);
+                return (
+                  <li key={p.recipeId}>
+                    <button
+                      className={`offer-btn ${exact ? 'exact' : ok ? 'similar' : 'nope'}`}
+                      onClick={() => dispatch({ type: 'SERVE_CUSTOMER', customerId: c.id, recipeId: p.recipeId })}
+                    >
+                      <FlaskIcon color={r.color} size={18} />
+                      <span className="offer-name">{r.name} <span className="muted">×{p.quantity}</span></span>
+                      <span className="offer-tag">{exact ? 'o pedido' : ok ? 'parecida' : 'não serve'}</span>
+                      <span className="offer-price"><CoinIcon size={12} /> {getPrice(save, p.recipeId)}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          <button className="btn btn-ghost-dark btn-small" onClick={() => dispatch({ type: 'DISMISS_CUSTOMER', customerId: c.id })}>
+            Hoje não tenho (dispensar com educação)
+          </button>
+        </>
+      )}
     </div>
   );
 }

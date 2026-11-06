@@ -7,7 +7,11 @@ import { createGameConfig } from './phaser/config';
 /** Maior escala inteira que cabe no espaço disponível (PRD 6.3). */
 function fitZoom(el: HTMLElement) {
   const { width, height } = el.getBoundingClientRect();
-  return Math.max(1, Math.floor(Math.min(width / WORLD_W, height / WORLD_H)));
+  const exact = Math.min((width - 12) / WORLD_W, (height - 12) / WORLD_H);
+  // Escala inteira sempre que possível (pixels perfeitos); em telas pequenas (celular) usa a escala exata.
+  const whole = Math.floor(exact);
+  if (whole >= 2 && whole / exact >= 0.88) return whole;
+  return Math.max(0.5, Math.floor(exact * 100) / 100);
 }
 
 /** Monta o canvas do Phaser dentro do layout React. */

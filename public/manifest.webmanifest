@@ -1,0 +1,11 @@
+{
+  "name": "Alchemist's Corner",
+  "short_name": "Alchemist's",
+  "description": "Administre uma pequena loja de alquimia aconchegante.",
+  "start_url": "/",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#1c1216",
+  "theme_color": "#3e2619",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

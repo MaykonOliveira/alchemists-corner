@@ -551,3 +551,142 @@ export function drawCoin(): HTMLCanvasElement {
   p.px(2, 1, PAL.warm);
   return p.canvas;
 }
+
+// ---------------------------------------------------------------------------
+// Reações, efeitos e melhorias
+// ---------------------------------------------------------------------------
+
+export function drawHeart(): HTMLCanvasElement {
+  const p = painter(7, 6);
+  const rows = ['.xx.xx.', 'xhxxxxx', 'xxxxxxx', '.xxxxx.', '..xxx..', '...x...'];
+  rows.forEach((r, y) => [...r].forEach((c, x) => c !== '.' && p.px(x, y, c === 'h' ? '#ffb0c0' : '#e0485a')));
+  return p.canvas;
+}
+
+export function drawAngry(): HTMLCanvasElement {
+  const p = painter(7, 7);
+  const rows = ['.x...x.', 'xx...xx', '.......', '.......', '.......', 'xx...xx', '.x...x.'];
+  rows.forEach((r, y) => [...r].forEach((c, x) => c !== '.' && p.px(x, y, PAL.terracotta)));
+  p.px(3, 3, PAL.terracotta);
+  return p.canvas;
+}
+
+export function drawSad(): HTMLCanvasElement {
+  const p = painter(5, 7);
+  const rows = ['..x..', '..x..', '.xxx.', '.xxx.', 'xxhxx', 'xxxxx', '.xxx.'];
+  rows.forEach((r, y) => [...r].forEach((c, x) => c !== '.' && p.px(x, y, c === 'h' ? '#cfe8ff' : '#5a8ad0')));
+  return p.canvas;
+}
+
+export function drawSparkle(): HTMLCanvasElement {
+  const p = painter(5, 5);
+  p.px(2, 0, PAL.warm);
+  p.hline(1, 2, 3, PAL.warm);
+  p.hline(0, 2, 5, PAL.gold);
+  p.vline(2, 0, 5, PAL.gold);
+  p.px(2, 2, '#ffffff');
+  return p.canvas;
+}
+
+/** Superfície do líquido do caldeirão (branca, tingida pela cor da receita). */
+export function drawLiquid(): HTMLCanvasElement {
+  const p = painter(33, 7);
+  p.ellipse(16, 3, 16, 3, '#ffffff');
+  return p.canvas;
+}
+
+export function drawCauldronBands(): HTMLCanvasElement {
+  const p = painter(48, 48);
+  for (const y of [16, 26]) {
+    for (let x = 0; x < 48; x++) {
+      const dx = (x - 24) / 17.5;
+      if (Math.abs(dx) > 1) continue;
+      const yy = y + Math.round(Math.sqrt(1 - dx * dx) * 2);
+      p.px(x, yy, PAL.copper);
+      p.px(x, yy - 1, PAL.copperHi);
+    }
+  }
+  p.rect(22, 18, 4, 4, PAL.gold);
+  return p.canvas;
+}
+
+export function drawCabinetLabels(): HTMLCanvasElement {
+  const p = painter(40, 98);
+  for (let i = 0; i < 3; i++) {
+    const y = 62 + i * 11;
+    p.rect(7, y + 2, 8, 5, PAL.parchment);
+    p.hline(8, y + 4, 6, PAL.parchmentDark);
+    p.rect(25, y + 2, 8, 5, PAL.parchment);
+    p.hline(26, y + 4, 6, PAL.parchmentDark);
+  }
+  for (const sy of [24, 41, 57]) {
+    p.px(10, sy - 1, PAL.gold);
+    p.px(30, sy - 1, PAL.gold);
+  }
+  return p.canvas;
+}
+
+/** Placa pintada pendurada na viga, sobre a porta. */
+export function drawShopSign(): HTMLCanvasElement {
+  const p = painter(40, 18);
+  p.vline(6, 0, 4, PAL.charcoal);
+  p.vline(33, 0, 4, PAL.charcoal);
+  p.rect(0, 4, 40, 14, PAL.woodDark);
+  p.rect(1, 5, 38, 12, PAL.blueDeep);
+  p.frame(2, 6, 36, 10, PAL.gold);
+  // Frasco estilizado no centro e estrelinhas
+  p.rect(18, 7, 4, 2, PAL.cream);
+  p.rect(17, 9, 6, 5, PAL.teal);
+  p.px(18, 10, '#ffffff');
+  for (const [x, y] of [[7, 9], [11, 12], [28, 9], [32, 12]]) p.px(x, y, PAL.gold);
+  return p.canvas;
+}
+
+/** Expositor de chão (melhoria "Expositor de poções"). */
+export function drawDisplayStand(): HTMLCanvasElement {
+  const p = painter(44, 30);
+  p.rect(0, 8, 44, 4, PAL.woodHi);
+  p.hline(0, 8, 44, '#d8a466');
+  p.rect(2, 12, 40, 14, PAL.woodMid);
+  p.frame(2, 12, 40, 14, PAL.woodDark);
+  p.rect(6, 15, 32, 8, PAL.terracotta);
+  p.frame(6, 15, 32, 8, PAL.gold);
+  p.rect(2, 26, 4, 4, PAL.woodDark);
+  p.rect(38, 26, 4, 4, PAL.woodDark);
+  return p.canvas;
+}
+
+/** Cordão de luzes (melhoria "Iluminação aconchegante"). Retorna também as posições das lâmpadas. */
+export const GARLAND_BULBS: { x: number; y: number; color: string }[] = (() => {
+  const colors = ['#ffd27a', '#ff9ab0', '#9ae0ff', '#c8ff9a', '#e0b0ff'];
+  const out: { x: number; y: number; color: string }[] = [];
+  for (let x = 28; x < 360; x += 12) {
+    const t = ((x - 28) % 96) / 96;
+    out.push({ x, y: 14 + Math.round(Math.sin(t * Math.PI) * 7), color: colors[out.length % colors.length] });
+  }
+  return out;
+})();
+
+export function drawGarland(): HTMLCanvasElement {
+  const p = painter(384, 26);
+  for (let x = 28; x < 356; x++) {
+    const t = ((x - 28) % 96) / 96;
+    p.px(x, 13 + Math.round(Math.sin(t * Math.PI) * 7), PAL.moss);
+  }
+  for (const b of GARLAND_BULBS) {
+    p.rect(b.x - 1, b.y, 3, 3, b.color);
+    p.px(b.x, b.y - 1, PAL.charcoal);
+  }
+  return p.canvas;
+}
+
+export function drawBadge(): HTMLCanvasElement {
+  const p = painter(9, 11);
+  p.ellipse(4, 4, 4, 4, PAL.ink);
+  p.ellipse(4, 4, 3, 3, PAL.gold);
+  p.vline(4, 2, 3, PAL.ink);
+  p.px(4, 6, PAL.ink);
+  p.rect(3, 8, 3, 1, PAL.ink);
+  p.px(4, 9, PAL.ink);
+  return p.canvas;
+}

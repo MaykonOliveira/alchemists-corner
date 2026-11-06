@@ -1,22 +1,25 @@
 import { CounterPanel } from '../../features/customers/CounterPanel';
 import { DoorPanel } from '../../features/customers/DoorPanel';
-import { NoticeBoardPanel } from '../../features/customers/NoticeBoardPanel';
+import { OrdersPanel } from '../../features/customers/OrdersPanel';
 import { ProductionPanel } from '../../features/alchemy/ProductionPanel';
 import { RecipesPanel } from '../../features/alchemy/RecipesPanel';
 import { ReportPanel } from '../../features/economy/ReportPanel';
 import { IngredientsPanel } from '../../features/inventory/IngredientsPanel';
 import { ShelvesPanel } from '../../features/inventory/ShelvesPanel';
+import { UpgradesPanel } from '../../features/progression/UpgradesPanel';
 import { useGameStore, type PanelId } from '../../store/gameStore';
+import { potionStock } from '../../domain/rules/economy';
 
 const TITLES: Record<PanelId, string> = {
-  ingredients: 'Armário de ingredientes',
+  ingredients: 'Armário e fornecedor',
   production: 'Caldeirão',
   recipes: 'Livro de receitas',
   orders: 'Quadro de avisos',
-  report: 'Caixa',
-  shelves: 'Prateleiras',
+  report: 'Caixa e relatório',
+  shelves: 'Prateleiras e preços',
   counter: 'Balcão',
   door: 'Porta da loja',
+  upgrades: 'Melhorias',
 };
 
 export function SidePanel() {
@@ -25,19 +28,21 @@ export function SidePanel() {
   const dispatch = useGameStore((s) => s.dispatch);
 
   if (!panel) {
+    const stock = save.potions.reduce((n, p) => n + p.quantity, 0);
     return (
-      <aside className="side" aria-label="Painel">
-        <h2 className="side-title">Sua loja</h2>
-        <p className="panel-lead">Clique nos objetos da loja para ver o que cada um faz.</p>
-        <ul className="hints">
-          <li><strong>Armário</strong> guarda os ingredientes.</li>
-          <li><strong>Caldeirão</strong> prepara as poções.</li>
-          <li><strong>Prateleiras</strong> expõem o que está à venda.</li>
-          <li><strong>Porta</strong> abre e fecha a loja.</li>
-          <li><strong>Balcão</strong> é onde você atende.</li>
+      <aside className="side side-idle" aria-label="Resumo">
+        <h2 className="side-title">Dia {save.day}</h2>
+        <ul className="checklist">
+          <li className={stock > 0 ? 'done' : ''}>Poções nas prateleiras: <strong>{stock}</strong></li>
+          <li className={save.brew ? 'done' : ''}>Caldeirão: {save.brew ? 'fervendo…' : 'livre'}</li>
+          <li className={save.order ? 'todo' : ''}>
+            Pedido especial: {save.order ? `${potionStock(save, save.order.recipeId)}/${save.order.qty}` : 'nenhum'}
+          </li>
+          <li>Clientes no balcão: {save.customers.length}</li>
         </ul>
+        <p className="panel-lead small">Toque nos objetos da loja ou use a barra de baixo.</p>
         {save.phase === 'preparacao' && (
-          <button className="btn btn-primary" onClick={() => dispatch({ type: 'OPEN_SHOP' })}>Abrir a loja</button>
+          <button className="btn btn-primary btn-big" onClick={() => dispatch({ type: 'OPEN_SHOP' })}>Abrir a loja</button>
         )}
       </aside>
     );
@@ -54,10 +59,11 @@ export function SidePanel() {
         {panel === 'shelves' && <ShelvesPanel save={save} />}
         {panel === 'production' && <ProductionPanel save={save} />}
         {panel === 'recipes' && <RecipesPanel save={save} />}
-        {panel === 'orders' && <NoticeBoardPanel />}
+        {panel === 'orders' && <OrdersPanel save={save} />}
         {panel === 'report' && <ReportPanel save={save} />}
         {panel === 'counter' && <CounterPanel save={save} />}
         {panel === 'door' && <DoorPanel save={save} />}
+        {panel === 'upgrades' && <UpgradesPanel save={save} />}
       </div>
     </aside>
   );

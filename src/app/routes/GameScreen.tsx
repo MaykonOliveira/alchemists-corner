@@ -1,27 +1,36 @@
 import { useEffect } from 'react';
 import { PhaserGame } from '../../game/PhaserGame';
-import { useGameStore, type PanelId } from '../../store/gameStore';
+import { TutorialCard } from '../../features/tutorial/TutorialCard';
+import { useGameStore } from '../../store/gameStore';
 import { BottomBar, SHORTCUTS } from '../layout/BottomBar';
 import { DayEndModal } from '../layout/DayEndModal';
 import { Hud } from '../layout/Hud';
+import { LevelUpModal } from '../layout/LevelUpModal';
+import { SettingsModal } from '../layout/SettingsModal';
 import { SidePanel } from '../layout/SidePanel';
+import { Toasts } from '../layout/Toasts';
 
 export function GameScreen() {
   const dispatch = useGameStore((s) => s.dispatch);
   const phase = useGameStore((s) => s.save?.phase);
+  const panelOpen = useGameStore((s) => s.ui.activePanel !== null);
 
   // Atalhos de teclado (PRD 7.4)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
       if (target.closest('input, textarea, select')) return;
+      if (useGameStore.getState().ui.modal) {
+        if (e.key === 'Escape') dispatch({ type: 'OPEN_MODAL', modal: null });
+        return;
+      }
       if (e.key === 'Escape') dispatch({ type: 'CLOSE_PANEL' });
       else if (e.key === ' ' && phase === 'expediente' && target.tagName !== 'BUTTON') {
         e.preventDefault();
         dispatch({ type: 'TOGGLE_PAUSE' });
       } else {
         const sc = SHORTCUTS.find((s) => s.key === e.key);
-        if (sc) dispatch({ type: 'TOGGLE_PANEL', panel: sc.panel as PanelId });
+        if (sc) dispatch({ type: 'TOGGLE_PANEL', panel: sc.panel });
       }
     };
     window.addEventListener('keydown', onKey);
@@ -29,14 +38,20 @@ export function GameScreen() {
   }, [dispatch, phase]);
 
   return (
-    <div className="game">
+    <div className={`game ${panelOpen ? 'panel-open' : ''}`}>
       <Hud />
       <main className="game-main">
-        <PhaserGame />
+        <div className="stage-wrap">
+          <PhaserGame />
+          <TutorialCard />
+          <Toasts />
+        </div>
         <SidePanel />
       </main>
       <BottomBar />
       <DayEndModal />
+      <LevelUpModal />
+      <SettingsModal />
     </div>
   );
 }
