@@ -1,0 +1,31 @@
+import type { Ingredient } from '../models/types';
+
+export const INGREDIENTS: Ingredient[] = [
+  { id: 'folha-lunar', name: 'Folha lunar', family: 'erva', rarity: 'comum', price: 4, color: '#9cc76a',
+    description: 'Folha prateada colhida sob a lua cheia. Base de quase toda cura.' },
+  { id: 'hortela-brava', name: 'Hortelã-brava', family: 'erva', rarity: 'comum', price: 3, color: '#4f8a3a',
+    description: 'Aroma forte que desperta até o mais cansado dos viajantes.' },
+  { id: 'cristal-ambar', name: 'Cristal âmbar', family: 'mineral', rarity: 'incomum', price: 7, color: '#e0a040',
+    description: 'Guarda o calor do sol. Dá brilho e firmeza às misturas.' },
+  { id: 'po-de-pedra', name: 'Pó de pedra', family: 'mineral', rarity: 'comum', price: 2, color: '#a39a90',
+    description: 'Moído de pedras de rio. Estabiliza qualquer preparo.' },
+  { id: 'orvalho-feerico', name: 'Orvalho feérico', family: 'magico', rarity: 'incomum', price: 8, color: '#7fd6d0',
+    description: 'Gotas que nunca evaporam. Clareiam a mente.' },
+  { id: 'essencia-azul', name: 'Essência azul', family: 'magico', rarity: 'incomum', price: 9, color: '#4a6fd0',
+    description: 'Destilado de flores noturnas. Acalma e aguça os sentidos.' },
+  { id: 'escama-salamandra', name: 'Escama de salamandra', family: 'raro', rarity: 'raro', price: 16, color: '#d0583a',
+    description: 'Ainda morna ao toque. Rara e muito procurada.' },
+  { id: 'cogumelo-lanterna', name: 'Cogumelo-lanterna', family: 'raro', rarity: 'raro', price: 14, color: '#c9e070',
+    description: 'Brilha suavemente no escuro das cavernas.' },
+];
+
+export const INGREDIENTS_BY_ID: Record<string, Ingredient> = Object.fromEntries(
+  INGREDIENTS.map((i) => [i.id, i]),
+);
+
+export const FAMILY_LABEL: Record<Ingredient['family'], string> = {
+  erva: 'Ervas',
+  mineral: 'Minerais',
+  magico: 'Elementos mágicos',
+  raro: 'Componentes raros',
+};

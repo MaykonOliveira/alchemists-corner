@@ -1,0 +1,58 @@
+import Phaser from 'phaser';
+import { useEffect, useRef } from 'react';
+import { useGameStore } from '../store/gameStore';
+import { WORLD_H, WORLD_W } from './phaser/art/shop';
+import { createGameConfig } from './phaser/config';
+
+/** Maior escala inteira que cabe no espaço disponível (PRD 6.3). */
+function fitZoom(el: HTMLElement) {
+  const { width, height } = el.getBoundingClientRect();
+  return Math.max(1, Math.floor(Math.min(width / WORLD_W, height / WORLD_H)));
+}
+
+/** Monta o canvas do Phaser dentro do layout React. */
+export function PhaserGame() {
+  const hostRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const dispatch = useGameStore((s) => s.dispatch);
+
+  useEffect(() => {
+    const host = hostRef.current!;
+    const parent = canvasRef.current!;
+    const zoom = fitZoom(host);
+    dispatch({ type: 'SET_ZOOM', zoom });
+    const game = new Phaser.Game(createGameConfig(parent, zoom));
+
+    const ro = new ResizeObserver(() => {
+      const z = fitZoom(host);
+      if (game.scale.zoom !== z) game.scale.setZoom(z);
+      dispatch({ type: 'SET_ZOOM', zoom: z });
+    });
+    ro.observe(host);
+
+    return () => {
+      ro.disconnect();
+      game.destroy(true);
+    };
+  }, [dispatch]);
+
+  return (
+    <div ref={hostRef} className="stage-host">
+      <div className="stage" style={{ position: 'relative' }}>
+        <div ref={canvasRef} className="stage-canvas" aria-label="Interior da loja" role="img" />
+        <HotspotTooltip />
+      </div>
+    </div>
+  );
+}
+
+function HotspotTooltip() {
+  const hover = useGameStore((s) => s.ui.hover);
+  const zoom = useGameStore((s) => s.ui.zoom);
+  if (!hover) return null;
+  return (
+    <div className="tooltip" style={{ left: hover.x * zoom, top: hover.y * zoom }} role="tooltip">
+      {hover.label}
+    </div>
+  );
+}

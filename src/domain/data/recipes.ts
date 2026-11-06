@@ -1,0 +1,36 @@
+import type { Recipe } from '../models/types';
+
+export const RECIPES: Recipe[] = [
+  { id: 'cura-simples', name: 'Poção de Cura Simples', category: 'cura', color: '#d8484a',
+    ingredients: [{ ingredientId: 'folha-lunar', qty: 2 }, { ingredientId: 'po-de-pedra', qty: 1 }],
+    durationMin: 60, basePrice: 18, unlockLevel: 1,
+    need: 'Recuperação de ferimentos', customerProfile: 'Aventureiros e moradores',
+    hint: 'Uma erva prateada e algo que dê firmeza.' },
+  { id: 'tonico-energia', name: 'Tônico de Energia', category: 'vigor', color: '#e8b03a',
+    ingredients: [{ ingredientId: 'hortela-brava', qty: 2 }, { ingredientId: 'cristal-ambar', qty: 1 }],
+    durationMin: 60, basePrice: 22, unlockLevel: 1,
+    need: 'Disposição e resistência', customerProfile: 'Viajantes e trabalhadores',
+    hint: 'Folhas que despertam e um mineral que guarda o sol.' },
+  { id: 'elixir-concentracao', name: 'Elixir de Concentração', category: 'mente', color: '#5aa0e0',
+    ingredients: [{ ingredientId: 'orvalho-feerico', qty: 1 }, { ingredientId: 'folha-lunar', qty: 1 }, { ingredientId: 'po-de-pedra', qty: 1 }],
+    durationMin: 90, basePrice: 28, unlockLevel: 1,
+    need: 'Foco e estudo', customerProfile: 'Estudiosos e aprendizes',
+    hint: 'Gotas que nunca evaporam, equilibradas por uma erva.' },
+  { id: 'visao-noturna', name: 'Visão Noturna', category: 'utilidade', color: '#3fae78',
+    ingredients: [{ ingredientId: 'cogumelo-lanterna', qty: 1 }, { ingredientId: 'essencia-azul', qty: 1 }],
+    durationMin: 120, basePrice: 44, unlockLevel: 2,
+    need: 'Enxergar no escuro', customerProfile: 'Exploradores',
+    hint: 'Algo que brilha nas cavernas e uma flor da noite.' },
+  { id: 'balsamo-calmante', name: 'Bálsamo Calmante', category: 'cura', color: '#9a6ad0',
+    ingredients: [{ ingredientId: 'essencia-azul', qty: 1 }, { ingredientId: 'hortela-brava', qty: 1 }],
+    durationMin: 90, basePrice: 26, unlockLevel: 2,
+    need: 'Relaxamento e sono', customerProfile: 'Moradores',
+    hint: 'O azul que acalma, suavizado por uma erva comum.' },
+  { id: 'pocao-brilho', name: 'Poção de Brilho', category: 'utilidade', color: '#f0d860',
+    ingredients: [{ ingredientId: 'escama-salamandra', qty: 1 }, { ingredientId: 'cristal-ambar', qty: 1 }],
+    durationMin: 120, basePrice: 52, unlockLevel: 3,
+    need: 'Utilidade e iluminação', customerProfile: 'Viajantes e curiosos',
+    hint: 'Calor de criatura e luz de mineral.' },
+];
+
+export const RECIPES_BY_ID: Record<string, Recipe> = Object.fromEntries(RECIPES.map((r) => [r.id, r]));
