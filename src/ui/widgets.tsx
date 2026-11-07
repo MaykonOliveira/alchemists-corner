@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { RECIPES_BY_ID } from '../domain/data/recipes';
-import { CoinIcon, FlaskIcon } from './icons';
+import { CoinIcon } from './icons';
+import { PotionIcon } from './SpriteIcon';
 
 export function Stepper({ value, min, max, onChange, label }: { value: number; min: number; max: number; onChange: (v: number) => void; label: string }) {
   return (
@@ -45,7 +46,7 @@ export function PotionName({ id, size = 16 }: { id: string; size?: number }) {
   const r = RECIPES_BY_ID[id];
   return (
     <span className="potion-name">
-      <FlaskIcon color={r.color} size={size} />
+      <PotionIcon recipeId={r.id} size={size} />
       {r.name}
     </span>
   );

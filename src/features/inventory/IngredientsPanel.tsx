@@ -3,7 +3,7 @@ import { FAMILY_LABEL, INGREDIENTS } from '../../domain/data/ingredients';
 import type { GameSave } from '../../domain/models/types';
 import { countIngredients, ingredientCapacity } from '../../domain/rules/economy';
 import { useGameStore } from '../../store/gameStore';
-import { LeafIcon } from '../../ui/icons';
+import { IngredientIcon } from '../../ui/SpriteIcon';
 import { Coins, Meter, Stepper } from '../../ui/widgets';
 
 const LOW_STOCK = 2;
@@ -53,7 +53,7 @@ function SupplierRow({ save, id, room }: { save: GameSave; id: string; room: num
   return (
     <li className={`card ${locked ? 'card-locked' : ''}`}>
       <div className="card-head">
-        <LeafIcon color={locked ? '#7a6a5a' : ing.color} size={20} />
+        <IngredientIcon ingredientId={ing.id} size={32} muted={locked} />
         <div className="row-main">
           <span className="row-title">{ing.name}</span>
           <span className="row-sub">{FAMILY_LABEL[ing.family]} · você tem {have}</span>
@@ -89,7 +89,7 @@ function Stock({ save }: { save: GameSave }) {
               const qty = save.ingredients[ing.id] ?? 0;
               return (
                 <li key={ing.id} className="row">
-                  <LeafIcon color={ing.color} size={18} />
+                  <IngredientIcon ingredientId={ing.id} />
                   <div className="row-main">
                     <span className="row-title">{ing.name}</span>
                   </div>

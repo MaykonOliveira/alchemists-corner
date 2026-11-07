@@ -1,0 +1,63 @@
+{
+ "size": 16,
+ "width": 128,
+ "height": 32,
+ "icons": {
+  "potion-cura-simples": [
+   0,
+   0
+  ],
+  "potion-tonico-energia": [
+   16,
+   0
+  ],
+  "potion-elixir-concentracao": [
+   32,
+   0
+  ],
+  "potion-visao-noturna": [
+   48,
+   0
+  ],
+  "potion-balsamo-calmante": [
+   64,
+   0
+  ],
+  "potion-pocao-brilho": [
+   80,
+   0
+  ],
+  "ingredient-folha-lunar": [
+   96,
+   0
+  ],
+  "ingredient-hortela-brava": [
+   112,
+   0
+  ],
+  "ingredient-cristal-ambar": [
+   0,
+   16
+  ],
+  "ingredient-po-de-pedra": [
+   16,
+   16
+  ],
+  "ingredient-orvalho-feerico": [
+   32,
+   16
+  ],
+  "ingredient-essencia-azul": [
+   48,
+   16
+  ],
+  "ingredient-escama-salamandra": [
+   64,
+   16
+  ],
+  "ingredient-cogumelo-lanterna": [
+   80,
+   16
+  ]
+ }
+}

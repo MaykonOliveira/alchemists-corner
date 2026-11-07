@@ -1,72 +1,41 @@
 import Phaser from 'phaser';
 import { ARCHETYPES } from '../../../domain/data/customers';
-import { RECIPES } from '../../../domain/data/recipes';
 import type { CustomerArchetype } from '../../../domain/models/types';
-import { CUSTOMER_FRAMES, CUSTOMER_H, CUSTOMER_W, drawCustomerSheet } from '../art/customers';
-import { outlineOf } from '../art/painter';
-import {
-  drawAngry, drawBadge, drawCabinetLabels, drawCauldronBands, drawDisplayStand, drawGarland, drawHeart, drawLiquid,
-  drawSad, drawShopSign, drawSparkle,
-  drawBoard, drawBubble, drawCabinet, drawCauldron, drawCoin, drawCounter, drawDoor, drawDot, drawEmptyJar,
-  drawFire, drawGlow, drawMarker, drawPotion, drawRegister, drawRoom, drawShelf, drawSign,
-} from '../art/shop';
+import { CUSTOMER_FRAMES, CUSTOMER_H, CUSTOMER_URLS, CUSTOMER_W, ROOM_URL, SHOP_ATLAS } from '../art/sprites';
 
 /**
- * Gera as texturas do jogo. Nesta fase toda a arte é desenhada em código;
- * quando houver spritesheets do Aseprite, eles serão carregados aqui com this.load.
+ * Carrega os spritesheets do jogo (src/assets/sprites, gerados a partir de art/).
+ * Cada quadro do atlas da loja vira uma textura com o próprio nome ('obj-cabinet', 'potion-cura-simples'…),
+ * para que a cena use chaves simples.
  */
 export class BootScene extends Phaser.Scene {
   constructor() {
     super('Boot');
   }
 
-  create() {
-    const add = (key: string, canvas: HTMLCanvasElement, outline = false) => {
-      if (this.textures.exists(key)) return;
-      this.textures.addCanvas(key, canvas);
-      if (outline) this.textures.addCanvas(`${key}-outline`, outlineOf(canvas));
-    };
-
-    add('room', drawRoom());
-    add('obj-cabinet', drawCabinet(), true);
-    add('obj-cauldron', drawCauldron(), true);
-    add('obj-shelf', drawShelf(), true);
-    add('obj-board', drawBoard(), true);
-    add('obj-door', drawDoor(), true);
-    add('obj-counter', drawCounter(), true);
-    add('obj-register', drawRegister(), true);
-    add('sign-open', drawSign(true));
-    add('sign-closed', drawSign(false));
-    add('jar', drawEmptyJar());
-    add('bubble', drawBubble());
-    add('marker', drawMarker());
-    add('coin', drawCoin());
-    add('glow-warm', drawGlow(24, [255, 200, 110]));
-    add('glow-fire', drawGlow(18, [255, 140, 60]));
-    add('dot-bubble', drawDot(3, '#ffffff'));
-    add('heart', drawHeart());
-    add('angry', drawAngry());
-    add('sad', drawSad());
-    add('sparkle', drawSparkle());
-    add('liquid', drawLiquid());
-    add('cauldron-bands', drawCauldronBands());
-    add('cabinet-labels', drawCabinetLabels());
-    add('shop-sign', drawShopSign());
-    add('display-stand', drawDisplayStand(), true);
-    add('garland', drawGarland());
-    add('badge', drawBadge());
-    add('glow-small', drawGlow(6, [255, 230, 170]));
-    add('px', drawDot(2, '#ffffff'));
-    add('dot-steam', drawDot(5, '#f3e6c8'));
-    for (let f = 0; f < 3; f++) add(`fire-${f}`, drawFire(f));
-    for (const r of RECIPES) add(`potion-${r.id}`, drawPotion(r.color));
-
+  preload() {
+    if (!this.textures.exists('room')) this.load.image('room', ROOM_URL);
+    if (!this.textures.exists('shop-atlas')) this.load.atlas('shop-atlas', SHOP_ATLAS.url, SHOP_ATLAS.data);
     for (const id of Object.keys(ARCHETYPES) as CustomerArchetype[]) {
       const key = `customer-${id}`;
       if (!this.textures.exists(key)) {
-        const tex = this.textures.addCanvas(key, drawCustomerSheet(id))!;
-        for (let f = 0; f < CUSTOMER_FRAMES; f++) tex.add(f, 0, f * CUSTOMER_W, 0, CUSTOMER_W, CUSTOMER_H);
+        this.load.spritesheet(key, CUSTOMER_URLS[id], { frameWidth: CUSTOMER_W, frameHeight: CUSTOMER_H, endFrame: CUSTOMER_FRAMES - 1 });
       }
+    }
+  }
+
+  create() {
+    const atlas = this.textures.get('shop-atlas');
+    for (const name of atlas.getFrameNames()) {
+      if (this.textures.exists(name)) continue;
+      const frame = atlas.get(name);
+      const tex = this.textures.createCanvas(name, frame.cutWidth, frame.cutHeight)!;
+      tex.drawFrame('shop-atlas', name);
+      tex.refresh();
+    }
+
+    for (const id of Object.keys(ARCHETYPES) as CustomerArchetype[]) {
+      const key = `customer-${id}`;
       if (!this.anims.exists(`${key}-walk`)) {
         this.anims.create({ key: `${key}-walk`, frames: [{ key, frame: 1 }, { key, frame: 0 }, { key, frame: 2 }, { key, frame: 0 }], frameRate: 8, repeat: -1 });
       }

@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { WORLD_H, WORLD_W } from './art/shop';
+import { WORLD_H, WORLD_W } from './art/sprites';
 import { BootScene } from './scenes/BootScene';
 import { ShopScene } from './scenes/ShopScene';
 

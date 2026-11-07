@@ -4,7 +4,8 @@ import type { Customer, GameSave } from '../../domain/models/types';
 import { suits } from '../../domain/rules/customers';
 import { getPrice } from '../../domain/rules/economy';
 import { useGameStore } from '../../store/gameStore';
-import { CoinIcon, FlaskIcon } from '../../ui/icons';
+import { CoinIcon } from '../../ui/icons';
+import { PotionIcon } from '../../ui/SpriteIcon';
 import { Meter } from '../../ui/widgets';
 
 /** Quão "cheio" parece o bolso do cliente (dica, não o valor exato). */
@@ -39,7 +40,7 @@ export function CounterPanel({ save }: { save: GameSave }) {
               onClick={() => dispatch({ type: 'SELECT_CUSTOMER', id: c.id })}
             >
               <span className="row-title">{ARCHETYPES[c.archetype].label}</span>
-              <span className="queue-want"><FlaskIcon color={r.color} size={14} /> {r.shortName}{c.offer ? ' · negociando' : ''}</span>
+              <span className="queue-want"><PotionIcon recipeId={r.id} /> {r.shortName}{c.offer ? ' · negociando' : ''}</span>
               <Meter ratio={left} tone={left > 0.5 ? 'ok' : left > 0.25 ? 'gold' : 'warn'} label="Paciência" />
             </button>
           );
@@ -99,7 +100,7 @@ function Serve({ save, c }: { save: GameSave; c: Customer }) {
                       className={`offer-btn ${exact ? 'exact' : ok ? 'similar' : 'nope'}`}
                       onClick={() => dispatch({ type: 'SERVE_CUSTOMER', customerId: c.id, recipeId: p.recipeId })}
                     >
-                      <FlaskIcon color={r.color} size={18} />
+                      <PotionIcon recipeId={r.id} />
                       <span className="offer-name">{r.name} <span className="muted">×{p.quantity}</span></span>
                       <span className="offer-tag">{exact ? 'o pedido' : ok ? 'parecida' : 'não serve'}</span>
                       <span className="offer-price"><CoinIcon size={12} /> {getPrice(save, p.recipeId)}</span>

@@ -5,7 +5,7 @@ import type { GameSave } from '../../domain/models/types';
 import { brewDurationMs, maxBatches, POTIONS_PER_BATCH } from '../../domain/rules/alchemy';
 import { recipeCost } from '../../domain/rules/economy';
 import { useGameStore } from '../../store/gameStore';
-import { FlaskIcon } from '../../ui/icons';
+import { PotionIcon } from '../../ui/SpriteIcon';
 import { Meter, PotionName, Stepper } from '../../ui/widgets';
 
 const secs = (ms: number) => `${Math.ceil(ms / 1000)}s`;
@@ -23,7 +23,7 @@ export function ProductionPanel({ save }: { save: GameSave }) {
       {save.brew ? (
         <div className="card brewing">
           <div className="card-head">
-            <FlaskIcon color={RECIPES_BY_ID[save.brew.recipeId].color} size={20} />
+            <PotionIcon recipeId={save.brew.recipeId} size={32} />
             <span className="row-title">Fervendo: {RECIPES_BY_ID[save.brew.recipeId].name}</span>
           </div>
           <Meter ratio={save.brew.elapsedMs / save.brew.totalMs} tone="potion" label="Progresso do preparo" />
@@ -47,7 +47,7 @@ export function ProductionPanel({ save }: { save: GameSave }) {
               className={`recipe-chip ${selected === id ? 'on' : ''} ${can ? '' : 'dim'}`}
               onClick={() => { setSelected(id); setBatches(1); }}
             >
-              <FlaskIcon color={RECIPES_BY_ID[id].color} size={18} />
+              <PotionIcon recipeId={id} />
               <span>{RECIPES_BY_ID[id].shortName}</span>
               {can ? <span className="dot-ok" aria-label="pode preparar">●</span> : null}
             </button>
