@@ -5,6 +5,7 @@ import type { GameSave } from '../models/types';
 import { fail, type Draft } from './context';
 import { masteryStars, STAR_BONUS, talentBonus } from './mastery';
 import { gainXp } from './progression';
+import { MOON_MARKET_EXTRA, seasonalStock } from './street';
 
 export const PRICE_MIN_FACTOR = 0.8;
 export const PRICE_MAX_FACTOR = 1.3;
@@ -44,7 +45,12 @@ export const recipeCost = (s: GameSave, recipeId: string) =>
 
 /** Estoque do fornecedor para um novo dia. 0 = indisponível no nível atual. */
 export function supplierStock(s: GameSave): Record<string, number | null> {
-  return Object.fromEntries(INGREDIENTS.map((i) => [i.id, s.level >= i.supplierLevel ? i.dailyStock : 0]));
+  return Object.fromEntries(INGREDIENTS.map((i) => {
+    if (i.season) return [i.id, seasonalStock(s, i)];
+    if (s.level < i.supplierLevel) return [i.id, 0];
+    // No Mercado da Lua Cheia os itens raros vêm em maior quantidade.
+    return [i.id, i.dailyStock !== null && s.event === 'lua-cheia' ? i.dailyStock + MOON_MARKET_EXTRA : i.dailyStock];
+  }));
 }
 
 /** Quantas unidades do ingrediente o fornecedor ainda tem hoje (Infinity = sem limite). */
@@ -52,7 +58,8 @@ export function supplierLeft(s: GameSave, ingredientId: string) {
   const ing = INGREDIENTS_BY_ID[ingredientId];
   if (!ing || s.level < ing.supplierLevel) return 0;
   const available = s.supplier[ingredientId];
-  return available === null || available === undefined ? Infinity : available;
+  if (available === undefined) return ing.season || ing.dailyStock !== null ? 0 : Infinity;
+  return available === null ? Infinity : available;
 }
 
 /** Valida uma compra. Retorna a mensagem de erro ou null se a compra é possível. */

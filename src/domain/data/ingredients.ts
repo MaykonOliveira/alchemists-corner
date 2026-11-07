@@ -28,6 +28,15 @@ export const INGREDIENTS: Ingredient[] = [
     description: 'Poeira de estrela cadente. Cintila mesmo dentro da bolsa fechada.' },
   { id: 'pena-fenix', supplierLevel: 14, dailyStock: 3, name: 'Pena de fênix', family: 'raro', rarity: 'raro', price: 45, color: '#f06a2a',
     description: 'Quente como brasa e impossível de queimar. A mais rara do fornecedor.' },
+  // Ingredientes da estação (pacote E): o fornecedor só vende na estação de cada um, a partir do nível 5.
+  { id: 'petala-aurora', supplierLevel: 5, dailyStock: 6, season: 'primavera', name: 'Pétala-da-aurora', family: 'erva', rarity: 'raro', price: 18, color: '#f4a0c0',
+    description: 'Só desabrocha nas manhãs de primavera. Cheira a recomeço.' },
+  { id: 'fruta-sol', supplierLevel: 5, dailyStock: 6, season: 'verao', name: 'Fruta-do-sol', family: 'erva', rarity: 'raro', price: 18, color: '#ffa030',
+    description: 'Amadurece no auge do verão e fica morna por dias.' },
+  { id: 'folha-rubra', supplierLevel: 5, dailyStock: 6, season: 'outono', name: 'Folha rubra', family: 'erva', rarity: 'raro', price: 18, color: '#c84a28',
+    description: 'Cai das árvores velhas da academia. Dizem que guarda lembranças.' },
+  { id: 'flor-neve', supplierLevel: 5, dailyStock: 6, season: 'inverno', name: 'Flor-de-neve', family: 'magico', rarity: 'raro', price: 18, color: '#cfe8ff',
+    description: 'Cresce sob a neve e brilha como a aurora nas noites longas.' },
 ];
 
 export const INGREDIENTS_BY_ID: Record<string, Ingredient> = Object.fromEntries(

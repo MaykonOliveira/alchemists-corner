@@ -10,6 +10,7 @@ import { checkAchievements, petCat } from './world';
 import { deliverOrder } from './orders';
 import { buySeal, learnTalentCmd } from './progression';
 import { sponsorFestival } from './day';
+import { sendExpedition } from './street';
 
 /**
  * Comandos tipados que alteram o estado canônico da partida.
@@ -33,6 +34,7 @@ export type DomainCommand =
   | { type: 'DECLINE_CONTRACT' }
   | { type: 'DELIVER_CONTRACT' }
   | { type: 'PET_CAT' }
+  | { type: 'SEND_EXPEDITION'; dest: string }
   | { type: 'BUY_UPGRADE'; upgradeId: string }
   | { type: 'SET_HELPER'; upgradeId: string; on: boolean }
   | { type: 'EXPERIMENT'; ingredientIds: string[] }
@@ -78,6 +80,7 @@ function run(d: Draft, cmd: DomainCommand): boolean {
     case 'DECLINE_CONTRACT': return declineContract(d);
     case 'DELIVER_CONTRACT': return deliverContract(d);
     case 'PET_CAT': return petCat(d);
+    case 'SEND_EXPEDITION': return sendExpedition(d, cmd.dest);
     case 'BUY_UPGRADE': return buyUpgrade(d, cmd.upgradeId);
     case 'SET_HELPER': return setHelper(d, cmd.upgradeId, cmd.on);
     case 'EXPERIMENT': return experiment(d, cmd.ingredientIds);

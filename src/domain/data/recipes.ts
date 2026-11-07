@@ -57,6 +57,27 @@ export const RECIPES: Recipe[] = [
     durationMin: 180, basePrice: 150, unlockLevel: 14,
     need: 'Cura lendária', customerProfile: 'Nobres e aventureiros veteranos',
     hint: 'A pena que não queima, uma escama morna e a erva prateada.' },
+  // Poções da estação (pacote E): pedidas só na estação delas.
+  { id: 'nectar-primavera', shortName: 'Néctar', request: 'A primavera chegou e eu quero sentir ela por dentro!', name: 'Néctar da Primavera', category: 'cura', color: '#f070a8', season: 'primavera',
+    ingredients: [{ ingredientId: 'petala-aurora', qty: 1 }, { ingredientId: 'folha-lunar', qty: 1 }, { ingredientId: 'orvalho-feerico', qty: 1 }],
+    durationMin: 90, basePrice: 60, unlockLevel: 5,
+    need: 'Renovar as forças', customerProfile: 'Moradores e nobres, só na primavera',
+    hint: 'Uma pétala da manhã, a erva prateada e gotas eternas.' },
+  { id: 'refresco-solar', shortName: 'Refresco', request: 'Que calor! Tem aquele refresco de verão?', name: 'Refresco Solar', category: 'vigor', color: '#ff9a28', season: 'verao',
+    ingredients: [{ ingredientId: 'fruta-sol', qty: 1 }, { ingredientId: 'hortela-brava', qty: 1 }, { ingredientId: 'cristal-ambar', qty: 1 }],
+    durationMin: 80, basePrice: 58, unlockLevel: 5,
+    need: 'Aguentar o sol forte', customerProfile: 'Aventureiros e viajantes, só no verão',
+    hint: 'Uma fruta morna, uma erva fresca e o mineral que guarda o sol.' },
+  { id: 'cha-colheita', shortName: 'Chá', request: 'As aulas voltaram… quero o chá da colheita para lembrar de tudo.', name: 'Chá da Colheita', category: 'mente', color: '#c8602a', season: 'outono',
+    ingredients: [{ ingredientId: 'folha-rubra', qty: 1 }, { ingredientId: 'essencia-azul', qty: 1 }, { ingredientId: 'orvalho-feerico', qty: 1 }],
+    durationMin: 100, basePrice: 64, unlockLevel: 5,
+    need: 'Memória e estudo', customerProfile: 'Estudiosos, só no outono',
+    hint: 'Uma folha que guarda lembranças, a flor da noite e gotas eternas.' },
+  { id: 'aurora-boreal', shortName: 'Aurora', request: 'As noites estão tão longas. Quero levar a aurora para casa.', name: 'Poção Aurora Boreal', category: 'utilidade', color: '#5ad8c0', season: 'inverno',
+    ingredients: [{ ingredientId: 'flor-neve', qty: 1 }, { ingredientId: 'cogumelo-lanterna', qty: 1 }, { ingredientId: 'po-de-pedra', qty: 1 }],
+    durationMin: 120, basePrice: 68, unlockLevel: 5,
+    need: 'Luz e alegria no inverno', customerProfile: 'Viajantes e nobres, só no inverno',
+    hint: 'Uma flor que brilha sob a neve, algo que brilha nas cavernas e pó para firmar.' },
 ];
 
 export const RECIPES_BY_ID: Record<string, Recipe> = Object.fromEntries(RECIPES.map((r) => [r.id, r]));

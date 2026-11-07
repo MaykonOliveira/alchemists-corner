@@ -1,4 +1,6 @@
-import type { CustomerArchetype, RecipeCategory } from '../models/types';
+import type { CustomerArchetype, RecipeCategory, SeasonId } from '../models/types';
+
+export type { SeasonId };
 
 /** Fregueses fiéis: sempre voltam, pedem a mesma poção e viram amigos da loja. */
 export interface RegularInfo {
@@ -44,7 +46,6 @@ export const MAX_HEARTS = 5;
 export const TIP_HEARTS = 3;
 export const TIP_RATE = 0.15;
 
-export type SeasonId = 'primavera' | 'verao' | 'outono' | 'inverno';
 
 export interface SeasonInfo {
   id: SeasonId;

@@ -9,6 +9,7 @@ import { ShelvesPanel } from '../../features/inventory/ShelvesPanel';
 import { UpgradesPanel } from '../../features/progression/UpgradesPanel';
 import { GrimoirePanel } from '../../features/mastery/GrimoirePanel';
 import { AlbumPanel } from '../../features/world/AlbumPanel';
+import { StreetPanel } from '../../features/world/StreetPanel';
 import { useGameStore, type PanelId } from '../../store/gameStore';
 import { potionStock } from '../../domain/rules/economy';
 import { QuickServe } from '../../features/customers/QuickServe';
@@ -25,6 +26,7 @@ const TITLES: Record<PanelId, string> = {
   upgrades: 'Melhorias',
   grimoire: 'Grimório do Mestre',
   album: 'Álbum da loja',
+  street: 'A rua da loja',
 };
 
 export function SidePanel() {
@@ -77,6 +79,7 @@ export function SidePanel() {
         {panel === 'upgrades' && <UpgradesPanel save={save} />}
         {panel === 'grimoire' && <GrimoirePanel save={save} />}
         {panel === 'album' && <AlbumPanel save={save} />}
+        {panel === 'street' && <StreetPanel save={save} />}
       </div>
     </aside>
   );

@@ -1,6 +1,8 @@
 // Tipos de domínio do Alchemist's Corner.
 // Este módulo não depende de React nem de Phaser.
 
+export type SeasonId = 'primavera' | 'verao' | 'outono' | 'inverno';
+
 export type IngredientFamily = 'erva' | 'mineral' | 'magico' | 'raro';
 export type Rarity = 'comum' | 'incomum' | 'raro';
 
@@ -17,6 +19,8 @@ export interface Ingredient {
   dailyStock: number | null;
   /** Cor principal usada nos ícones. */
   color: string;
+  /** Ingrediente da estação: o fornecedor só vende nela. */
+  season?: SeasonId;
 }
 
 export interface RecipeIngredient {
@@ -43,6 +47,8 @@ export interface Recipe {
   /** Pista mostrada no livro antes da descoberta. */
   hint: string;
   color: string;
+  /** Poção da estação: só é procurada nela (e só se prepara com o ingrediente dela). */
+  season?: SeasonId;
 }
 
 export interface PotionStack {
@@ -126,6 +132,10 @@ export interface SpecialOrder {
   rewardRep: number;
   rewardXp: number;
   dueDay: number;
+  /** Pedido do Visitante Misterioso (evento raro): vale só no dia e traz um achado lendário. */
+  visitor?: boolean;
+  rewardSeal?: boolean;
+  rewardFind?: string;
 }
 
 /** Uma linha de um contrato: quantas poções de uma receita, e quantas já foram entregues. */
@@ -152,7 +162,7 @@ export interface Contract {
   accepted: boolean;
 }
 
-export type DayEventId = 'feira' | 'caravana' | 'chuva' | 'festival';
+export type DayEventId = 'feira' | 'caravana' | 'chuva' | 'festival' | 'eclipse' | 'lua-cheia' | 'visitante';
 
 export interface DayStats {
   revenue: number;
@@ -184,6 +194,24 @@ export interface DayReport {
   /** Parte da manutenção que foi salário dos ajudantes. */
   wages?: number;
   helperWork?: HelperWork;
+  /** Placar da semana contra a rival, depois deste dia. */
+  rival?: { me: number; her: number; result: 'win' | 'loss' | null };
+}
+
+/** Disputa semanal de vendas com a Madame Vesper, a alquimista do outro lado da rua. */
+export interface RivalState {
+  /** Semana (índice) do placar atual. */
+  week: number;
+  me: number;
+  her: number;
+  wins: number;
+  losses: number;
+}
+
+/** Expedição do corvo (volta no começo do dia indicado). */
+export interface Expedition {
+  dest: string;
+  returnDay: number;
 }
 
 export type DayPhase = 'preparacao' | 'expediente' | 'fechamento';
@@ -196,7 +224,7 @@ export interface Settings {
   reduceMotion: boolean;
 }
 
-export const SAVE_VERSION = 6 as const;
+export const SAVE_VERSION = 7 as const;
 
 export interface GameSave {
   saveVersion: typeof SAVE_VERSION;
@@ -255,6 +283,12 @@ export interface GameSave {
   /** Carinhos no gato da loja e o último dia em que ele deu sorte. */
   petCount: number;
   petDay: number;
+  /** Rival da rua (pacote E). */
+  rival: RivalState;
+  expedition: Expedition | null;
+  expeditionsDone: number;
+  /** Achados de expedições e do Visitante Misterioso (ids). */
+  finds: string[];
   tutorialStep: number;
   seq: number;
   settings: Settings;
@@ -298,4 +332,8 @@ export type GameEvent =
   | { type: 'ACHIEVEMENT'; id: string }
   | { type: 'CAT_PETTED'; lucky: boolean }
   | { type: 'SEASON_STARTED'; season: string }
+  | { type: 'RIVAL_RESULT'; win: boolean; me: number; her: number; coins: number }
+  | { type: 'EXPEDITION_SENT'; dest: string; returnDay: number }
+  | { type: 'EXPEDITION_BACK'; dest: string; items: { ingredientId: string; qty: number }[]; find: string | null }
+  | { type: 'FIND'; id: string }
   | { type: 'ERROR'; message: string };

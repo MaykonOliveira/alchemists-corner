@@ -26,6 +26,10 @@ export interface DayEventInfo {
   /** Nível mínimo da loja para o evento acontecer. */
   minLevel?: number;
   budgetBonus: number;
+  /** Evento especial raro (sorteado à parte, cerca de uma vez por estação). */
+  rare?: boolean;
+  /** Categoria de poção que paga mais no dia (multiplicador). */
+  categoryBoost?: { category: 'cura' | 'vigor' | 'mente' | 'utilidade'; factor: number };
 }
 
 export const DAY_EVENTS: Record<DayEventId, DayEventInfo> = {
@@ -37,6 +41,14 @@ export const DAY_EVENTS: Record<DayEventId, DayEventInfo> = {
     spawnFactor: 1.25, archetypeBoost: { estudioso: 3 }, budgetBonus: 0.05 },
   festival: { id: 'festival', name: 'Festival das Lanternas', text: 'A cidade está em festa! A nobreza desfila pelas ruas com bolsos cheios.',
     spawnFactor: 0.65, archetypeBoost: { nobre: 2.5, viajante: 1 }, budgetBonus: 0.12, minLevel: 8 },
+  // Eventos especiais raros (pacote E)
+  eclipse: { id: 'eclipse', name: 'Eclipse', text: 'O sol sumiu ao meio-dia! Estudiosos correm atrás de elixires para a mente, que valem quase o dobro.',
+    spawnFactor: 0.9, archetypeBoost: { estudioso: 3 }, budgetBonus: 0, minLevel: 5, rare: true,
+    categoryBoost: { category: 'mente', factor: 1.8 } },
+  'lua-cheia': { id: 'lua-cheia', name: 'Mercado da Lua Cheia', text: 'Mercadores da noite trouxeram ingredientes de todas as estações e itens raros a mais.',
+    spawnFactor: 0.85, archetypeBoost: { viajante: 2 }, budgetBonus: 0.05, minLevel: 5, rare: true },
+  visitante: { id: 'visitante', name: 'Visitante Misterioso', text: 'Um viajante encapuzado deixou um pedido no quadro. Paga com algo que não se vende em loja nenhuma.',
+    spawnFactor: 1, archetypeBoost: {}, budgetBonus: 0, minLevel: 5, rare: true },
 };
 
 /** Quem oferece contratos de vários dias (a partir do nível 6). */

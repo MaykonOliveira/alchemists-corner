@@ -9,6 +9,7 @@ import { seasonOf } from './world';
 import { expireOrder, maybeCreateOrder } from './orders';
 import { CLOSE_MIN, GAME_MIN_PER_SECOND, OPEN_MIN } from './time';
 import { advanceBrew } from './alchemy';
+import { createVisitorOrder, returnExpedition, rivalOnClose, rollRareEvent } from './street';
 
 export function freshStats(s: GameSave): DayStats {
   return {
@@ -48,6 +49,7 @@ export function closeDay(d: Draft): boolean {
     wages: Math.min(maintenance, helperWages(s)),
     helperWork: { ...st.helperWork },
   };
+  rivalOnClose(d, report);
   s.reports = [...s.reports, report].slice(-30);
   s.phase = 'fechamento';
   d.events.push({ type: 'DAY_CLOSED', report });
@@ -61,18 +63,22 @@ export function startNextDay(d: Draft): boolean {
   s.phase = 'preparacao';
   s.clockMin = OPEN_MIN;
   s.customers = [];
-  s.supplier = supplierStock(s);
   s.stats = freshStats(s);
   // O corvo faz a entrega da manhã logo que o dia começa.
   s.helpers.ravenInMs = 1500;
   s.helpers.golemInMs = 0;
   // Eventos simples a partir do dia 3 (cerca de 1 em cada 3 dias).
-  const events = (Object.keys(DAY_EVENTS) as DayEventId[]).filter((id) => s.level >= (DAY_EVENTS[id].minLevel ?? 1));
-  s.event = s.day >= 3 && d.ctx.random() < 0.35 ? pick<DayEventId>(events, d.ctx.random) : null;
+  // Eventos especiais raros (Eclipse, Lua Cheia, Visitante) têm sorteio próprio, cerca de 1 em cada 8 dias.
+  const events = (Object.keys(DAY_EVENTS) as DayEventId[]).filter((id) => !DAY_EVENTS[id].rare && s.level >= (DAY_EVENTS[id].minLevel ?? 1));
+  expireOrder(d);
+  s.event = rollRareEvent(d) ?? (s.day >= 3 && d.ctx.random() < 0.35 ? pick<DayEventId>(events, d.ctx.random) : null);
   if (s.festivalSponsored) s.event = 'festival';
   s.festivalSponsored = false;
+  // O estoque do fornecedor depende da estação e do evento do dia.
+  s.supplier = supplierStock(s);
   harvestGreenhouse(d);
-  expireOrder(d);
+  returnExpedition(d);
+  if (s.event === 'visitante' && !s.order) createVisitorOrder(d);
   maybeCreateOrder(d);
   updateContracts(d);
   if (seasonOf(s.day).id !== seasonOf(s.day - 1).id) d.events.push({ type: 'SEASON_STARTED', season: seasonOf(s.day).id });

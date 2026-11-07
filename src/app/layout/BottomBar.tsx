@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { DAY_EVENTS } from '../../domain/data/orders';
 import { sealsAvailable } from '../../domain/rules/progression';
 import { useGameStore, type PanelId } from '../../store/gameStore';
 
@@ -13,6 +14,7 @@ export const SHORTCUTS: { key: string; label: string; panel: PanelId; icon: stri
   { key: '8', label: 'Mestre', panel: 'grimoire', icon: '✨' },
   { key: '9', label: 'Relatório', panel: 'report', icon: '📊' },
   { key: '0', label: 'Álbum', panel: 'album', icon: '🏆' },
+  { key: 'r', label: 'Rua', panel: 'street', icon: '🗺️' },
 ];
 
 /**
@@ -24,11 +26,13 @@ export function BottomBar() {
   const customers = useGameStore((s) => s.save?.customers.length ?? 0);
   const order = useGameStore((s) => !!s.save?.order || (!!s.save?.contract && !s.save.contract.accepted));
   const seals = useGameStore((s) => (s.save ? sealsAvailable(s.save) : 0));
+  const rareEvent = useGameStore((s) => !!(s.save?.event && DAY_EVENTS[s.save.event].rare));
   const dispatch = useGameStore((s) => s.dispatch);
   const [moreOpen, setMoreOpen] = useState(false);
 
   const badgeFor = (panel: PanelId) =>
-    panel === 'counter' && customers > 0 ? customers : panel === 'orders' && order ? '!' : panel === 'grimoire' && seals > 0 ? seals : null;
+    panel === 'counter' && customers > 0 ? customers : panel === 'orders' && order ? '!' : panel === 'grimoire' && seals > 0 ? seals
+      : panel === 'street' && rareEvent ? '!' : null;
   const secondary = SHORTCUTS.filter((s) => !s.primary);
   const moreBadge = secondary.some((s) => badgeFor(s.panel) !== null);
   const moreActive = secondary.some((s) => s.panel === active);

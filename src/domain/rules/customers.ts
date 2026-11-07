@@ -9,6 +9,7 @@ import { gainReputation, gainXp } from './progression';
 import { CLOSE_MIN } from './time';
 import { availableRegulars, befriend, REGULAR_CHANCE, seasonCategory } from './world';
 import { SEASON_PRICE_BONUS } from '../data/world';
+import { eventCategoryFactor, inSeason, seasonalRecipe } from './street';
 
 export const MAX_CUSTOMERS = 3;
 /** Clientes que cabem no balcão (o balcão duplo abre espaço para mais um). */
@@ -52,13 +53,18 @@ export function spawnCustomer(d: Draft) {
   const archetype = weightedPick(weights, ctx.random);
   const info = ARCHETYPES[archetype];
   // Ninguém pede o que só aparece muitos níveis depois.
-  const wants = info.wants.filter((id) => RECIPES_BY_ID[id].unlockLevel <= s.level + 1);
+  // Poções da estação só são pedidas na estação delas.
+  const wants = info.wants.filter((id) => RECIPES_BY_ID[id].unlockLevel <= s.level + 1 && inSeason(s, RECIPES_BY_ID[id]));
 
   // O primeiro cliente do jogo sempre pede algo que você tem, para ensinar a vender.
   const firstEver = s.day === 1 && s.stats.served === 0 && s.stats.lost === 0 && s.customers.length === 0;
-  const known = wants.filter((id) => s.knownRecipes.includes(id));
+  // Poção da estação só vira pedido frequente depois que a loja já preparou ela alguma vez.
+  const known = wants.filter((id) => s.knownRecipes.includes(id) && (!RECIPES_BY_ID[id].season || (s.mastery[id] ?? 0) > 0));
   let wanted: string;
+  const special = seasonalRecipe(s);
   if (firstEver && potionStock(s, 'cura-simples') > 0) wanted = 'cura-simples';
+  // A poção da estação é a sensação da rua: um em cada cinco clientes pede por ela.
+  else if (special && (s.mastery[special.id] ?? 0) > 0 && ctx.random() < 0.2) wanted = special.id;
   else if (known.length && (s.day <= 2 || ctx.random() < 0.8)) {
     // A estação puxa a procura para a categoria dela.
     const inSeason = known.filter((id) => RECIPES_BY_ID[id].category === seasonCategory(s));
@@ -92,7 +98,8 @@ export function maxPriceFor(s: GameSave, c: Customer, recipeId: string) {
   const decor = (has(s, 'prateleira-extra') ? 1.03 : 1) * (has(s, 'iluminacao-aconchegante') ? 1.04 : 1) * (has(s, 'vitral-arcano') ? 1.05 : 1) * (has(s, 'torre-alquimista') ? 1.08 : 1);
   const skill = (1 + masteryStars(s, recipeId) * STAR_BONUS) * (1 + talentBonus(s, 'labia'));
   const season = r.category === seasonCategory(s) ? SEASON_PRICE_BONUS : 1;
-  return Math.round(r.basePrice * c.budgetFactor * fame * decor * skill * season * (substitute ? 0.9 : 1));
+  const event = eventCategoryFactor(s, recipeId);
+  return Math.round(r.basePrice * c.budgetFactor * fame * decor * skill * season * event * (substitute ? 0.9 : 1));
 }
 
 /** Uma poção serve para o cliente? (a pedida, ou outra da mesma categoria como substituta) */

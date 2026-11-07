@@ -39,7 +39,8 @@ export const GOLEM_DISMISS_AT = 0.6;
 export const emptyHelperWork = (): HelperWork => ({ brews: 0, served: 0, deliveries: 0, delivered: 0 });
 
 /** Ajudante contratado e trabalhando (não está descansando). */
-export const helperActive = (s: GameSave, id: string) => has(s, id) && !s.helpers.off.includes(id);
+export const helperActive = (s: GameSave, id: string) =>
+  has(s, id) && !s.helpers.off.includes(id) && !(id === RAVEN && s.expedition);
 
 export function setHelper(d: Draft, upgradeId: string, on: boolean): boolean {
   const s = d.s;

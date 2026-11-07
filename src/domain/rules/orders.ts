@@ -4,6 +4,7 @@ import { fail, nextId, pick, type Draft } from './context';
 import { potionStock, takePotions } from './economy';
 import { talentBonus } from './mastery';
 import { gainReputation, gainXp } from './progression';
+import { grantFind } from './street';
 
 /** Cria um pedido especial se não houver nenhum ativo (a partir do dia 2). */
 export function maybeCreateOrder(d: Draft) {
@@ -40,6 +41,8 @@ export function deliverOrder(d: Draft): boolean {
   s.stats.ordersDone += 1;
   gainReputation(d, o.rewardRep);
   s.order = null;
+  if (o.rewardSeal) s.contractSeals += 1;
+  grantFind(d, o.rewardFind);
   d.events.push({ type: 'ORDER_DONE', orderId: o.id, coins: o.rewardCoins });
   gainXp(d, o.rewardXp);
   return true;
