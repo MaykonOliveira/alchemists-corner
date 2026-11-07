@@ -1,6 +1,7 @@
 import 'fake-indexeddb/auto';
 import { describe, expect, it } from 'vitest';
 import { createNewGame } from '../../domain/rules/initialState';
+import { levelFromXp } from '../../domain/rules/progression';
 import { migrateSave } from '../../persistence/migrations';
 import { saveRepository } from '../../persistence/saveRepository';
 
@@ -26,6 +27,12 @@ describe('migrateSave', () => {
     expect(s.coins).toBe(0);
     expect(s.phase).toBe('preparacao');
     expect(s.day).toBe(1);
+  });
+
+  it('save antigo mantém o nível mesmo com a curva de XP nova', () => {
+    const s = migrateSave({ ...createNewGame(0), level: 3, xp: 260 })!;
+    expect(s.level).toBe(3);
+    expect(levelFromXp(s.xp)).toBe(3);
   });
 });
 

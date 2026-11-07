@@ -24,7 +24,7 @@ export const countIngredients = (s: GameSave) => Object.values(s.ingredients).re
 export const potionStock = (s: GameSave, recipeId: string) => s.potions.find((p) => p.recipeId === recipeId)?.quantity ?? 0;
 
 /** Custo de manutenção cobrado no fechamento (aluguel, lenha, velas). Informado antes de fechar. */
-export const maintenanceCost = (s: GameSave) => 8 + 4 * (s.level - 1) + 2 * s.upgrades.length;
+export const maintenanceCost = (s: GameSave) => 10 + 5 * (s.level - 1) + 3 * s.upgrades.length;
 
 /** Custo dos ingredientes de um lote, pelos preços atuais do fornecedor. */
 export const recipeCost = (recipeId: string) =>

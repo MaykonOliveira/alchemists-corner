@@ -1,5 +1,6 @@
 import { SAVE_VERSION, type GameSave } from '../domain/models/types';
 import { createNewGame } from '../domain/rules/initialState';
+import { xpForLevel } from '../domain/rules/progression';
 
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 const num = (v: unknown, fallback: number) => (typeof v === 'number' && Number.isFinite(v) ? v : fallback);
@@ -24,6 +25,7 @@ export function migrateSave(raw: unknown): GameSave | null {
   // Os campos novos recebem os valores padrão abaixo.
 
   const base = createNewGame(num(raw.createdAt, Date.now()));
+  const level = Math.max(1, num(raw.level, base.level));
   const phase = raw.phase === 'preparacao' || raw.phase === 'expediente' || raw.phase === 'fechamento' ? raw.phase : base.phase;
   const settings = isObj(raw.settings) ? raw.settings : {};
   const supplier: GameSave['supplier'] = { ...base.supplier };
@@ -38,8 +40,9 @@ export function migrateSave(raw: unknown): GameSave | null {
     clockMin: num(raw.clockMin, base.clockMin),
     coins: Math.max(0, num(raw.coins, base.coins)),
     reputation: Math.max(0, num(raw.reputation, base.reputation)),
-    level: Math.max(1, num(raw.level, base.level)),
-    xp: Math.max(0, num(raw.xp, base.xp)),
+    level,
+    // A curva de XP mudou no rebalanceamento: saves antigos mantêm o nível e começam no piso dele.
+    xp: Math.max(xpForLevel(level), num(raw.xp, base.xp)),
     ingredients: numRecord(raw.ingredients, base.ingredients),
     potions: arr(raw.potions, base.potions).filter((p) => isObj(p) && typeof p.recipeId === 'string' && num(p.quantity, 0) > 0),
     prices: numRecord(raw.prices, base.prices),

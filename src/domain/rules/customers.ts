@@ -14,8 +14,8 @@ export const NEGOTIATION_MARGIN = 1.2;
 export function nextSpawnDelay(s: GameSave, random: () => number) {
   const event = s.event ? DAY_EVENTS[s.event].spawnFactor : 1;
   const sign = has(s, 'letreiro-novo') ? 0.75 : 1;
-  const fame = 1 + Math.min(s.reputation, 200) / 160;
-  return Math.round((15000 * event * sign) / fame * (0.7 + random() * 0.6));
+  const fame = 1 + Math.min(s.reputation, 400) / 800;
+  return Math.round((16000 * event * sign) / fame * (0.7 + random() * 0.6));
 }
 
 export function spawnCustomer(d: Draft) {
@@ -87,7 +87,7 @@ function completeSale(d: Draft, c: Customer, recipeId: string, price: number) {
   s.stats.served += 1;
   const fair = price <= r.basePrice ? 1 : 0;
   const cozy = has(s, 'iluminacao-aconchegante') ? 1 : 0;
-  gainReputation(d, 1 + fair + cozy);
+  gainReputation(d, fair + cozy);
   d.events.push({ type: 'SALE', customerId: c.id, recipeId, price, substitute: recipeId !== c.wantedRecipeId });
   removeCustomer(d, c, 'atendido');
   gainXp(d, 6 + Math.round(r.basePrice / 5));

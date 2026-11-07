@@ -6,8 +6,9 @@ export const MAX_LEVEL = 10;
 /** XP total necessário para alcançar o nível informado (nível 1 = 0 XP). */
 export function xpForLevel(level: number): number {
   if (level <= 1) return 0;
-  // Curva suave: 100, 250, 450, 700, 1000...
-  return 25 * (level - 1) * (level + 2);
+  // Curva: 205, 540, 1035, 1720, 2625... (nível 10 perto de 9000 XP)
+  const n = level - 1;
+  return 150 * n + 50 * n * n + 5 * n * n * n;
 }
 
 export function levelFromXp(xp: number): number {
@@ -45,10 +46,10 @@ export function gainReputation(d: Draft, amount: number) {
 
 /** Nome do título da loja de acordo com a reputação. */
 export function reputationTitle(rep: number): string {
-  if (rep >= 300) return 'Lendária';
-  if (rep >= 180) return 'Famosa';
-  if (rep >= 100) return 'Respeitada';
-  if (rep >= 50) return 'Conhecida';
-  if (rep >= 20) return 'Promissora';
+  if (rep >= 450) return 'Lendária';
+  if (rep >= 280) return 'Famosa';
+  if (rep >= 160) return 'Respeitada';
+  if (rep >= 80) return 'Conhecida';
+  if (rep >= 30) return 'Promissora';
   return 'Desconhecida';
 }
