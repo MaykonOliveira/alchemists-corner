@@ -32,7 +32,7 @@ export function MenuScreen() {
           )}
         </div>
       </div>
-      <p className="menu-foot">Versão 0.4 · Níveis até o 15, Grimório do Mestre e 5 poções lendárias</p>
+      <p className="menu-foot">Versão 0.5 · Venda com um toque e celular sem atrito</p>
     </main>
   );
 }

@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { PhaserGame } from '../../game/PhaserGame';
 import { TutorialCard } from '../../features/tutorial/TutorialCard';
+import { WelcomeBack } from '../../features/tutorial/WelcomeBack';
+import { QuickServe } from '../../features/customers/QuickServe';
 import { useGameStore } from '../../store/gameStore';
 import { BottomBar, SHORTCUTS } from '../layout/BottomBar';
 import { DayEndModal } from '../layout/DayEndModal';
@@ -44,6 +46,8 @@ export function GameScreen() {
         <div className="stage-wrap">
           <PhaserGame />
           <TutorialCard />
+          <WelcomeBack />
+          <QuickServe placement="stage" />
           <Toasts />
         </div>
         <SidePanel />
