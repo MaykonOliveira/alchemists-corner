@@ -23,8 +23,11 @@ export const countPotions = (s: GameSave) => s.potions.reduce((n, p) => n + p.qu
 export const countIngredients = (s: GameSave) => Object.values(s.ingredients).reduce((n, q) => n + q, 0);
 export const potionStock = (s: GameSave, recipeId: string) => s.potions.find((p) => p.recipeId === recipeId)?.quantity ?? 0;
 
-/** Custo de manutenção cobrado no fechamento (aluguel, lenha, velas). Informado antes de fechar. */
-export const maintenanceCost = (s: GameSave) => 10 + 5 * (s.level - 1) + 3 * s.upgrades.length;
+/** Salário diário dos ajudantes contratados (mesmo descansando, continuam na folha). */
+export const helperWages = (s: GameSave) => s.upgrades.reduce((n, id) => n + (UPGRADES_BY_ID[id]?.upkeep ?? 0), 0);
+
+/** Custo de manutenção cobrado no fechamento (aluguel, lenha, velas e salários). Informado antes de fechar. */
+export const maintenanceCost = (s: GameSave) => 10 + 5 * (s.level - 1) + 3 * s.upgrades.length + helperWages(s);
 
 /** Custo dos ingredientes de um lote, pelos preços atuais do fornecedor. */
 export const recipeCost = (recipeId: string) =>
@@ -35,21 +38,42 @@ export function supplierStock(s: GameSave): Record<string, number | null> {
   return Object.fromEntries(INGREDIENTS.map((i) => [i.id, s.level >= i.supplierLevel ? i.dailyStock : 0]));
 }
 
-export function buyIngredient(d: Draft, ingredientId: string, qty: number): boolean {
-  const s = d.s;
+/** Quantas unidades do ingrediente o fornecedor ainda tem hoje (Infinity = sem limite). */
+export function supplierLeft(s: GameSave, ingredientId: string) {
   const ing = INGREDIENTS_BY_ID[ingredientId];
-  if (!ing || !Number.isInteger(qty) || qty <= 0) return fail(d, 'Quantidade inválida.');
-  if (s.phase === 'fechamento') return fail(d, 'O fornecedor já foi embora hoje.');
-  if (s.level < ing.supplierLevel) return fail(d, `${ing.name} só aparece no nível ${ing.supplierLevel}.`);
+  if (!ing || s.level < ing.supplierLevel) return 0;
   const available = s.supplier[ingredientId];
-  if (available !== null && available !== undefined && qty > available) return fail(d, `O fornecedor só tem ${available} hoje.`);
-  if (countIngredients(s) + qty > ingredientCapacity(s)) return fail(d, 'O armário está cheio.');
-  const cost = ing.price * qty;
-  if (cost > s.coins) return fail(d, 'Moedas insuficientes.');
+  return available === null || available === undefined ? Infinity : available;
+}
+
+/** Valida uma compra. Retorna a mensagem de erro ou null se a compra é possível. */
+export function purchaseError(s: GameSave, ingredientId: string, qty: number): string | null {
+  const ing = INGREDIENTS_BY_ID[ingredientId];
+  if (!ing || !Number.isInteger(qty) || qty <= 0) return 'Quantidade inválida.';
+  if (s.phase === 'fechamento') return 'O fornecedor já foi embora hoje.';
+  if (s.level < ing.supplierLevel) return `${ing.name} só aparece no nível ${ing.supplierLevel}.`;
+  const available = supplierLeft(s, ingredientId);
+  if (qty > available) return `O fornecedor só tem ${available} hoje.`;
+  if (countIngredients(s) + qty > ingredientCapacity(s)) return 'O armário está cheio.';
+  if (ing.price * qty > s.coins) return 'Moedas insuficientes.';
+  return null;
+}
+
+/** Aplica uma compra já validada e devolve o custo. */
+export function applyPurchase(s: GameSave, ingredientId: string, qty: number) {
+  const cost = INGREDIENTS_BY_ID[ingredientId].price * qty;
+  const available = s.supplier[ingredientId];
   s.coins -= cost;
   s.ingredients[ingredientId] = (s.ingredients[ingredientId] ?? 0) + qty;
   if (available !== null && available !== undefined) s.supplier[ingredientId] = available - qty;
   s.stats.ingredientCost += cost;
+  return cost;
+}
+
+export function buyIngredient(d: Draft, ingredientId: string, qty: number): boolean {
+  const err = purchaseError(d.s, ingredientId, qty);
+  if (err) return fail(d, err);
+  const cost = applyPurchase(d.s, ingredientId, qty);
   d.events.push({ type: 'PURCHASE', ingredientId, qty, cost });
   return true;
 }
@@ -79,6 +103,8 @@ export function buyUpgrade(d: Draft, upgradeId: string): boolean {
   if (s.coins < up.cost) return fail(d, 'Moedas insuficientes.');
   s.coins -= up.cost;
   s.upgrades.push(upgradeId);
+  // Ajudante recém-contratado começa a trabalhar logo.
+  if (upgradeId === 'corvo-entregador') s.helpers.ravenInMs = Math.min(s.helpers.ravenInMs, 1500);
   d.events.push({ type: 'UPGRADE_BOUGHT', upgradeId });
   gainXp(d, 20);
   return true;

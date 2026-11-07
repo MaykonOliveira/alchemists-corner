@@ -35,7 +35,7 @@ describe('dados iniciais', () => {
 
   it('nova partida começa na preparação do dia 1', () => {
     const s = createNewGame(0);
-    expect(s).toMatchObject({ day: 1, phase: 'preparacao', clockMin: OPEN_MIN, saveVersion: 2 });
+    expect(s).toMatchObject({ day: 1, phase: 'preparacao', clockMin: OPEN_MIN, saveVersion: 3 });
     expect(s.knownRecipes.length).toBe(3);
   });
 });
