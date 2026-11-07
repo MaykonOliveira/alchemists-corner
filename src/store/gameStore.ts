@@ -42,7 +42,9 @@ export type UiCommand =
   | { type: 'OPEN_MODAL'; modal: ModalId }
   | { type: 'DISMISS_TOAST'; id: number }
   | { type: 'SKIP_TUTORIAL' }
-  | { type: 'NEXT_TUTORIAL' };
+  | { type: 'NEXT_TUTORIAL' }
+  | { type: 'TOGGLE_SPEED' }
+  | { type: 'DISMISS_WELCOME' };
 
 export type GameCommand = DomainCommand | UiCommand;
 
@@ -56,6 +58,10 @@ export interface UiState {
   levelUp: { level: number; recipes: string[] } | null;
   toasts: Toast[];
   lastHint: string | null;
+  /** Multiplicador do relógio durante o expediente (1× ou 2×). */
+  speed: 1 | 2;
+  /** Cartão "bem-vindo de volta" ao continuar uma partida salva. */
+  welcome: boolean;
 }
 
 interface StoreState {
@@ -73,12 +79,12 @@ interface StoreState {
 
 const initialUi: UiState = {
   activePanel: null, hover: null, selectedCustomerId: null, paused: false, zoom: 2,
-  modal: null, levelUp: null, toasts: [], lastHint: null,
+  modal: null, levelUp: null, toasts: [], lastHint: null, speed: 1, welcome: false,
 };
 
 const UI_TYPES = new Set<GameCommand['type']>([
   'OPEN_PANEL', 'TOGGLE_PANEL', 'CLOSE_PANEL', 'SET_HOVER', 'SELECT_CUSTOMER', 'TOGGLE_PAUSE', 'SET_PAUSED',
-  'SET_ZOOM', 'OPEN_MODAL', 'DISMISS_TOAST', 'SKIP_TUTORIAL', 'NEXT_TUTORIAL',
+  'SET_ZOOM', 'OPEN_MODAL', 'DISMISS_TOAST', 'SKIP_TUTORIAL', 'NEXT_TUTORIAL', 'TOGGLE_SPEED', 'DISMISS_WELCOME',
 ]);
 const isUi = (cmd: GameCommand): cmd is UiCommand => UI_TYPES.has(cmd.type);
 
@@ -86,14 +92,25 @@ const isUi = (cmd: GameCommand): cmd is UiCommand => UI_TYPES.has(cmd.type);
 export const TUTORIAL_DONE = 7;
 
 let toastSeq = 0;
+export const MAX_TOASTS = 2;
 let loadedSave: GameSave | null = null;
 
 export const useGameStore = create<StoreState>()(
   subscribeWithSelector((set, get) => {
+    /** Avisos curtos: no máximo 2 na tela e sem repetir o mesmo texto. */
     const toast = (text: string, tone: Toast['tone'] = 'info') => {
       const t = { id: ++toastSeq, text, tone };
-      set((st) => ({ ui: { ...st.ui, toasts: [...st.ui.toasts.slice(-3), t] } }));
-      setTimeout(() => get().dispatch({ type: 'DISMISS_TOAST', id: t.id }), tone === 'warn' ? 3200 : 4200);
+      set((st) => ({
+        ui: { ...st.ui, toasts: [...st.ui.toasts.filter((x) => x.text !== text).slice(-(MAX_TOASTS - 1)), t] },
+      }));
+      setTimeout(() => get().dispatch({ type: 'DISMISS_TOAST', id: t.id }), tone === 'warn' ? 2600 : 3400);
+    };
+
+    /** Depois que o cliente selecionado sai, o próximo da fila já fica pronto para o atendimento rápido. */
+    const selectNextAfter = (customerId: string) => {
+      if (get().ui.selectedCustomerId !== customerId) return;
+      const next = get().save?.customers.find((c) => c.id !== customerId)?.id ?? null;
+      set((st) => ({ ui: { ...st.ui, selectedCustomerId: next } }));
     };
 
     const tutorialAt = (step: number) => get().save?.tutorialStep === step;
@@ -120,16 +137,17 @@ export const useGameStore = create<StoreState>()(
           return toast(`${UPGRADES_BY_ID[e.upgradeId].name}: ${e.on ? 'de volta ao trabalho!' : 'descansando.'}`);
         case 'BREW_DONE': return toast(`${e.qty}× ${RECIPES_BY_ID[e.recipeId].name} prontas nas prateleiras!`, 'ok');
         case 'SALE':
-          if (get().ui.selectedCustomerId === e.customerId) set((st) => ({ ui: { ...st.ui, selectedCustomerId: null } }));
+          selectNextAfter(e.customerId);
           return advanceTutorial(4);
         case 'CUSTOMER_LEFT':
-          if (get().ui.selectedCustomerId === e.customerId) set((st) => ({ ui: { ...st.ui, selectedCustomerId: null } }));
+          selectNextAfter(e.customerId);
           if (e.reason === 'paciencia') toast('Um cliente cansou de esperar e foi embora (−1 reputação).', 'warn');
           return;
         case 'CUSTOMER_ARRIVED': {
           const s = get().save;
-          // Seleciona automaticamente quando é o único cliente, para o atendimento ficar a um clique.
-          if (s && s.customers.length === 1 && !get().ui.selectedCustomerId) {
+          // Sem ninguém selecionado, o cliente que chega já aparece no atendimento rápido (venda com um toque).
+          const sel = get().ui.selectedCustomerId;
+          if (s && (!sel || !s.customers.some((c) => c.id === sel))) {
             set((st) => ({ ui: { ...st.ui, selectedCustomerId: e.customerId } }));
           }
           return;
@@ -186,7 +204,12 @@ export const useGameStore = create<StoreState>()(
         case 'SET_HOVER':
           return { ...ui, hover: cmd.hover };
         case 'SELECT_CUSTOMER':
-          return { ...ui, selectedCustomerId: cmd.id, activePanel: cmd.id ? 'counter' : ui.activePanel };
+          // Selecionar não abre mais o painel: o atendimento rápido aparece sobre a loja.
+          return { ...ui, selectedCustomerId: cmd.id };
+        case 'TOGGLE_SPEED':
+          return { ...ui, speed: ui.speed === 1 ? 2 : 1 };
+        case 'DISMISS_WELCOME':
+          return ui.welcome ? { ...ui, welcome: false, paused: false } : ui;
         case 'TOGGLE_PAUSE':
           return { ...ui, paused: !ui.paused };
         case 'SET_PAUSED':
@@ -228,7 +251,8 @@ export const useGameStore = create<StoreState>()(
 
       continueGame() {
         if (!loadedSave) return get().newGame();
-        set({ status: 'playing', save: loadedSave, ui: initialUi });
+        // No meio do expediente, o jogo volta pausado até o jogador fechar o "bem-vindo de volta".
+        set({ status: 'playing', save: loadedSave, ui: { ...initialUi, welcome: true, paused: loadedSave.phase === 'expediente' } });
       },
 
       backToMenu() {

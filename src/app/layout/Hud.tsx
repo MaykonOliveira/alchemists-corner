@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { levelProgress, masterRank, MAX_LEVEL, reputationTitle } from '../../domain/rules/progression';
+import { levelProgress, masterRank, MASTER_STEP_XP, MAX_LEVEL, reputationTitle, xpForLevel } from '../../domain/rules/progression';
 import { dayProgress, formatClock, TIME_OF_DAY_LABEL, timeOfDay } from '../../domain/rules/time';
 import { useGameStore } from '../../store/gameStore';
 import { CoinIcon, StarIcon } from '../../ui/icons';
@@ -12,7 +12,13 @@ export function Hud() {
   const paused = useGameStore((s) => s.ui.paused);
   const dispatch = useGameStore((s) => s.dispatch);
   const [confirmClose, setConfirmClose] = useState(false);
+  const speed = useGameStore((s) => s.ui.speed);
   const coins = useAnimatedNumber(save.coins);
+  const isMaster = save.level >= MAX_LEVEL;
+  // XP dentro do nível atual (ou do grau de Mestre), em número, para o jogador saber quanto falta.
+  const xpStart = isMaster ? xpForLevel(MAX_LEVEL) + masterRank(save.xp) * MASTER_STEP_XP : xpForLevel(save.level);
+  const xpSpan = isMaster ? MASTER_STEP_XP : xpForLevel(save.level + 1) - xpStart;
+  const xpIn = save.xp - xpStart;
 
   return (
     <header className="hud">
@@ -30,17 +36,18 @@ export function Hud() {
         <span className="hud-label">Moedas</span>
         <span className="hud-value"><CoinIcon size={16} /> {coins}</span>
       </div>
-      <div className="hud-stat" title={`Reputação: ${reputationTitle(save.reputation)}`}>
-        <span className="hud-label">{reputationTitle(save.reputation)}</span>
-        <span className="hud-value"><StarIcon size={16} /> {save.reputation}</span>
+      <div className="hud-stat" title={`Reputação ${save.reputation}: ${reputationTitle(save.reputation)}. Sobe com vendas a preço justo.`}>
+        <span className="hud-label">Reputação</span>
+        <span className="hud-value"><StarIcon size={16} /> {save.reputation}<span className="hud-sub hide-sm">{reputationTitle(save.reputation)}</span></span>
       </div>
-      <div className="hud-stat" title={save.level >= MAX_LEVEL ? 'Grau de Mestre' : 'Nível da loja'}>
-        <span className={`hud-label ${save.level >= MAX_LEVEL ? 'hud-master' : ''}`}>
-          {save.level >= MAX_LEVEL ? `Mestre ${masterRank(save.xp)}` : `Nível ${save.level}`}
+      <div className="hud-stat hud-level" title={isMaster ? 'Grau de Mestre' : 'Nível da loja'}>
+        <span className={`hud-label ${isMaster ? 'hud-master' : ''}`}>
+          {isMaster ? `Mestre ${masterRank(save.xp)}` : `Nível ${save.level}`}
         </span>
         <span className="bar bar-xp" aria-label={`Experiência: ${Math.round(levelProgress(save.xp) * 100)}%`}>
           <span style={{ width: `${levelProgress(save.xp) * 100}%` }} />
         </span>
+        <span className="hud-xp">{xpIn}/{xpSpan} XP</span>
       </div>
       <div className="hud-actions">
         {save.phase === 'preparacao' && (
@@ -48,6 +55,14 @@ export function Hud() {
         )}
         {save.phase === 'expediente' && (
           <>
+            <button
+              className={`btn btn-speed ${speed === 2 ? 'on' : ''}`}
+              onClick={() => dispatch({ type: 'TOGGLE_SPEED' })}
+              aria-pressed={speed === 2}
+              title={speed === 2 ? 'Voltar à velocidade normal' : 'Acelerar o dia (2×)'}
+            >
+              {speed === 2 ? '2×' : '1×'}
+            </button>
             <button className="btn" onClick={() => dispatch({ type: 'TOGGLE_PAUSE' })} aria-pressed={paused} title="Pausar (espaço)">
               {paused ? '▶' : '❚❚'}<span className="hide-sm">{paused ? ' Continuar' : ' Pausar'}</span>
             </button>

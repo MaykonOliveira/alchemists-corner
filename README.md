@@ -47,6 +47,11 @@ Um robô-jogador (`src/tests/balance/bot.ts`) joga vários dias usando só as re
 
 ## Celular
 
+- **Venda com um toque:** quando um cliente chega, o pedido aparece sobre a loja (ou no topo do painel, no celular) com o botão Vender, o preço e se ele deve aceitar. Opções abre o balcão completo.
+- **Barra com 5 abas** no celular (Armário, Caldeirão, Preços, Balcão e Mais); as outras ficam no menu Mais, com selo quando há novidade.
+- **Avisos curtos:** no máximo 2 na tela, sem repetir e sempre dentro do palco.
+- **Velocidade 2×** durante o expediente e cartão de **bem-vindo de volta** ao continuar a partida.
+
 O layout se adapta a telas estreitas (palco em cima e painel embaixo) e a celular deitado (painel lateral compacto). O toque funciona no canvas e nos painéis. Já existem `manifest.webmanifest` e ícone, então dá para instalar como app web. Para gerar um app nativo depois:
 
 ```bash

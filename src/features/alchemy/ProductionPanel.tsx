@@ -75,7 +75,7 @@ export function ProductionPanel({ save }: { save: GameSave }) {
           <span>Venda ≈ <strong>{(save.prices[selected] ?? r.basePrice) * b * perBatch}</strong></span>
           <span>Tempo <strong>{secs(brewDurationMs(save, selected, b))}</strong></span>
         </div>
-        <div className="card-foot">
+        <div className="card-foot sticky-actions">
           <Stepper value={b} min={1} max={Math.max(1, max)} onChange={setBatches} label="Lotes" />
           <button
             className="btn btn-primary"

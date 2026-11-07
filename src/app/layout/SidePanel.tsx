@@ -10,6 +10,7 @@ import { UpgradesPanel } from '../../features/progression/UpgradesPanel';
 import { GrimoirePanel } from '../../features/mastery/GrimoirePanel';
 import { useGameStore, type PanelId } from '../../store/gameStore';
 import { potionStock } from '../../domain/rules/economy';
+import { QuickServe } from '../../features/customers/QuickServe';
 
 const TITLES: Record<PanelId, string> = {
   ingredients: 'Armário e fornecedor',
@@ -33,6 +34,7 @@ export function SidePanel() {
     const stock = save.potions.reduce((n, p) => n + p.quantity, 0);
     return (
       <aside className="side side-idle" aria-label="Resumo">
+        <QuickServe placement="side" />
         <h2 className="side-title">Dia {save.day}</h2>
         <ul className="checklist">
           <li className={stock > 0 ? 'done' : ''}>Poções nas prateleiras: <strong>{stock}</strong></li>
@@ -56,6 +58,7 @@ export function SidePanel() {
         <h2 className="side-title">{TITLES[panel]}</h2>
         <button className="icon-btn" onClick={() => dispatch({ type: 'CLOSE_PANEL' })} aria-label="Fechar painel" title="Fechar (Esc)">×</button>
       </div>
+      <QuickServe placement="side" />
       <div className="side-body">
         {panel === 'ingredients' && <IngredientsPanel save={save} />}
         {panel === 'shelves' && <ShelvesPanel save={save} />}

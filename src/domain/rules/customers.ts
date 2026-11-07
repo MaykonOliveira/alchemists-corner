@@ -80,6 +80,19 @@ export function priceVerdict(s: GameSave, c: Customer, recipeId: string): 'sim' 
   return 'nao';
 }
 
+/**
+ * A melhor poção para oferecer: a pedida, se houver; senão a substituta parecida
+ * que o cliente aceita pagar (ou a mais barata das parecidas).
+ */
+export function bestOffer(save: GameSave, c: Customer): string | null {
+  const forSale = save.potions.filter((p) => p.forSale && p.quantity > 0).map((p) => p.recipeId);
+  if (forSale.includes(c.wantedRecipeId)) return c.wantedRecipeId;
+  const similar = forSale.filter((id) => suits(c, id));
+  if (similar.length === 0) return null;
+  const rank = { sim: 0, negocia: 1, nao: 2 } as const;
+  return [...similar].sort((a, b) => rank[priceVerdict(save, c, a)] - rank[priceVerdict(save, c, b)] || getPrice(save, a) - getPrice(save, b))[0];
+}
+
 function removeCustomer(d: Draft, c: Customer, reason: 'paciencia' | 'preco' | 'recusou-oferta' | 'fechou' | 'atendido') {
   d.s.customers = d.s.customers.filter((x) => x.id !== c.id);
   d.events.push({ type: 'CUSTOMER_LEFT', customerId: c.id, reason });

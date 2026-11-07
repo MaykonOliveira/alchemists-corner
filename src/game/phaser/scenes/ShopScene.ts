@@ -485,7 +485,8 @@ export class ShopScene extends Phaser.Scene {
     if (this.advanceAcc >= ADVANCE_STEP_MS) {
       const ms = this.advanceAcc;
       this.advanceAcc = 0;
-      this.store.dispatch({ type: 'ADVANCE', ms });
+      // No modo 2× o relógio, os clientes e o caldeirão andam no dobro da velocidade.
+      this.store.dispatch({ type: 'ADVANCE', ms: ms * ui.speed });
       const next = this.store.save;
       if (next?.brew) this.drawBrewBar(next);
     }

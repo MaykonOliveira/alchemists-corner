@@ -12,7 +12,7 @@ export const TUTORIAL_STEPS: Step[] = [
   { title: 'Compre ingredientes', text: 'A Poção de Cura leva Folha lunar e Pó de pedra. Escolha a quantidade e toque em Comprar.' },
   { title: 'Hora de ferver', text: 'Toque no caldeirão, escolha uma receita e quantos lotes quer. Cada lote rende 2 poções.', action: { label: 'Ir ao caldeirão', panel: 'production' } },
   { title: 'Abra as portas', text: 'O caldeirão trabalha sozinho. Confira os preços nas prateleiras e, quando quiser, abra a loja pela porta.', action: { label: 'Ver preços', panel: 'shelves' } },
-  { title: 'Seu primeiro cliente', text: 'Toque no cliente no balcão, veja o que ele quer e ofereça a poção certa.', action: { label: 'Ir ao balcão', panel: 'counter' } },
+  { title: 'Seu primeiro cliente', text: 'Quando alguém chega, o pedido aparece sobre a loja. Toque em Vender para atender com um toque, ou em Opções para escolher outra poção.' },
   { title: 'Muito bem!', text: 'Atenda quem aparecer. Clientes sem resposta perdem a paciência. Ao fim da tarde (ou quando quiser) encerre o dia.' },
   { title: 'Relatório do dia', text: 'Aqui você vê o que vendeu, o que gastou e o lucro. Use isso para decidir o que preparar amanhã.' },
 ];
