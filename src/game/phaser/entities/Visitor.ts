@@ -145,7 +145,14 @@ export class Visitor {
     const s = this.sprite;
     s.setDepth(s.y);
     const bob = this.opts.reduceMotion() ? 0 : Math.round(Math.sin(time / 300 + s.x) * 1);
-    const bx = Math.round(s.x + 10);
+    // Humor: quando a paciência acaba, o balão alterna entre o pedido e uma carinha zangada.
+    if (this.arrived && !this.leaving && !this.hasOffer) {
+      const cranky = this.patienceRatio < 0.35 && Math.floor(time / 650) % 2 === 1;
+      const want = cranky ? 'angry' : `potion-${this.wantedRecipeId}`;
+      if (this.bubbleIcon.texture.key !== want) this.bubbleIcon.setTexture(want);
+    }
+    const shake = this.arrived && !this.leaving && this.patienceRatio < 0.2 && !this.opts.reduceMotion() ? Math.round(Math.sin(time / 45)) * 0.5 : 0;
+    const bx = Math.round(s.x + 10 + shake);
     const by = Math.round(s.y - 38 + bob);
     this.bubble.setPosition(bx, by).setDepth(900);
     this.marker.setPosition(Math.round(s.x), Math.round(s.y - 42 + bob)).setDepth(901);

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { levelProgress, masterRank, MASTER_STEP_XP, MAX_LEVEL, reputationTitle, xpForLevel } from '../../domain/rules/progression';
 import { dayProgress, formatClock, TIME_OF_DAY_LABEL, timeOfDay } from '../../domain/rules/time';
 import { useGameStore } from '../../store/gameStore';
@@ -14,6 +14,17 @@ export function Hud() {
   const [confirmClose, setConfirmClose] = useState(false);
   const speed = useGameStore((s) => s.ui.speed);
   const coins = useAnimatedNumber(save.coins);
+  // Moedas "pulam" e mostram a diferença quando o saldo muda.
+  const [delta, setDelta] = useState<{ n: number; key: number } | null>(null);
+  const prevCoins = useRef(save.coins);
+  useEffect(() => {
+    const diff = save.coins - prevCoins.current;
+    prevCoins.current = save.coins;
+    if (diff === 0) return;
+    setDelta({ n: diff, key: Date.now() });
+    const t = setTimeout(() => setDelta(null), 900);
+    return () => clearTimeout(t);
+  }, [save.coins]);
   const isMaster = save.level >= MAX_LEVEL;
   // XP dentro do nível atual (ou do grau de Mestre), em número, para o jogador saber quanto falta.
   const xpStart = isMaster ? xpForLevel(MAX_LEVEL) + masterRank(save.xp) * MASTER_STEP_XP : xpForLevel(save.level);
@@ -34,7 +45,8 @@ export function Hud() {
       </div>
       <div className="hud-stat hud-coins" title="Moedas">
         <span className="hud-label">Moedas</span>
-        <span className="hud-value"><CoinIcon size={16} /> {coins}</span>
+        <span key={delta?.key ?? 0} className={`hud-value ${delta ? (delta.n > 0 ? 'coin-gain' : 'coin-loss') : ''}`}><CoinIcon size={16} /> {coins}</span>
+        {delta && <span key={`d${delta.key}`} className={`coin-delta ${delta.n > 0 ? 'up' : 'down'}`}>{delta.n > 0 ? '+' : '−'}{Math.abs(delta.n)}</span>}
       </div>
       <div className="hud-stat" title={`Reputação ${save.reputation}: ${reputationTitle(save.reputation)}. Sobe com vendas a preço justo.`}>
         <span className="hud-label">Reputação</span>

@@ -412,13 +412,18 @@ export class ShopScene extends Phaser.Scene {
         return this.ringBell();
       case 'SALE': {
         const v = this.visitors.get(e.customerId);
-        this.coinPopup(v ? v.sprite.x : 230, v ? v.sprite.y - 30 : 110, e.price);
+        const x = v ? v.sprite.x : 230;
+        const y = v ? v.sprite.y - 30 : 110;
+        const bonus = e.price > RECIPES_BY_ID[e.recipeId].basePrice;
+        this.coinPopup(x, y, e.price, bonus);
+        this.coinRain(x, y + 10, Math.min(6, 2 + Math.floor(e.price / 25)));
         return;
       }
       case 'ORDER_DONE':
         return this.coinPopup(256, 40, e.coins);
       case 'BREW_DONE':
-        return this.sparkleBurst(CAULDRON.cx, CAULDRON.y + 6, 10);
+        this.sparkleBurst(CAULDRON.cx, CAULDRON.y + 6, 10);
+        return this.brewDoneFx(e.recipeId, e.qty);
       case 'UPGRADE_BOUGHT':
       case 'LEVEL_UP':
       case 'DISCOVERY':
@@ -437,9 +442,70 @@ export class ShopScene extends Phaser.Scene {
     });
   }
 
-  private coinPopup(x: number, y: number, amount: number) {
-    const key = `txt-+${amount}`;
-    if (!this.textures.exists(key)) this.textures.addCanvas(key, outlinedText(`+${amount}`, '#f2c95c'));
+  /** Textura branca simples para partículas (tingida na hora). */
+  private fxTexture(key: 'fx-dot' | 'fx-puff') {
+    if (this.textures.exists(key)) return key;
+    const size = key === 'fx-dot' ? 2 : 5;
+    const tex = this.textures.createCanvas(key, size, size)!;
+    const ctx = tex.getContext();
+    ctx.fillStyle = '#ffffff';
+    if (key === 'fx-dot') ctx.fillRect(0, 0, 2, 2);
+    else { ctx.fillRect(1, 0, 3, 5); ctx.fillRect(0, 1, 5, 3); }
+    tex.refresh();
+    return key;
+  }
+
+  /** Moedas saltam do cliente e caem no caixa, uma atrás da outra. */
+  private coinRain(x: number, y: number, n: number) {
+    if (this.reduceMotion()) return;
+    const reg = this.hotspots.find((h) => h.def.id === 'register');
+    const tx = reg ? reg.def.x + 9 : 252;
+    const ty = reg ? reg.def.y + 4 : 121;
+    for (let i = 0; i < n; i++) {
+      const c = this.add.image(x + Phaser.Math.Between(-4, 4), y, 'coin').setDepth(972);
+      const peak = y - 18 - Phaser.Math.Between(0, 8);
+      const start = { x: c.x, y: c.y };
+      this.tweens.addCounter({
+        from: 0, to: 1, delay: i * 70, duration: 520, ease: 'Sine.In',
+        onUpdate: (tw) => {
+          const k = tw.getValue() ?? 0;
+          c.x = Phaser.Math.Linear(start.x, tx, k);
+          c.y = Phaser.Math.Linear(start.y, ty, k) + (peak - (start.y + ty) / 2) * 4 * k * (1 - k) * 0.5;
+        },
+        onComplete: () => {
+          c.destroy();
+          if (reg) this.tweens.add({ targets: reg.sprite, y: reg.def.y - 1, yoyo: true, duration: 60 });
+        },
+      });
+    }
+  }
+
+  /** Fumaça colorida ao terminar o preparo e frascos voando até as prateleiras. */
+  private brewDoneFx(recipeId: string, qty: number) {
+    if (this.reduceMotion()) return;
+    const color = Phaser.Display.Color.HexStringToColor(RECIPES_BY_ID[recipeId].color).color;
+    const puff = this.fxTexture('fx-puff');
+    for (let i = 0; i < 12; i++) {
+      const p = this.add.image(CAULDRON.cx + Phaser.Math.Between(-8, 8), 134, puff).setDepth(982).setTint(color).setAlpha(0.9);
+      this.tweens.add({
+        targets: p, x: p.x + Phaser.Math.Between(-14, 14), y: 134 - Phaser.Math.Between(14, 30),
+        scale: Phaser.Math.FloatBetween(1.6, 2.6), alpha: 0, duration: 900 + Phaser.Math.Between(0, 400), ease: 'Cubic.Out',
+        onComplete: () => p.destroy(),
+      });
+    }
+    for (let i = 0; i < Math.min(qty, 4); i++) {
+      const f = this.add.image(CAULDRON.cx, 128, `potion-${recipeId}`).setDepth(983).setScale(0.6);
+      const tx = 114 + Phaser.Math.Between(0, 100);
+      const ty = 40 + Phaser.Math.Between(0, 30);
+      this.tweens.add({ targets: f, x: tx, duration: 700, delay: 150 + i * 120, ease: 'Sine.InOut' });
+      this.tweens.add({ targets: f, y: { from: 128, to: ty }, scale: 1, duration: 700, delay: 150 + i * 120, ease: 'Back.Out' });
+      this.tweens.add({ targets: f, alpha: 0, delay: 850 + i * 120, duration: 250, onComplete: () => { this.sparkleBurst(tx, ty, 4); f.destroy(); } });
+    }
+  }
+
+  private coinPopup(x: number, y: number, amount: number, bonus = false) {
+    const key = `txt-+${amount}${bonus ? '!' : ''}`;
+    if (!this.textures.exists(key)) this.textures.addCanvas(key, outlinedText(`+${amount}${bonus ? '!' : ''}`, bonus ? '#fff3a0' : '#f2c95c'));
     const coin = this.add.image(x - 6, y, 'coin').setDepth(970);
     const txt = this.add.image(x + 3, y, key).setOrigin(0, 0.5).setDepth(970);
     const rise = this.reduceMotion() ? 0 : 14;
@@ -448,7 +514,11 @@ export class ShopScene extends Phaser.Scene {
     // O caixa dá um pulinho
     const reg = this.hotspots.find((h) => h.def.id === 'register');
     if (reg && !this.reduceMotion()) this.tweens.add({ targets: reg.sprite, y: reg.def.y - 2, yoyo: true, duration: 90 });
-    this.sparkleBurst(x, y, 5);
+    this.sparkleBurst(x, y, bonus ? 12 : 5);
+    if (bonus && !this.reduceMotion()) {
+      const ring = this.add.image(x, y, 'glow-warm').setDepth(969).setBlendMode(Phaser.BlendModes.ADD).setScale(0.3).setAlpha(0.9);
+      this.tweens.add({ targets: ring, scale: 1.1, alpha: 0, duration: 650, ease: 'Cubic.Out', onComplete: () => ring.destroy() });
+    }
   }
 
   private sparkleBurst(x: number, y: number, n: number) {
