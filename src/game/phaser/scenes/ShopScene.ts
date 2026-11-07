@@ -5,7 +5,7 @@ import { CLOSE_MIN, OPEN_MIN } from '../../../domain/rules/time';
 import { useGameStore } from '../../../store/gameStore';
 import { gameEvents } from '../../events';
 import { outlinedText } from '../art/painter';
-import { GARLAND_BULBS, LANTERNS, SHELF_BOARDS } from '../art/sprites';
+import { GARLAND_BULBS, LANTERNS, LATEGAME, SHELF_BOARDS } from '../art/sprites';
 import { HelperViews } from '../entities/Helpers';
 import { Visitor, type Mood } from '../entities/Visitor';
 import { HOTSPOTS, type HotspotDef } from '../interaction/hotspots';
@@ -47,6 +47,9 @@ export class ShopScene extends Phaser.Scene {
   private overlay!: Phaser.GameObjects.Rectangle;
   private glows: Phaser.GameObjects.Image[] = [];
   private bulbGlows: Phaser.GameObjects.Image[] = [];
+  /** Brilhos mágicos (runas, vitral) que ficam mais fortes à noite. */
+  private magicGlows: Phaser.GameObjects.Image[] = [];
+  private bell: Phaser.GameObjects.Image | null = null;
   private sign!: Phaser.GameObjects.Image;
   private fire!: Phaser.GameObjects.Image;
   private liquid!: Phaser.GameObjects.Image;
@@ -269,6 +272,8 @@ export class ShopScene extends Phaser.Scene {
     this.upgradeLayer.forEach((o) => o.destroy());
     this.upgradeLayer = [];
     this.bulbGlows = [];
+    this.magicGlows = [];
+    this.bell = null;
     this.hotspots = this.hotspots.filter((h) => h.def.id !== 'stand');
     const has = (id: string) => save.upgrades.includes(id);
 
@@ -286,6 +291,40 @@ export class ShopScene extends Phaser.Scene {
       sprite.setInteractive({ useHandCursor: true, pixelPerfect: true });
       this.bindHotspot({ def, sprite, outline, hovered: false });
       this.upgradeLayer.push(outline, sprite);
+    }
+    // ---- late game
+    if (has('estufa')) {
+      const p = LATEGAME.greenhouse;
+      const g = this.add.image(p.x, p.y, 'greenhouse').setOrigin(0).setDepth(21);
+      this.upgradeLayer.push(g);
+      if (!this.reduceMotion()) this.tweens.add({ targets: g, scaleY: { from: 1, to: 1.03 }, y: p.y - 0.5, yoyo: true, repeat: -1, duration: 2200, ease: 'Sine.InOut' });
+    }
+    if (has('alambique-prata')) {
+      const p = LATEGAME.alembic;
+      this.upgradeLayer.push(this.add.image(p.x, p.y, 'alembic').setOrigin(0).setDepth(p.y + 44));
+    }
+    if (has('despensa-encantada')) {
+      const p = LATEGAME['cabinet-runes'];
+      this.upgradeLayer.push(this.add.image(p.x, p.y, 'cabinet-runes').setOrigin(0).setDepth(136.2));
+      for (const [dx, dy] of [[4, 3], [35, 3], [3, 61], [36, 61], [19, 93]]) {
+        const g = this.add.image(p.x + dx, p.y + dy, 'glow-violet').setDepth(1002).setBlendMode(Phaser.BlendModes.ADD);
+        this.magicGlows.push(g);
+        this.upgradeLayer.push(g);
+      }
+    }
+    if (has('vitral-arcano')) {
+      const p = LATEGAME.vitral;
+      this.upgradeLayer.push(this.add.image(p.x, p.y, 'vitral').setOrigin(0).setDepth(2));
+      for (const dx of [11, 35]) {
+        const g = this.add.image(p.x + dx, p.y + 14, 'glow-vitral').setDepth(1002).setBlendMode(Phaser.BlendModes.ADD);
+        this.magicGlows.push(g);
+        this.upgradeLayer.push(g);
+      }
+    }
+    if (has('sino-encantado')) {
+      const p = LATEGAME.bell;
+      this.bell = this.add.image(p.x, p.y, 'bell-0').setOrigin(0).setDepth(116);
+      this.upgradeLayer.push(this.bell);
     }
     if (has('iluminacao-aconchegante')) {
       this.upgradeLayer.push(this.add.image(0, 0, 'garland').setOrigin(0).setDepth(20));
@@ -369,6 +408,8 @@ export class ShopScene extends Phaser.Scene {
         this.leaveReasons.set(e.customerId, moods[e.reason]);
         return;
       }
+      case 'CUSTOMER_ARRIVED':
+        return this.ringBell();
       case 'SALE': {
         const v = this.visitors.get(e.customerId);
         this.coinPopup(v ? v.sprite.x : 230, v ? v.sprite.y - 30 : 110, e.price);
@@ -383,6 +424,17 @@ export class ShopScene extends Phaser.Scene {
       case 'DISCOVERY':
         return this.sparkleBurst(192, 90, 16);
     }
+  }
+
+  /** O sino encantado balança quando alguém entra. */
+  private ringBell() {
+    const bell = this.bell;
+    if (!bell || this.reduceMotion()) return;
+    let n = 0;
+    this.time.addEvent({
+      delay: 120, repeat: 5,
+      callback: () => bell.active && bell.setTexture(++n % 2 ? 'bell-1' : 'bell-0'),
+    });
   }
 
   private coinPopup(x: number, y: number, amount: number) {
@@ -423,6 +475,7 @@ export class ShopScene extends Phaser.Scene {
     const base = 0.55 + this.nightness * 0.45;
     this.glows.forEach((g, i) => g.setAlpha(Phaser.Math.Clamp(base + flicker * (i + 1), 0, 1)));
     this.bulbGlows.forEach((g, i) => g.setAlpha(0.5 + this.nightness * 0.5 + (this.reduceMotion() ? 0 : Math.sin(time / 400 + i) * 0.15)));
+    this.magicGlows.forEach((g, i) => g.setAlpha(0.35 + this.nightness * 0.65 + (this.reduceMotion() ? 0 : Math.sin(time / 600 + i * 1.7) * 0.2)));
 
     for (const v of this.visitors.values()) v.update(time);
     this.helpers.update(time);

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { INGREDIENTS_BY_ID } from '../../domain/data/ingredients';
 import { RECIPES } from '../../domain/data/recipes';
 import { UPGRADES_BY_ID } from '../../domain/data/upgrades';
-import type { Customer, GameSave } from '../../domain/models/types';
+import { SAVE_VERSION, type Customer, type GameSave } from '../../domain/models/types';
 import { applyCommand, type DomainCommand } from '../../domain/rules/commands';
 import { maxPriceFor } from '../../domain/rules/customers';
 import { maintenanceCost } from '../../domain/rules/economy';
@@ -35,7 +35,7 @@ describe('dados iniciais', () => {
 
   it('nova partida começa na preparação do dia 1', () => {
     const s = createNewGame(0);
-    expect(s).toMatchObject({ day: 1, phase: 'preparacao', clockMin: OPEN_MIN, saveVersion: 3 });
+    expect(s).toMatchObject({ day: 1, phase: 'preparacao', clockMin: OPEN_MIN, saveVersion: SAVE_VERSION });
     expect(s.knownRecipes.length).toBe(3);
   });
 });

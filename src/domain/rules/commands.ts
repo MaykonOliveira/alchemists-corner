@@ -6,6 +6,8 @@ import { advance, closeDay, openShop, startNextDay } from './day';
 import { buyIngredient, buyUpgrade, setForSale, setPrice } from './economy';
 import { setHelper } from './helpers';
 import { deliverOrder } from './orders';
+import { buySeal, learnTalentCmd } from './progression';
+import { sponsorFestival } from './day';
 
 /**
  * Comandos tipados que alteram o estado canônico da partida.
@@ -28,6 +30,9 @@ export type DomainCommand =
   | { type: 'BUY_UPGRADE'; upgradeId: string }
   | { type: 'SET_HELPER'; upgradeId: string; on: boolean }
   | { type: 'EXPERIMENT'; ingredientIds: string[] }
+  | { type: 'LEARN_TALENT'; talentId: string }
+  | { type: 'BUY_SEAL' }
+  | { type: 'SPONSOR_FESTIVAL' }
   | { type: 'SET_SETTINGS'; settings: Partial<Settings> }
   | { type: 'SET_TUTORIAL'; step: number };
 
@@ -65,6 +70,9 @@ function run(d: Draft, cmd: DomainCommand): boolean {
     case 'BUY_UPGRADE': return buyUpgrade(d, cmd.upgradeId);
     case 'SET_HELPER': return setHelper(d, cmd.upgradeId, cmd.on);
     case 'EXPERIMENT': return experiment(d, cmd.ingredientIds);
+    case 'LEARN_TALENT': return learnTalentCmd(d, cmd.talentId);
+    case 'BUY_SEAL': return buySeal(d);
+    case 'SPONSOR_FESTIVAL': return sponsorFestival(d);
     case 'SET_SETTINGS':
       d.s.settings = { ...d.s.settings, ...cmd.settings };
       return true;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Customer, GameSave } from '../../domain/models/types';
+import { SAVE_VERSION, type Customer, type GameSave } from '../../domain/models/types';
 import { applyCommand, type DomainCommand } from '../../domain/rules/commands';
 import { maintenanceCost } from '../../domain/rules/economy';
 import {
@@ -153,7 +153,7 @@ describe('relatório e save', () => {
   it('save v2 ganha os campos dos ajudantes', () => {
     const { helpers: _h, ...old } = createNewGame(0);
     const s = migrateSave({ ...old, saveVersion: 2, stats: { ...old.stats, helperWork: undefined } })!;
-    expect(s.saveVersion).toBe(3);
+    expect(s.saveVersion).toBe(SAVE_VERSION);
     expect(s.helpers.off).toEqual([]);
     expect(s.stats.helperWork.served).toBe(0);
   });

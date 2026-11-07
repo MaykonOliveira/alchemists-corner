@@ -1,9 +1,10 @@
-import { ARCHETYPES } from '../data/customers';
+import { ARCHETYPES, NOBLE_LEVEL } from '../data/customers';
 import { DAY_EVENTS } from '../data/orders';
 import { RECIPES_BY_ID } from '../data/recipes';
 import type { Customer, CustomerArchetype, GameSave } from '../models/types';
 import { fail, nextId, pick, weightedPick, type Draft } from './context';
 import { getPrice, has, potionStock, takePotions } from './economy';
+import { masteryStars, STAR_BONUS, talentBonus } from './mastery';
 import { gainReputation, gainXp } from './progression';
 import { CLOSE_MIN } from './time';
 
@@ -13,25 +14,29 @@ export const NEGOTIATION_MARGIN = 1.2;
 
 export function nextSpawnDelay(s: GameSave, random: () => number) {
   const event = s.event ? DAY_EVENTS[s.event].spawnFactor : 1;
-  const sign = has(s, 'letreiro-novo') ? 0.75 : 1;
-  const fame = 1 + Math.min(s.reputation, 400) / 800;
+  const sign = (has(s, 'letreiro-novo') ? 0.75 : 1) * (has(s, 'sino-encantado') ? 0.9 : 1);
+  const fame = (1 + Math.min(s.reputation, 400) / 800) * (1 + talentBonus(s, 'fama'));
   return Math.round((16000 * event * sign) / fame * (0.7 + random() * 0.6));
 }
 
 export function spawnCustomer(d: Draft) {
   const { s, ctx } = d;
-  const weights = { aventureiro: 1, estudioso: 1, morador: 1.2, viajante: 0.8 } as Record<CustomerArchetype, number>;
+  const noble = s.level >= NOBLE_LEVEL ? 0.6 + (has(s, 'vitral-arcano') ? 0.4 : 0) : 0;
+  const weights = { aventureiro: 1, estudioso: 1, morador: 1.2, viajante: 0.8, nobre: noble } as Record<CustomerArchetype, number>;
   if (s.event) for (const [k, w] of Object.entries(DAY_EVENTS[s.event].archetypeBoost)) weights[k as CustomerArchetype] += w;
+  if (s.level < NOBLE_LEVEL) weights.nobre = 0;
   const archetype = weightedPick(weights, ctx.random);
   const info = ARCHETYPES[archetype];
+  // Ninguém pede o que só aparece muitos níveis depois.
+  const wants = info.wants.filter((id) => RECIPES_BY_ID[id].unlockLevel <= s.level + 1);
 
   // O primeiro cliente do jogo sempre pede algo que você tem, para ensinar a vender.
   const firstEver = s.day === 1 && s.stats.served === 0 && s.stats.lost === 0 && s.customers.length === 0;
-  const known = info.wants.filter((id) => s.knownRecipes.includes(id));
+  const known = wants.filter((id) => s.knownRecipes.includes(id));
   let wanted: string;
   if (firstEver && potionStock(s, 'cura-simples') > 0) wanted = 'cura-simples';
   else if (known.length && (s.day <= 2 || ctx.random() < 0.8)) wanted = pick(known, ctx.random);
-  else wanted = pick(info.wants, ctx.random);
+  else wanted = pick(wants.length ? wants : info.wants, ctx.random);
 
   const bonus = s.event ? DAY_EVENTS[s.event].budgetBonus : 0;
   const customer: Customer = {
@@ -39,7 +44,7 @@ export function spawnCustomer(d: Draft) {
     archetype,
     wantedRecipeId: wanted,
     budgetFactor: +(info.budget + (ctx.random() - 0.5) * 0.16 + bonus).toFixed(3),
-    patienceMs: Math.round(info.patienceMs * (0.85 + ctx.random() * 0.3)),
+    patienceMs: Math.round(info.patienceMs * (0.85 + ctx.random() * 0.3) * patienceFactor(s)),
     waitedMs: 0,
     offer: null,
     remark: RECIPES_BY_ID[wanted].request,
@@ -48,13 +53,17 @@ export function spawnCustomer(d: Draft) {
   d.events.push({ type: 'CUSTOMER_ARRIVED', customerId: customer.id });
 }
 
+/** Multiplicador de paciência (sino encantado e talento "Freguesia fiel"). */
+export const patienceFactor = (s: GameSave) => (has(s, 'sino-encantado') ? 1.3 : 1) * (1 + talentBonus(s, 'freguesia'));
+
 /** Preço máximo que o cliente aceita por uma poção. */
 export function maxPriceFor(s: GameSave, c: Customer, recipeId: string) {
   const r = RECIPES_BY_ID[recipeId];
   const substitute = recipeId !== c.wantedRecipeId;
   const fame = 1 + Math.min(s.reputation, 240) / 800;
-  const decor = (has(s, 'prateleira-extra') ? 1.03 : 1) * (has(s, 'iluminacao-aconchegante') ? 1.04 : 1);
-  return Math.round(r.basePrice * c.budgetFactor * fame * decor * (substitute ? 0.9 : 1));
+  const decor = (has(s, 'prateleira-extra') ? 1.03 : 1) * (has(s, 'iluminacao-aconchegante') ? 1.04 : 1) * (has(s, 'vitral-arcano') ? 1.05 : 1);
+  const skill = (1 + masteryStars(s, recipeId) * STAR_BONUS) * (1 + talentBonus(s, 'labia'));
+  return Math.round(r.basePrice * c.budgetFactor * fame * decor * skill * (substitute ? 0.9 : 1));
 }
 
 /** Uma poção serve para o cliente? (a pedida, ou outra da mesma categoria como substituta) */
@@ -86,11 +95,11 @@ function completeSale(d: Draft, c: Customer, recipeId: string, price: number) {
   s.stats.salesByRecipe[recipeId] = (s.stats.salesByRecipe[recipeId] ?? 0) + 1;
   s.stats.served += 1;
   const fair = price <= r.basePrice ? 1 : 0;
-  const cozy = has(s, 'iluminacao-aconchegante') ? 1 : 0;
+  const cozy = (has(s, 'iluminacao-aconchegante') ? 1 : 0) + (has(s, 'vitral-arcano') && c.archetype === 'nobre' ? 1 : 0);
   gainReputation(d, fair + cozy);
   d.events.push({ type: 'SALE', customerId: c.id, recipeId, price, substitute: recipeId !== c.wantedRecipeId });
   removeCustomer(d, c, 'atendido');
-  gainXp(d, 6 + Math.round(r.basePrice / 5));
+  gainXp(d, 6 + Math.round(r.basePrice / 5) + masteryStars(s, recipeId));
 }
 
 export function serveCustomer(d: Draft, customerId: string, recipeId: string): boolean {

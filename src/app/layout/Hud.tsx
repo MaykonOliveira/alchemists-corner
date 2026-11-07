@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { levelProgress, reputationTitle } from '../../domain/rules/progression';
+import { levelProgress, masterRank, MAX_LEVEL, reputationTitle } from '../../domain/rules/progression';
 import { dayProgress, formatClock, TIME_OF_DAY_LABEL, timeOfDay } from '../../domain/rules/time';
 import { useGameStore } from '../../store/gameStore';
 import { CoinIcon, StarIcon } from '../../ui/icons';
@@ -34,8 +34,10 @@ export function Hud() {
         <span className="hud-label">{reputationTitle(save.reputation)}</span>
         <span className="hud-value"><StarIcon size={16} /> {save.reputation}</span>
       </div>
-      <div className="hud-stat" title="Nível da loja">
-        <span className="hud-label">Nível {save.level}</span>
+      <div className="hud-stat" title={save.level >= MAX_LEVEL ? 'Grau de Mestre' : 'Nível da loja'}>
+        <span className={`hud-label ${save.level >= MAX_LEVEL ? 'hud-master' : ''}`}>
+          {save.level >= MAX_LEVEL ? `Mestre ${masterRank(save.xp)}` : `Nível ${save.level}`}
+        </span>
         <span className="bar bar-xp" aria-label={`Experiência: ${Math.round(levelProgress(save.xp) * 100)}%`}>
           <span style={{ width: `${levelProgress(save.xp) * 100}%` }} />
         </span>

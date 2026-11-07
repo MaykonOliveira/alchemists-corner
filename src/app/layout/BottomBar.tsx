@@ -1,3 +1,4 @@
+import { sealsAvailable } from '../../domain/rules/progression';
 import { useGameStore, type PanelId } from '../../store/gameStore';
 
 export const SHORTCUTS: { key: string; label: string; panel: PanelId; icon: string }[] = [
@@ -8,18 +9,20 @@ export const SHORTCUTS: { key: string; label: string; panel: PanelId; icon: stri
   { key: '5', label: 'Receitas', panel: 'recipes', icon: '📖' },
   { key: '6', label: 'Pedidos', panel: 'orders', icon: '📜' },
   { key: '7', label: 'Melhorias', panel: 'upgrades', icon: '🔨' },
-  { key: '8', label: 'Relatório', panel: 'report', icon: '📊' },
+  { key: '8', label: 'Mestre', panel: 'grimoire', icon: '✨' },
+  { key: '9', label: 'Relatório', panel: 'report', icon: '📊' },
 ];
 
 export function BottomBar() {
   const active = useGameStore((s) => s.ui.activePanel);
   const customers = useGameStore((s) => s.save?.customers.length ?? 0);
   const order = useGameStore((s) => !!s.save?.order);
+  const seals = useGameStore((s) => (s.save ? sealsAvailable(s.save) : 0));
   const dispatch = useGameStore((s) => s.dispatch);
   return (
     <nav className="bottombar" aria-label="Atalhos">
       {SHORTCUTS.map((s) => {
-        const badge = s.panel === 'counter' && customers > 0 ? customers : s.panel === 'orders' && order ? '!' : null;
+        const badge = s.panel === 'counter' && customers > 0 ? customers : s.panel === 'orders' && order ? '!' : s.panel === 'grimoire' && seals > 0 ? seals : null;
         return (
           <button
             key={s.panel}

@@ -3,16 +3,22 @@ import { RECIPES, RECIPES_BY_ID } from '../data/recipes';
 import type { GameSave } from '../models/types';
 import { fail, type Draft } from './context';
 import { addPotions, countPotions, has, potionCapacity } from './economy';
+import { addMastery, talentBonus } from './mastery';
 import { gainXp } from './progression';
 
 export const MAX_BATCHES = 5;
 export const POTIONS_PER_BATCH = 2;
+
+/** Poções por lote (o alambique de prata rende uma a mais). */
+export const potionsPerBatch = (s: GameSave) => POTIONS_PER_BATCH + (has(s, 'alambique-prata') ? 1 : 0);
+/** Lotes máximos por preparo (o talento "Caldeirão grande" aumenta). */
+export const maxBatchesCap = (s: GameSave) => MAX_BATCHES + talentBonus(s, 'caldeirao-grande');
 /** Milissegundos reais por minuto de preparo (60 min ≈ 9 s). */
 const MS_PER_BREW_MIN = 150;
 
 export function brewDurationMs(s: GameSave, recipeId: string, batches: number) {
   const r = RECIPES_BY_ID[recipeId];
-  const speed = has(s, 'caldeirao-reforcado') ? 0.7 : 1;
+  const speed = (has(s, 'caldeirao-reforcado') ? 0.7 : 1) * (1 - talentBonus(s, 'maos-ageis'));
   return Math.round(r.durationMin * MS_PER_BREW_MIN * (1 + 0.5 * (batches - 1)) * speed);
 }
 
@@ -20,8 +26,8 @@ export function brewDurationMs(s: GameSave, recipeId: string, batches: number) {
 export function maxBatches(s: GameSave, recipeId: string) {
   const r = RECIPES_BY_ID[recipeId];
   const byIngredients = Math.min(...r.ingredients.map((i) => Math.floor((s.ingredients[i.ingredientId] ?? 0) / i.qty)));
-  const bySpace = Math.floor((potionCapacity(s) - countPotions(s)) / POTIONS_PER_BATCH);
-  return Math.max(0, Math.min(MAX_BATCHES, byIngredients, bySpace));
+  const bySpace = Math.floor((potionCapacity(s) - countPotions(s)) / potionsPerBatch(s));
+  return Math.max(0, Math.min(maxBatchesCap(s), byIngredients, bySpace));
 }
 
 export function startBrew(d: Draft, recipeId: string, batches: number): boolean {
@@ -32,7 +38,7 @@ export function startBrew(d: Draft, recipeId: string, batches: number): boolean 
   if (s.brew) return fail(d, 'O caldeirão já está ocupado.');
   if (!Number.isInteger(batches) || batches < 1) return fail(d, 'Escolha ao menos um lote.');
   if (batches > maxBatches(s, recipeId)) {
-    const space = Math.floor((potionCapacity(s) - countPotions(s)) / POTIONS_PER_BATCH);
+    const space = Math.floor((potionCapacity(s) - countPotions(s)) / potionsPerBatch(s));
     return fail(d, space < batches ? 'Não há espaço nas prateleiras.' : 'Ingredientes insuficientes.');
   }
   for (const i of r.ingredients) s.ingredients[i.ingredientId] -= i.qty * batches;
@@ -46,10 +52,11 @@ export function advanceBrew(d: Draft, ms: number) {
   if (!b) return;
   b.elapsedMs = Math.min(b.totalMs, b.elapsedMs + ms);
   if (b.elapsedMs < b.totalMs) return;
-  const qty = b.batches * POTIONS_PER_BATCH;
+  const qty = b.batches * potionsPerBatch(d.s);
   addPotions(d.s, b.recipeId, qty);
   d.s.brew = null;
   d.events.push({ type: 'BREW_DONE', recipeId: b.recipeId, qty });
+  addMastery(d, b.recipeId, qty);
   gainXp(d, 3 * b.batches);
 }
 

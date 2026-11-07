@@ -11,6 +11,17 @@ export const UPGRADES: ShopUpgrade[] = [
     effect: 'Uma placa pintada na fachada: chegam mais clientes.' },
   { id: 'iluminacao-aconchegante', name: 'Iluminação aconchegante', cost: 1100, category: 'visual', requiredLevel: 5,
     effect: 'Cordões de luz mágica no teto. A loja fica linda e a reputação cresce mais rápido.' },
+  // Late game (níveis 7 a 15)
+  { id: 'estufa', name: 'Estufa no quintal', cost: 2400, category: 'funcional', requiredLevel: 7,
+    effect: 'Toda manhã rende de graça 4 folhas lunares, 4 hortelãs e 2 raízes de mandrágora (se couber no armário).' },
+  { id: 'alambique-prata', name: 'Alambique de prata', cost: 3600, category: 'funcional', requiredLevel: 9,
+    effect: 'Destila o que sobra no caldeirão: cada lote rende 3 poções em vez de 2.' },
+  { id: 'despensa-encantada', name: 'Despensa encantada', cost: 4200, category: 'funcional', requiredLevel: 11,
+    effect: 'Runas que dobram o espaço por dentro: +40 de capacidade para ingredientes e +12 lugares para poções.' },
+  { id: 'vitral-arcano', name: 'Vitral arcano', cost: 5500, category: 'visual', requiredLevel: 13,
+    effect: 'Uma janela de vidro colorido que brilha à noite. Clientes pagam 5% a mais e a nobreza aparece com mais frequência.' },
+  { id: 'sino-encantado', name: 'Sino encantado', cost: 7000, category: 'funcional', requiredLevel: 15,
+    effect: 'Um sino na porta que acalma quem espera: clientes têm 30% mais paciência e chegam com mais frequência.' },
   // Ajudantes: automatizam uma parte do trabalho e recebem salário diário (somado à manutenção).
   { id: 'corvo-entregador', name: 'Corvo entregador', cost: 600, category: 'ajudante', requiredLevel: 3, upkeep: 8,
     effect: 'Confere o armário a cada hora e busca no fornecedor o que está acabando (taxa de 3 moedas por viagem).' },

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { FAMILY_LABEL, INGREDIENTS } from '../../domain/data/ingredients';
 import type { GameSave } from '../../domain/models/types';
-import { countIngredients, ingredientCapacity } from '../../domain/rules/economy';
+import { countIngredients, ingredientCapacity, ingredientPrice } from '../../domain/rules/economy';
 import { useGameStore } from '../../store/gameStore';
 import { IngredientIcon } from '../../ui/SpriteIcon';
 import { Coins, Meter, Stepper } from '../../ui/widgets';
@@ -44,10 +44,11 @@ function SupplierRow({ save, id, room }: { save: GameSave; id: string; room: num
   const locked = save.level < ing.supplierLevel;
   const left = save.supplier[id];
   const maxByStock = left === null || left === undefined ? 99 : left;
-  const max = Math.max(1, Math.min(maxByStock, room, Math.floor(save.coins / ing.price), 30));
+  const price = ingredientPrice(save, id);
+  const max = Math.max(1, Math.min(maxByStock, room, Math.floor(save.coins / price), 30));
   const q = Math.min(qty, max);
-  const cost = q * ing.price;
-  const canBuy = !locked && maxByStock > 0 && room > 0 && save.coins >= ing.price && save.phase !== 'fechamento';
+  const cost = q * price;
+  const canBuy = !locked && maxByStock > 0 && room > 0 && save.coins >= price && save.phase !== 'fechamento';
   const have = save.ingredients[id] ?? 0;
 
   return (
@@ -58,7 +59,7 @@ function SupplierRow({ save, id, room }: { save: GameSave; id: string; room: num
           <span className="row-title">{ing.name}</span>
           <span className="row-sub">{FAMILY_LABEL[ing.family]} · você tem {have}</span>
         </div>
-        <Coins n={ing.price} />
+        <Coins n={price} />
       </div>
       {locked ? (
         <p className="card-text muted">O fornecedor traz este item a partir do nível {ing.supplierLevel}.</p>

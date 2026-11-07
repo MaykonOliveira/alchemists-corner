@@ -9,6 +9,7 @@ from pix import Canvas, check_palette, outline_mask
 import objects as O
 import items as I
 import helpers as H
+import lategame as L
 from room import draw_room
 from customers import customer_sheet, LOOKS, FW, FH, FRAMES
 
@@ -76,6 +77,10 @@ def main():
         shop[f'{k}-outline'] = outline_mask(cv)
     shop.update({'raven-fly-0': H.raven_fly(0), 'raven-fly-1': H.raven_fly(1), 'raven-carry-0': H.raven_fly(0, True),
                  'raven-carry-1': H.raven_fly(1, True), 'parcel': H.parcel(), 'perch': H.perch(), 'zz': H.zz()})
+    # Melhorias do late game
+    shop.update({'greenhouse': L.greenhouse(), 'alembic': L.alembic(), 'cabinet-runes': L.cabinet_runes(),
+                 'vitral': L.vitral(), 'bell-0': L.bell(0), 'bell-1': L.bell(1),
+                 'glow-violet': O.glow(10, (184, 150, 228)), 'glow-vitral': O.glow(16, (200, 170, 255))})
     for rid in I.LIQ:
         shop[f'potion-{rid}'] = I.potion_small(rid)
     sheet, meta = pack(shop, 512)
@@ -103,7 +108,8 @@ def main():
     # Posições que o jogo precisa conhecer (lâmpadas do cordão de luzes, para os brilhos).
     from pix import P
     layout = {'garlandBulbs': [{'x': x, 'y': y, 'color': P[c]} for x, y, c in O.garland_bulbs()],
-              'shelfBoards': O.SHELF_BOARDS, 'customer': {'w': FW, 'h': FH, 'frames': FRAMES}}
+              'shelfBoards': O.SHELF_BOARDS, 'customer': {'w': FW, 'h': FH, 'frames': FRAMES},
+              'lategame': {k: {'x': x, 'y': y} for k, (x, y) in L.POS.items()}}
     with open(os.path.join(OUT, 'layout.json'), 'w') as fh:
         json.dump(layout, fh, indent=1)
     print('ok:', sorted(os.listdir(OUT)))

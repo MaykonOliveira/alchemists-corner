@@ -11,9 +11,10 @@ O jogo **não desenha nada em tempo de execução**: ele só carrega os spritesh
 |---|---|
 | `room.py` | Cenário de fundo 384×216 (paredes, piso, janela com vista da rua, decoração, primeiro plano) |
 | `objects.py` | Móveis interativos (armário, caldeirão, prateleiras, quadro, porta, balcão, caixa), placas, efeitos e melhorias |
-| `customers.py` | 4 clientes-base, 3 quadros cada (parado + 2 passos), 18×40 |
+| `customers.py` | 4 clientes-base e a Nobre, 3 quadros cada (parado + 2 passos), 18×40 |
 | `helpers.py` | Ajudantes automáticos: corvo (pousado, voando, com trouxinha), aprendiz (parado, mexendo, cochilando) e golem (parado, entregando, cochilando), mais retratos 16×16 |
-| `items.py` | 6 poções (frasco de formato próprio por receita, 7×10 e 16×16) e 8 ingredientes 16×16 |
+| `lategame.py` | Melhorias do late game na loja: estufa, alambique, runas da despensa, vitral e sino |
+| `items.py` | 11 poções (frasco de formato próprio por receita, 7×10 e 16×16) e 13 ingredientes 16×16 |
 | `pix.py` | Paleta e primitivas (retângulo, elipse, dithering, contorno, sprite em texto) |
 | `build.py` | Exporta tudo para `src/assets/sprites/` |
 
