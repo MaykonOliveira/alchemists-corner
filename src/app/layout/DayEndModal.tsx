@@ -1,13 +1,57 @@
+import { useEffect, useRef, useState } from 'react';
 import { RECIPES_BY_ID } from '../../domain/data/recipes';
+import type { DayReport } from '../../domain/models/types';
+import { dayMedal } from '../../domain/rules/medals';
 import { useGameStore } from '../../store/gameStore';
 import { Coins } from '../../ui/widgets';
+
+const MEDAL_LABEL = { ouro: 'Medalha de ouro', prata: 'Medalha de prata', bronze: 'Medalha de bronze' } as const;
+
+/** Número que conta do zero até o valor ao abrir o fechamento. */
+function CountUp({ value, ms = 900 }: { value: number; ms?: number }) {
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    const start = performance.now();
+    let raf = 0;
+    const step = (t: number) => {
+      const k = Math.min(1, (t - start) / ms);
+      setN(Math.round(value * (1 - (1 - k) ** 3)));
+      if (k < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [value, ms]);
+  return <>{n}</>;
+}
+
+/** Lucro dos últimos 7 dias, com hoje em destaque. */
+function WeekChart({ reports }: { reports: DayReport[] }) {
+  const last = reports.slice(-7);
+  if (last.length < 2) return null;
+  const max = Math.max(1, ...last.map((r) => Math.abs(r.profit)));
+  return (
+    <div className="week-chart" aria-label="Lucro dos últimos dias">
+      {last.map((r, i) => (
+        <div key={r.day} className={`week-col ${i === last.length - 1 ? 'today' : ''}`} title={`Dia ${r.day}: ${r.profit}`}>
+          <span className={`week-bar ${r.profit >= 0 ? 'pos' : 'neg'}`} style={{ height: `${Math.max(4, (Math.abs(r.profit) / max) * 100)}%` }} />
+          <span className="week-day">{r.day}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export function DayEndModal() {
   const save = useGameStore((s) => s.save)!;
   const dispatch = useGameStore((s) => s.dispatch);
-  if (save.phase !== 'fechamento') return null;
+  const nextRef = useRef<HTMLButtonElement>(null);
+  const closing = save.phase === 'fechamento';
+  // Foca o botão sem rolar o fechamento até o fim (o topo, com a medalha, fica visível).
+  useEffect(() => { if (closing) nextRef.current?.focus({ preventScroll: true }); }, [closing, save.day]);
+  if (!closing) return null;
   const r = save.reports.at(-1);
   if (!r) return null;
+  const { medal, record } = dayMedal(save.reports);
   const sales = Object.entries(r.salesByRecipe).sort((a, b) => b[1] - a[1]);
   const mood =
     r.profit > 60 ? 'Que dia! A cidade inteira está falando da loja.' :
@@ -17,9 +61,26 @@ export function DayEndModal() {
 
   return (
     <div className="modal-backdrop">
-      <div className="modal modal-report" role="dialog" aria-modal="true" aria-labelledby="day-end-title">
-        <p className="modal-kicker">Fechamento</p>
-        <h2 id="day-end-title">Fim do dia {r.day}</h2>
+      <div className={`modal modal-report ${medal ? `medal-${medal}` : ''}`} role="dialog" aria-modal="true" aria-labelledby="day-end-title">
+        {(medal === 'ouro' || record) && <div className="confetti" aria-hidden />}
+        <div className="report-head">
+          <div>
+            <p className="modal-kicker">Fechamento</p>
+            <h2 id="day-end-title">Fim do dia {r.day}</h2>
+          </div>
+          {medal && (
+            <div className={`medal medal-${medal}`} title={MEDAL_LABEL[medal]} aria-label={MEDAL_LABEL[medal]}>
+              <span>{medal === 'ouro' ? '1º' : medal === 'prata' ? '2º' : '3º'}</span>
+            </div>
+          )}
+        </div>
+        {record && <p className="record-banner">Novo recorde de lucro!</p>}
+        <div className={`profit-hero ${r.profit >= 0 ? 'pos' : 'neg'}`}>
+          <span className="muted small">Lucro do dia</span>
+          <strong>{r.profit >= 0 ? '+' : '−'}<CountUp value={Math.abs(r.profit)} /></strong>
+          {medal && <span className="small">{MEDAL_LABEL[medal]}</span>}
+        </div>
+        <WeekChart reports={save.reports} />
         <p className="card-text">{mood}</p>
         <table className="ledger">
           <tbody>
@@ -27,7 +88,6 @@ export function DayEndModal() {
             {r.orderRewards > 0 && <tr><td>Pedidos especiais</td><td className="pos-text">+{r.orderRewards}</td></tr>}
             <tr><td>Ingredientes comprados</td><td className="neg-text">−{r.ingredientCost}</td></tr>
             <tr><td>Manutenção (aluguel, lenha, velas{r.wages ? ', salários' : ''})</td><td className="neg-text">−{r.maintenance}</td></tr>
-            <tr className="ledger-total"><td>Lucro do dia</td><td className={r.profit >= 0 ? 'pos-text' : 'neg-text'}>{r.profit >= 0 ? '+' : ''}{r.profit}</td></tr>
           </tbody>
         </table>
         <div className="report-grid">
@@ -54,7 +114,7 @@ export function DayEndModal() {
           <p className="tip">Dica: clientes vão embora quando falta a poção certa ou o preço está alto. Veja o que mais pediram e prepare antes de abrir.</p>
         )}
         <p className="card-text">Caixa agora: <Coins n={save.coins} /></p>
-        <button className="btn btn-primary btn-big" autoFocus onClick={() => dispatch({ type: 'START_NEXT_DAY' })}>
+        <button ref={nextRef} className="btn btn-primary btn-big" onClick={() => dispatch({ type: 'START_NEXT_DAY' })}>
           Começar o dia {save.day + 1}
         </button>
       </div>

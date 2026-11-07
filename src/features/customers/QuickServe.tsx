@@ -33,7 +33,7 @@ export function QuickServe({ placement }: { placement: 'stage' | 'side' }) {
       <div className="qs-head">
         <PotionIcon recipeId={wanted.id} size={24} />
         <div className="qs-who">
-          <span className="qs-name">{a.label} <span className="muted">quer</span> {wanted.shortName}</span>
+          <span className="qs-name"><span className="qs-face" aria-label="Humor">{left > 0.5 ? '🙂' : left > 0.25 ? '😐' : '😠'}</span> {a.label} <span className="muted">quer</span> {wanted.shortName}</span>
           <Meter ratio={left} tone={left > 0.5 ? 'ok' : left > 0.25 ? 'gold' : 'warn'} label="Paciência" />
         </div>
         {next && (

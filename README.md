@@ -45,6 +45,13 @@ Um robô-jogador (`src/tests/balance/bot.ts`) joga vários dias usando só as re
 - **Grimório do Mestre (tecla 8):** Selos de Mestre vêm dos níveis 11+, dos graus de Mestre (a cada 3000 XP depois do nível 15, sem fim), das receitas com 5 estrelas e das doações à Guilda. Os Selos compram 7 talentos permanentes. Moedas sobrando também patrocinam o festival.
 - Saves antigos migram para a `saveVersion` 4: as receitas dos níveis já alcançados entram direto, a maestria é estimada pelas vendas dos relatórios e a XP acumulada no nível 10 fica guardada na porta do 11.
 
+## Loja que reage
+
+- Cada venda faz moedas saltarem do cliente até o caixa; vendas acima do preço-base ganham brilho dourado. O saldo no HUD pula e mostra a diferença.
+- Clientes ficam com cara zangada e tremem quando a paciência está acabando; o atendimento rápido mostra o humor.
+- Ao terminar um preparo, sai fumaça na cor da poção e os frascos voam até as prateleiras.
+- O fechamento conta o lucro do zero, dá medalha de ouro, prata ou bronze (comparando com a média dos 7 dias anteriores), avisa recorde e mostra o gráfico da semana.
+
 ## Celular
 
 - **Venda com um toque:** quando um cliente chega, o pedido aparece sobre a loja (ou no topo do painel, no celular) com o botão Vender, o preço e se ele deve aceitar. Opções abre o balcão completo.
