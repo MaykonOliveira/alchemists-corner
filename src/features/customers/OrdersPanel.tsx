@@ -4,6 +4,7 @@ import type { GameSave } from '../../domain/models/types';
 import { CONTRACT_DAYS, CONTRACT_LEVEL, contractDelivered, contractReady, contractTotal } from '../../domain/rules/contracts';
 import { potionStock } from '../../domain/rules/economy';
 import { INGREDIENTS_BY_ID } from '../../domain/data/ingredients';
+import { FINDS_BY_ID } from '../../domain/data/street';
 import { useGameStore } from '../../store/gameStore';
 import { Coins, Meter, PotionName } from '../../ui/widgets';
 
@@ -21,8 +22,8 @@ export function OrdersPanel({ save }: { save: GameSave }) {
       )}
       <ContractCard save={save} />
       {o ? (
-        <div className="card note">
-          <p className="muted small">Pedido especial · {o.client}</p>
+        <div className={`card note ${o.visitor ? 'visitor-order' : ''}`}>
+          <p className="muted small">{o.visitor ? '🧥 Pedido do dia' : 'Pedido especial'} · {o.client}</p>
           <p className="card-text">{o.text}</p>
           <div className="card-head order-line">
             <span className="row-title">{o.qty}×</span>
@@ -35,6 +36,8 @@ export function OrdersPanel({ save }: { save: GameSave }) {
           </p>
           <p className="card-text">
             Recompensa: <Coins n={o.rewardCoins} /> · +{o.rewardRep} reputação · +{o.rewardXp} XP
+            {o.rewardSeal && ' · 1 Selo de Mestre'}
+            {o.rewardFind && FINDS_BY_ID[o.rewardFind] && <> · achado lendário: <b>{FINDS_BY_ID[o.rewardFind].icon} {FINDS_BY_ID[o.rewardFind].name}</b></>}
           </p>
           <button
             className="btn btn-primary"

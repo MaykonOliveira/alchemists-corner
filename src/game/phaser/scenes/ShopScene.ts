@@ -68,6 +68,8 @@ export class ShopScene extends Phaser.Scene {
   private cat!: CatView;
   private advanceAcc = 0;
   private seasonFxAt = 0;
+  private rareSky: Phaser.GameObjects.Graphics | null = null;
+  private rareSkyEvent: string | null = null;
   private nightness = 0;
   private unsubscribers: (() => void)[] = [];
 
@@ -213,6 +215,35 @@ export class ShopScene extends Phaser.Scene {
       alpha: { from: 0.9, to: 0 }, duration: look.rise ? 2600 : 2200 + Phaser.Math.Between(0, 800), ease: 'Sine.InOut',
       onComplete: () => p.destroy(),
     });
+  }
+
+  /** Eventos raros vistos pela janela: o eclipse escurece o céu e a lua cheia aparece grande. */
+  private rareWindow(time: number) {
+    const save = this.store.save;
+    const ev = save?.event === 'eclipse' || save?.event === 'lua-cheia' || save?.event === 'visitante' ? save.event : null;
+    if (ev !== this.rareSkyEvent) {
+      this.rareSkyEvent = ev;
+      this.rareSky?.destroy();
+      this.rareSky = null;
+      if (ev) {
+        const g = this.add.graphics().setDepth(1.4);
+        const W = { x: 55, y: 26, w: 45, h: 22 };
+        if (ev === 'eclipse') {
+          g.fillStyle(0x24163a, 0.55).fillRect(W.x, W.y, W.w, W.h);
+          g.fillStyle(0xf2c95c, 1).fillCircle(86, 33, 6);
+          g.fillStyle(0x18141a, 1).fillCircle(86, 33, 5);
+        } else if (ev === 'lua-cheia') {
+          g.fillStyle(0x1a2440, 0.5).fillRect(W.x, W.y, W.w, W.h);
+          g.fillStyle(0xffeaa0, 0.35).fillCircle(84, 34, 8);
+          g.fillStyle(0xfff8dc, 1).fillCircle(84, 34, 5);
+          g.fillStyle(0xe0cb98, 1).fillRect(82, 33, 1, 1).fillRect(85, 35, 2, 1);
+        } else {
+          g.fillStyle(0x3e2662, 0.35).fillRect(W.x, W.y, W.w, W.h);
+        }
+        this.rareSky = g;
+      }
+    }
+    if (this.rareSky && !this.reduceMotion()) this.rareSky.setAlpha(0.85 + Math.sin(time / 700) * 0.15);
   }
 
   // ------------------------------------------------------------- caldeirão
@@ -641,6 +672,7 @@ export class ShopScene extends Phaser.Scene {
     this.helpers.update(time);
     this.cat.update(time);
     this.seasonFx(time);
+    this.rareWindow(time);
 
     if (ui.paused || ui.modal || save.phase === 'fechamento') return;
     this.advanceAcc += Math.min(delta, 250);

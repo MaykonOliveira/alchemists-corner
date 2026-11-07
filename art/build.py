@@ -12,6 +12,7 @@ import helpers as H
 import lategame as L
 import expansion as X
 import cat as CAT
+import seasonal as SE  # registra poções e ingredientes da estação em items.py
 from room import draw_room
 from customers import customer_sheet, LOOKS, FW, FH, FRAMES
 
@@ -107,6 +108,7 @@ def main():
     icons = {f'potion-{r}': I.potion_icon(r) for r in I.LIQ}
     icons.update({f'ingredient-{i}': I.ingredient_icon(i) for i in I.INGREDIENTS})
     icons.update({f'helper-{h}': H.portrait(h) for h in ('corvo-entregador', 'aprendiz', 'golem-balconista')})
+    icons['rival-vesper'] = SE.rival_portrait()
     cols = 8
     grid = Canvas(16 * cols, 16 * ((len(icons) + cols - 1) // cols))
     index = {}

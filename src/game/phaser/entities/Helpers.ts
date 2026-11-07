@@ -161,6 +161,12 @@ export class HelperViews {
     if (!save) return;
     const calm = this.reduceMotion();
     for (const view of this.views.values()) {
+      // Em expedição o poleiro fica vazio.
+      if (view.id === RAVEN && !this.ravenAway) {
+        const away = !!save.expedition;
+        view.sprite.setVisible(!away);
+        if (away) { view.zz.setVisible(false); view.outline.setVisible(false); continue; }
+      }
       const on = helperActive(save, view.id);
       const sleeping = !on || save.phase === 'fechamento';
       view.zz.setVisible(sleeping && view.sprite.visible);

@@ -873,3 +873,42 @@ button, .stage-canvas { touch-action: manipulation; -webkit-tap-highlight-color:
 .file-btn { position: relative; overflow: hidden; display: inline-block; margin-bottom: 8px; }
 .file-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 .transfer-ok { background: var(--ok-bg); color: var(--ok); padding: 8px 10px; border-radius: 4px; font-family: var(--font-body); font-size: 14px; margin-bottom: 8px; }
+
+/* ---------------- A rua da loja (pacote E) ---------------- */
+.rare-event { border: 2px solid #1c1216; color: #f3e6ff; margin-bottom: 10px; position: relative; overflow: hidden; }
+.rare-event .card-text, .rare-event .row-title { color: inherit; }
+.rare-kicker { margin: 0; font-family: var(--font-pixel); color: var(--gold); font-size: 13px; letter-spacing: .5px; }
+.rare-eclipse { background: radial-gradient(circle at 80% 20%, #1c1216 0 18px, #f2c95c 19px 21px, transparent 22px), linear-gradient(135deg, #2a1d48, #120b0d); }
+.rare-lua-cheia { background: radial-gradient(circle at 82% 26%, #fff8dc 0 14px, #f6cf5e55 15px 26px, transparent 27px), linear-gradient(135deg, #1a2440, #3e2662); }
+.rare-visitante { background: linear-gradient(135deg, #24163a, #3a3238 60%, #5e3c92); }
+.season-special .card-head { gap: 8px; }
+.season-strip { display: flex; gap: 8px; list-style: none; padding: 0; margin: 8px 0 0; }
+.season-strip li { padding: 4px; border-radius: 6px; background: #0000000f; }
+.season-strip li.on { background: #f8e6b0; box-shadow: 0 0 0 2px var(--gold), 0 0 10px #f2c95c99; animation: bob 2.4s ease-in-out infinite; }
+.rival { background: linear-gradient(180deg, #efe0f8, #e2cf9f); border: 2px solid #5e3c92; }
+.rival-locked { display: flex; gap: 10px; align-items: center; filter: saturate(.5); }
+.rival-top { display: flex; gap: 10px; align-items: center; }
+.rival-portrait { background: #d8c8ec; border: 2px solid #3e2662; border-radius: 8px; padding: 2px; line-height: 0; flex: none; }
+.rival-speech { margin: 4px 0 0; font-size: 14px; }
+.duel { display: grid; gap: 5px; margin: 10px 0 6px; }
+.duel-row { display: grid; grid-template-columns: 56px 1fr auto; gap: 8px; align-items: center; font-family: var(--font-pixel); font-size: 14px; }
+.duel-bar { height: 12px; border-radius: 6px; background: #0000001f; overflow: hidden; display: block; }
+.duel-bar span { display: block; height: 100%; border-radius: 6px; transition: width .5s; }
+.duel-me { background: linear-gradient(90deg, var(--copper), var(--gold)); }
+.duel-her { background: linear-gradient(90deg, #5e3c92, #b896e4); }
+.rival-me-ahead { box-shadow: inset 0 0 0 2px var(--gold); }
+.expedition-icon { font-size: 22px; }
+.expedition .card-head { gap: 8px; }
+.expedition .card-head .tag { margin-left: auto; }
+.expedition-away { background: #e4eef4; border: 2px dashed #4f86d8; margin-bottom: 8px; }
+.loot-row { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin: 6px 0 0; }
+.finds { list-style: none; padding: 0; margin: 0 0 8px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.find { background: var(--parchment-2); border-radius: 6px; padding: 6px; text-align: center; display: grid; gap: 2px; opacity: .6; }
+.find-on { opacity: 1; background: linear-gradient(180deg, #fff3c8, #f2dc98); box-shadow: inset 0 0 0 2px var(--gold); }
+.find-icon { font-size: 24px; }
+.find-name { font-size: 12px; font-weight: 600; }
+.visitor-order { background: linear-gradient(180deg, #ece0fa, #e2cf9f); border-color: #5e3c92; box-shadow: 0 0 0 2px #8a62c0, 2px 3px 0 rgba(0,0,0,.15); }
+.rival-line { display: flex; gap: 8px; align-items: flex-start; }
+.rival-line .sprite-icon { margin-top: 2px; }
+.rival-win { color: var(--ok); }
+.rival-loss { color: #5e3c92; }

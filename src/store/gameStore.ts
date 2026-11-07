@@ -7,6 +7,7 @@ import { REGULARS_BY_ID, SEASONS, TIP_HEARTS } from '../domain/data/world';
 import { ACHIEVEMENTS, giftLabel } from '../domain/rules/world';
 import { TALENTS_BY_ID } from '../domain/data/talents';
 import { UPGRADES_BY_ID } from '../domain/data/upgrades';
+import { EXPEDITIONS_BY_ID, FINDS_BY_ID } from '../domain/data/street';
 import type { GameEvent, GameSave } from '../domain/models/types';
 import { applyCommand, type DomainCommand } from '../domain/rules/commands';
 import { createNewGame } from '../domain/rules/initialState';
@@ -14,7 +15,7 @@ import { gameEvents } from '../game/events';
 import { saveRepository } from '../persistence/saveRepository';
 
 export type PanelId =
-  | 'ingredients' | 'production' | 'recipes' | 'orders' | 'report' | 'shelves' | 'counter' | 'door' | 'upgrades' | 'grimoire' | 'album';
+  | 'ingredients' | 'production' | 'recipes' | 'orders' | 'report' | 'shelves' | 'counter' | 'door' | 'upgrades' | 'grimoire' | 'album' | 'street';
 
 export interface HoverInfo {
   id: string;
@@ -214,6 +215,24 @@ export const useGameStore = create<StoreState>()(
         case 'SEASON_STARTED': {
           const se = SEASONS.find((x) => x.id === e.season);
           return se ? toast(`${se.icon} Chegou ${se.id === 'verao' ? 'o' : se.id === 'outono' ? 'o' : se.id === 'inverno' ? 'o' : 'a'} ${se.name.toLowerCase()}! ${se.text}`, 'gold') : undefined;
+        }
+        case 'RIVAL_RESULT':
+          return e.win
+            ? toast(`🏆 Você venceu a Madame Vesper na semana (${Math.round(e.me)} × ${Math.round(e.her)})! +${e.coins} moedas e um mimo da despensa dela.`, 'gold')
+            : toast(`A Madame Vesper venceu a semana (${Math.round(e.her)} × ${Math.round(e.me)}). Revanche amanhã!`, 'warn');
+        case 'EXPEDITION_SENT': {
+          const x = EXPEDITIONS_BY_ID[e.dest];
+          return toast(`🐦‍⬛ O corvo partiu para ${x.name}. Volta ${x.days === 1 ? 'amanhã' : `em ${x.days} dias`}.`, 'ok');
+        }
+        case 'EXPEDITION_BACK': {
+          const x = EXPEDITIONS_BY_ID[e.dest];
+          const units = e.items.reduce((n, i) => n + i.qty, 0);
+          const f = e.find ? FINDS_BY_ID[e.find] : null;
+          return toast(`🐦‍⬛ O corvo voltou de ${x.name} com ${units} ingredientes${f ? ` e um achado: ${f.icon} ${f.name}!` : '.'}`, 'gold');
+        }
+        case 'FIND': {
+          const f = FINDS_BY_ID[e.id];
+          return f ? toast(`${f.icon} O Visitante deixou um achado lendário: ${f.name}!`, 'gold') : undefined;
         }
         case 'DAY_STARTED':
           if (e.event) toast(`${DAY_EVENTS[e.event].name}: ${DAY_EVENTS[e.event].text}`, 'gold');

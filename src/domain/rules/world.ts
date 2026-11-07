@@ -113,6 +113,13 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'todos-amigos', name: 'Coração da cidade', icon: '💞', text: 'Seja amigo de todos os fregueses.', done: (s) => friends(s) >= REGULARS.length },
   { id: 'um-ano', name: 'Um ano de loja', icon: '🍂', text: 'Passe pelas quatro estações.', done: (s) => s.day > SEASON_DAYS * 4 },
   { id: 'gato', name: 'Melhor amigo', icon: '🐈', text: 'Faça 20 carinhos no gato da loja.', done: (s) => s.petCount >= 20 },
+  // Pacote E
+  { id: 'sabor-estacao', name: 'Sabor da estação', icon: '🌸', text: 'Prepare as quatro poções da estação.',
+    done: (s) => RECIPES.filter((r) => r.season).every((r) => (s.mastery[r.id] ?? 0) > 0) },
+  { id: 'rival-vencida', name: 'Vizinha derrotada', icon: '🏆', text: 'Vença uma semana de disputa contra a Madame Vesper.', done: (s) => s.rival.wins >= 1 },
+  { id: 'rainha-da-rua', name: 'Rainha da rua', icon: '👑', text: 'Vença 5 semanas contra a Madame Vesper.', done: (s) => s.rival.wins >= 5 },
+  { id: 'explorador', name: 'Asas longas', icon: '🗺️', text: 'Complete 5 expedições com o corvo.', done: (s) => s.expeditionsDone >= 5 },
+  { id: 'colecionador', name: 'Gabinete de curiosidades', icon: '🔮', text: 'Reúna 6 achados raros.', done: (s) => s.finds.length >= 6 },
 ];
 
 /** Confere o álbum e anuncia o que acabou de ser conquistado. */

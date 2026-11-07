@@ -39,6 +39,7 @@ export function migrateSave(raw: unknown): GameSave | null {
   // v3 → v4: late game (níveis 11 a 15, maestria das receitas e talentos do Grimório do Mestre).
   // v4 → v5: contratos de vários dias e expansão da loja (segundo caldeirão).
   // v5 → v6: fregueses fiéis, estações, álbum de conquistas e o gato da loja.
+  // v6 → v7: ingredientes e poções da estação, rival da rua, eventos raros e expedições.
   // Os campos novos recebem os valores padrão abaixo.
 
   const base = createNewGame(num(raw.createdAt, Date.now()));
@@ -114,6 +115,20 @@ export function migrateSave(raw: unknown): GameSave | null {
       : lifetimeFromReports(arr(raw.reports, [])),
     petCount: Math.max(0, Math.floor(num(raw.petCount, 0))),
     petDay: num(raw.petDay, 0),
+    rival: isObj(raw.rival)
+      ? {
+          week: Math.max(0, Math.floor(num(raw.rival.week, 0))),
+          me: Math.max(0, num(raw.rival.me, 0)),
+          her: Math.max(0, num(raw.rival.her, 0)),
+          wins: Math.max(0, Math.floor(num(raw.rival.wins, 0))),
+          losses: Math.max(0, Math.floor(num(raw.rival.losses, 0))),
+        }
+      : base.rival,
+    expedition: isObj(raw.expedition) && typeof raw.expedition.dest === 'string'
+      ? { dest: raw.expedition.dest, returnDay: num(raw.expedition.returnDay, 0) }
+      : null,
+    expeditionsDone: Math.max(0, Math.floor(num(raw.expeditionsDone, 0))),
+    finds: arr<string>(raw.finds, []).filter((x) => typeof x === 'string'),
     tutorialStep: num(raw.tutorialStep, raw.saveVersion === 1 ? 99 : 0),
     seq: num(raw.seq, 0),
     settings: {

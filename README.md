@@ -74,6 +74,21 @@ Um robô-jogador (`src/tests/balance/bot.ts`) joga vários dias usando só as re
 - **Gato da loja**: passeia, senta, pisca e dorme no tapete à noite. Um toque faz carinho; uma vez por dia ele dá sorte (+1 reputação).
 - Prints em `prints-mundo-vivo/`.
 
+## A rua da loja (aba 🗺️ Rua, tecla R)
+
+- **Poções da estação** (nível 5): cada estação traz um ingrediente raro que o fornecedor só vende nela
+  (pétala-da-aurora, fruta-do-sol, folha rubra e flor-de-neve) e uma poção própria: Néctar da Primavera, Refresco Solar,
+  Chá da Colheita e Poção Aurora Boreal. Depois que a loja prepara a primeira, ela vira a sensação da rua (1 em cada 5 clientes pede).
+- **Madame Vesper**, a rival (nível 4, a partir do dia 8): toda semana o placar soma vendas e pedidos das duas lojas.
+  A rival fatura um pouco acima da sua média recente. Vencer dá moedas, reputação e ingredientes raros; perder não tira nada.
+- **Eventos raros** (nível 5, cerca de 1 em cada 8 dias): Eclipse (elixires de mente valem 1,8×), Mercado da Lua Cheia
+  (ingredientes das quatro estações e itens raros a mais) e Visitante Misterioso (pedido do dia que paga 1 Selo de Mestre e um achado lendário).
+  Eclipse e lua aparecem na janela da loja.
+- **Expedições do corvo**: Floresta (1 dia), Cavernas (2 dias, nível 6) e Pico dos Grifos (3 dias, nível 9). Enquanto viaja ele não faz entregas.
+  Volta com ingredientes raros e, às vezes, um dos 9 achados do gabinete.
+- 5 conquistas novas no álbum. Save v7. Regras em `src/domain/rules/street.ts`, dados em `src/domain/data/street.ts`, arte em `art/seasonal.py`.
+- Prints em `prints-rua/`.
+
 ## Jogar em qualquer lugar
 
 - **GitHub Pages:** a cada merge na `main`, a Action `.github/workflows/pages.yml` roda os testes, gera o build e publica em

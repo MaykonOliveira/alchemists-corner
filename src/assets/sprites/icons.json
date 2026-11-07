@@ -1,7 +1,7 @@
 {
  "size": 16,
  "width": 128,
- "height": 64,
+ "height": 80,
  "icons": {
   "potion-cura-simples": [
    0,
@@ -47,69 +47,105 @@
    32,
    16
   ],
-  "ingredient-folha-lunar": [
+  "potion-nectar-primavera": [
    48,
+   16
+  ],
+  "potion-refresco-solar": [
+   64,
+   16
+  ],
+  "potion-cha-colheita": [
+   80,
+   16
+  ],
+  "potion-aurora-boreal": [
+   96,
+   16
+  ],
+  "ingredient-folha-lunar": [
+   112,
    16
   ],
   "ingredient-hortela-brava": [
-   64,
-   16
-  ],
-  "ingredient-cristal-ambar": [
-   80,
-   16
-  ],
-  "ingredient-po-de-pedra": [
-   96,
-   16
-  ],
-  "ingredient-orvalho-feerico": [
-   112,
-   16
-  ],
-  "ingredient-essencia-azul": [
    0,
    32
   ],
-  "ingredient-escama-salamandra": [
+  "ingredient-cristal-ambar": [
    16,
    32
   ],
-  "ingredient-cogumelo-lanterna": [
+  "ingredient-po-de-pedra": [
    32,
    32
   ],
-  "ingredient-raiz-mandragora": [
+  "ingredient-orvalho-feerico": [
    48,
    32
   ],
-  "ingredient-cristal-geada": [
+  "ingredient-essencia-azul": [
    64,
    32
   ],
-  "ingredient-pluma-grifo": [
+  "ingredient-escama-salamandra": [
    80,
    32
   ],
-  "ingredient-areia-estelar": [
+  "ingredient-cogumelo-lanterna": [
    96,
    32
   ],
-  "ingredient-pena-fenix": [
+  "ingredient-raiz-mandragora": [
    112,
    32
   ],
-  "helper-corvo-entregador": [
+  "ingredient-cristal-geada": [
    0,
    48
   ],
-  "helper-aprendiz": [
+  "ingredient-pluma-grifo": [
    16,
    48
   ],
-  "helper-golem-balconista": [
+  "ingredient-areia-estelar": [
    32,
    48
+  ],
+  "ingredient-pena-fenix": [
+   48,
+   48
+  ],
+  "ingredient-petala-aurora": [
+   64,
+   48
+  ],
+  "ingredient-fruta-sol": [
+   80,
+   48
+  ],
+  "ingredient-folha-rubra": [
+   96,
+   48
+  ],
+  "ingredient-flor-neve": [
+   112,
+   48
+  ],
+  "helper-corvo-entregador": [
+   0,
+   64
+  ],
+  "helper-aprendiz": [
+   16,
+   64
+  ],
+  "helper-golem-balconista": [
+   32,
+   64
+  ],
+  "rival-vesper": [
+   48,
+   64
   ]
  }
 }

@@ -1,3 +1,4 @@
+import { SpriteIcon } from '../../ui/SpriteIcon';
 import { useEffect, useRef, useState } from 'react';
 import { RECIPES_BY_ID } from '../../domain/data/recipes';
 import type { DayReport } from '../../domain/models/types';
@@ -96,6 +97,14 @@ export function DayEndModal() {
           <div><span className="muted small">Reputação</span><strong>{r.reputationDelta >= 0 ? '+' : ''}{r.reputationDelta}</strong></div>
           <div><span className="muted small">Experiência</span><strong>+{r.xpGained}</strong></div>
         </div>
+        {r.rival && (
+          <p className={`card-text small rival-line ${r.rival.result ? `rival-${r.rival.result}` : ''}`}>
+            <SpriteIcon name="rival-vesper" size={16} />
+            <span>{r.rival.result === 'win' ? <><b>Você venceu a semana contra a Madame Vesper!</b> {r.rival.me} × {r.rival.her} moedas. Prêmio no caixa.</>
+              : r.rival.result === 'loss' ? <>A Madame Vesper levou a semana: {r.rival.her} × {r.rival.me}. Revanche começa amanhã!</>
+              : <>Disputa da semana: você {r.rival.me} × {r.rival.her} Vesper.</>}</span>
+          </p>
+        )}
         {r.helperWork && (r.helperWork.brews + r.helperWork.served + r.helperWork.deliveries > 0) && (
           <p className="card-text small">
             Ajudantes: {[
