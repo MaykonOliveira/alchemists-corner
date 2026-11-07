@@ -1,43 +1,5 @@
-// Utilitários para desenhar pixel art original diretamente em canvas.
-// Toda a arte provisória do jogo é gerada em código a partir destas primitivas,
-// e pode ser substituída por spritesheets exportados do Aseprite mais tarde.
-
-export const PAL = {
-  ink: '#1c1216',
-  woodDeep: '#2e1c14',
-  woodDark: '#3e2619',
-  wood: '#5e3a22',
-  woodMid: '#7a4d2c',
-  woodLight: '#9a6638',
-  woodHi: '#c08a4e',
-  plasterDark: '#7d5c45',
-  plaster: '#957058',
-  plasterHi: '#a98065',
-  stoneDark: '#3e383c',
-  stone: '#5c5458',
-  stoneHi: '#7f767a',
-  moss: '#3f5a2c',
-  leaf: '#6b9a3c',
-  leafHi: '#9cc75a',
-  amber: '#e0a040',
-  gold: '#f2c95c',
-  warm: '#ffe6a0',
-  blueDeep: '#26336a',
-  teal: '#3fa6a0',
-  violet: '#6f4a9a',
-  cream: '#f3e6c8',
-  parchment: '#e0cb98',
-  parchmentDark: '#b89c68',
-  charcoal: '#2a2326',
-  copper: '#b8693a',
-  copperHi: '#dc9256',
-  terracotta: '#b9533a',
-  terracottaDark: '#8a3a2a',
-  sage: '#8fbf7a',
-  skin1: '#f0c6a0',
-  skin2: '#c98d62',
-  skin3: '#8a5a3c',
-} as const;
+// Texto pixelado dinâmico (números flutuantes como "+18").
+// A arte do jogo em si vem dos spritesheets em src/assets/sprites (fontes em art/).
 
 export interface Painter {
   canvas: HTMLCanvasElement;
@@ -82,37 +44,6 @@ export function painter(w: number, h: number): Painter {
       }
     },
   };
-}
-
-/** Gerador pseudoaleatório determinístico (mulberry32), para texturas estáveis entre execuções. */
-export function rng(seed: number) {
-  let a = seed >>> 0;
-  return () => {
-    a = (a + 0x6d2b79f5) >>> 0;
-    let t = a;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-/**
- * Gera um contorno de 1px ao redor dos pixels opacos de um canvas.
- * O contorno é branco, para ser tingido no Phaser (hover / acionado).
- */
-export function outlineOf(src: HTMLCanvasElement): HTMLCanvasElement {
-  const w = src.width;
-  const h = src.height;
-  const data = src.getContext('2d')!.getImageData(0, 0, w, h).data;
-  const opaque = (x: number, y: number) => x >= 0 && y >= 0 && x < w && y < h && data[(y * w + x) * 4 + 3] > 40;
-  const out = painter(w + 2, h + 2);
-  for (let y = -1; y <= h; y++) {
-    for (let x = -1; x <= w; x++) {
-      if (opaque(x, y)) continue;
-      if (opaque(x - 1, y) || opaque(x + 1, y) || opaque(x, y - 1) || opaque(x, y + 1)) out.px(x + 1, y + 1, '#ffffff');
-    }
-  }
-  return out.canvas;
 }
 
 // Fonte minúscula 3×5 para placas e etiquetas dentro do cenário.

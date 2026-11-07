@@ -5,7 +5,7 @@ import { CLOSE_MIN, OPEN_MIN } from '../../../domain/rules/time';
 import { useGameStore } from '../../../store/gameStore';
 import { gameEvents } from '../../events';
 import { outlinedText } from '../art/painter';
-import { GARLAND_BULBS, LANTERNS, SHELF_BOARDS } from '../art/shop';
+import { GARLAND_BULBS, LANTERNS, SHELF_BOARDS } from '../art/sprites';
 import { Visitor, type Mood } from '../entities/Visitor';
 import { HOTSPOTS, type HotspotDef } from '../interaction/hotspots';
 

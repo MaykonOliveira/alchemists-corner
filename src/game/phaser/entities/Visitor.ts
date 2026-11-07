@@ -123,7 +123,7 @@ export class Visitor {
 
     const icon = { feliz: 'heart', bravo: 'angry', triste: 'sad', neutro: null }[mood];
     if (icon) {
-      const r = this.scene.add.image(this.sprite.x, this.sprite.y - 36, icon).setDepth(950);
+      const r = this.scene.add.image(this.sprite.x, this.sprite.y - 42, icon).setDepth(950);
       this.scene.tweens.add({
         targets: r,
         y: r.y - (this.opts.reduceMotion() ? 0 : 10),
@@ -146,9 +146,9 @@ export class Visitor {
     s.setDepth(s.y);
     const bob = this.opts.reduceMotion() ? 0 : Math.round(Math.sin(time / 300 + s.x) * 1);
     const bx = Math.round(s.x + 10);
-    const by = Math.round(s.y - 34 + bob);
+    const by = Math.round(s.y - 38 + bob);
     this.bubble.setPosition(bx, by).setDepth(900);
-    this.marker.setPosition(Math.round(s.x), Math.round(s.y - 36 + bob)).setDepth(901);
+    this.marker.setPosition(Math.round(s.x), Math.round(s.y - 42 + bob)).setDepth(901);
     if (this.bubble.visible) this.marker.setX(Math.round(s.x - 7));
 
     // Barrinha de paciência sob o balão: verde → âmbar → terracota

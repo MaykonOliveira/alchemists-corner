@@ -501,3 +501,15 @@ button, .stage-canvas { touch-action: manipulation; -webkit-tap-highlight-color:
   .toasts { top: 6px; }
   .toast { font-size: 12px; padding: 4px 8px; }
 }
+
+/* Ícones em pixel art recortados do spritesheet (src/ui/SpriteIcon.tsx) */
+.sprite-icon {
+  display: inline-block;
+  flex: none;
+  vertical-align: middle;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+}
+.sprite-icon-muted {
+  filter: grayscale(1) brightness(0.7) opacity(0.7);
+}

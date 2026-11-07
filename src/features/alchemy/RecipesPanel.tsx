@@ -3,7 +3,7 @@ import { INGREDIENTS, INGREDIENTS_BY_ID } from '../../domain/data/ingredients';
 import { RECIPES } from '../../domain/data/recipes';
 import type { GameSave } from '../../domain/models/types';
 import { useGameStore } from '../../store/gameStore';
-import { FlaskIcon, LeafIcon } from '../../ui/icons';
+import { IngredientIcon, PotionIcon } from '../../ui/SpriteIcon';
 
 export function RecipesPanel({ save }: { save: GameSave }) {
   const known = RECIPES.filter((r) => save.knownRecipes.includes(r.id)).length;
@@ -16,7 +16,7 @@ export function RecipesPanel({ save }: { save: GameSave }) {
           return (
             <li key={r.id} className={`card ${isKnown ? '' : 'card-locked'}`}>
               <div className="card-head">
-                <FlaskIcon color={isKnown ? r.color : '#5c5458'} size={20} />
+                <PotionIcon recipeId={r.id} size={32} muted={!isKnown} />
                 <span className="row-title">{isKnown ? r.name : '??? — página em branco'}</span>
               </div>
               {isKnown ? (
@@ -55,7 +55,7 @@ function Experiment({ save }: { save: GameSave }) {
           const have = save.ingredients[i.id] ?? 0;
           return (
             <button key={i.id} className={`chip ${picked.includes(i.id) ? 'on' : ''}`} disabled={have === 0 && !picked.includes(i.id)} onClick={() => toggle(i.id)} aria-pressed={picked.includes(i.id)}>
-              <LeafIcon color={i.color} size={14} /> {i.name} <span className="muted">({have})</span>
+              <IngredientIcon ingredientId={i.id} /> {i.name} <span className="muted">({have})</span>
             </button>
           );
         })}

@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { useEffect, useRef } from 'react';
 import { useGameStore } from '../store/gameStore';
-import { WORLD_H, WORLD_W } from './phaser/art/shop';
+import { WORLD_H, WORLD_W } from './phaser/art/sprites';
 import { createGameConfig } from './phaser/config';
 
 /** Maior escala inteira que cabe no espaço disponível (PRD 6.3). */
