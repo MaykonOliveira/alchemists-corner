@@ -73,7 +73,7 @@ export function createNewGame(now: number = Date.now()): GameSave {
     festivalSponsored: false,
     tutorialStep: 0,
     seq: 0,
-    settings: { volume: 0.7, muted: false, music: true, reduceMotion: false },
+    settings: { volume: 0.7, muted: false, music: true, reduceMotion: false, musicVolume: 0.6, sfxVolume: 0.8, ambienceVolume: 0.5, vibration: true },
   };
   s.supplier = supplierStock(s);
   s.stats = freshStats(s);
