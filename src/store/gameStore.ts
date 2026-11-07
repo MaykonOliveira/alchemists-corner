@@ -157,6 +157,11 @@ export const useGameStore = create<StoreState>()(
           return;
         case 'ORDER_NEW': return toast('Novo pedido especial no quadro de avisos!', 'gold');
         case 'ORDER_DONE': return toast(`Pedido entregue! +${e.coins} moedas.`, 'gold');
+        case 'CONTRACT_OFFERED': return toast('📜 Um contrato grande chegou ao quadro de avisos!', 'gold');
+        case 'CONTRACT_ACCEPTED': return toast('Contrato aceito! Você tem 3 dias para entregar.', 'ok');
+        case 'CONTRACT_PROGRESS': return toast(`${e.delivered} poções entregues para o contrato.`, 'ok');
+        case 'CONTRACT_DONE': return toast(`Contrato cumprido! +${e.coins} moedas${e.seal ? ' e 1 Selo de Mestre' : ''} e um baú de ingredientes raros.`, 'gold');
+        case 'CONTRACT_FAILED': return toast(`O contrato venceu. O cliente pagou ${e.coins} pelo que recebeu e a reputação caiu.`, 'warn');
         case 'ORDER_EXPIRED': return toast('Um pedido especial expirou. Sem problemas, outros virão.');
         case 'UPGRADE_BOUGHT': {
           const up = UPGRADES_BY_ID[e.upgradeId];

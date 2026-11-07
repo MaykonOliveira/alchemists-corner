@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { INGREDIENTS_BY_ID } from '../../domain/data/ingredients';
 import { RECIPES_BY_ID } from '../../domain/data/recipes';
-import type { GameSave } from '../../domain/models/types';
-import { brewDurationMs, maxBatches, potionsPerBatch } from '../../domain/rules/alchemy';
+import type { BrewJob, GameSave } from '../../domain/models/types';
+import { brewDurationMs, freeCauldron, hasSecondCauldron, maxBatches, potionsPerBatch } from '../../domain/rules/alchemy';
 import { recipeCost } from '../../domain/rules/economy';
 import { useGameStore } from '../../store/gameStore';
 import { PotionIcon } from '../../ui/SpriteIcon';
@@ -18,23 +18,17 @@ export function ProductionPanel({ save }: { save: GameSave }) {
   const max = maxBatches(save, selected);
   const b = Math.max(1, Math.min(batches, Math.max(1, max)));
   const perBatch = potionsPerBatch(save);
+  const slot = freeCauldron(save);
 
   return (
     <>
-      {save.brew ? (
-        <div className="card brewing">
-          <div className="card-head">
-            <PotionIcon recipeId={save.brew.recipeId} size={32} />
-            <span className="row-title">Fervendo: {RECIPES_BY_ID[save.brew.recipeId].name}</span>
-          </div>
-          <Meter ratio={save.brew.elapsedMs / save.brew.totalMs} tone="potion" label="Progresso do preparo" />
-          <p className="card-text muted">
-            {save.brew.batches * perBatch} poções · faltam {secs(save.brew.totalMs - save.brew.elapsedMs)}
-            {save.phase === 'preparacao' ? '. Você pode abrir a loja enquanto isso.' : ''}
-          </p>
+      {save.brew || save.brew2 ? (
+        <div className={hasSecondCauldron(save) ? 'cauldron-pair' : ''}>
+          <BrewCard job={save.brew} label={hasSecondCauldron(save) ? 'Caldeirão 1' : null} save={save} />
+          {hasSecondCauldron(save) && <BrewCard job={save.brew2} label="Caldeirão 2" save={save} />}
         </div>
       ) : (
-        <p className="panel-lead">Escolha uma receita. Cada lote rende {perBatch} poções.</p>
+        <p className="panel-lead">Escolha uma receita. Cada lote rende {perBatch} poções.{hasSecondCauldron(save) ? ' Você tem 2 caldeirões!' : ''}</p>
       )}
 
       <div className="recipe-picker" role="radiogroup" aria-label="Receitas conhecidas">
@@ -79,13 +73,37 @@ export function ProductionPanel({ save }: { save: GameSave }) {
           <Stepper value={b} min={1} max={Math.max(1, max)} onChange={setBatches} label="Lotes" />
           <button
             className="btn btn-primary"
-            disabled={!!save.brew || max < 1 || save.phase === 'fechamento'}
+            disabled={!slot || max < 1 || save.phase === 'fechamento'}
             onClick={() => dispatch({ type: 'START_BREW', recipeId: selected, batches: b })}
           >
-            {save.brew ? 'Caldeirão ocupado' : max < 1 ? 'Faltam ingredientes' : `Preparar ${b} lote${b > 1 ? 's' : ''}`}
+            {!slot ? (hasSecondCauldron(save) ? 'Caldeirões ocupados' : 'Caldeirão ocupado') : max < 1 ? 'Faltam ingredientes' : `Preparar ${b} lote${b > 1 ? 's' : ''}${hasSecondCauldron(save) ? ` no caldeirão ${slot}` : ''}`}
           </button>
         </div>
       </div>
     </>
+  );
+}
+
+function BrewCard({ job, label, save }: { job: BrewJob | null; label: string | null; save: GameSave }) {
+  if (!job) {
+    return (
+      <div className="card brewing brewing-idle">
+        <p className="row-title">{label}: livre</p>
+        <p className="card-text muted small">Escolha uma receita abaixo para usar este caldeirão.</p>
+      </div>
+    );
+  }
+  return (
+    <div className="card brewing">
+      <div className="card-head">
+        <PotionIcon recipeId={job.recipeId} size={32} />
+        <span className="row-title">{label ? `${label}: ` : 'Fervendo: '}{RECIPES_BY_ID[job.recipeId].name}</span>
+      </div>
+      <Meter ratio={job.elapsedMs / job.totalMs} tone="potion" label="Progresso do preparo" />
+      <p className="card-text muted">
+        {job.batches * potionsPerBatch(save)} poções · faltam {secs(job.totalMs - job.elapsedMs)}
+        {save.phase === 'preparacao' && !label ? '. Você pode abrir a loja enquanto isso.' : ''}
+      </p>
+    </div>
   );
 }

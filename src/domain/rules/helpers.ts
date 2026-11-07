@@ -2,7 +2,7 @@ import { INGREDIENTS } from '../data/ingredients';
 import { HELPER_IDS } from '../data/upgrades';
 import { RECIPES_BY_ID } from '../data/recipes';
 import type { Customer, GameSave, HelperWork } from '../models/types';
-import { maxBatches, potionsPerBatch, startBrew } from './alchemy';
+import { freeCauldron, maxBatches, potionsPerBatch, startBrew } from './alchemy';
 import { fail, type Draft } from './context';
 import { acceptOffer, dismissCustomer, priceVerdict, serveCustomer, suits } from './customers';
 import { applyPurchase, countIngredients, has, ingredientCapacity, ingredientPrice, potionStock, supplierLeft } from './economy';
@@ -105,7 +105,7 @@ function runRaven(d: Draft, ms: number) {
 
 /** O que o aprendiz prepararia agora (ou null). Pedido especial pendente tem prioridade. */
 export function apprenticePlan(s: GameSave): { recipeId: string; batches: number } | null {
-  if (s.brew || s.phase === 'fechamento') return null;
+  if (!freeCauldron(s) || s.phase === 'fechamento') return null;
   const order = s.order;
   const plans = s.knownRecipes
     .map((id) => {
@@ -183,9 +183,9 @@ export function advanceHelpers(d: Draft, ms: number): boolean {
     busy = true;
   }
   if (helperActive(s, APPRENTICE)) {
-    const before = s.brew;
+    const before = [s.brew, s.brew2];
     runApprentice(d);
-    busy ||= before !== s.brew;
+    busy ||= before[0] !== s.brew || before[1] !== s.brew2;
   }
   if (helperActive(s, GOLEM) && s.phase === 'expediente') {
     runGolem(d, ms);

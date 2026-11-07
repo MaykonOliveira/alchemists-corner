@@ -32,7 +32,7 @@ export function MenuScreen() {
           )}
         </div>
       </div>
-      <p className="menu-foot">Versão 0.6 · Loja que reage: moedas, humor e medalhas</p>
+      <p className="menu-foot">Versão 0.7 · Expansões da loja e contratos de vários dias</p>
     </main>
   );
 }

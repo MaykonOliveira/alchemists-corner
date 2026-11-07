@@ -21,7 +21,7 @@ export const SHORTCUTS: { key: string; label: string; panel: PanelId; icon: stri
 export function BottomBar() {
   const active = useGameStore((s) => s.ui.activePanel);
   const customers = useGameStore((s) => s.save?.customers.length ?? 0);
-  const order = useGameStore((s) => !!s.save?.order);
+  const order = useGameStore((s) => !!s.save?.order || (!!s.save?.contract && !s.save.contract.accepted));
   const seals = useGameStore((s) => (s.save ? sealsAvailable(s.save) : 0));
   const dispatch = useGameStore((s) => s.dispatch);
   const [moreOpen, setMoreOpen] = useState(false);

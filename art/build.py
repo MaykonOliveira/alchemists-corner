@@ -10,6 +10,7 @@ import objects as O
 import items as I
 import helpers as H
 import lategame as L
+import expansion as X
 from room import draw_room
 from customers import customer_sheet, LOOKS, FW, FH, FRAMES
 
@@ -81,6 +82,11 @@ def main():
     shop.update({'greenhouse': L.greenhouse(), 'alembic': L.alembic(), 'cabinet-runes': L.cabinet_runes(),
                  'vitral': L.vitral(), 'bell-0': L.bell(0), 'bell-1': L.bell(1),
                  'glow-violet': O.glow(10, (184, 150, 228)), 'glow-vitral': O.glow(16, (200, 170, 255))})
+    # Expansões (pacote C)
+    shop.update({'cauldron-2': X.cauldron_copper(), 'counter-wing': X.counter_wing(),
+                 'astrolabe-0': X.astrolabe(0), 'astrolabe-1': X.astrolabe(1)})
+    for k in ('cauldron-2', 'counter-wing'):
+        shop[f'{k}-outline'] = outline_mask(shop[k])
     for rid in I.LIQ:
         shop[f'potion-{rid}'] = I.potion_small(rid)
     sheet, meta = pack(shop, 512)
@@ -109,7 +115,8 @@ def main():
     from pix import P
     layout = {'garlandBulbs': [{'x': x, 'y': y, 'color': P[c]} for x, y, c in O.garland_bulbs()],
               'shelfBoards': O.SHELF_BOARDS, 'customer': {'w': FW, 'h': FH, 'frames': FRAMES},
-              'lategame': {k: {'x': x, 'y': y} for k, (x, y) in L.POS.items()}}
+              'lategame': {k: {'x': x, 'y': y} for k, (x, y) in L.POS.items()},
+              'expansion': {k: {'x': x, 'y': y} for k, (x, y) in X.POS.items()}}
     with open(os.path.join(OUT, 'layout.json'), 'w') as fh:
         json.dump(layout, fh, indent=1)
     print('ok:', sorted(os.listdir(OUT)))

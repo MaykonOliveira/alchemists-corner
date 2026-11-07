@@ -22,6 +22,13 @@ export const UPGRADES: ShopUpgrade[] = [
     effect: 'Uma janela de vidro colorido que brilha à noite. Clientes pagam 5% a mais e a nobreza aparece com mais frequência.' },
   { id: 'sino-encantado', name: 'Sino encantado', cost: 7000, category: 'funcional', requiredLevel: 15,
     effect: 'Um sino na porta que acalma quem espera: clientes têm 30% mais paciência e chegam com mais frequência.' },
+  // Expansão da loja: etapas caras, em ordem, para o late game.
+  { id: 'sala-dos-fundos', name: 'Sala dos fundos', cost: 9000, category: 'expansao', requiredLevel: 9,
+    effect: 'Derruba a parede do depósito e instala um segundo caldeirão: dois preparos ao mesmo tempo.' },
+  { id: 'balcao-duplo', name: 'Balcão duplo', cost: 14000, category: 'expansao', requiredLevel: 11, requires: 'sala-dos-fundos',
+    effect: 'Um balcão maior: até 4 clientes esperando e 10% mais movimento na rua.' },
+  { id: 'torre-alquimista', name: 'Torre do alquimista', cost: 22000, category: 'expansao', requiredLevel: 13, requires: 'balcao-duplo',
+    effect: 'Uma torre com observatório no telhado. Clientes pagam 8% a mais e os contratos rendem 25% mais moedas.' },
   // Ajudantes: automatizam uma parte do trabalho e recebem salário diário (somado à manutenção).
   { id: 'corvo-entregador', name: 'Corvo entregador', cost: 600, category: 'ajudante', requiredLevel: 3, upkeep: 8,
     effect: 'Confere o armário a cada hora e busca no fornecedor o que está acabando (taxa de 3 moedas por viagem).' },

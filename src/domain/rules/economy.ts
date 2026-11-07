@@ -109,6 +109,7 @@ export function buyUpgrade(d: Draft, upgradeId: string): boolean {
   if (!up) return false;
   if (has(s, upgradeId)) return fail(d, 'Você já tem esta melhoria.');
   if (s.level < up.requiredLevel) return fail(d, `Disponível no nível ${up.requiredLevel}.`);
+  if (up.requires && !has(s, up.requires)) return fail(d, `Compre antes: ${UPGRADES_BY_ID[up.requires].name}.`);
   if (s.coins < up.cost) return fail(d, 'Moedas insuficientes.');
   s.coins -= up.cost;
   s.upgrades.push(upgradeId);

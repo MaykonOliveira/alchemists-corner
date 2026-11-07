@@ -18,7 +18,8 @@ function helperStatus(save: GameSave, id: string): string {
     return `Hoje: ${plural(w.deliveries, 'viagem', 'viagens')}, ${plural(w.delivered, 'item', 'itens')}. Confere o armário de novo em ${next}s.`;
   }
   if (id === APPRENTICE) {
-    if (save.brew) return `Mexendo o caldeirão: ${RECIPES_BY_ID[save.brew.recipeId].shortName}. Hoje: ${plural(w.brews, 'preparo', 'preparos')}.`;
+    const job = save.brew ?? save.brew2;
+    if (job && !apprenticePlan(save)) return `Mexendo o caldeirão: ${RECIPES_BY_ID[job.recipeId].shortName}. Hoje: ${plural(w.brews, 'preparo', 'preparos')}.`;
     const plan = apprenticePlan(save);
     return plan ? `Vai preparar ${RECIPES_BY_ID[plan.recipeId].shortName}.` : `Esperando ingredientes ou espaço nas prateleiras. Hoje: ${plural(w.brews, 'preparo', 'preparos')}.`;
   }
@@ -32,16 +33,18 @@ function helperStatus(save: GameSave, id: string): string {
 function UpgradeCard({ save, u }: { save: GameSave; u: ShopUpgrade }) {
   const dispatch = useGameStore((s) => s.dispatch);
   const owned = save.upgrades.includes(u.id);
-  const locked = save.level < u.requiredLevel;
+  const needs = u.requires && !save.upgrades.includes(u.requires) ? UPGRADES.find((x) => x.id === u.requires) : undefined;
+  const locked = save.level < u.requiredLevel || !!needs;
+  const expansion = u.category === 'expansao';
   const afford = save.coins >= u.cost;
   const helper = u.category === 'ajudante';
   const on = owned && helperActive(save, u.id);
   return (
-    <li className={`card ${locked ? 'card-locked' : ''} ${owned ? 'card-owned' : ''} ${helper ? 'card-helper' : ''}`}>
+    <li className={`card ${locked ? 'card-locked' : ''} ${owned ? 'card-owned' : ''} ${helper ? 'card-helper' : ''} ${expansion ? 'card-expansion' : ''}`}>
       <div className="card-head">
         {helper && <SpriteIcon name={`helper-${u.id}`} size={32} muted={locked} />}
         <span className="row-title">{u.name}</span>
-        <span className={`tag ${u.category === 'visual' ? 'tag-gold' : ''} ${helper ? 'tag-helper' : ''}`}>{u.category}</span>
+        <span className={`tag ${u.category === 'visual' || expansion ? 'tag-gold' : ''} ${helper ? 'tag-helper' : ''}`}>{expansion ? 'expansão' : u.category}</span>
       </div>
       <p className="card-text small">{u.effect}</p>
       {helper && <p className="card-text small muted">Salário: {u.upkeep} moedas por dia.</p>}
@@ -56,8 +59,10 @@ function UpgradeCard({ save, u }: { save: GameSave; u: ShopUpgrade }) {
           </label>
         ) : owned ? (
           <span className="tag tag-ok">instalada ✓</span>
-        ) : locked ? (
+        ) : save.level < u.requiredLevel ? (
           <span className="tag">nível {u.requiredLevel}</span>
+        ) : needs ? (
+          <span className="tag">antes: {needs.name}</span>
         ) : (
           <button className="btn btn-small btn-primary" disabled={!afford} onClick={() => dispatch({ type: 'BUY_UPGRADE', upgradeId: u.id })}>
             {afford ? (helper ? 'Contratar' : 'Comprar') : `Faltam ${u.cost - save.coins}`}
@@ -70,7 +75,8 @@ function UpgradeCard({ save, u }: { save: GameSave; u: ShopUpgrade }) {
 
 export function UpgradesPanel({ save }: { save: GameSave }) {
   const helpers = UPGRADES.filter((u) => u.category === 'ajudante');
-  const others = UPGRADES.filter((u) => u.category !== 'ajudante');
+  const expansions = UPGRADES.filter((u) => u.category === 'expansao');
+  const others = UPGRADES.filter((u) => u.category !== 'ajudante' && u.category !== 'expansao');
   return (
     <>
       <p className="panel-lead">Reinvista o lucro. Cada melhoria aparece na loja.</p>
@@ -79,6 +85,11 @@ export function UpgradesPanel({ save }: { save: GameSave }) {
       <ul className="list">
         {helpers.map((u) => <UpgradeCard key={u.id} save={save} u={u} />)}
       </ul>
+      <h3 className="mini-title">🏰 Expansão da loja</h3>
+      <p className="card-text small muted">Obras grandes, em etapas: cada uma abre a próxima. A loja cresce de verdade na tela.</p>
+      <ol className="list expansion-track">
+        {expansions.map((u) => <UpgradeCard key={u.id} save={save} u={u} />)}
+      </ol>
       <h3 className="mini-title">Melhorias da loja</h3>
       <ul className="list">
         {others.map((u) => <UpgradeCard key={u.id} save={save} u={u} />)}

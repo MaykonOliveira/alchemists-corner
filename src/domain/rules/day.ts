@@ -4,6 +4,7 @@ import { advanceCustomers, sendAllCustomersHome } from './customers';
 import { harvestGreenhouse, helperWages, maintenanceCost, supplierStock } from './economy';
 import { DAY_EVENTS } from '../data/orders';
 import { advanceHelpers, emptyHelperWork } from './helpers';
+import { updateContracts } from './contracts';
 import { expireOrder, maybeCreateOrder } from './orders';
 import { CLOSE_MIN, GAME_MIN_PER_SECOND, OPEN_MIN } from './time';
 import { advanceBrew } from './alchemy';
@@ -72,6 +73,7 @@ export function startNextDay(d: Draft): boolean {
   harvestGreenhouse(d);
   expireOrder(d);
   maybeCreateOrder(d);
+  updateContracts(d);
   d.events.push({ type: 'DAY_STARTED', day: s.day, event: s.event });
   return true;
 }
@@ -96,11 +98,11 @@ export function sponsorFestival(d: Draft): boolean {
 export function advance(d: Draft, ms: number): boolean {
   const s = d.s;
   if (ms <= 0 || s.phase === 'fechamento') return false;
-  const before = s.brew?.elapsedMs;
+  const before = [s.brew?.elapsedMs, s.brew2?.elapsedMs];
   advanceBrew(d, ms);
   if (s.phase !== 'expediente') {
     const helped = advanceHelpers(d, ms);
-    return helped || before !== s.brew?.elapsedMs;
+    return helped || before[0] !== s.brew?.elapsedMs || before[1] !== s.brew2?.elapsedMs;
   }
   s.clockMin = Math.min(CLOSE_MIN, s.clockMin + (ms / 1000) * GAME_MIN_PER_SECOND);
   advanceCustomers(d, ms);

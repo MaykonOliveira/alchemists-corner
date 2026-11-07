@@ -30,34 +30,49 @@ export function maxBatches(s: GameSave, recipeId: string) {
   return Math.max(0, Math.min(maxBatchesCap(s), byIngredients, bySpace));
 }
 
+/** A loja tem o segundo caldeirão (expansão "Sala dos fundos")? */
+export const hasSecondCauldron = (s: GameSave) => has(s, 'sala-dos-fundos');
+/** Qual caldeirão está livre agora (1, 2) ou null. */
+export function freeCauldron(s: GameSave): 1 | 2 | null {
+  if (!s.brew) return 1;
+  if (hasSecondCauldron(s) && !s.brew2) return 2;
+  return null;
+}
+
 export function startBrew(d: Draft, recipeId: string, batches: number): boolean {
   const s = d.s;
   const r = RECIPES_BY_ID[recipeId];
   if (!r || !s.knownRecipes.includes(recipeId)) return fail(d, 'Receita desconhecida.');
   if (s.phase === 'fechamento') return fail(d, 'A loja está fechando.');
-  if (s.brew) return fail(d, 'O caldeirão já está ocupado.');
+  const slot = freeCauldron(s);
+  if (!slot) return fail(d, hasSecondCauldron(s) ? 'Os dois caldeirões estão ocupados.' : 'O caldeirão já está ocupado.');
   if (!Number.isInteger(batches) || batches < 1) return fail(d, 'Escolha ao menos um lote.');
   if (batches > maxBatches(s, recipeId)) {
     const space = Math.floor((potionCapacity(s) - countPotions(s)) / potionsPerBatch(s));
     return fail(d, space < batches ? 'Não há espaço nas prateleiras.' : 'Ingredientes insuficientes.');
   }
   for (const i of r.ingredients) s.ingredients[i.ingredientId] -= i.qty * batches;
-  s.brew = { recipeId, batches, elapsedMs: 0, totalMs: brewDurationMs(s, recipeId, batches) };
-  d.events.push({ type: 'BREW_STARTED', recipeId, batches });
+  const job = { recipeId, batches, elapsedMs: 0, totalMs: brewDurationMs(s, recipeId, batches) };
+  if (slot === 1) s.brew = job;
+  else s.brew2 = job;
+  d.events.push(slot === 1 ? { type: 'BREW_STARTED', recipeId, batches } : { type: 'BREW_STARTED', recipeId, batches, slot: 2 });
   return true;
 }
 
 export function advanceBrew(d: Draft, ms: number) {
-  const b = d.s.brew;
-  if (!b) return;
-  b.elapsedMs = Math.min(b.totalMs, b.elapsedMs + ms);
-  if (b.elapsedMs < b.totalMs) return;
-  const qty = b.batches * potionsPerBatch(d.s);
-  addPotions(d.s, b.recipeId, qty);
-  d.s.brew = null;
-  d.events.push({ type: 'BREW_DONE', recipeId: b.recipeId, qty });
-  addMastery(d, b.recipeId, qty);
-  gainXp(d, 3 * b.batches);
+  for (const slot of [1, 2] as const) {
+    const b = slot === 1 ? d.s.brew : d.s.brew2;
+    if (!b) continue;
+    b.elapsedMs = Math.min(b.totalMs, b.elapsedMs + ms);
+    if (b.elapsedMs < b.totalMs) continue;
+    const qty = b.batches * potionsPerBatch(d.s);
+    addPotions(d.s, b.recipeId, qty);
+    if (slot === 1) d.s.brew = null;
+    else d.s.brew2 = null;
+    d.events.push(slot === 1 ? { type: 'BREW_DONE', recipeId: b.recipeId, qty } : { type: 'BREW_DONE', recipeId: b.recipeId, qty, slot: 2 });
+    addMastery(d, b.recipeId, qty);
+    gainXp(d, 3 * b.batches);
+  }
 }
 
 /**
