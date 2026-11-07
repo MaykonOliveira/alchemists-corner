@@ -3,6 +3,7 @@ import { subscribeWithSelector } from 'zustand/middleware';
 import { INGREDIENTS_BY_ID } from '../domain/data/ingredients';
 import { DAY_EVENTS } from '../domain/data/orders';
 import { RECIPES_BY_ID } from '../domain/data/recipes';
+import { TALENTS_BY_ID } from '../domain/data/talents';
 import { UPGRADES_BY_ID } from '../domain/data/upgrades';
 import type { GameEvent, GameSave } from '../domain/models/types';
 import { applyCommand, type DomainCommand } from '../domain/rules/commands';
@@ -11,7 +12,7 @@ import { gameEvents } from '../game/events';
 import { saveRepository } from '../persistence/saveRepository';
 
 export type PanelId =
-  | 'ingredients' | 'production' | 'recipes' | 'orders' | 'report' | 'shelves' | 'counter' | 'door' | 'upgrades';
+  | 'ingredients' | 'production' | 'recipes' | 'orders' | 'report' | 'shelves' | 'counter' | 'door' | 'upgrades' | 'grimoire';
 
 export interface HoverInfo {
   id: string;
@@ -152,6 +153,20 @@ export const useGameStore = create<StoreState>()(
         case 'DAY_CLOSED':
           set((st) => ({ ui: { ...st.ui, activePanel: null, selectedCustomerId: null, paused: false } }));
           return advanceTutorial(5);
+        case 'MASTERY_STAR':
+          return toast(`Maestria! ${RECIPES_BY_ID[e.recipeId].name} agora tem ${'★'.repeat(e.stars)}: clientes pagam mais por ela.`, 'gold');
+        case 'MASTER_RANK':
+          return toast(`Grau de Mestre ${e.rank}! Você ganhou 1 Selo de Mestre para o Grimório.`, 'gold');
+        case 'TALENT_LEARNED':
+          return toast(`Talento aprendido: ${TALENTS_BY_ID[e.talentId].name} (grau ${e.rank}).`, 'gold');
+        case 'SEAL_BOUGHT':
+          return toast(`A Guilda dos Alquimistas agradece a doação de ${e.cost} moedas: +1 Selo de Mestre!`, 'gold');
+        case 'FESTIVAL_SPONSORED':
+          return toast(`Festival patrocinado (−${e.cost} moedas)! Amanhã a cidade estará em festa.`, 'gold');
+        case 'GREENHOUSE_HARVEST': {
+          const units = e.items.reduce((n, i) => n + i.qty, 0);
+          return toast(`A estufa rendeu ${units} ervas fresquinhas para o armário.`, 'ok');
+        }
         case 'DAY_STARTED':
           if (e.event) toast(`${DAY_EVENTS[e.event].name}: ${DAY_EVENTS[e.event].text}`, 'gold');
           return advanceTutorial(6);

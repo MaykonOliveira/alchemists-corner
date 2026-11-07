@@ -1,6 +1,7 @@
 import { SAVE_VERSION, type GameSave } from '../domain/models/types';
 import { createNewGame } from '../domain/rules/initialState';
-import { xpForLevel } from '../domain/rules/progression';
+import { MAX_LEVEL, unlockRecipesUpTo, xpForLevel } from '../domain/rules/progression';
+import { DAY_EVENTS } from '../domain/data/orders';
 
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 const num = (v: unknown, fallback: number) => (typeof v === 'number' && Number.isFinite(v) ? v : fallback);
@@ -23,6 +24,7 @@ export function migrateSave(raw: unknown): GameSave | null {
 
   // v1 → v2: entraram preços, clientes, caldeirão, fornecedor, pedidos e tutorial.
   // v2 → v3: entraram os ajudantes automáticos (helpers) e o trabalho deles no relatório.
+  // v3 → v4: late game (níveis 11 a 15, maestria das receitas e talentos do Grimório do Mestre).
   // Os campos novos recebem os valores padrão abaixo.
 
   const base = createNewGame(num(raw.createdAt, Date.now()));
@@ -32,7 +34,24 @@ export function migrateSave(raw: unknown): GameSave | null {
   const supplier: GameSave['supplier'] = { ...base.supplier };
   if (isObj(raw.supplier)) for (const [k, v] of Object.entries(raw.supplier)) supplier[k] = v === null ? null : Math.max(0, num(v, 0));
 
-  return {
+  // Até a v3 o nível máximo era 10 e a XP seguia acumulando sem efeito. Ela fica guardada até a
+  // porta do nível 11, para a próxima venda já subir de nível.
+  let xp = Math.max(xpForLevel(level), num(raw.xp, base.xp));
+  if (raw.saveVersion < 4 && level < MAX_LEVEL) xp = Math.min(xp, xpForLevel(level + 1) - 1);
+
+  // Maestria inicial para saves antigos: estimada pelas vendas dos relatórios guardados.
+  const mastery: Record<string, number> = {};
+  if (isObj(raw.mastery)) for (const [k, v] of Object.entries(raw.mastery)) mastery[k] = Math.max(0, Math.floor(num(v, 0)));
+  else if (Array.isArray(raw.reports)) {
+    for (const r of raw.reports) {
+      if (!isObj(r) || !isObj(r.salesByRecipe)) continue;
+      for (const [k, v] of Object.entries(r.salesByRecipe)) mastery[k] = (mastery[k] ?? 0) + Math.max(0, Math.floor(num(v, 0)));
+    }
+  }
+  const talents: Record<string, number> = {};
+  if (isObj(raw.talents)) for (const [k, v] of Object.entries(raw.talents)) talents[k] = Math.max(0, Math.floor(num(v, 0)));
+
+  const save: GameSave = {
     saveVersion: SAVE_VERSION,
     createdAt: base.createdAt,
     updatedAt: num(raw.updatedAt, base.updatedAt),
@@ -43,7 +62,7 @@ export function migrateSave(raw: unknown): GameSave | null {
     reputation: Math.max(0, num(raw.reputation, base.reputation)),
     level,
     // A curva de XP mudou no rebalanceamento: saves antigos mantêm o nível e começam no piso dele.
-    xp: Math.max(xpForLevel(level), num(raw.xp, base.xp)),
+    xp,
     ingredients: numRecord(raw.ingredients, base.ingredients),
     potions: arr(raw.potions, base.potions).filter((p) => isObj(p) && typeof p.recipeId === 'string' && num(p.quantity, 0) > 0),
     prices: numRecord(raw.prices, base.prices),
@@ -59,12 +78,16 @@ export function migrateSave(raw: unknown): GameSave | null {
     spawnInMs: num(raw.spawnInMs, base.spawnInMs),
     supplier,
     order: isObj(raw.order) ? (raw.order as unknown as GameSave['order']) : null,
-    event: raw.event === 'feira' || raw.event === 'caravana' || raw.event === 'chuva' ? raw.event : null,
+    event: typeof raw.event === 'string' && raw.event in DAY_EVENTS ? (raw.event as GameSave['event']) : null,
     stats: isObj(raw.stats)
       ? { ...base.stats, ...(raw.stats as object), helperWork: { ...base.stats.helperWork, ...(isObj(raw.stats.helperWork) ? raw.stats.helperWork : {}) } }
       : base.stats,
     reports: arr(raw.reports, base.reports),
     researchPoints: num(raw.researchPoints, 0),
+    mastery,
+    talents,
+    sealsBought: Math.max(0, Math.floor(num(raw.sealsBought, 0))),
+    festivalSponsored: bool(raw.festivalSponsored, false),
     tutorialStep: num(raw.tutorialStep, raw.saveVersion === 1 ? 99 : 0),
     seq: num(raw.seq, 0),
     settings: {
@@ -74,4 +97,7 @@ export function migrateSave(raw: unknown): GameSave | null {
       reduceMotion: bool(settings.reduceMotion, base.settings.reduceMotion),
     },
   };
+  // Receitas de níveis que o jogador já alcançou (as novas dos níveis 6 a 10 entram direto).
+  unlockRecipesUpTo(save, save.level);
+  return save;
 }

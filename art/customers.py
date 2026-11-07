@@ -1,4 +1,4 @@
-"""Os 4 clientes-base (PRD 6.6), 3 quadros cada: 0 parado, 1 e 2 caminhando."""
+"""Os 4 clientes-base (PRD 6.6) e a Nobre (late game), 3 quadros cada: 0 parado, 1 e 2 caminhando."""
 from pix import Canvas
 
 FW, FH, FRAMES = 18, 40, 3
@@ -21,6 +21,10 @@ LOOKS = {
     'viajante': dict(skin=('sk2', 'sk3', 'sk4'), hair=('a1', 'a2', 'a3'), hair_style='short',
                      top=('t1', 't2', 't3'), trim='c3', legs=('w1', 'w2'), boots=('w0', 'w2'),
                      extra='staff', hat='wide'),
+    # Nobre: coroa de ouro, manto rubi com gola de arminho e corrente dourada.
+    'nobre': dict(skin=('sk2', 'sk3', 'sk4'), hair=('a2', 'a3', 'a4'), hair_style='short',
+                  top=('r1', 'r2', 'r3'), trim='a4', legs=('r0', 'r1'), boots=('k0', 'k2'),
+                  extra='cape', hat='crown'),
 }
 
 
@@ -47,7 +51,7 @@ def draw_frame(look, frame):
         c.rect(sx - 1, top - 1, 3, 3, 't3'); c.px(sx, top - 1, 't5'); c.px(sx, top - 2, 't4')
     # tronco
     ty = top + 11
-    if look['extra'] == 'staff' or look['hat'] == 'wizard':  # capa / túnica longa
+    if look['extra'] in ('staff', 'cape') or look['hat'] == 'wizard':  # capa / túnica longa
         c.rect(ox + 1, ty, 10, 14, tb)
         c.rect(ox, ty + 3, 12, 11, tb)
         c.vline(ox, ty + 3, 11, td); c.vline(ox + 11, ty + 3, 11, td)
@@ -73,6 +77,14 @@ def draw_frame(look, frame):
         c.hline(ox + 3, ty, 6, 'c4')
     if look['extra'] == 'staff':
         c.hline(ox + 2, ty, 8, look['trim']); c.px(ox + 6, ty + 1, 'a4')  # broche
+    if look['extra'] == 'cape':
+        # gola de arminho, corrente de ouro e barra dourada do manto
+        c.rect(ox, ty, 12, 3, 'c5'); c.hline(ox, ty + 2, 12, 'c3')
+        for x in (ox + 2, ox + 5, ox + 9):
+            c.px(x, ty + 1, 'ink')
+        c.px(ox + 4, ty + 4, 'a4'); c.px(ox + 5, ty + 5, 'a3'); c.px(ox + 6, ty + 6, 'a5'); c.px(ox + 7, ty + 5, 'a3'); c.px(ox + 8, ty + 4, 'a4')
+        c.rect(ox + 5, ty + 7, 3, 2, 'a3'); c.px(ox + 6, ty + 7, 'r4')
+        c.hline(ox, ty + 12, 12, 'a3'); c.hline(ox, ty + 13, 12, 'a1')
     # braços
     sw = {0: 0, 1: 1, 2: -1}[frame]
     for side, ax in ((0, ox - 1), (1, ox + 11)):
@@ -129,6 +141,12 @@ def draw_frame(look, frame):
         c.rect(ox - 2, hy + 1, 16, 2, 'w2'); c.hline(ox - 2, hy + 1, 16, 'w4')
         c.rect(ox + 2, hy - 3, 8, 4, 'w3'); c.hline(ox + 2, hy - 3, 8, 'w4'); c.hline(ox + 2, hy, 8, look['trim'])
         c.px(ox + 9, hy - 2, 'r3'); c.px(ox + 10, hy - 3, 'r4')  # pena
+    if hat == 'crown':
+        c.rect(ox + 2, hy - 2, 8, 3, 'a3'); c.hline(ox + 2, hy - 2, 8, 'a4'); c.hline(ox + 2, hy, 8, 'a1')
+        for x in (ox + 2, ox + 5, ox + 9):
+            c.px(x, hy - 3, 'a4'); c.px(x, hy - 4, 'a5')
+        c.px(ox + 6, hy - 3, 'a4'); c.px(ox + 6, hy - 4, 'a5')
+        c.px(ox + 4, hy - 1, 'r3'); c.px(ox + 7, hy - 1, 'b3')
     c.outline('ink')
     return c
 

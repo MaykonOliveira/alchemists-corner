@@ -7,6 +7,7 @@ import { ReportPanel } from '../../features/economy/ReportPanel';
 import { IngredientsPanel } from '../../features/inventory/IngredientsPanel';
 import { ShelvesPanel } from '../../features/inventory/ShelvesPanel';
 import { UpgradesPanel } from '../../features/progression/UpgradesPanel';
+import { GrimoirePanel } from '../../features/mastery/GrimoirePanel';
 import { useGameStore, type PanelId } from '../../store/gameStore';
 import { potionStock } from '../../domain/rules/economy';
 
@@ -20,6 +21,7 @@ const TITLES: Record<PanelId, string> = {
   counter: 'Balcão',
   door: 'Porta da loja',
   upgrades: 'Melhorias',
+  grimoire: 'Grimório do Mestre',
 };
 
 export function SidePanel() {
@@ -64,6 +66,7 @@ export function SidePanel() {
         {panel === 'counter' && <CounterPanel save={save} />}
         {panel === 'door' && <DoorPanel save={save} />}
         {panel === 'upgrades' && <UpgradesPanel save={save} />}
+        {panel === 'grimoire' && <GrimoirePanel save={save} />}
       </div>
     </aside>
   );

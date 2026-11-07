@@ -1,7 +1,7 @@
 {
  "size": 16,
  "width": 128,
- "height": 48,
+ "height": 64,
  "icons": {
   "potion-cura-simples": [
    0,
@@ -27,49 +27,89 @@
    80,
    0
   ],
-  "ingredient-folha-lunar": [
+  "potion-pocao-sorte": [
    96,
    0
   ],
-  "ingredient-hortela-brava": [
+  "potion-elixir-geada": [
    112,
    0
   ],
-  "ingredient-cristal-ambar": [
+  "potion-pena-leve": [
    0,
    16
   ],
-  "ingredient-po-de-pedra": [
+  "potion-elixir-estelar": [
    16,
    16
   ],
-  "ingredient-orvalho-feerico": [
+  "potion-elixir-fenix": [
    32,
    16
   ],
-  "ingredient-essencia-azul": [
+  "ingredient-folha-lunar": [
    48,
    16
   ],
-  "ingredient-escama-salamandra": [
+  "ingredient-hortela-brava": [
    64,
    16
   ],
-  "ingredient-cogumelo-lanterna": [
+  "ingredient-cristal-ambar": [
    80,
    16
   ],
-  "helper-corvo-entregador": [
+  "ingredient-po-de-pedra": [
    96,
    16
   ],
-  "helper-aprendiz": [
+  "ingredient-orvalho-feerico": [
    112,
    16
   ],
-  "helper-golem-balconista": [
+  "ingredient-essencia-azul": [
    0,
    32
+  ],
+  "ingredient-escama-salamandra": [
+   16,
+   32
+  ],
+  "ingredient-cogumelo-lanterna": [
+   32,
+   32
+  ],
+  "ingredient-raiz-mandragora": [
+   48,
+   32
+  ],
+  "ingredient-cristal-geada": [
+   64,
+   32
+  ],
+  "ingredient-pluma-grifo": [
+   80,
+   32
+  ],
+  "ingredient-areia-estelar": [
+   96,
+   32
+  ],
+  "ingredient-pena-fenix": [
+   112,
+   32
+  ],
+  "helper-corvo-entregador": [
+   0,
+   48
+  ],
+  "helper-aprendiz": [
+   16,
+   48
+  ],
+  "helper-golem-balconista": [
+   32,
+   48
   ]
  }
 }

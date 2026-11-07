@@ -32,7 +32,7 @@ export function MenuScreen() {
           )}
         </div>
       </div>
-      <p className="menu-foot">Versão de desenvolvimento · Fase 1 (vertical slice visual)</p>
+      <p className="menu-foot">Versão 0.4 · Níveis até o 15, Grimório do Mestre e 5 poções lendárias</p>
     </main>
   );
 }

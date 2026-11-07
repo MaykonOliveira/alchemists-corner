@@ -17,6 +17,17 @@ export const INGREDIENTS: Ingredient[] = [
     description: 'Ainda morna ao toque. Rara e muito procurada.' },
   { id: 'cogumelo-lanterna', supplierLevel: 2, dailyStock: 5, name: 'Cogumelo-lanterna', family: 'raro', rarity: 'raro', price: 17, color: '#c9e070',
     description: 'Brilha suavemente no escuro das cavernas.' },
+  // Late game (níveis 6 a 14)
+  { id: 'raiz-mandragora', supplierLevel: 6, dailyStock: null, name: 'Raiz de mandrágora', family: 'erva', rarity: 'incomum', price: 12, color: '#b07a4a',
+    description: 'Tem forma de gente e resmunga baixinho. Dizem que atrai a sorte.' },
+  { id: 'cristal-geada', supplierLevel: 8, dailyStock: 8, name: 'Cristal de geada', family: 'mineral', rarity: 'incomum', price: 16, color: '#8ad8f0',
+    description: 'Colhido no alto das montanhas. Nunca derrete, nem perto do fogo.' },
+  { id: 'pluma-grifo', supplierLevel: 10, dailyStock: 5, name: 'Pluma de grifo', family: 'raro', rarity: 'raro', price: 26, color: '#e8dcc0',
+    description: 'Mais leve que o ar. Flutua devagar quando você a solta.' },
+  { id: 'areia-estelar', supplierLevel: 12, dailyStock: 6, name: 'Areia estelar', family: 'magico', rarity: 'raro', price: 22, color: '#7a6ad8',
+    description: 'Poeira de estrela cadente. Cintila mesmo dentro da bolsa fechada.' },
+  { id: 'pena-fenix', supplierLevel: 14, dailyStock: 3, name: 'Pena de fênix', family: 'raro', rarity: 'raro', price: 45, color: '#f06a2a',
+    description: 'Quente como brasa e impossível de queimar. A mais rara do fornecedor.' },
 ];
 
 export const INGREDIENTS_BY_ID: Record<string, Ingredient> = Object.fromEntries(

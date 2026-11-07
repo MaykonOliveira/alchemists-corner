@@ -1,7 +1,8 @@
 import type { DayEventId, DayReport, DayStats, GameSave } from '../models/types';
-import { pick, type Draft } from './context';
+import { fail, pick, type Draft } from './context';
 import { advanceCustomers, sendAllCustomersHome } from './customers';
-import { helperWages, maintenanceCost, supplierStock } from './economy';
+import { harvestGreenhouse, helperWages, maintenanceCost, supplierStock } from './economy';
+import { DAY_EVENTS } from '../data/orders';
 import { advanceHelpers, emptyHelperWork } from './helpers';
 import { expireOrder, maybeCreateOrder } from './orders';
 import { CLOSE_MIN, GAME_MIN_PER_SECOND, OPEN_MIN } from './time';
@@ -64,10 +65,30 @@ export function startNextDay(d: Draft): boolean {
   s.helpers.ravenInMs = 1500;
   s.helpers.golemInMs = 0;
   // Eventos simples a partir do dia 3 (cerca de 1 em cada 3 dias).
-  s.event = s.day >= 3 && d.ctx.random() < 0.35 ? pick<DayEventId>(['feira', 'caravana', 'chuva'], d.ctx.random) : null;
+  const events = (Object.keys(DAY_EVENTS) as DayEventId[]).filter((id) => s.level >= (DAY_EVENTS[id].minLevel ?? 1));
+  s.event = s.day >= 3 && d.ctx.random() < 0.35 ? pick<DayEventId>(events, d.ctx.random) : null;
+  if (s.festivalSponsored) s.event = 'festival';
+  s.festivalSponsored = false;
+  harvestGreenhouse(d);
   expireOrder(d);
   maybeCreateOrder(d);
   d.events.push({ type: 'DAY_STARTED', day: s.day, event: s.event });
+  return true;
+}
+
+/** Preço para patrocinar o Festival das Lanternas no dia seguinte (cresce com o nível). */
+export const festivalPrice = (s: GameSave) => 600 + 150 * s.level;
+
+export function sponsorFestival(d: Draft): boolean {
+  const s = d.s;
+  const minLevel = DAY_EVENTS.festival.minLevel ?? 1;
+  if (s.level < minLevel) return fail(d, `O festival só pode ser patrocinado a partir do nível ${minLevel}.`);
+  if (s.festivalSponsored) return fail(d, 'O festival de amanhã já está garantido.');
+  const cost = festivalPrice(s);
+  if (s.coins < cost) return fail(d, 'Moedas insuficientes.');
+  s.coins -= cost;
+  s.festivalSponsored = true;
+  d.events.push({ type: 'FESTIVAL_SPONSORED', cost });
   return true;
 }
 

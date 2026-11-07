@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { INGREDIENTS_BY_ID } from '../../domain/data/ingredients';
 import { RECIPES_BY_ID } from '../../domain/data/recipes';
 import type { GameSave } from '../../domain/models/types';
-import { brewDurationMs, maxBatches, POTIONS_PER_BATCH } from '../../domain/rules/alchemy';
+import { brewDurationMs, maxBatches, potionsPerBatch } from '../../domain/rules/alchemy';
 import { recipeCost } from '../../domain/rules/economy';
 import { useGameStore } from '../../store/gameStore';
 import { PotionIcon } from '../../ui/SpriteIcon';
@@ -17,6 +17,7 @@ export function ProductionPanel({ save }: { save: GameSave }) {
   const r = RECIPES_BY_ID[selected];
   const max = maxBatches(save, selected);
   const b = Math.max(1, Math.min(batches, Math.max(1, max)));
+  const perBatch = potionsPerBatch(save);
 
   return (
     <>
@@ -28,12 +29,12 @@ export function ProductionPanel({ save }: { save: GameSave }) {
           </div>
           <Meter ratio={save.brew.elapsedMs / save.brew.totalMs} tone="potion" label="Progresso do preparo" />
           <p className="card-text muted">
-            {save.brew.batches * POTIONS_PER_BATCH} poções · faltam {secs(save.brew.totalMs - save.brew.elapsedMs)}
+            {save.brew.batches * perBatch} poções · faltam {secs(save.brew.totalMs - save.brew.elapsedMs)}
             {save.phase === 'preparacao' ? '. Você pode abrir a loja enquanto isso.' : ''}
           </p>
         </div>
       ) : (
-        <p className="panel-lead">Escolha uma receita. Cada lote rende {POTIONS_PER_BATCH} poções.</p>
+        <p className="panel-lead">Escolha uma receita. Cada lote rende {perBatch} poções.</p>
       )}
 
       <div className="recipe-picker" role="radiogroup" aria-label="Receitas conhecidas">
@@ -69,9 +70,9 @@ export function ProductionPanel({ save }: { save: GameSave }) {
           })}
         </ul>
         <div className="brew-facts">
-          <span>Rende <strong>{b * POTIONS_PER_BATCH}</strong></span>
-          <span>Custo ≈ <strong>{recipeCost(selected) * b}</strong></span>
-          <span>Venda ≈ <strong>{(save.prices[selected] ?? r.basePrice) * b * POTIONS_PER_BATCH}</strong></span>
+          <span>Rende <strong>{b * perBatch}</strong></span>
+          <span>Custo ≈ <strong>{recipeCost(save, selected) * b}</strong></span>
+          <span>Venda ≈ <strong>{(save.prices[selected] ?? r.basePrice) * b * perBatch}</strong></span>
           <span>Tempo <strong>{secs(brewDurationMs(save, selected, b))}</strong></span>
         </div>
         <div className="card-foot">

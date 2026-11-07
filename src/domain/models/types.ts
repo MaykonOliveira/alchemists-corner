@@ -52,7 +52,7 @@ export interface PotionStack {
   forSale: boolean;
 }
 
-export type CustomerArchetype = 'aventureiro' | 'estudioso' | 'morador' | 'viajante';
+export type CustomerArchetype = 'aventureiro' | 'estudioso' | 'morador' | 'viajante' | 'nobre';
 
 export interface Customer {
   id: string;
@@ -116,7 +116,7 @@ export interface SpecialOrder {
   dueDay: number;
 }
 
-export type DayEventId = 'feira' | 'caravana' | 'chuva';
+export type DayEventId = 'feira' | 'caravana' | 'chuva' | 'festival';
 
 export interface DayStats {
   revenue: number;
@@ -160,7 +160,7 @@ export interface Settings {
   reduceMotion: boolean;
 }
 
-export const SAVE_VERSION = 3 as const;
+export const SAVE_VERSION = 4 as const;
 
 export interface GameSave {
   saveVersion: typeof SAVE_VERSION;
@@ -193,6 +193,14 @@ export interface GameSave {
   stats: DayStats;
   reports: DayReport[];
   researchPoints: number;
+  /** Maestria: quantas poções de cada receita já saíram do caldeirão. */
+  mastery: Record<string, number>;
+  /** Talentos do Grimório do Mestre (grau por id), comprados com Selos. */
+  talents: Record<string, number>;
+  /** Selos comprados com moedas (doações à Guilda dos Alquimistas). */
+  sealsBought: number;
+  /** O jogador patrocinou o Festival das Lanternas para o próximo dia. */
+  festivalSponsored: boolean;
   tutorialStep: number;
   seq: number;
   settings: Settings;
@@ -220,4 +228,10 @@ export type GameEvent =
   | { type: 'EXPERIMENT_FAILED'; hint: string }
   | { type: 'DAY_CLOSED'; report: DayReport }
   | { type: 'DAY_STARTED'; day: number; event: DayEventId | null }
+  | { type: 'MASTERY_STAR'; recipeId: string; stars: number }
+  | { type: 'MASTER_RANK'; rank: number }
+  | { type: 'TALENT_LEARNED'; talentId: string; rank: number }
+  | { type: 'SEAL_BOUGHT'; cost: number }
+  | { type: 'FESTIVAL_SPONSORED'; cost: number }
+  | { type: 'GREENHOUSE_HARVEST'; items: { ingredientId: string; qty: number }[] }
   | { type: 'ERROR'; message: string };

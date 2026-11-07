@@ -32,7 +32,18 @@ Um robô-jogador (`src/tests/balance/bot.ts`) joga vários dias usando só as re
 - **Pedidos especiais** no quadro de avisos, **eventos do dia** (feira, caravana, chuva) e **bancada de experimentos** com pistas.
 - **Polimento:** tutorial de 7 passos, sons e música sintetizados (sem arquivos), configurações (volume, música, reduzir animações), atalhos de teclado e avisos.
 - **Sem game over:** a manutenção nunca deixa o saldo negativo e há sempre ingredientes básicos baratos.
-- **Save automático** em IndexedDB com `saveVersion` 3, validação e migração.
+- **Save automático** em IndexedDB com `saveVersion` 4, validação e migração.
+
+## Late game (níveis 6 a 15 e além)
+
+- **Nível máximo 15**, com algo novo em cada nível do 6 ao 15.
+- **5 poções novas:** Poção da Sorte (nv 6), Elixir de Geada (nv 8), Poção Pena-leve (nv 10), Elixir Estelar (nv 12) e Elixir da Fênix (nv 14), cada uma com frasco próprio.
+- **5 ingredientes novos:** raiz de mandrágora, cristal de geada, pluma de grifo, areia estelar e pena de fênix.
+- **Cliente Nobre** (a partir do nível 8), que paga bem pelas poções caras, e o evento **Festival das Lanternas**. A partir do nível 10, a Corte e o Observatório fazem encomendas mais generosas.
+- **5 melhorias novas**, todas visíveis na loja: estufa no quintal (ervas grátis toda manhã), alambique de prata (3 poções por lote), despensa encantada (+40 ingredientes, +12 poções), vitral arcano e sino encantado.
+- **Maestria das receitas:** estrelas aos 10, 30, 70, 140 e 250 preparos. Cada estrela faz o cliente aceitar pagar 4% a mais, sobe o teto de preço e dá XP extra por venda.
+- **Grimório do Mestre (tecla 8):** Selos de Mestre vêm dos níveis 11+, dos graus de Mestre (a cada 3000 XP depois do nível 15, sem fim), das receitas com 5 estrelas e das doações à Guilda. Os Selos compram 7 talentos permanentes. Moedas sobrando também patrocinam o festival.
+- Saves antigos migram para a `saveVersion` 4: as receitas dos níveis já alcançados entram direto, a maestria é estimada pelas vendas dos relatórios e a XP acumulada no nível 10 fica guardada na porta do 11.
 
 ## Celular
 

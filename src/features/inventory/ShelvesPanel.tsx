@@ -1,7 +1,9 @@
 import { RECIPES_BY_ID } from '../../domain/data/recipes';
 import type { GameSave } from '../../domain/models/types';
 import { countPotions, getPrice, potionCapacity, potionStock, priceRange, recipeCost } from '../../domain/rules/economy';
-import { POTIONS_PER_BATCH } from '../../domain/rules/alchemy';
+import { potionsPerBatch } from '../../domain/rules/alchemy';
+import { masteryStars } from '../../domain/rules/mastery';
+import { Stars } from '../../ui/Stars';
 import { useGameStore } from '../../store/gameStore';
 import { Meter, PotionName } from '../../ui/widgets';
 
@@ -28,14 +30,15 @@ export function ShelvesPanel({ save }: { save: GameSave }) {
         {save.knownRecipes.map((id) => {
           const stock = potionStock(save, id);
           const stack = save.potions.find((p) => p.recipeId === id);
-          const { min, max, base } = priceRange(id);
+          const { min, max, base } = priceRange(save, id);
           const price = getPrice(save, id);
           const label = priceLabel(price, base);
-          const unitCost = Math.round(recipeCost(id) / POTIONS_PER_BATCH);
+          const unitCost = Math.round(recipeCost(save, id) / potionsPerBatch(save));
           return (
             <li key={id} className={`card ${stock === 0 ? 'card-empty' : ''}`}>
               <div className="card-head">
                 <PotionName id={id} size={18} />
+                <Stars n={masteryStars(save, id)} />
                 <span className={`qty ${stock === 0 ? 'qty-low' : ''}`}>{stock}</span>
               </div>
               <div className="price-row">

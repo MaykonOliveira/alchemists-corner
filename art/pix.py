@@ -50,6 +50,12 @@ P = {
     'pg0': '#14482e', 'pg1': '#21784e', 'pg2': '#3fae78', 'pg3': '#7ad6a0', 'pg4': '#c8f4d8',
     'pv0': '#36205e', 'pv1': '#5e3c98', 'pv2': '#9a6ad0', 'pv3': '#c49ae8', 'pv4': '#ecdaff',
     'pl0': '#7a6416', 'pl1': '#bca02a', 'pl2': '#f0d860', 'pl3': '#fcee9c', 'pl4': '#fffbe0',
+    # poções do late game: sorte (trevo), geada (gelo), pena-leve (rosa-nuvem), estelar (índigo) e fênix (brasa)
+    'pk0': '#2e4a10', 'pk1': '#4e7a1a', 'pk2': '#7cb22a', 'pk3': '#b4dc58', 'pk4': '#e8f8a8',
+    'pi0': '#1a4a6a', 'pi1': '#3a86b0', 'pi2': '#78c8e8', 'pi3': '#b8ecf8', 'pi4': '#f0fcff',
+    'pp0': '#7a4a6a', 'pp1': '#b878a0', 'pp2': '#e8a8cc', 'pp3': '#f8d4e8', 'pp4': '#fff4fa',
+    'ps0': '#1a1240', 'ps1': '#33268a', 'ps2': '#5a46c8', 'ps3': '#9a86f0', 'ps4': '#d8d0ff',
+    'pf0': '#6a1a08', 'pf1': '#b8401a', 'pf2': '#f07828', 'pf3': '#ffb050', 'pf4': '#fff0b0',
 }
 
 def rgba(c):

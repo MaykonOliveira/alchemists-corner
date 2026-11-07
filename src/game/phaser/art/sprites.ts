@@ -8,6 +8,7 @@ import aventureiroUrl from '../../../assets/sprites/customer-aventureiro.png';
 import estudiosoUrl from '../../../assets/sprites/customer-estudioso.png';
 import moradorUrl from '../../../assets/sprites/customer-morador.png';
 import viajanteUrl from '../../../assets/sprites/customer-viajante.png';
+import nobreUrl from '../../../assets/sprites/customer-nobre.png';
 import type { CustomerArchetype } from '../../../domain/models/types';
 
 // Dimensões do mundo lógico (PRD 6.3).
@@ -25,7 +26,11 @@ export const CUSTOMER_URLS: Record<CustomerArchetype, string> = {
   estudioso: estudiosoUrl,
   morador: moradorUrl,
   viajante: viajanteUrl,
+  nobre: nobreUrl,
 };
+
+/** Posições das melhorias do late game (estufa, alambique, runas, vitral e sino). */
+export const LATEGAME: Record<'greenhouse' | 'alembic' | 'cabinet-runes' | 'vitral' | 'bell', { x: number; y: number }> = layout.lategame;
 
 /** Linhas (y relativo) das tábuas onde os frascos ficam apoiados. */
 export const SHELF_BOARDS: number[] = layout.shelfBoards;

@@ -150,5 +150,27 @@
   "w": 18,
   "h": 40,
   "frames": 3
+ },
+ "lategame": {
+  "greenhouse": {
+   "x": 46,
+   "y": 52
+  },
+  "alembic": {
+   "x": 96,
+   "y": 127
+  },
+  "cabinet-runes": {
+   "x": 2,
+   "y": 38
+  },
+  "vitral": {
+   "x": 52,
+   "y": 24
+  },
+  "bell": {
+   "x": 343,
+   "y": 28
+  }
  }
 }

@@ -2,10 +2,10 @@ import { INGREDIENTS } from '../data/ingredients';
 import { HELPER_IDS } from '../data/upgrades';
 import { RECIPES_BY_ID } from '../data/recipes';
 import type { Customer, GameSave, HelperWork } from '../models/types';
-import { maxBatches, POTIONS_PER_BATCH, startBrew } from './alchemy';
+import { maxBatches, potionsPerBatch, startBrew } from './alchemy';
 import { fail, type Draft } from './context';
 import { acceptOffer, dismissCustomer, priceVerdict, serveCustomer, suits } from './customers';
-import { applyPurchase, countIngredients, has, ingredientCapacity, potionStock, supplierLeft } from './economy';
+import { applyPurchase, countIngredients, has, ingredientCapacity, ingredientPrice, potionStock, supplierLeft } from './economy';
 
 // ---------------------------------------------------------------------------
 // Ajudantes automáticos (melhorias da categoria 'ajudante').
@@ -75,10 +75,11 @@ export function ravenShoppingList(s: GameSave): { ingredientId: string; qty: num
   for (const ing of INGREDIENTS) {
     const need = (targets[ing.id] ?? 0) - (s.ingredients[ing.id] ?? 0);
     if (need <= 0) continue;
-    const qty = Math.min(need, supplierLeft(s, ing.id), room, Math.floor(budget / ing.price));
+    const price = ingredientPrice(s, ing.id);
+    const qty = Math.min(need, supplierLeft(s, ing.id), room, Math.floor(budget / price));
     if (qty <= 0) continue;
     items.push({ ingredientId: ing.id, qty });
-    budget -= qty * ing.price;
+    budget -= qty * price;
     room -= qty;
   }
   return items;
@@ -118,7 +119,7 @@ export function apprenticePlan(s: GameSave): { recipeId: string; batches: number
       RECIPES_BY_ID[b.id].basePrice - RECIPES_BY_ID[a.id].basePrice);
   const p = plans[0];
   if (!p) return null;
-  const batches = Math.min(p.max, APPRENTICE_MAX_BATCHES, Math.ceil((p.target - p.stock) / POTIONS_PER_BATCH));
+  const batches = Math.min(p.max, APPRENTICE_MAX_BATCHES, Math.ceil((p.target - p.stock) / potionsPerBatch(s)));
   return { recipeId: p.id, batches };
 }
 

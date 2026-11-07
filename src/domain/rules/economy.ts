@@ -3,6 +3,7 @@ import { RECIPES_BY_ID } from '../data/recipes';
 import { UPGRADES_BY_ID } from '../data/upgrades';
 import type { GameSave } from '../models/types';
 import { fail, type Draft } from './context';
+import { masteryStars, STAR_BONUS, talentBonus } from './mastery';
 import { gainXp } from './progression';
 
 export const PRICE_MIN_FACTOR = 0.8;
@@ -10,15 +11,23 @@ export const PRICE_MAX_FACTOR = 1.3;
 
 export const has = (s: GameSave, upgradeId: string) => s.upgrades.includes(upgradeId);
 
-export function priceRange(recipeId: string) {
+/** Faixa de preço permitida. Cada estrela de maestria sobe o teto junto com o que o cliente aceita pagar. */
+export function priceRange(s: GameSave, recipeId: string) {
   const base = RECIPES_BY_ID[recipeId].basePrice;
-  return { min: Math.max(1, Math.round(base * PRICE_MIN_FACTOR)), max: Math.round(base * PRICE_MAX_FACTOR), base };
+  const maxFactor = PRICE_MAX_FACTOR + masteryStars(s, recipeId) * STAR_BONUS;
+  return { min: Math.max(1, Math.round(base * PRICE_MIN_FACTOR)), max: Math.round(base * maxFactor), base };
 }
+
+/** Preço de um ingrediente no fornecedor (com o desconto do talento "Amigo do fornecedor"). */
+export const ingredientPrice = (s: GameSave, ingredientId: string) =>
+  Math.max(1, Math.round(INGREDIENTS_BY_ID[ingredientId].price * (1 - talentBonus(s, 'fornecedor-amigo'))));
 
 export const getPrice = (s: GameSave, recipeId: string) => s.prices[recipeId] ?? RECIPES_BY_ID[recipeId].basePrice;
 
-export const potionCapacity = (s: GameSave) => 16 + (has(s, 'prateleira-extra') ? 12 : 0);
-export const ingredientCapacity = (s: GameSave) => 40 + (has(s, 'armario-organizado') ? 30 : 0);
+export const potionCapacity = (s: GameSave) =>
+  16 + (has(s, 'prateleira-extra') ? 12 : 0) + (has(s, 'despensa-encantada') ? 12 : 0);
+export const ingredientCapacity = (s: GameSave) =>
+  40 + (has(s, 'armario-organizado') ? 30 : 0) + (has(s, 'despensa-encantada') ? 40 : 0);
 export const countPotions = (s: GameSave) => s.potions.reduce((n, p) => n + p.quantity, 0);
 export const countIngredients = (s: GameSave) => Object.values(s.ingredients).reduce((n, q) => n + q, 0);
 export const potionStock = (s: GameSave, recipeId: string) => s.potions.find((p) => p.recipeId === recipeId)?.quantity ?? 0;
@@ -30,8 +39,8 @@ export const helperWages = (s: GameSave) => s.upgrades.reduce((n, id) => n + (UP
 export const maintenanceCost = (s: GameSave) => 10 + 5 * (s.level - 1) + 3 * s.upgrades.length + helperWages(s);
 
 /** Custo dos ingredientes de um lote, pelos preços atuais do fornecedor. */
-export const recipeCost = (recipeId: string) =>
-  RECIPES_BY_ID[recipeId].ingredients.reduce((n, i) => n + INGREDIENTS_BY_ID[i.ingredientId].price * i.qty, 0);
+export const recipeCost = (s: GameSave, recipeId: string) =>
+  RECIPES_BY_ID[recipeId].ingredients.reduce((n, i) => n + ingredientPrice(s, i.ingredientId) * i.qty, 0);
 
 /** Estoque do fornecedor para um novo dia. 0 = indisponível no nível atual. */
 export function supplierStock(s: GameSave): Record<string, number | null> {
@@ -55,13 +64,13 @@ export function purchaseError(s: GameSave, ingredientId: string, qty: number): s
   const available = supplierLeft(s, ingredientId);
   if (qty > available) return `O fornecedor só tem ${available} hoje.`;
   if (countIngredients(s) + qty > ingredientCapacity(s)) return 'O armário está cheio.';
-  if (ing.price * qty > s.coins) return 'Moedas insuficientes.';
+  if (ingredientPrice(s, ingredientId) * qty > s.coins) return 'Moedas insuficientes.';
   return null;
 }
 
 /** Aplica uma compra já validada e devolve o custo. */
 export function applyPurchase(s: GameSave, ingredientId: string, qty: number) {
-  const cost = INGREDIENTS_BY_ID[ingredientId].price * qty;
+  const cost = ingredientPrice(s, ingredientId) * qty;
   const available = s.supplier[ingredientId];
   s.coins -= cost;
   s.ingredients[ingredientId] = (s.ingredients[ingredientId] ?? 0) + qty;
@@ -80,7 +89,7 @@ export function buyIngredient(d: Draft, ingredientId: string, qty: number): bool
 
 export function setPrice(d: Draft, recipeId: string, price: number): boolean {
   if (!RECIPES_BY_ID[recipeId]) return false;
-  const { min, max } = priceRange(recipeId);
+  const { min, max } = priceRange(d.s, recipeId);
   const p = Math.round(Math.min(max, Math.max(min, price)));
   if (d.s.prices[recipeId] === p) return false;
   d.s.prices[recipeId] = p;
@@ -117,6 +126,28 @@ export function takePotions(s: GameSave, recipeId: string, qty: number) {
   stack.quantity -= qty;
   if (stack.quantity === 0) s.potions = s.potions.filter((p) => p !== stack);
   return true;
+}
+
+/** Colheita da estufa no começo do dia (só o que couber no armário). */
+export const GREENHOUSE_YIELD: { ingredientId: string; qty: number }[] = [
+  { ingredientId: 'folha-lunar', qty: 4 },
+  { ingredientId: 'hortela-brava', qty: 4 },
+  { ingredientId: 'raiz-mandragora', qty: 2 },
+];
+
+export function harvestGreenhouse(d: Draft) {
+  const s = d.s;
+  if (!has(s, 'estufa')) return;
+  let room = ingredientCapacity(s) - countIngredients(s);
+  const items: { ingredientId: string; qty: number }[] = [];
+  for (const it of GREENHOUSE_YIELD) {
+    const qty = Math.min(it.qty, room);
+    if (qty <= 0) break;
+    s.ingredients[it.ingredientId] = (s.ingredients[it.ingredientId] ?? 0) + qty;
+    room -= qty;
+    items.push({ ingredientId: it.ingredientId, qty });
+  }
+  if (items.length) d.events.push({ type: 'GREENHOUSE_HARVEST', items });
 }
 
 export function addPotions(s: GameSave, recipeId: string, qty: number) {

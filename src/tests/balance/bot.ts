@@ -11,6 +11,8 @@ import type { RuleContext } from '../../domain/rules/context';
 import { countIngredients, ingredientCapacity, potionStock, priceRange } from '../../domain/rules/economy';
 import { suits } from '../../domain/rules/customers';
 import { createNewGame } from '../../domain/rules/initialState';
+import { sealsAvailable } from '../../domain/rules/progression';
+import { TALENTS, talentCost } from '../../domain/data/talents';
 
 export function mulberry32(seed: number) {
   let a = seed >>> 0;
@@ -123,6 +125,17 @@ export function simulate(profile: BotProfile, days: number, seed: number): SimRe
     }
   };
 
+  /** Gasta os Selos de Mestre no talento mais barato disponível. */
+  const tryTalents = () => {
+    for (let guard = 0; guard < 20; guard++) {
+      const free = sealsAvailable(s);
+      const next = TALENTS.filter((t) => (s.talents[t.id] ?? 0) < t.max)
+        .sort((a, b) => (s.talents[a.id] ?? 0) - (s.talents[b.id] ?? 0))[0];
+      if (!next || talentCost(s.talents[next.id] ?? 0) > free) return;
+      cmd({ type: 'LEARN_TALENT', talentId: next.id });
+    }
+  };
+
   const tryBrew = () => {
     if (s.brew) return;
     const candidates = s.knownRecipes
@@ -180,7 +193,7 @@ export function simulate(profile: BotProfile, days: number, seed: number): SimRe
 
   const setPrices = () => {
     for (const id of s.knownRecipes) {
-      const { base } = priceRange(id);
+      const { base } = priceRange(s, id);
       cmd({ type: 'SET_PRICE', recipeId: id, price: base * profile.priceFactor });
     }
   };
@@ -190,6 +203,7 @@ export function simulate(profile: BotProfile, days: number, seed: number): SimRe
     setPrices();
     if (s.order && potionStock(s, s.order.recipeId) >= s.order.qty) cmd({ type: 'DELIVER_ORDER' });
     tryUpgrades();
+    tryTalents();
     const prepMs = profile.prepS(day) * 1000;
     for (let t = 0; t < prepMs; t += STEP_MS) {
       tryBrew();

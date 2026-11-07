@@ -4,6 +4,8 @@ import { RECIPES } from '../../domain/data/recipes';
 import type { GameSave } from '../../domain/models/types';
 import { useGameStore } from '../../store/gameStore';
 import { IngredientIcon, PotionIcon } from '../../ui/SpriteIcon';
+import { masteryStars } from '../../domain/rules/mastery';
+import { Stars } from '../../ui/Stars';
 
 export function RecipesPanel({ save }: { save: GameSave }) {
   const known = RECIPES.filter((r) => save.knownRecipes.includes(r.id)).length;
@@ -18,6 +20,7 @@ export function RecipesPanel({ save }: { save: GameSave }) {
               <div className="card-head">
                 <PotionIcon recipeId={r.id} size={32} muted={!isKnown} />
                 <span className="row-title">{isKnown ? r.name : '??? — página em branco'}</span>
+                {isKnown && <Stars n={masteryStars(save, r.id)} />}
               </div>
               {isKnown ? (
                 <>
