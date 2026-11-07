@@ -12,6 +12,7 @@ export const SHORTCUTS: { key: string; label: string; panel: PanelId; icon: stri
   { key: '7', label: 'Melhorias', panel: 'upgrades', icon: '🔨' },
   { key: '8', label: 'Mestre', panel: 'grimoire', icon: '✨' },
   { key: '9', label: 'Relatório', panel: 'report', icon: '📊' },
+  { key: '0', label: 'Álbum', panel: 'album', icon: '🏆' },
 ];
 
 /**

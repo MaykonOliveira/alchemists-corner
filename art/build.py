@@ -11,6 +11,7 @@ import items as I
 import helpers as H
 import lategame as L
 import expansion as X
+import cat as CAT
 from room import draw_room
 from customers import customer_sheet, LOOKS, FW, FH, FRAMES
 
@@ -85,6 +86,11 @@ def main():
     # Expansões (pacote C)
     shop.update({'cauldron-2': X.cauldron_copper(), 'counter-wing': X.counter_wing(),
                  'astrolabe-0': X.astrolabe(0), 'astrolabe-1': X.astrolabe(1)})
+    # Gato da loja (pacote D)
+    for k, cv in {'cat-sit-0': CAT.cat_sit(0), 'cat-sit-1': CAT.cat_sit(1), 'cat-walk-0': CAT.cat_walk(0),
+                  'cat-walk-1': CAT.cat_walk(1), 'cat-sleep': CAT.cat_sleep()}.items():
+        shop[k] = cv
+        shop[f'{k}-outline'] = outline_mask(cv)
     for k in ('cauldron-2', 'counter-wing'):
         shop[f'{k}-outline'] = outline_mask(shop[k])
     for rid in I.LIQ:

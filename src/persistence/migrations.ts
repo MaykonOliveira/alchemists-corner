@@ -13,6 +13,18 @@ const numRecord = (v: unknown, base: Record<string, number>) => {
   return out;
 };
 
+/** Saves antigos (até a v5) não tinham totais: estimamos pelos relatórios guardados. */
+function lifetimeFromReports(reports: unknown[]) {
+  let sold = 0;
+  let earned = 0;
+  for (const r of reports) {
+    if (!isObj(r)) continue;
+    earned += Math.max(0, num(r.revenue, 0));
+    if (isObj(r.salesByRecipe)) for (const v of Object.values(r.salesByRecipe)) sold += Math.max(0, num(v, 0));
+  }
+  return { sold, earned };
+}
+
 /**
  * Valida e migra um save lido do armazenamento.
  * Campos ausentes ou inválidos recebem os valores padrão de uma partida nova.
@@ -26,6 +38,7 @@ export function migrateSave(raw: unknown): GameSave | null {
   // v2 → v3: entraram os ajudantes automáticos (helpers) e o trabalho deles no relatório.
   // v3 → v4: late game (níveis 11 a 15, maestria das receitas e talentos do Grimório do Mestre).
   // v4 → v5: contratos de vários dias e expansão da loja (segundo caldeirão).
+  // v5 → v6: fregueses fiéis, estações, álbum de conquistas e o gato da loja.
   // Os campos novos recebem os valores padrão abaixo.
 
   const base = createNewGame(num(raw.createdAt, Date.now()));
@@ -94,6 +107,13 @@ export function migrateSave(raw: unknown): GameSave | null {
     talents,
     sealsBought: Math.max(0, Math.floor(num(raw.sealsBought, 0))),
     festivalSponsored: bool(raw.festivalSponsored, false),
+    regulars: isObj(raw.regulars) ? (raw.regulars as unknown as GameSave['regulars']) : {},
+    achievements: arr<string>(raw.achievements, []).filter((x) => typeof x === 'string'),
+    lifetime: isObj(raw.lifetime)
+      ? { sold: num(raw.lifetime.sold, 0), earned: num(raw.lifetime.earned, 0) }
+      : lifetimeFromReports(arr(raw.reports, [])),
+    petCount: Math.max(0, Math.floor(num(raw.petCount, 0))),
+    petDay: num(raw.petDay, 0),
     tutorialStep: num(raw.tutorialStep, raw.saveVersion === 1 ? 99 : 0),
     seq: num(raw.seq, 0),
     settings: {

@@ -1,4 +1,5 @@
 import { ARCHETYPES } from '../../domain/data/customers';
+import { regularOf, regularState } from '../../domain/rules/world';
 import { RECIPES_BY_ID } from '../../domain/data/recipes';
 import { bestOffer, priceVerdict } from '../../domain/rules/customers';
 import { getPrice } from '../../domain/rules/economy';
@@ -22,6 +23,8 @@ export function QuickServe({ placement }: { placement: 'stage' | 'side' }) {
   if (idx < 0) return null;
   const c = save.customers[idx];
   const a = ARCHETYPES[c.archetype];
+  const reg = regularOf(c);
+  const hearts = reg ? regularState(save, reg.id).hearts : 0;
   const wanted = RECIPES_BY_ID[c.wantedRecipeId];
   const left = 1 - c.waitedMs / c.patienceMs;
   const offerId = c.offer ? null : bestOffer(save, c);
@@ -33,7 +36,7 @@ export function QuickServe({ placement }: { placement: 'stage' | 'side' }) {
       <div className="qs-head">
         <PotionIcon recipeId={wanted.id} size={24} />
         <div className="qs-who">
-          <span className="qs-name"><span className="qs-face" aria-label="Humor">{left > 0.5 ? '🙂' : left > 0.25 ? '😐' : '😠'}</span> {a.label} <span className="muted">quer</span> {wanted.shortName}</span>
+          <span className="qs-name"><span className="qs-face" aria-label="Humor">{left > 0.5 ? '🙂' : left > 0.25 ? '😐' : '😠'}</span> {reg ? <span className="qs-regular">{reg.name.split(',')[0]} <span className="heart-on">{'♥'.repeat(hearts) || '♡'}</span></span> : a.label} <span className="muted">quer</span> {wanted.shortName}</span>
           <Meter ratio={left} tone={left > 0.5 ? 'ok' : left > 0.25 ? 'gold' : 'warn'} label="Paciência" />
         </div>
         {next && (

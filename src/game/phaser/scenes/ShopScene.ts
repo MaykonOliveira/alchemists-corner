@@ -3,9 +3,11 @@ import { RECIPES_BY_ID } from '../../../domain/data/recipes';
 import type { Customer, GameEvent, GameSave } from '../../../domain/models/types';
 import { CLOSE_MIN, OPEN_MIN } from '../../../domain/rules/time';
 import { useGameStore } from '../../../store/gameStore';
+import { seasonOf } from '../../../domain/rules/world';
 import { gameEvents } from '../../events';
 import { outlinedText } from '../art/painter';
 import { EXPANSION, GARLAND_BULBS, LANTERNS, LATEGAME, SHELF_BOARDS } from '../art/sprites';
+import { CatView } from '../entities/Cat';
 import { HelperViews } from '../entities/Helpers';
 import { Visitor, type Mood } from '../entities/Visitor';
 import { HOTSPOTS, type HotspotDef } from '../interaction/hotspots';
@@ -63,7 +65,9 @@ export class ShopScene extends Phaser.Scene {
   private badge!: Phaser.GameObjects.Image;
   private upgradeLayer: Phaser.GameObjects.GameObject[] = [];
   private helpers!: HelperViews;
+  private cat!: CatView;
   private advanceAcc = 0;
+  private seasonFxAt = 0;
   private nightness = 0;
   private unsubscribers: (() => void)[] = [];
 
@@ -97,6 +101,7 @@ export class ShopScene extends Phaser.Scene {
     }
 
     this.helpers = new HelperViews(this, this.reduceMotion);
+    this.cat = new CatView(this, this.reduceMotion);
     this.renderUpgrades(save);
     this.renderShelves(save);
     this.applyPhase(save);
@@ -180,6 +185,34 @@ export class ShopScene extends Phaser.Scene {
       v.outline.setVisible(v.hovered || isActive);
       v.outline.setTint(isActive ? OUTLINE_ACTIVE : OUTLINE_HOVER);
     }
+  }
+
+  // --------------------------------------------------------------- estações
+
+  /** Clima da estação visto pela janela: pétalas, brilho de sol, folhas ou neve. */
+  private seasonFx(time: number) {
+    if (this.reduceMotion() || time < this.seasonFxAt) return;
+    const save = this.store.save;
+    if (!save) return;
+    const season = seasonOf(save.day).id;
+    this.seasonFxAt = time + (season === 'inverno' ? 260 : 420);
+    const W = { x0: 55, x1: 99, top: 26, bottom: 47 };
+    const x = Phaser.Math.Between(W.x0, W.x1);
+    const look = {
+      primavera: { tint: [0xf8b8d0, 0xffd8e8], rise: false, drift: 10 },
+      verao: { tint: [0xffe890, 0xfff4c0], rise: true, drift: 3 },
+      outono: { tint: [0xe08a3a, 0xc8602a, 0xf0b040], rise: false, drift: 8 },
+      inverno: { tint: [0xffffff, 0xe0f0ff], rise: false, drift: 4 },
+    }[season];
+    const p = this.add.image(x, look.rise ? W.bottom - 4 : W.top, 'px').setDepth(1.5)
+      .setTint(look.tint[Phaser.Math.Between(0, look.tint.length - 1)]).setAlpha(0.9).setScale(1.5);
+    if (season === 'outono') p.setScale(2, 1.2);
+    const tx = Phaser.Math.Clamp(x + Phaser.Math.Between(-look.drift, look.drift), W.x0, W.x1);
+    this.tweens.add({
+      targets: p, x: tx, y: look.rise ? W.top + 6 : W.bottom, angle: season === 'outono' ? 180 : 0,
+      alpha: { from: 0.9, to: 0 }, duration: look.rise ? 2600 : 2200 + Phaser.Math.Between(0, 800), ease: 'Sine.InOut',
+      onComplete: () => p.destroy(),
+    });
   }
 
   // ------------------------------------------------------------- caldeirão
@@ -439,6 +472,7 @@ export class ShopScene extends Phaser.Scene {
       if (!v) {
         v = new Visitor(this, c.id, c.archetype, c.wantedRecipeId, slotX, {
           instant,
+          regular: !!c.regularId,
           reduceMotion: this.reduceMotion,
           onClick: (vis) => this.store.dispatch({ type: 'SELECT_CUSTOMER', id: vis.id }),
         });
@@ -605,6 +639,8 @@ export class ShopScene extends Phaser.Scene {
 
     for (const v of this.visitors.values()) v.update(time);
     this.helpers.update(time);
+    this.cat.update(time);
+    this.seasonFx(time);
 
     if (ui.paused || ui.modal || save.phase === 'fechamento') return;
     this.advanceAcc += Math.min(delta, 250);

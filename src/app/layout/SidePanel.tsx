@@ -8,6 +8,7 @@ import { IngredientsPanel } from '../../features/inventory/IngredientsPanel';
 import { ShelvesPanel } from '../../features/inventory/ShelvesPanel';
 import { UpgradesPanel } from '../../features/progression/UpgradesPanel';
 import { GrimoirePanel } from '../../features/mastery/GrimoirePanel';
+import { AlbumPanel } from '../../features/world/AlbumPanel';
 import { useGameStore, type PanelId } from '../../store/gameStore';
 import { potionStock } from '../../domain/rules/economy';
 import { QuickServe } from '../../features/customers/QuickServe';
@@ -23,6 +24,7 @@ const TITLES: Record<PanelId, string> = {
   door: 'Porta da loja',
   upgrades: 'Melhorias',
   grimoire: 'Grimório do Mestre',
+  album: 'Álbum da loja',
 };
 
 export function SidePanel() {
@@ -74,6 +76,7 @@ export function SidePanel() {
         {panel === 'door' && <DoorPanel save={save} />}
         {panel === 'upgrades' && <UpgradesPanel save={save} />}
         {panel === 'grimoire' && <GrimoirePanel save={save} />}
+        {panel === 'album' && <AlbumPanel save={save} />}
       </div>
     </aside>
   );

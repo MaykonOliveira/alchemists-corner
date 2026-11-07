@@ -1,4 +1,6 @@
 import { ARCHETYPES } from '../../domain/data/customers';
+import { MAX_HEARTS } from '../../domain/data/world';
+import { regularOf, regularState } from '../../domain/rules/world';
 import { RECIPES_BY_ID } from '../../domain/data/recipes';
 import type { Customer, GameSave } from '../../domain/models/types';
 import { suits } from '../../domain/rules/customers';
@@ -39,7 +41,7 @@ export function CounterPanel({ save }: { save: GameSave }) {
               className={`queue-item ${selected?.id === c.id ? 'on' : ''}`}
               onClick={() => dispatch({ type: 'SELECT_CUSTOMER', id: c.id })}
             >
-              <span className="row-title">{ARCHETYPES[c.archetype].label}</span>
+              <span className="row-title">{regularOf(c)?.name.split(',')[0] ?? ARCHETYPES[c.archetype].label}{regularOf(c) ? ' ♥' : ''}</span>
               <span className="queue-want"><PotionIcon recipeId={r.id} /> {r.shortName}{c.offer ? ' · negociando' : ''}</span>
               <Meter ratio={left} tone={left > 0.5 ? 'ok' : left > 0.25 ? 'gold' : 'warn'} label="Paciência" />
             </button>
@@ -54,6 +56,7 @@ export function CounterPanel({ save }: { save: GameSave }) {
 function Serve({ save, c }: { save: GameSave; c: Customer }) {
   const dispatch = useGameStore((s) => s.dispatch);
   const a = ARCHETYPES[c.archetype];
+  const reg = regularOf(c);
   const wanted = RECIPES_BY_ID[c.wantedRecipeId];
   const options = save.potions.filter((p) => p.forSale && p.quantity > 0);
   const sorted = [...options].sort((x, y) => Number(y.recipeId === c.wantedRecipeId) - Number(x.recipeId === c.wantedRecipeId));
@@ -61,7 +64,10 @@ function Serve({ save, c }: { save: GameSave; c: Customer }) {
   return (
     <div className="card serve">
       <div className="card-head">
-        <span className="row-title">{a.label}</span>
+        <span className="row-title">
+          {reg ? reg.name : a.label}
+          {reg && <span className="serve-hearts"> {'♥'.repeat(regularState(save, reg.id).hearts)}{'♡'.repeat(MAX_HEARTS - regularState(save, reg.id).hearts)}</span>}
+        </span>
         <span className="wallet" title="Disposição para pagar" aria-label={`Bolso: ${wallet(c)} de 3`}>
           {Array.from({ length: 3 }, (_, i) => (
             <span key={i} className={i < wallet(c) ? '' : 'faded'}><CoinIcon size={12} /></span>

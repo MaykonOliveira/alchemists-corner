@@ -7,6 +7,8 @@ import { getPrice, has, potionStock, takePotions } from './economy';
 import { masteryStars, STAR_BONUS, talentBonus } from './mastery';
 import { gainReputation, gainXp } from './progression';
 import { CLOSE_MIN } from './time';
+import { availableRegulars, befriend, REGULAR_CHANCE, seasonCategory } from './world';
+import { SEASON_PRICE_BONUS } from '../data/world';
 
 export const MAX_CUSTOMERS = 3;
 /** Clientes que cabem no balcão (o balcão duplo abre espaço para mais um). */
@@ -23,6 +25,26 @@ export function nextSpawnDelay(s: GameSave, random: () => number) {
 
 export function spawnCustomer(d: Draft) {
   const { s, ctx } = d;
+  // De vez em quando quem entra é um freguês fiel, que já chega pedindo o de sempre.
+  const regulars = s.day >= 2 ? availableRegulars(s) : [];
+  if (regulars.length && ctx.random() < REGULAR_CHANCE) {
+    const r = pick(regulars, ctx.random);
+    const info = ARCHETYPES[r.archetype];
+    const regular: Customer = {
+      id: nextId(d, 'c'),
+      archetype: r.archetype,
+      wantedRecipeId: r.favorite,
+      budgetFactor: +(info.budget + 0.08).toFixed(3),
+      patienceMs: Math.round(info.patienceMs * 1.3 * patienceFactor(s)),
+      waitedMs: 0,
+      offer: null,
+      remark: r.greeting,
+      regularId: r.id,
+    };
+    s.customers.push(regular);
+    d.events.push({ type: 'CUSTOMER_ARRIVED', customerId: regular.id });
+    return;
+  }
   const noble = s.level >= NOBLE_LEVEL ? 0.6 + (has(s, 'vitral-arcano') ? 0.4 : 0) : 0;
   const weights = { aventureiro: 1, estudioso: 1, morador: 1.2, viajante: 0.8, nobre: noble } as Record<CustomerArchetype, number>;
   if (s.event) for (const [k, w] of Object.entries(DAY_EVENTS[s.event].archetypeBoost)) weights[k as CustomerArchetype] += w;
@@ -37,7 +59,11 @@ export function spawnCustomer(d: Draft) {
   const known = wants.filter((id) => s.knownRecipes.includes(id));
   let wanted: string;
   if (firstEver && potionStock(s, 'cura-simples') > 0) wanted = 'cura-simples';
-  else if (known.length && (s.day <= 2 || ctx.random() < 0.8)) wanted = pick(known, ctx.random);
+  else if (known.length && (s.day <= 2 || ctx.random() < 0.8)) {
+    // A estação puxa a procura para a categoria dela.
+    const inSeason = known.filter((id) => RECIPES_BY_ID[id].category === seasonCategory(s));
+    wanted = pick(inSeason.length && ctx.random() < 0.4 ? inSeason : known, ctx.random);
+  }
   else wanted = pick(wants.length ? wants : info.wants, ctx.random);
 
   const bonus = s.event ? DAY_EVENTS[s.event].budgetBonus : 0;
@@ -65,7 +91,8 @@ export function maxPriceFor(s: GameSave, c: Customer, recipeId: string) {
   const fame = 1 + Math.min(s.reputation, 240) / 800;
   const decor = (has(s, 'prateleira-extra') ? 1.03 : 1) * (has(s, 'iluminacao-aconchegante') ? 1.04 : 1) * (has(s, 'vitral-arcano') ? 1.05 : 1) * (has(s, 'torre-alquimista') ? 1.08 : 1);
   const skill = (1 + masteryStars(s, recipeId) * STAR_BONUS) * (1 + talentBonus(s, 'labia'));
-  return Math.round(r.basePrice * c.budgetFactor * fame * decor * skill * (substitute ? 0.9 : 1));
+  const season = r.category === seasonCategory(s) ? SEASON_PRICE_BONUS : 1;
+  return Math.round(r.basePrice * c.budgetFactor * fame * decor * skill * season * (substitute ? 0.9 : 1));
 }
 
 /** Uma poção serve para o cliente? (a pedida, ou outra da mesma categoria como substituta) */
@@ -112,7 +139,10 @@ function completeSale(d: Draft, c: Customer, recipeId: string, price: number) {
   const fair = price <= r.basePrice ? 1 : 0;
   const cozy = (has(s, 'iluminacao-aconchegante') ? 1 : 0) + (has(s, 'vitral-arcano') && c.archetype === 'nobre' ? 1 : 0);
   gainReputation(d, fair + cozy);
+  s.lifetime = { sold: s.lifetime.sold + 1, earned: s.lifetime.earned + price };
   d.events.push({ type: 'SALE', customerId: c.id, recipeId, price, substitute: recipeId !== c.wantedRecipeId });
+  const tip = befriend(d, c, recipeId, price);
+  if (tip) s.lifetime = { ...s.lifetime, earned: s.lifetime.earned + tip };
   removeCustomer(d, c, 'atendido');
   gainXp(d, 6 + Math.round(r.basePrice / 5) + masteryStars(s, recipeId));
 }

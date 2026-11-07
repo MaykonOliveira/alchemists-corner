@@ -66,6 +66,16 @@ export interface Customer {
   offer: { recipeId: string; price: number } | null;
   /** Última reação, para a interface mostrar. */
   remark: string | null;
+  /** Freguês fiel (id em REGULARS), se for um. */
+  regularId?: string | null;
+}
+
+/** Amizade com um freguês fiel. */
+export interface RegularState {
+  visits: number;
+  hearts: number;
+  /** Já deu o presente de amizade. */
+  gift: boolean;
 }
 
 export interface ShopUpgrade {
@@ -186,7 +196,7 @@ export interface Settings {
   reduceMotion: boolean;
 }
 
-export const SAVE_VERSION = 5 as const;
+export const SAVE_VERSION = 6 as const;
 
 export interface GameSave {
   saveVersion: typeof SAVE_VERSION;
@@ -236,6 +246,15 @@ export interface GameSave {
   sealsBought: number;
   /** O jogador patrocinou o Festival das Lanternas para o próximo dia. */
   festivalSponsored: boolean;
+  /** Amizade com os fregueses fiéis, por id. */
+  regulars: Record<string, RegularState>;
+  /** Conquistas do álbum já desbloqueadas (ids, na ordem em que vieram). */
+  achievements: string[];
+  /** Totais da partida inteira (para o álbum). */
+  lifetime: { sold: number; earned: number };
+  /** Carinhos no gato da loja e o último dia em que ele deu sorte. */
+  petCount: number;
+  petDay: number;
   tutorialStep: number;
   seq: number;
   settings: Settings;
@@ -274,4 +293,9 @@ export type GameEvent =
   | { type: 'SEAL_BOUGHT'; cost: number }
   | { type: 'FESTIVAL_SPONSORED'; cost: number }
   | { type: 'GREENHOUSE_HARVEST'; items: { ingredientId: string; qty: number }[] }
+  | { type: 'REGULAR_HEART'; regularId: string; hearts: number; tip: number }
+  | { type: 'REGULAR_GIFT'; regularId: string }
+  | { type: 'ACHIEVEMENT'; id: string }
+  | { type: 'CAT_PETTED'; lucky: boolean }
+  | { type: 'SEASON_STARTED'; season: string }
   | { type: 'ERROR'; message: string };
