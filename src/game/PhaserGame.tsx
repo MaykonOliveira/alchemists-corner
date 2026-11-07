@@ -1,3 +1,4 @@
+import { SceneSpotlight } from '../features/tutorial/Spotlight';
 import Phaser from 'phaser';
 import { useEffect, useRef } from 'react';
 import { useGameStore } from '../store/gameStore';
@@ -45,6 +46,7 @@ export function PhaserGame() {
       <div className="stage" style={{ position: 'relative' }}>
         <div ref={canvasRef} className="stage-canvas" aria-label="Interior da loja" role="img" />
         <HotspotTooltip />
+        <SceneSpotlight />
       </div>
     </div>
   );

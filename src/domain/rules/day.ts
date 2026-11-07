@@ -1,4 +1,5 @@
 import type { DayEventId, DayReport, DayStats, GameSave } from '../models/types';
+import { ensureGoals } from './goals';
 import { fail, pick, type Draft } from './context';
 import { advanceCustomers, sendAllCustomersHome } from './customers';
 import { harvestGreenhouse, helperWages, maintenanceCost, supplierStock } from './economy';
@@ -82,6 +83,7 @@ export function startNextDay(d: Draft): boolean {
   maybeCreateOrder(d);
   updateContracts(d);
   if (seasonOf(s.day).id !== seasonOf(s.day - 1).id) d.events.push({ type: 'SEASON_STARTED', season: seasonOf(s.day).id });
+  ensureGoals(s);
   d.events.push({ type: 'DAY_STARTED', day: s.day, event: s.event });
   return true;
 }

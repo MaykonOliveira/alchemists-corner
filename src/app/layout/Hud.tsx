@@ -64,7 +64,7 @@ export function Hud() {
       </div>
       <div className="hud-actions">
         {save.phase === 'preparacao' && (
-          <button className="btn btn-primary btn-glow" onClick={() => dispatch({ type: 'OPEN_SHOP' })}>Abrir loja</button>
+          <button data-tut="open-shop" className="btn btn-primary btn-glow" onClick={() => dispatch({ type: 'OPEN_SHOP' })}>Abrir loja</button>
         )}
         {save.phase === 'expediente' && (
           <>
@@ -85,7 +85,7 @@ export function Hud() {
                 <button className="btn btn-ghost" onClick={() => setConfirmClose(false)}>Não</button>
               </>
             ) : (
-              <button className="btn" onClick={() => setConfirmClose(true)}>Encerrar dia</button>
+              <button data-tut="close-day" className="btn" onClick={() => setConfirmClose(true)}>Encerrar dia</button>
             )}
           </>
         )}

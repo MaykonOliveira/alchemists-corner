@@ -2,6 +2,9 @@ import { useEffect } from 'react';
 import { PhaserGame } from '../../game/PhaserGame';
 import { TutorialCard } from '../../features/tutorial/TutorialCard';
 import { WelcomeBack } from '../../features/tutorial/WelcomeBack';
+import { TipCard } from '../../features/tutorial/TipCard';
+import { StoryIntro } from '../../features/tutorial/StoryIntro';
+import { UiSpotlight } from '../../features/tutorial/Spotlight';
 import { QuickServe } from '../../features/customers/QuickServe';
 import { useGameStore } from '../../store/gameStore';
 import { BottomBar, SHORTCUTS } from '../layout/BottomBar';
@@ -22,6 +25,7 @@ export function GameScreen() {
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
       if (target.closest('input, textarea, select')) return;
+      if (useGameStore.getState().save?.storySeen === false) return;
       if (useGameStore.getState().ui.modal) {
         if (e.key === 'Escape') dispatch({ type: 'OPEN_MODAL', modal: null });
         return;
@@ -46,6 +50,7 @@ export function GameScreen() {
         <div className="stage-wrap">
           <PhaserGame />
           <TutorialCard />
+          <TipCard />
           <WelcomeBack />
           <QuickServe placement="stage" />
           <Toasts />
@@ -56,6 +61,8 @@ export function GameScreen() {
       <DayEndModal />
       <LevelUpModal />
       <SettingsModal />
+      <UiSpotlight />
+      <StoryIntro />
     </div>
   );
 }

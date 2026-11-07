@@ -73,7 +73,7 @@ function SupplierRow({ save, id, room }: { save: GameSave; id: string; room: num
           </p>
           <div className="card-foot">
             <Stepper value={q} min={1} max={max} onChange={setQty} label={`Quantidade de ${ing.name}`} />
-            <button className="btn btn-small btn-primary" disabled={!canBuy} onClick={() => dispatch({ type: 'BUY_INGREDIENT', ingredientId: id, qty: q })}>
+            <button data-tut="buy" className="btn btn-small btn-primary" disabled={!canBuy} onClick={() => dispatch({ type: 'BUY_INGREDIENT', ingredientId: id, qty: q })}>
               Comprar · {cost}
             </button>
           </div>

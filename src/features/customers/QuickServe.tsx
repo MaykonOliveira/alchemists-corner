@@ -60,6 +60,7 @@ export function QuickServe({ placement }: { placement: 'stage' | 'side' }) {
         ) : offerId ? (
           <>
             <button
+              data-tut="quick-sell"
               className={`btn btn-primary qs-main qs-${verdict}`}
               onClick={() => dispatch({ type: 'SERVE_CUSTOMER', customerId: c.id, recipeId: offerId })}
             >

@@ -89,6 +89,20 @@ Um robô-jogador (`src/tests/balance/bot.ts`) joga vários dias usando só as re
 - 5 conquistas novas no álbum. Save v7. Regras em `src/domain/rules/street.ts`, dados em `src/domain/data/street.ts`, arte em `art/seasonal.py`.
 - Prints em `prints-rua/`.
 
+## Primeiros passos, metas e dicas
+
+- **História de abertura:** numa partida nova, três quadros em pixel art (a carta do antigo dono, a loja empoeirada,
+  o caldeirão aceso) contam como a loja chegou até você. Dá para pular. Saves antigos não veem a história.
+- **Tutorial na cena:** cada passo do tutorial acende o objeto certo da loja (contorno pulsando e seta) e o botão que
+  precisa ser tocado na interface (anel dourado). No celular, com um painel aberto, a dica sobe para cima da cena.
+- **Metas do dia** (aba 🎯 Metas, tecla M, e no resumo ao lado da cena): três metas por dia sorteadas com a semente do dia
+  (vender, faturar, vender de uma categoria, preparar uma receita, atender sem trocar a poção, entregar o pedido, carinho no gato).
+  Cada uma paga moedas e XP na hora. O primeiro dia acompanha o tutorial.
+- **Baú da semana:** 10 metas cumpridas na semana abrem o baú (moedas e ingredientes raros que a loja já pode comprar).
+- **Dicas de contexto:** aparecem uma vez quando a situação pede, por exemplo prateleira vazia, armário ou prateleira cheios
+  (os ajudantes param), cliente impaciente, pedido especial, corvo disponível, rival e poção da estação.
+- Save v8. Regras em `src/domain/rules/goals.ts`, dicas em `src/domain/data/tips.ts`, arte em `art/story.py`. Prints em `prints-metas/`.
+
 ## Som da loja
 
 - **Trilha por estação**, toda sintetizada em WebAudio (sem arquivos): Jardim em flor (primavera), Estrada ensolarada (verão),

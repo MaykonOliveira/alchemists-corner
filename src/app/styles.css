@@ -474,6 +474,9 @@ button, .stage-canvas { touch-action: manipulation; -webkit-tap-highlight-color:
   .stage-host { padding: 6px; aspect-ratio: 16 / 9; width: 100%; height: auto; }
   .side { border-left: none; border-top: 3px solid #120b0d; box-shadow: inset 0 3px 0 var(--parchment-edge); padding: 10px 12px; }
   .tutorial { position: fixed; left: 8px; right: 8px; bottom: 70px; width: auto; }
+  /* Com um painel aberto, a dica sobe para cima da cena e deixa os botões do painel livres. */
+  .game.panel-open .tutorial { position: absolute; top: 6px; bottom: auto; left: 6px; right: 6px; padding: 6px 10px; }
+  .game.panel-open .tutorial-text { font-size: 13px; }
   .toasts { position: fixed; top: 60px; }
 
 }
@@ -922,3 +925,73 @@ button, .stage-canvas { touch-action: manipulation; -webkit-tap-highlight-color:
 .mixer-val { font-family: var(--font-pixel); font-size: 13px; text-align: right; color: var(--ink-soft); }
 .mixer-off input[type=range], .mixer-off .mixer-val { opacity: .4; }
 .now-playing { margin: -4px 0 6px; font-style: italic; }
+
+/* ===================== Pacote G: tutorial na cena, história, metas e dicas ===================== */
+.scene-spot {
+  position: absolute; pointer-events: none; z-index: 4; border-radius: 6px;
+  box-shadow: 0 0 0 3px var(--gold), 0 0 18px 6px rgba(242, 201, 92, .55);
+  animation: spot-pulse 1.1s ease-in-out infinite;
+}
+.scene-spot-arrow {
+  position: absolute; left: 50%; top: -30px; transform: translateX(-50%);
+  font-size: 22px; line-height: 1; color: var(--gold); text-shadow: 0 2px 0 #120b0d, 0 0 8px rgba(242, 201, 92, .8);
+  animation: spot-bob .7s ease-in-out infinite alternate;
+}
+.ui-spot {
+  position: fixed; pointer-events: none; z-index: 30; border-radius: 10px;
+  box-shadow: 0 0 0 3px var(--gold), 0 0 0 6px rgba(242, 201, 92, .35), 0 0 22px 6px rgba(242, 201, 92, .5);
+  animation: spot-pulse 1.1s ease-in-out infinite; transition: left .15s, top .15s, width .15s, height .15s;
+}
+.ui-spot-hand { position: absolute; right: -10px; bottom: -22px; font-size: 22px; animation: spot-tap .8s ease-in-out infinite alternate; }
+@keyframes spot-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
+@keyframes spot-bob { from { transform: translate(-50%, 0); } to { transform: translate(-50%, 7px); } }
+@keyframes spot-tap { from { transform: translate(0, 0); } to { transform: translate(-4px, -6px); } }
+
+.story {
+  position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; padding: 16px;
+  background: radial-gradient(ellipse at center, #2a1a1c 0%, #0c0809 80%); animation: fade .4s ease-out;
+}
+.story-card {
+  width: min(720px, 100%); background: var(--parchment); color: var(--ink); border: 3px solid var(--wood);
+  box-shadow: 0 0 0 3px var(--copper), 0 20px 60px rgba(0,0,0,.7); border-radius: 10px; padding: 12px; animation: story-in .5s ease-out;
+}
+.story-frame { position: relative; border: 3px solid var(--wood); border-radius: 6px; overflow: hidden; line-height: 0; background: #120b0d; }
+.story-img { width: 100%; aspect-ratio: 16 / 9; image-rendering: pixelated; animation: story-pan 9s ease-out both; }
+.story-vignette { position: absolute; inset: 0; box-shadow: inset 0 0 50px rgba(12, 8, 9, .75); }
+.story-kicker { font-family: var(--font-pixel); color: var(--copper); font-size: 14px; margin: 10px 0 2px; text-transform: uppercase; letter-spacing: .06em; }
+.story-text { margin: 0 0 10px; font-size: 16px; line-height: 1.45; min-height: 3em; }
+.story-foot { display: flex; align-items: center; gap: 12px; }
+.story-foot .link-btn { margin-left: auto; }
+.story-dots { display: flex; gap: 6px; }
+.story-dots span { width: 10px; height: 10px; border-radius: 2px; background: var(--parchment-edge); }
+.story-dots span.on { background: var(--copper); box-shadow: 0 0 0 2px var(--gold); }
+@keyframes story-in { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: none; } }
+@keyframes story-pan { from { transform: scale(1.08); } to { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .story-img, .story-card, .scene-spot, .ui-spot, .scene-spot-arrow, .ui-spot-hand { animation: none; } }
+
+.goals-compact { margin: 10px 0; }
+.goal-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.goal {
+  display: grid; grid-template-columns: 28px 1fr auto; gap: 8px; align-items: center;
+  background: var(--parchment); color: var(--ink); border: 2px solid var(--parchment-edge); border-radius: 8px; padding: 6px 8px;
+}
+.goal-icon { font-size: 18px; text-align: center; }
+.goal-body { display: grid; gap: 4px; min-width: 0; }
+.goal-text { font-size: 13px; font-weight: 600; }
+.goal-bar { display: block; height: 7px; border-radius: 4px; background: #d8c49a; overflow: hidden; box-shadow: inset 0 1px 0 rgba(0,0,0,.2); }
+.goal-bar > span { display: block; height: 100%; background: linear-gradient(90deg, var(--copper), var(--gold)); transition: width .4s ease-out; }
+.goal-reward { display: grid; justify-items: end; gap: 2px; font-size: 12px; }
+.goal-xp { color: var(--ink-soft); font-size: 11px; }
+.goal-check { font-family: var(--font-pixel); color: var(--ok); }
+.goal-done { border-color: var(--ok); background: var(--ok-bg); animation: goal-pop .5s cubic-bezier(.2, 1.6, .4, 1); }
+.goal-done .goal-bar > span { background: var(--ok); }
+@keyframes goal-pop { 0% { transform: scale(1); } 40% { transform: scale(1.04); } 100% { transform: scale(1); } }
+.chest-top { display: flex; gap: 10px; align-items: center; }
+.chest-icon { font-size: 34px; filter: drop-shadow(0 2px 0 rgba(0,0,0,.3)); }
+.chest-bar { margin: 8px 0 4px; height: 10px; }
+.chest-ready { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold), 0 0 18px rgba(242, 201, 92, .55); }
+.chest-ready .chest-icon { animation: chest-shake 1.2s ease-in-out infinite; }
+.chest-open { opacity: .8; }
+.loot-item { display: inline-flex; align-items: center; gap: 2px; margin-left: 8px; font-size: 12px; }
+@keyframes chest-shake { 0%, 70%, 100% { transform: rotate(0); } 75% { transform: rotate(-10deg); } 85% { transform: rotate(10deg); } 95% { transform: rotate(-4deg); } }
+.tip-card { box-shadow: 0 0 0 2px var(--copper-hi), 0 8px 24px rgba(0,0,0,.5); }

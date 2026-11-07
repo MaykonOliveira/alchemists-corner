@@ -72,6 +72,7 @@ export function ProductionPanel({ save }: { save: GameSave }) {
         <div className="card-foot sticky-actions">
           <Stepper value={b} min={1} max={Math.max(1, max)} onChange={setBatches} label="Lotes" />
           <button
+            data-tut="brew"
             className="btn btn-primary"
             disabled={!slot || max < 1 || save.phase === 'fechamento'}
             onClick={() => dispatch({ type: 'START_BREW', recipeId: selected, batches: b })}

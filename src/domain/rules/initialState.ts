@@ -3,6 +3,7 @@ import { SAVE_VERSION, type GameSave } from '../models/types';
 import { freshStats } from './day';
 import { supplierStock } from './economy';
 import { OPEN_MIN } from './time';
+import { ensureGoals } from './goals';
 
 /** Estado de uma partida nova: a loja herdada do antigo proprietário. */
 export function createNewGame(now: number = Date.now()): GameSave {
@@ -63,6 +64,9 @@ export function createNewGame(now: number = Date.now()): GameSave {
     expedition: null,
     expeditionsDone: 0,
     finds: [],
+    goals: { day: 0, list: [], week: 0, weekDone: 0, chestClaimed: false },
+    tipsSeen: [],
+    storySeen: false,
     event: null,
     stats: null as unknown as GameSave['stats'],
     reports: [],
@@ -77,5 +81,6 @@ export function createNewGame(now: number = Date.now()): GameSave {
   };
   s.supplier = supplierStock(s);
   s.stats = freshStats(s);
+  ensureGoals(s);
   return s;
 }

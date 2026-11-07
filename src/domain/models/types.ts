@@ -208,6 +208,30 @@ export interface RivalState {
   losses: number;
 }
 
+/** Metas do dia (pacote G): três por dia, e um baú na semana para quem cumprir bastante. */
+export type GoalKind = 'vender' | 'faturar' | 'categoria' | 'preparar' | 'sem-troca' | 'pedido' | 'carinho';
+
+export interface DailyGoal {
+  id: string;
+  kind: GoalKind;
+  /** Categoria (para 'categoria') ou receita (para 'preparar'). */
+  ref?: string;
+  target: number;
+  progress: number;
+  coins: number;
+  xp: number;
+  done: boolean;
+}
+
+export interface GoalsState {
+  day: number;
+  list: DailyGoal[];
+  /** Semana (índice) do baú e quantas metas foram cumpridas nela. */
+  week: number;
+  weekDone: number;
+  chestClaimed: boolean;
+}
+
 /** Expedição do corvo (volta no começo do dia indicado). */
 export interface Expedition {
   dest: string;
@@ -230,7 +254,7 @@ export interface Settings {
   vibration: boolean;
 }
 
-export const SAVE_VERSION = 7 as const;
+export const SAVE_VERSION = 8 as const;
 
 export interface GameSave {
   saveVersion: typeof SAVE_VERSION;
@@ -295,6 +319,12 @@ export interface GameSave {
   expeditionsDone: number;
   /** Achados de expedições e do Visitante Misterioso (ids). */
   finds: string[];
+  /** Metas do dia e baú da semana (pacote G). */
+  goals: GoalsState;
+  /** Dicas de contexto que o jogador já viu (ids). */
+  tipsSeen: string[];
+  /** A história de abertura já foi vista. */
+  storySeen: boolean;
   tutorialStep: number;
   seq: number;
   settings: Settings;
@@ -342,4 +372,6 @@ export type GameEvent =
   | { type: 'EXPEDITION_SENT'; dest: string; returnDay: number }
   | { type: 'EXPEDITION_BACK'; dest: string; items: { ingredientId: string; qty: number }[]; find: string | null }
   | { type: 'FIND'; id: string }
+  | { type: 'GOAL_DONE'; goalId: string; coins: number; xp: number; allDone: boolean }
+  | { type: 'CHEST_OPENED'; coins: number; items: { ingredientId: string; qty: number }[] }
   | { type: 'ERROR'; message: string };

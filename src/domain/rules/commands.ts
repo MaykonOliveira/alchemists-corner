@@ -11,6 +11,7 @@ import { deliverOrder } from './orders';
 import { buySeal, learnTalentCmd } from './progression';
 import { sponsorFestival } from './day';
 import { sendExpedition } from './street';
+import { claimChest, trackGoals } from './goals';
 
 /**
  * Comandos tipados que alteram o estado canônico da partida.
@@ -42,7 +43,10 @@ export type DomainCommand =
   | { type: 'BUY_SEAL' }
   | { type: 'SPONSOR_FESTIVAL' }
   | { type: 'SET_SETTINGS'; settings: Partial<Settings> }
-  | { type: 'SET_TUTORIAL'; step: number };
+  | { type: 'SET_TUTORIAL'; step: number }
+  | { type: 'CLAIM_CHEST' }
+  | { type: 'SEE_TIP'; tipId: string }
+  | { type: 'SEE_STORY' };
 
 export interface CommandResult {
   save: GameSave;
@@ -56,6 +60,7 @@ export function applyCommand(save: GameSave, cmd: DomainCommand, ctx: RuleContex
   const d: Draft = { s: structuredClone(save), events: [], ctx };
   const changed = run(d, cmd);
   if (!changed) return { save, events: d.events };
+  trackGoals(d, 0);
   checkAchievements(d);
   d.s.updatedAt = ctx.now;
   return { save: d.s, events: d.events };
@@ -93,6 +98,15 @@ function run(d: Draft, cmd: DomainCommand): boolean {
     case 'SET_TUTORIAL':
       if (d.s.tutorialStep === cmd.step) return false;
       d.s.tutorialStep = cmd.step;
+      return true;
+    case 'CLAIM_CHEST': return claimChest(d);
+    case 'SEE_TIP':
+      if (d.s.tipsSeen.includes(cmd.tipId)) return false;
+      d.s.tipsSeen = [...d.s.tipsSeen, cmd.tipId];
+      return true;
+    case 'SEE_STORY':
+      if (d.s.storySeen) return false;
+      d.s.storySeen = true;
       return true;
   }
 }
