@@ -18,7 +18,7 @@ export function WelcomeBack() {
   let step: { text: string; label: string; act: () => void };
   if (save.phase === 'expediente') {
     step = { text: 'A loja está aberta e o relógio está pausado.', label: 'Continuar o dia', act: close };
-  } else if (potions === 0 && !save.brew) {
+  } else if (potions === 0 && !save.brew && !save.brew2) {
     step = { text: 'As prateleiras estão vazias. Prepare poções antes de abrir.', label: 'Ir ao caldeirão', act: () => go('production') };
   } else {
     step = { text: 'Tudo pronto para receber clientes.', label: 'Abrir a loja', act: () => { close(); dispatch({ type: 'OPEN_SHOP' }); } };
@@ -35,6 +35,8 @@ export function WelcomeBack() {
         <li><CoinIcon size={14} /> {save.coins} moedas</li>
         <li>{potions} poções à venda</li>
         {save.brew && <li>Caldeirão: {RECIPES_BY_ID[save.brew.recipeId].shortName}</li>}
+        {save.brew2 && <li>Caldeirão 2: {RECIPES_BY_ID[save.brew2.recipeId].shortName}</li>}
+        {save.contract?.accepted && <li>Contrato: {save.contract.dueDay - save.day <= 0 ? 'vence hoje!' : `faltam ${save.contract.dueDay - save.day} dia(s)`}</li>}
         {save.order && <li>Pedido: {potionStock(save, save.order.recipeId)}/{save.order.qty} {RECIPES_BY_ID[save.order.recipeId].shortName}</li>}
       </ul>
       <p className="tutorial-text">{step.text}</p>

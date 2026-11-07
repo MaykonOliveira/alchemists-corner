@@ -4,6 +4,7 @@ import type { Draft, RuleContext } from './context';
 import { acceptOffer, declineOffer, dismissCustomer, serveCustomer } from './customers';
 import { advance, closeDay, openShop, startNextDay } from './day';
 import { buyIngredient, buyUpgrade, setForSale, setPrice } from './economy';
+import { acceptContract, declineContract, deliverContract } from './contracts';
 import { setHelper } from './helpers';
 import { deliverOrder } from './orders';
 import { buySeal, learnTalentCmd } from './progression';
@@ -27,6 +28,9 @@ export type DomainCommand =
   | { type: 'DECLINE_OFFER'; customerId: string }
   | { type: 'DISMISS_CUSTOMER'; customerId: string }
   | { type: 'DELIVER_ORDER' }
+  | { type: 'ACCEPT_CONTRACT' }
+  | { type: 'DECLINE_CONTRACT' }
+  | { type: 'DELIVER_CONTRACT' }
   | { type: 'BUY_UPGRADE'; upgradeId: string }
   | { type: 'SET_HELPER'; upgradeId: string; on: boolean }
   | { type: 'EXPERIMENT'; ingredientIds: string[] }
@@ -67,6 +71,9 @@ function run(d: Draft, cmd: DomainCommand): boolean {
     case 'DECLINE_OFFER': return declineOffer(d, cmd.customerId);
     case 'DISMISS_CUSTOMER': return dismissCustomer(d, cmd.customerId);
     case 'DELIVER_ORDER': return deliverOrder(d);
+    case 'ACCEPT_CONTRACT': return acceptContract(d);
+    case 'DECLINE_CONTRACT': return declineContract(d);
+    case 'DELIVER_CONTRACT': return deliverContract(d);
     case 'BUY_UPGRADE': return buyUpgrade(d, cmd.upgradeId);
     case 'SET_HELPER': return setHelper(d, cmd.upgradeId, cmd.on);
     case 'EXPERIMENT': return experiment(d, cmd.ingredientIds);

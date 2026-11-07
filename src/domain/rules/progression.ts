@@ -40,7 +40,7 @@ export function levelProgress(xp: number): number {
 
 /** Selos de Mestre ganhos: níveis 11+, graus de Mestre e receitas com maestria completa. */
 export const sealsEarned = (s: GameSave) =>
-  Math.max(0, s.level - SEAL_LEVEL + 1) + masterRank(s.xp) + masteredRecipes(s) + s.sealsBought;
+  Math.max(0, s.level - SEAL_LEVEL + 1) + masterRank(s.xp) + masteredRecipes(s) + s.sealsBought + (s.contractSeals ?? 0);
 
 /** Doação à Guilda dos Alquimistas: troca moedas por um Selo (o preço sobe a cada compra). */
 export const sealPrice = (s: GameSave) => 3000 * (s.sealsBought + 1);

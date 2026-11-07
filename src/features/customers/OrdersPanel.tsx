@@ -1,7 +1,9 @@
 import { DAY_EVENTS } from '../../domain/data/orders';
 import { RECIPES_BY_ID } from '../../domain/data/recipes';
 import type { GameSave } from '../../domain/models/types';
+import { CONTRACT_DAYS, CONTRACT_LEVEL, contractDelivered, contractReady, contractTotal } from '../../domain/rules/contracts';
 import { potionStock } from '../../domain/rules/economy';
+import { INGREDIENTS_BY_ID } from '../../domain/data/ingredients';
 import { useGameStore } from '../../store/gameStore';
 import { Coins, Meter, PotionName } from '../../ui/widgets';
 
@@ -17,6 +19,7 @@ export function OrdersPanel({ save }: { save: GameSave }) {
           <p className="card-text">{ev.text}</p>
         </div>
       )}
+      <ContractCard save={save} />
       {o ? (
         <div className="card note">
           <p className="muted small">Pedido especial · {o.client}</p>
@@ -41,7 +44,7 @@ export function OrdersPanel({ save }: { save: GameSave }) {
             Entregar {o.qty} {RECIPES_BY_ID[o.recipeId].shortName}
           </button>
         </div>
-      ) : (
+      ) : save.contract ? null : (
         <div className="card note">
           <p className="row-title">Nada pregado no quadro hoje</p>
           <p className="card-text">
@@ -52,5 +55,67 @@ export function OrdersPanel({ save }: { save: GameSave }) {
         </div>
       )}
     </>
+  );
+}
+
+function ContractCard({ save }: { save: GameSave }) {
+  const dispatch = useGameStore((s) => s.dispatch);
+  const c = save.contract;
+  if (!c) {
+    if (save.level < CONTRACT_LEVEL) return null;
+    return (
+      <div className="card note contract contract-empty">
+        <p className="row-title">📜 Contratos</p>
+        <p className="card-text small">Nenhum contrato agora. Um novo chega em {Math.max(1, save.nextContractDay - save.day)} dia(s).</p>
+      </div>
+    );
+  }
+  const done = contractDelivered(c);
+  const total = contractTotal(c);
+  const ready = contractReady(save);
+  const daysLeft = c.dueDay - save.day;
+  return (
+    <div className={`card contract ${c.accepted ? 'contract-active' : ''}`}>
+      <div className="contract-ribbon">{c.accepted ? 'Contrato em andamento' : 'Contrato de vários dias'}</div>
+      <p className="muted small">{c.client}</p>
+      <p className="card-text">{c.text}</p>
+      <ul className="contract-items">
+        {c.items.map((it) => (
+          <li key={it.recipeId} className={it.delivered >= it.qty ? 'contract-item-done' : ''}>
+            <span className="contract-qty">{it.delivered}/{it.qty}</span>
+            <PotionName id={it.recipeId} />
+            {c.accepted && it.delivered < it.qty && <span className="muted small">estoque {potionStock(save, it.recipeId)}</span>}
+          </li>
+        ))}
+      </ul>
+      {c.accepted && <Meter ratio={done / total} tone="ok" label="Progresso do contrato" />}
+      <div className="contract-reward">
+        <span><Coins n={c.rewardCoins} /></span>
+        <span>+{c.rewardRep} rep</span>
+        <span>+{c.rewardXp} XP</span>
+        {c.rewardSeal && <span className="contract-seal">✨ 1 Selo</span>}
+      </div>
+      <p className="card-text small">
+        🎁 Baú: {c.rewardIngredients.map((r) => `${r.qty}× ${INGREDIENTS_BY_ID[r.ingredientId].name}`).join(', ')}
+      </p>
+      {c.accepted ? (
+        <>
+          <p className={`card-text small ${daysLeft <= 0 ? 'text-warn' : ''}`}>
+            Prazo: fim do dia {c.dueDay} {daysLeft <= 0 ? '(hoje!)' : `(faltam ${daysLeft} dia${daysLeft > 1 ? 's' : ''})`}. Se vencer, você recebe só metade do proporcional e perde reputação.
+          </p>
+          <button className="btn btn-primary" disabled={ready === 0 || save.phase === 'fechamento'} onClick={() => dispatch({ type: 'DELIVER_CONTRACT' })}>
+            {ready > 0 ? `Entregar ${ready} ${ready > 1 ? 'poções' : 'poção'}` : 'Nada para entregar ainda'}
+          </button>
+        </>
+      ) : (
+        <>
+          <p className="card-text small">Aceite até o fim do dia {c.dueDay}. Depois de aceito, são {CONTRACT_DAYS} dias para entregar aos poucos.</p>
+          <div className="row-actions">
+            <button className="btn btn-primary" onClick={() => dispatch({ type: 'ACCEPT_CONTRACT' })}>Aceitar contrato</button>
+            <button className="btn" onClick={() => dispatch({ type: 'DECLINE_CONTRACT' })}>Recusar</button>
+          </div>
+        </>
+      )}
+    </div>
   );
 }

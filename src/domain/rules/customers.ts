@@ -9,12 +9,14 @@ import { gainReputation, gainXp } from './progression';
 import { CLOSE_MIN } from './time';
 
 export const MAX_CUSTOMERS = 3;
+/** Clientes que cabem no balcão (o balcão duplo abre espaço para mais um). */
+export const maxCustomers = (s: GameSave) => MAX_CUSTOMERS + (has(s, 'balcao-duplo') ? 1 : 0);
 /** Margem acima do orçamento em que o cliente ainda negocia, em vez de ir embora. */
 export const NEGOTIATION_MARGIN = 1.2;
 
 export function nextSpawnDelay(s: GameSave, random: () => number) {
   const event = s.event ? DAY_EVENTS[s.event].spawnFactor : 1;
-  const sign = (has(s, 'letreiro-novo') ? 0.75 : 1) * (has(s, 'sino-encantado') ? 0.9 : 1);
+  const sign = (has(s, 'letreiro-novo') ? 0.75 : 1) * (has(s, 'sino-encantado') ? 0.9 : 1) * (has(s, 'balcao-duplo') ? 0.9 : 1);
   const fame = (1 + Math.min(s.reputation, 400) / 800) * (1 + talentBonus(s, 'fama'));
   return Math.round((16000 * event * sign) / fame * (0.7 + random() * 0.6));
 }
@@ -61,7 +63,7 @@ export function maxPriceFor(s: GameSave, c: Customer, recipeId: string) {
   const r = RECIPES_BY_ID[recipeId];
   const substitute = recipeId !== c.wantedRecipeId;
   const fame = 1 + Math.min(s.reputation, 240) / 800;
-  const decor = (has(s, 'prateleira-extra') ? 1.03 : 1) * (has(s, 'iluminacao-aconchegante') ? 1.04 : 1) * (has(s, 'vitral-arcano') ? 1.05 : 1);
+  const decor = (has(s, 'prateleira-extra') ? 1.03 : 1) * (has(s, 'iluminacao-aconchegante') ? 1.04 : 1) * (has(s, 'vitral-arcano') ? 1.05 : 1) * (has(s, 'torre-alquimista') ? 1.08 : 1);
   const skill = (1 + masteryStars(s, recipeId) * STAR_BONUS) * (1 + talentBonus(s, 'labia'));
   return Math.round(r.basePrice * c.budgetFactor * fame * decor * skill * (substitute ? 0.9 : 1));
 }
@@ -180,7 +182,7 @@ export function advanceCustomers(d: Draft, ms: number) {
   if (s.spawnInMs <= 0) {
     s.spawnInMs = nextSpawnDelay(s, d.ctx.random);
     // Ninguém entra nos últimos 30 minutos do expediente.
-    if (s.customers.length < MAX_CUSTOMERS && s.clockMin < CLOSE_MIN - 30) spawnCustomer(d);
+    if (s.customers.length < maxCustomers(s) && s.clockMin < CLOSE_MIN - 30) spawnCustomer(d);
   }
 }
 

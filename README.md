@@ -52,6 +52,17 @@ Um robô-jogador (`src/tests/balance/bot.ts`) joga vários dias usando só as re
 - Ao terminar um preparo, sai fumaça na cor da poção e os frascos voam até as prateleiras.
 - O fechamento conta o lucro do zero, dá medalha de ouro, prata ou bronze (comparando com a média dos 7 dias anteriores), avisa recorde e mostra o gráfico da semana.
 
+## Expansões e contratos
+
+- **Expansão da loja em 3 etapas** (aba Melhorias), cada uma abre a próxima e aparece na cena:
+  - **Sala dos fundos** (nível 9): um segundo caldeirão, de cobre. Dois preparos ao mesmo tempo, inclusive pelo aprendiz.
+  - **Balcão duplo** (nível 11): uma ala extra do balcão com balança. Até 4 clientes esperando e 10% mais movimento.
+  - **Torre do alquimista** (nível 13): um astrolábio dourado gira sobre a loja. Preços +8% e contratos pagam 25% a mais.
+- **Contratos de vários dias** (quadro de avisos, a partir do nível 6): 2 ou 3 receitas em quantidade. Aceite e entregue aos poucos em até 3 dias.
+  Ao completar: moedas, reputação, XP, um baú de ingredientes raros e, a partir do nível 12, 1 Selo de Mestre.
+  Se vencer, o cliente paga metade do proporcional ao que recebeu e a loja perde reputação.
+- Prints em `prints-expansoes/`.
+
 ## Celular
 
 - **Venda com um toque:** quando um cliente chega, o pedido aparece sobre a loja (ou no topo do painel, no celular) com o botão Vender, o preço e se ele deve aceitar. Opções abre o balcão completo.

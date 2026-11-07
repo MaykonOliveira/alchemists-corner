@@ -73,8 +73,10 @@ export interface ShopUpgrade {
   name: string;
   cost: number;
   effect: string;
-  category: 'funcional' | 'visual' | 'ajudante';
+  category: 'funcional' | 'visual' | 'ajudante' | 'expansao';
   requiredLevel: number;
+  /** Melhoria que precisa ser comprada antes (etapas da expansão). */
+  requires?: string;
   /** Salário diário (ajudantes), somado à manutenção no fechamento. */
   upkeep?: number;
 }
@@ -114,6 +116,30 @@ export interface SpecialOrder {
   rewardRep: number;
   rewardXp: number;
   dueDay: number;
+}
+
+/** Uma linha de um contrato: quantas poções de uma receita, e quantas já foram entregues. */
+export interface ContractItem {
+  recipeId: string;
+  qty: number;
+  delivered: number;
+}
+
+/** Encomenda grande de vários dias (late game), aceita no quadro de avisos e entregue aos poucos. */
+export interface Contract {
+  id: string;
+  client: string;
+  text: string;
+  items: ContractItem[];
+  rewardCoins: number;
+  rewardRep: number;
+  rewardXp: number;
+  /** Ingredientes raros que vêm no baú da recompensa. */
+  rewardIngredients: { ingredientId: string; qty: number }[];
+  rewardSeal: boolean;
+  /** Último dia para aceitar (oferta) ou para entregar (aceito). */
+  dueDay: number;
+  accepted: boolean;
 }
 
 export type DayEventId = 'feira' | 'caravana' | 'chuva' | 'festival';
@@ -160,7 +186,7 @@ export interface Settings {
   reduceMotion: boolean;
 }
 
-export const SAVE_VERSION = 4 as const;
+export const SAVE_VERSION = 5 as const;
 
 export interface GameSave {
   saveVersion: typeof SAVE_VERSION;
@@ -183,12 +209,21 @@ export interface GameSave {
   upgrades: string[];
   helpers: HelpersState;
   brew: BrewJob | null;
+  /** Segundo caldeirão (expansão "Sala dos fundos"). */
+  brew2: BrewJob | null;
   customers: Customer[];
   /** Tempo (ms reais de expediente) até o próximo cliente. */
   spawnInMs: number;
   /** Estoque restante do fornecedor hoje (null = ilimitado). */
   supplier: Record<string, number | null>;
   order: SpecialOrder | null;
+  /** Contrato de vários dias (oferecido ou aceito). */
+  contract: Contract | null;
+  /** Dia a partir do qual um novo contrato pode aparecer. */
+  nextContractDay: number;
+  contractsDone: number;
+  /** Selos de Mestre ganhos em contratos. */
+  contractSeals: number;
   event: DayEventId | null;
   stats: DayStats;
   reports: DayReport[];
@@ -209,8 +244,8 @@ export interface GameSave {
 /** Eventos emitidos pelas regras para a apresentação (sons, animações, avisos). */
 export type GameEvent =
   | { type: 'PURCHASE'; ingredientId: string; qty: number; cost: number }
-  | { type: 'BREW_STARTED'; recipeId: string; batches: number; by?: 'aprendiz' }
-  | { type: 'BREW_DONE'; recipeId: string; qty: number }
+  | { type: 'BREW_STARTED'; recipeId: string; batches: number; by?: 'aprendiz'; slot?: 2 }
+  | { type: 'BREW_DONE'; recipeId: string; qty: number; slot?: 2 }
   | { type: 'CUSTOMER_ARRIVED'; customerId: string }
   | { type: 'SALE'; customerId: string; recipeId: string; price: number; substitute: boolean; by?: 'golem' }
   | { type: 'RAVEN_DELIVERY'; items: { ingredientId: string; qty: number }[]; cost: number; fee: number }
@@ -223,6 +258,11 @@ export type GameEvent =
   | { type: 'ORDER_NEW'; orderId: string }
   | { type: 'ORDER_DONE'; orderId: string; coins: number }
   | { type: 'ORDER_EXPIRED'; orderId: string }
+  | { type: 'CONTRACT_OFFERED'; contractId: string }
+  | { type: 'CONTRACT_ACCEPTED'; contractId: string }
+  | { type: 'CONTRACT_PROGRESS'; contractId: string; delivered: number }
+  | { type: 'CONTRACT_DONE'; contractId: string; coins: number; seal: boolean }
+  | { type: 'CONTRACT_FAILED'; contractId: string; coins: number }
   | { type: 'UPGRADE_BOUGHT'; upgradeId: string }
   | { type: 'DISCOVERY'; recipeId: string }
   | { type: 'EXPERIMENT_FAILED'; hint: string }

@@ -25,6 +25,7 @@ export function migrateSave(raw: unknown): GameSave | null {
   // v1 → v2: entraram preços, clientes, caldeirão, fornecedor, pedidos e tutorial.
   // v2 → v3: entraram os ajudantes automáticos (helpers) e o trabalho deles no relatório.
   // v3 → v4: late game (níveis 11 a 15, maestria das receitas e talentos do Grimório do Mestre).
+  // v4 → v5: contratos de vários dias e expansão da loja (segundo caldeirão).
   // Os campos novos recebem os valores padrão abaixo.
 
   const base = createNewGame(num(raw.createdAt, Date.now()));
@@ -74,10 +75,15 @@ export function migrateSave(raw: unknown): GameSave | null {
       golemInMs: isObj(raw.helpers) ? num(raw.helpers.golemInMs, 0) : 0,
     },
     brew: isObj(raw.brew) ? (raw.brew as unknown as GameSave['brew']) : null,
+    brew2: isObj(raw.brew2) ? (raw.brew2 as unknown as GameSave['brew2']) : null,
     customers: arr(raw.customers, []),
     spawnInMs: num(raw.spawnInMs, base.spawnInMs),
     supplier,
     order: isObj(raw.order) ? (raw.order as unknown as GameSave['order']) : null,
+    contract: isObj(raw.contract) && Array.isArray(raw.contract.items) ? (raw.contract as unknown as GameSave['contract']) : null,
+    nextContractDay: num(raw.nextContractDay, 1),
+    contractsDone: Math.max(0, Math.floor(num(raw.contractsDone, 0))),
+    contractSeals: Math.max(0, Math.floor(num(raw.contractSeals, 0))),
     event: typeof raw.event === 'string' && raw.event in DAY_EVENTS ? (raw.event as GameSave['event']) : null,
     stats: isObj(raw.stats)
       ? { ...base.stats, ...(raw.stats as object), helperWork: { ...base.stats.helperWork, ...(isObj(raw.stats.helperWork) ? raw.stats.helperWork : {}) } }

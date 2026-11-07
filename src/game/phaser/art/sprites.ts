@@ -32,6 +32,9 @@ export const CUSTOMER_URLS: Record<CustomerArchetype, string> = {
 /** Posições das melhorias do late game (estufa, alambique, runas, vitral e sino). */
 export const LATEGAME: Record<'greenhouse' | 'alembic' | 'cabinet-runes' | 'vitral' | 'bell', { x: number; y: number }> = layout.lategame;
 
+/** Posições das expansões da loja (2º caldeirão, ala do balcão e astrolábio da torre). */
+export const EXPANSION: Record<'cauldron-2' | 'counter-wing' | 'astrolabe', { x: number; y: number }> = layout.expansion;
+
 /** Linhas (y relativo) das tábuas onde os frascos ficam apoiados. */
 export const SHELF_BOARDS: number[] = layout.shelfBoards;
 

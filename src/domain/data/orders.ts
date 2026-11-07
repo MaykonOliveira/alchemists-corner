@@ -38,3 +38,11 @@ export const DAY_EVENTS: Record<DayEventId, DayEventInfo> = {
   festival: { id: 'festival', name: 'Festival das Lanternas', text: 'A cidade está em festa! A nobreza desfila pelas ruas com bolsos cheios.',
     spawnFactor: 0.65, archetypeBoost: { nobre: 2.5, viajante: 1 }, budgetBonus: 0.12, minLevel: 8 },
 };
+
+/** Quem oferece contratos de vários dias (a partir do nível 6). */
+export const CONTRACT_CLIENTS = [
+  { client: 'Guilda dos Mercadores', text: 'Uma caravana sai em três dias e quer levar um carregamento completo.' },
+  { client: 'Hospital de Santa Brígida', text: 'O inverno chegou cedo. Precisamos encher a enfermaria.' },
+  { client: 'Exército do Norte', text: 'A tropa marcha para a fronteira. Um contrato de suprimentos, pago em ouro.' },
+  { client: 'Universidade de Valtória', text: 'Um semestre inteiro de experimentos depende das suas poções.' },
+];

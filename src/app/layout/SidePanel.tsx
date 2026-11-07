@@ -38,7 +38,11 @@ export function SidePanel() {
         <h2 className="side-title">Dia {save.day}</h2>
         <ul className="checklist">
           <li className={stock > 0 ? 'done' : ''}>Poções nas prateleiras: <strong>{stock}</strong></li>
-          <li className={save.brew ? 'done' : ''}>Caldeirão: {save.brew ? 'fervendo…' : 'livre'}</li>
+          <li className={save.brew || save.brew2 ? 'done' : ''}>
+            {save.upgrades.includes('sala-dos-fundos')
+              ? `Caldeirões: ${[save.brew, save.brew2].filter(Boolean).length} de 2 fervendo`
+              : `Caldeirão: ${save.brew ? 'fervendo…' : 'livre'}`}
+          </li>
           <li className={save.order ? 'todo' : ''}>
             Pedido especial: {save.order ? `${potionStock(save, save.order.recipeId)}/${save.order.qty}` : 'nenhum'}
           </li>

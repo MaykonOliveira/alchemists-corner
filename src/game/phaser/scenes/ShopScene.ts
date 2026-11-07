@@ -5,7 +5,7 @@ import { CLOSE_MIN, OPEN_MIN } from '../../../domain/rules/time';
 import { useGameStore } from '../../../store/gameStore';
 import { gameEvents } from '../../events';
 import { outlinedText } from '../art/painter';
-import { GARLAND_BULBS, LANTERNS, LATEGAME, SHELF_BOARDS } from '../art/sprites';
+import { EXPANSION, GARLAND_BULBS, LANTERNS, LATEGAME, SHELF_BOARDS } from '../art/sprites';
 import { HelperViews } from '../entities/Helpers';
 import { Visitor, type Mood } from '../entities/Visitor';
 import { HOTSPOTS, type HotspotDef } from '../interaction/hotspots';
@@ -15,12 +15,14 @@ const OUTLINE_ACTIVE = 0xf2c95c;
 const PRESSED_TINT = 0xffd8a0;
 
 /** Posições no balcão onde os clientes param (mais perto da porta primeiro). */
-const COUNTER_SLOTS = [224, 198, 172];
+const COUNTER_SLOTS = [224, 198, 172, 146];
 /** Envio de tempo para as regras (ms reais) — agrupado para não sobrecarregar a interface. */
 const ADVANCE_STEP_MS = 200;
 
 const CAULDRON = { x: 46, y: 128, cx: 70 };
 const STAND = { x: 280, y: 150 };
+/** Segundo caldeirão (expansão "Sala dos fundos"): mesmo desenho, então os deslocamentos são os mesmos. */
+const CAULDRON2 = { x: EXPANSION['cauldron-2'].x, y: EXPANSION['cauldron-2'].y, cx: EXPANSION['cauldron-2'].x + 24 };
 
 /** Cor da luz ambiente ao longo do dia (multiplicada sobre o cenário). */
 const LIGHT_KEYS: [number, number][] = [
@@ -54,6 +56,10 @@ export class ShopScene extends Phaser.Scene {
   private fire!: Phaser.GameObjects.Image;
   private liquid!: Phaser.GameObjects.Image;
   private brewBar!: Phaser.GameObjects.Graphics;
+  /** Peças do 2º caldeirão (só existem com a expansão). */
+  private liquid2: Phaser.GameObjects.Image | null = null;
+  private fire2: Phaser.GameObjects.Image | null = null;
+  private astroTimer: Phaser.Time.TimerEvent | null = null;
   private badge!: Phaser.GameObjects.Image;
   private upgradeLayer: Phaser.GameObjects.GameObject[] = [];
   private helpers!: HelperViews;
@@ -105,6 +111,7 @@ export class ShopScene extends Phaser.Scene {
       sub((s) => s.save?.phase, () => this.store.save && this.applyPhase(this.store.save)),
       sub((s) => s.save?.clockMin, (m) => m !== undefined && this.applyLight(m)),
       sub((s) => s.save?.brew, () => this.store.save && this.applyBrew(this.store.save)),
+      sub((s) => s.save?.brew2, () => this.store.save && this.applyBrew(this.store.save)),
       sub((s) => s.save?.upgrades, () => this.store.save && this.renderUpgrades(this.store.save)),
       sub((s) => s.save?.order, (o) => this.badge.setVisible(!!o)),
       sub(
@@ -191,6 +198,7 @@ export class ShopScene extends Phaser.Scene {
       callback: () => {
         frame = (frame + 1) % 3;
         this.fire.setTexture(`fire-${frame}`);
+        this.fire2?.setTexture(`fire-${(frame + 1) % 3}`);
       },
     });
 
@@ -200,42 +208,55 @@ export class ShopScene extends Phaser.Scene {
       loop: true,
       callback: () => {
         if (this.reduceMotion()) return;
-        const brew = this.store.save?.brew;
-        if (!brew && Math.random() > 0.35) return;
-        const color = brew ? Phaser.Display.Color.HexStringToColor(RECIPES_BY_ID[brew.recipeId].color).color : 0x8ae0c8;
-        const x = cx - 10 + Math.floor(Math.random() * 18);
-        const b = this.add.image(x, 138, 'dot-bubble').setDepth(180).setTint(color);
-        this.tweens.add({ targets: b, y: 133, alpha: 0, duration: 600, onComplete: () => b.destroy() });
-        if (Math.random() < (brew ? 0.8 : 0.5)) {
-          const s = this.add.image(x, 134, 'dot-steam').setDepth(181).setAlpha(brew ? 0.7 : 0.45);
-          this.tweens.add({
-            targets: s, y: 108, x: x + (Math.random() < 0.5 ? -5 : 5), alpha: 0, scale: 1.8, duration: 1800,
-            onComplete: () => s.destroy(),
-          });
-        }
+        this.bubble(cx, CAULDRON.y, this.store.save?.brew ?? null);
+        if (this.fire2) this.bubble(CAULDRON2.cx, CAULDRON2.y, this.store.save?.brew2 ?? null);
       },
     });
   }
 
+  /** Bolhas e vapor de um caldeirão (y = topo do sprite). */
+  private bubble(cx: number, top: number, brew: { recipeId: string } | null) {
+    if (!brew && Math.random() > 0.35) return;
+    const color = brew ? Phaser.Display.Color.HexStringToColor(RECIPES_BY_ID[brew.recipeId].color).color : 0x8ae0c8;
+    const x = cx - 10 + Math.floor(Math.random() * 18);
+    const b = this.add.image(x, top + 10, 'dot-bubble').setDepth(top + 52).setTint(color);
+    this.tweens.add({ targets: b, y: top + 5, alpha: 0, duration: 600, onComplete: () => b.destroy() });
+    if (Math.random() < (brew ? 0.8 : 0.5)) {
+      const s = this.add.image(x, top + 6, 'dot-steam').setDepth(top + 53).setAlpha(brew ? 0.7 : 0.45);
+      this.tweens.add({
+        targets: s, y: top - 20, x: x + (Math.random() < 0.5 ? -5 : 5), alpha: 0, scale: 1.8, duration: 1800,
+        onComplete: () => s.destroy(),
+      });
+    }
+  }
+
   private applyBrew(save: GameSave) {
+    const tint = (b: { recipeId: string }) => Phaser.Display.Color.HexStringToColor(RECIPES_BY_ID[b.recipeId].color).color;
     const brew = save.brew;
     this.liquid.setVisible(!!brew);
-    if (brew) this.liquid.setTint(Phaser.Display.Color.HexStringToColor(RECIPES_BY_ID[brew.recipeId].color).color);
+    if (brew) this.liquid.setTint(tint(brew));
     this.fire.setScale(brew ? 1.25 : 1, brew ? 1.35 : 1);
+    const brew2 = save.brew2;
+    this.liquid2?.setVisible(!!brew2);
+    if (brew2) this.liquid2?.setTint(tint(brew2));
+    this.fire2?.setScale(brew2 ? 1.25 : 1, brew2 ? 1.35 : 1);
     this.drawBrewBar(save);
   }
 
   private drawBrewBar(save: GameSave) {
     const g = this.brewBar.clear();
-    const brew = save.brew;
-    if (!brew) return;
-    const w = 30;
-    const x = CAULDRON.cx - w / 2;
-    const y = CAULDRON.y - 8;
-    g.fillStyle(0x1c1216, 1).fillRect(x - 1, y - 1, w + 2, 5);
-    g.fillStyle(0x3e2619, 1).fillRect(x, y, w, 3);
-    g.fillStyle(Phaser.Display.Color.HexStringToColor(RECIPES_BY_ID[brew.recipeId].color).color, 1)
-      .fillRect(x, y, Math.max(1, Math.round((w * brew.elapsedMs) / brew.totalMs)), 3);
+    const bar = (brew: GameSave['brew'], cx: number, top: number) => {
+      if (!brew) return;
+      const w = 30;
+      const x = cx - w / 2;
+      const y = top - 8;
+      g.fillStyle(0x1c1216, 1).fillRect(x - 1, y - 1, w + 2, 5);
+      g.fillStyle(0x3e2619, 1).fillRect(x, y, w, 3);
+      g.fillStyle(Phaser.Display.Color.HexStringToColor(RECIPES_BY_ID[brew.recipeId].color).color, 1)
+        .fillRect(x, y, Math.max(1, Math.round((w * brew.elapsedMs) / brew.totalMs)), 3);
+    };
+    bar(save.brew, CAULDRON.cx, CAULDRON.y);
+    if (this.fire2) bar(save.brew2, CAULDRON2.cx, CAULDRON2.y + 4);
   }
 
   // ------------------------------------------------------------ prateleiras
@@ -274,7 +295,11 @@ export class ShopScene extends Phaser.Scene {
     this.bulbGlows = [];
     this.magicGlows = [];
     this.bell = null;
-    this.hotspots = this.hotspots.filter((h) => h.def.id !== 'stand');
+    this.hotspots = this.hotspots.filter((h) => h.def.id !== 'stand' && h.def.id !== 'cauldron-2');
+    this.liquid2 = null;
+    this.fire2 = null;
+    this.astroTimer?.remove();
+    this.astroTimer = null;
     const has = (id: string) => save.upgrades.includes(id);
 
     if (has('caldeirao-reforcado')) this.upgradeLayer.push(this.add.image(CAULDRON.x, CAULDRON.y, 'cauldron-bands').setOrigin(0).setDepth(CAULDRON.y + 48.1));
@@ -325,6 +350,35 @@ export class ShopScene extends Phaser.Scene {
       const p = LATEGAME.bell;
       this.bell = this.add.image(p.x, p.y, 'bell-0').setOrigin(0).setDepth(116);
       this.upgradeLayer.push(this.bell);
+    }
+    // ---- expansões
+    if (has('sala-dos-fundos')) {
+      const p = CAULDRON2;
+      const def: HotspotDef = { id: 'cauldron-2', label: 'Segundo caldeirão', panel: 'production', texture: 'cauldron-2', x: p.x, y: p.y };
+      const outline = this.add.image(p.x - 1, p.y - 1, 'cauldron-2-outline').setOrigin(0).setDepth(p.y + 47.5).setVisible(false);
+      const sprite = this.add.image(p.x, p.y, 'cauldron-2').setOrigin(0).setDepth(p.y + 48);
+      sprite.setInteractive({ useHandCursor: true, pixelPerfect: true });
+      this.bindHotspot({ def, sprite, outline, hovered: false });
+      this.liquid2 = this.add.image(p.x + 8, p.y + 7, 'liquid').setOrigin(0).setDepth(p.y + 48.2).setVisible(false);
+      this.fire2 = this.add.image(p.cx, p.y + 48, 'fire-0').setOrigin(0.5, 1).setDepth(p.y + 48.1);
+      const glow = this.add.image(p.cx, p.y + 42, 'glow-fire').setDepth(1001).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0.45);
+      this.upgradeLayer.push(outline, sprite, this.liquid2, this.fire2, glow);
+      this.applyBrew(save);
+    }
+    if (has('balcao-duplo')) {
+      const p = EXPANSION['counter-wing'];
+      this.upgradeLayer.push(this.add.image(p.x, p.y, 'counter-wing').setOrigin(0).setDepth(p.y + 51.5));
+    }
+    if (has('torre-alquimista')) {
+      const p = EXPANSION.astrolabe;
+      const a = this.add.image(p.x + 11, p.y, 'astrolabe-0').setOrigin(0.5, 0).setDepth(119);
+      const glow = this.add.image(p.x + 11, p.y + 21, 'glow-violet').setDepth(1002).setBlendMode(Phaser.BlendModes.ADD).setScale(1.4);
+      this.magicGlows.push(glow);
+      this.upgradeLayer.push(a, glow);
+      if (!this.reduceMotion()) {
+        this.tweens.add({ targets: a, angle: { from: -4, to: 4 }, yoyo: true, repeat: -1, duration: 2400, ease: 'Sine.InOut' });
+        this.astroTimer = this.time.addEvent({ delay: 700, loop: true, callback: () => a.setTexture(a.texture.key === 'astrolabe-0' ? 'astrolabe-1' : 'astrolabe-0') });
+      }
     }
     if (has('iluminacao-aconchegante')) {
       this.upgradeLayer.push(this.add.image(0, 0, 'garland').setOrigin(0).setDepth(20));
@@ -421,9 +475,11 @@ export class ShopScene extends Phaser.Scene {
       }
       case 'ORDER_DONE':
         return this.coinPopup(256, 40, e.coins);
-      case 'BREW_DONE':
-        this.sparkleBurst(CAULDRON.cx, CAULDRON.y + 6, 10);
-        return this.brewDoneFx(e.recipeId, e.qty);
+      case 'BREW_DONE': {
+        const c = e.slot === 2 && this.fire2 ? CAULDRON2 : CAULDRON;
+        this.sparkleBurst(c.cx, c.y + 6, 10);
+        return this.brewDoneFx(e.recipeId, e.qty, c.cx, c.y);
+      }
       case 'UPGRADE_BOUGHT':
       case 'LEVEL_UP':
       case 'DISCOVERY':
@@ -481,24 +537,24 @@ export class ShopScene extends Phaser.Scene {
   }
 
   /** Fumaça colorida ao terminar o preparo e frascos voando até as prateleiras. */
-  private brewDoneFx(recipeId: string, qty: number) {
+  private brewDoneFx(recipeId: string, qty: number, cx: number, top: number) {
     if (this.reduceMotion()) return;
     const color = Phaser.Display.Color.HexStringToColor(RECIPES_BY_ID[recipeId].color).color;
     const puff = this.fxTexture('fx-puff');
     for (let i = 0; i < 12; i++) {
-      const p = this.add.image(CAULDRON.cx + Phaser.Math.Between(-8, 8), 134, puff).setDepth(982).setTint(color).setAlpha(0.9);
+      const p = this.add.image(cx + Phaser.Math.Between(-8, 8), top + 6, puff).setDepth(982).setTint(color).setAlpha(0.9);
       this.tweens.add({
-        targets: p, x: p.x + Phaser.Math.Between(-14, 14), y: 134 - Phaser.Math.Between(14, 30),
+        targets: p, x: p.x + Phaser.Math.Between(-14, 14), y: top + 6 - Phaser.Math.Between(14, 30),
         scale: Phaser.Math.FloatBetween(1.6, 2.6), alpha: 0, duration: 900 + Phaser.Math.Between(0, 400), ease: 'Cubic.Out',
         onComplete: () => p.destroy(),
       });
     }
     for (let i = 0; i < Math.min(qty, 4); i++) {
-      const f = this.add.image(CAULDRON.cx, 128, `potion-${recipeId}`).setDepth(983).setScale(0.6);
+      const f = this.add.image(cx, top, `potion-${recipeId}`).setDepth(983).setScale(0.6);
       const tx = 114 + Phaser.Math.Between(0, 100);
       const ty = 40 + Phaser.Math.Between(0, 30);
       this.tweens.add({ targets: f, x: tx, duration: 700, delay: 150 + i * 120, ease: 'Sine.InOut' });
-      this.tweens.add({ targets: f, y: { from: 128, to: ty }, scale: 1, duration: 700, delay: 150 + i * 120, ease: 'Back.Out' });
+      this.tweens.add({ targets: f, y: { from: top, to: ty }, scale: 1, duration: 700, delay: 150 + i * 120, ease: 'Back.Out' });
       this.tweens.add({ targets: f, alpha: 0, delay: 850 + i * 120, duration: 250, onComplete: () => { this.sparkleBurst(tx, ty, 4); f.destroy(); } });
     }
   }
@@ -558,7 +614,7 @@ export class ShopScene extends Phaser.Scene {
       // No modo 2× o relógio, os clientes e o caldeirão andam no dobro da velocidade.
       this.store.dispatch({ type: 'ADVANCE', ms: ms * ui.speed });
       const next = this.store.save;
-      if (next?.brew) this.drawBrewBar(next);
+      if (next?.brew || next?.brew2) this.drawBrewBar(next);
     }
   }
 }

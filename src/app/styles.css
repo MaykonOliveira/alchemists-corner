@@ -765,3 +765,45 @@ button, .stage-canvas { touch-action: manipulation; -webkit-tap-highlight-color:
   .week-chart { height: 50px; }
 }
 .qs-face { font-family: var(--font-body); font-size: 14px; }
+
+/* ---------- Pacote C: contratos, dois caldeirões e expansões ---------- */
+.contract {
+  position: relative; margin-bottom: 12px; padding-top: 26px;
+  background: linear-gradient(180deg, #fbefcb, #f1dca4);
+  border: 2px solid #b0822c; box-shadow: 0 0 0 2px #f6dc8a inset, 0 3px 0 #7a5418;
+}
+.contract-active { border-color: #6a8a3c; box-shadow: 0 0 0 2px #d8ecb0 inset, 0 3px 0 #3f5a1e; background: linear-gradient(180deg, #f4f2cc, #e2e6b0); }
+.contract-empty { padding-top: 10px; }
+.contract-ribbon {
+  position: absolute; top: -2px; left: 12px; right: 12px; text-align: center;
+  font-family: var(--font-pixel); font-size: 13px; color: #fff4d0; letter-spacing: .5px;
+  background: linear-gradient(180deg, #a0402e, #7a2a20); padding: 3px 8px; border-radius: 0 0 6px 6px;
+  box-shadow: 0 2px 0 #4a1812;
+}
+.contract-active .contract-ribbon { background: linear-gradient(180deg, #4f7a2c, #355a1c); box-shadow: 0 2px 0 #1f3610; }
+.contract-items { list-style: none; padding: 0; margin: 8px 0; display: grid; gap: 6px; }
+.contract-items li { display: flex; align-items: center; gap: 8px; background: rgba(255, 255, 255, .45); border-radius: 4px; padding: 4px 8px; }
+.contract-items li .muted { margin-left: auto; }
+.contract-item-done { opacity: .65; text-decoration: line-through; }
+.contract-qty { font-family: var(--font-pixel); font-size: 15px; min-width: 38px; color: var(--ink); }
+.contract-reward { display: flex; flex-wrap: wrap; gap: 6px 12px; margin: 8px 0 4px; font-family: var(--font-pixel); font-size: 14px; }
+.contract-seal { color: #6a3cb0; text-shadow: 0 0 6px #e6d2fa; }
+.row-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.row-actions .btn { flex: 1; }
+.text-warn { color: var(--warn); font-weight: 600; }
+
+.cauldron-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+.cauldron-pair .brewing { margin-bottom: 0; }
+.cauldron-pair .brewing .row-title { font-size: 14px; }
+.brewing-idle { background: #f4ecf8; border-style: dashed; }
+@media (max-width: 420px) { .cauldron-pair { grid-template-columns: 1fr; } }
+
+.expansion-track { counter-reset: etapa; }
+.card-expansion { position: relative; border: 2px solid #b0822c; background: linear-gradient(180deg, #fbf0d0, #f3e2b4); }
+.card-expansion::before {
+  counter-increment: etapa; content: 'Etapa ' counter(etapa);
+  position: absolute; top: -9px; right: 10px; font-family: var(--font-pixel); font-size: 12px;
+  background: #7a2a20; color: #fff4d0; padding: 1px 8px; border-radius: 8px;
+}
+.card-expansion.card-owned { border-color: var(--ok); background: #e2eccf; }
+.card-expansion.card-locked { filter: saturate(.6); }
