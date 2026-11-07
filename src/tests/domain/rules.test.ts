@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { INGREDIENTS_BY_ID } from '../../domain/data/ingredients';
 import { RECIPES } from '../../domain/data/recipes';
+import { UPGRADES_BY_ID } from '../../domain/data/upgrades';
 import type { Customer, GameSave } from '../../domain/models/types';
 import { applyCommand, type DomainCommand } from '../../domain/rules/commands';
 import { maxPriceFor } from '../../domain/rules/customers';
@@ -42,9 +43,10 @@ describe('dados iniciais', () => {
 describe('fornecedor', () => {
   it('compra desconta moedas e soma no inventário', () => {
     const { save, events } = run(createNewGame(0), { type: 'BUY_INGREDIENT', ingredientId: 'folha-lunar', qty: 5 });
-    expect(save.coins).toBe(100 - 20);
+    const cost = INGREDIENTS_BY_ID['folha-lunar'].price * 5;
+    expect(save.coins).toBe(100 - cost);
     expect(save.ingredients['folha-lunar']).toBe(9);
-    expect(save.stats.ingredientCost).toBe(20);
+    expect(save.stats.ingredientCost).toBe(cost);
     expect(events[0].type).toBe('PURCHASE');
   });
 
@@ -174,8 +176,12 @@ describe('progressão', () => {
   it('melhoria exige nível e moedas', () => {
     const s = createNewGame(0);
     expect(run(s, { type: 'BUY_UPGRADE', upgradeId: 'caldeirao-reforcado' }).save).toBe(s);
-    const rich = { ...s, level: 2, coins: 500 };
-    expect(run(rich, { type: 'BUY_UPGRADE', upgradeId: 'caldeirao-reforcado' }).save.upgrades).toContain('caldeirao-reforcado');
+    const up = UPGRADES_BY_ID['caldeirao-reforcado'];
+    expect(run({ ...s, level: up.requiredLevel - 1, coins: 5000 }, { type: 'BUY_UPGRADE', upgradeId: up.id }).save.upgrades).toHaveLength(0);
+    expect(run({ ...s, level: up.requiredLevel, coins: up.cost - 1 }, { type: 'BUY_UPGRADE', upgradeId: up.id }).save.upgrades).toHaveLength(0);
+    const bought = run({ ...s, level: up.requiredLevel, coins: up.cost }, { type: 'BUY_UPGRADE', upgradeId: up.id }).save;
+    expect(bought.upgrades).toContain(up.id);
+    expect(bought.coins).toBe(0);
   });
 
   it('experimento certo ensina a receita; errado dá pista e consome pouco', () => {

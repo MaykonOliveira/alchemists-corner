@@ -9,7 +9,12 @@ npm install
 npm run dev        # servidor local em http://localhost:5173
 npm test           # testes de domínio e persistência (Vitest)
 npm run build      # build de produção em dist/
+SIM_REPORT=1 npx vitest run src/tests/balance/report.test.ts --silent=false   # relatório de balanceamento
 ```
+
+## Balanceamento
+
+Um robô-jogador (`src/tests/balance/bot.ts`) joga vários dias usando só as regras puras do domínio, com dois perfis: **casual** (atende devagar e cobra o preço-base) e **eficiente** (atende rápido e cobra 10% a mais). `balance.test.ts` garante as metas do PRD: o primeiro dia cabe em 10 minutos e dá lucro, o nível 2 chega no fim do dia 1, e a primeira melhoria fica ao alcance depois do dia 2, sem estar disponível já no fim do dia 1.
 
 ## O que já dá para jogar (MVP completo)
 
