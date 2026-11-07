@@ -852,3 +852,24 @@ button, .stage-canvas { touch-action: manipulation; -webkit-tap-highlight-color:
   .bottombar .tab { padding: 5px 7px; gap: 4px; }
   .bottombar .tab-key { display: none; }
 }
+
+/* ---------------- Tela de título e levar o save ---------------- */
+.menu-potions { display: flex; gap: 10px; justify-content: center; margin: -4px 0 10px; }
+.menu-potion { display: inline-flex; animation: bob 2.6s ease-in-out infinite; filter: drop-shadow(0 3px 0 rgba(62, 38, 25, .25)); }
+@keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+.menu-links { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 14px; }
+.link-btn {
+  background: none; border: 0; padding: 4px 0; font: inherit; font-size: 14px; color: var(--copper);
+  text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
+}
+.link-btn:hover { color: var(--wood); }
+.menu-credits { margin: 10px 0 0; font-family: var(--font-body); font-size: 13px; color: var(--ink-soft); }
+.modal-backdrop.modal-top { z-index: 60; }
+.transfer { max-width: 460px; }
+.transfer-code {
+  width: 100%; font-family: ui-monospace, monospace; font-size: 12px; word-break: break-all; resize: vertical;
+  background: #fffaf0; color: var(--ink); border: 2px solid var(--parchment-edge); border-radius: 4px; padding: 8px; margin: 8px 0;
+}
+.file-btn { position: relative; overflow: hidden; display: inline-block; margin-bottom: 8px; }
+.file-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.transfer-ok { background: var(--ok-bg); color: var(--ok); padding: 8px 10px; border-radius: 4px; font-family: var(--font-body); font-size: 14px; margin-bottom: 8px; }
