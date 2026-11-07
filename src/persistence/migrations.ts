@@ -136,6 +136,10 @@ export function migrateSave(raw: unknown): GameSave | null {
       muted: bool(settings.muted, base.settings.muted),
       music: bool(settings.music, base.settings.music),
       reduceMotion: bool(settings.reduceMotion, base.settings.reduceMotion),
+      musicVolume: Math.min(1, Math.max(0, num(settings.musicVolume, base.settings.musicVolume))),
+      sfxVolume: Math.min(1, Math.max(0, num(settings.sfxVolume, base.settings.sfxVolume))),
+      ambienceVolume: Math.min(1, Math.max(0, num(settings.ambienceVolume, base.settings.ambienceVolume))),
+      vibration: bool(settings.vibration, base.settings.vibration),
     },
   };
   // Receitas de níveis que o jogador já alcançou (as novas dos níveis 6 a 10 entram direto).

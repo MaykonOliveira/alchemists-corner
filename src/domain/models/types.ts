@@ -222,6 +222,12 @@ export interface Settings {
   muted: boolean;
   music: boolean;
   reduceMotion: boolean;
+  /** Mixer (0 a 1): música, efeitos e sons de ambiente. */
+  musicVolume: number;
+  sfxVolume: number;
+  ambienceVolume: number;
+  /** Vibração curta no celular em vendas, níveis e conquistas. */
+  vibration: boolean;
 }
 
 export const SAVE_VERSION = 7 as const;

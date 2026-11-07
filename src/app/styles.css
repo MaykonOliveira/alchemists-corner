@@ -912,3 +912,13 @@ button, .stage-canvas { touch-action: manipulation; -webkit-tap-highlight-color:
 .rival-line .sprite-icon { margin-top: 2px; }
 .rival-win { color: var(--ok); }
 .rival-loss { color: #5e3c92; }
+
+/* ---------------- Mixer de som (pacote F) ---------------- */
+.mixer { display: grid; gap: 6px; margin: 10px 0; padding: 10px; background: var(--parchment-2); border-radius: 6px; }
+.mixer-row { display: grid; grid-template-columns: 112px 1fr 32px; gap: 8px; align-items: center; }
+.mixer-row input[type=range] { accent-color: var(--copper); width: 100%; }
+.mixer-name { display: flex; align-items: center; gap: 4px; font-family: var(--font-pixel); font-size: 14px; white-space: nowrap; }
+.mixer-name input { accent-color: var(--copper); width: 16px; height: 16px; }
+.mixer-val { font-family: var(--font-pixel); font-size: 13px; text-align: right; color: var(--ink-soft); }
+.mixer-off input[type=range], .mixer-off .mixer-val { opacity: .4; }
+.now-playing { margin: -4px 0 6px; font-style: italic; }

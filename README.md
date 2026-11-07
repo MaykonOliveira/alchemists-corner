@@ -89,6 +89,19 @@ Um robô-jogador (`src/tests/balance/bot.ts`) joga vários dias usando só as re
 - 5 conquistas novas no álbum. Save v7. Regras em `src/domain/rules/street.ts`, dados em `src/domain/data/street.ts`, arte em `art/seasonal.py`.
 - Prints em `prints-rua/`.
 
+## Som da loja
+
+- **Trilha por estação**, toda sintetizada em WebAudio (sem arquivos): Jardim em flor (primavera), Estrada ensolarada (verão),
+  Folhas e livros (outono) e Noite de neve (inverno). Lampiões acesos toca depois das 18h30 e no fechamento, Festival das Lanternas
+  no festival e Céu estranho nos eventos raros. Na preparação toca uma versão calma; a troca entre temas é em crossfade.
+- **Ambiente em camadas:** chuva, vento (inverno e eclipse), multidão (feira, festival, caravana, lua cheia), pássaros (dia de primavera e verão),
+  caldeirão borbulhando enquanto há preparo e lareira (outono, inverno e noite).
+- **Sons de recompensa:** moeda (venda grande soa diferente), fanfarra de nível, medalha de conquista, sino de pedido, vitória e derrota na rival,
+  troca de estação, coração do gato.
+- **Mixer** em *Configurações*: volume de música, efeitos e ambiente, liga/desliga, "Tocando agora" e vibração no celular
+  (venda, nível, conquista, pedido e vitória na rival).
+- Lógica pura em `src/audio/mood.ts` (testada em `src/tests/domain/audio.test.ts`); síntese em `src/audio/sound.ts`. Prints em `prints-som/`.
+
 ## Jogar em qualquer lugar
 
 - **GitHub Pages:** a cada merge na `main`, a Action `.github/workflows/pages.yml` roda os testes, gera o build e publica em
