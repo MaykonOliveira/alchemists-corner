@@ -1,4 +1,5 @@
 import { SAVE_VERSION, type GameSave } from '../domain/models/types';
+import { ensureGoals } from '../domain/rules/goals';
 import { createNewGame } from '../domain/rules/initialState';
 import { MAX_LEVEL, unlockRecipesUpTo, xpForLevel } from '../domain/rules/progression';
 import { DAY_EVENTS } from '../domain/data/orders';
@@ -40,6 +41,7 @@ export function migrateSave(raw: unknown): GameSave | null {
   // v4 → v5: contratos de vários dias e expansão da loja (segundo caldeirão).
   // v5 → v6: fregueses fiéis, estações, álbum de conquistas e o gato da loja.
   // v6 → v7: ingredientes e poções da estação, rival da rua, eventos raros e expedições.
+  // v7 → v8: metas do dia, baú da semana, dicas de contexto e história de abertura.
   // Os campos novos recebem os valores padrão abaixo.
 
   const base = createNewGame(num(raw.createdAt, Date.now()));
@@ -129,6 +131,18 @@ export function migrateSave(raw: unknown): GameSave | null {
       : null,
     expeditionsDone: Math.max(0, Math.floor(num(raw.expeditionsDone, 0))),
     finds: arr<string>(raw.finds, []).filter((x) => typeof x === 'string'),
+    goals: isObj(raw.goals) && Array.isArray(raw.goals.list)
+      ? {
+          day: num(raw.goals.day, 0),
+          list: (raw.goals.list as unknown[]).filter((g): g is GameSave['goals']['list'][number] => isObj(g) && typeof g.kind === 'string' && typeof g.id === 'string'),
+          week: Math.max(0, Math.floor(num(raw.goals.week, 0))),
+          weekDone: Math.max(0, Math.floor(num(raw.goals.weekDone, 0))),
+          chestClaimed: bool(raw.goals.chestClaimed, false),
+        }
+      : { ...base.goals, day: 0 },
+    tipsSeen: arr<string>(raw.tipsSeen, []).filter((x) => typeof x === 'string'),
+    // Quem já tinha uma partida não precisa ver a história de abertura.
+    storySeen: raw.saveVersion < 8 ? true : bool(raw.storySeen, false),
     tutorialStep: num(raw.tutorialStep, raw.saveVersion === 1 ? 99 : 0),
     seq: num(raw.seq, 0),
     settings: {
@@ -144,5 +158,6 @@ export function migrateSave(raw: unknown): GameSave | null {
   };
   // Receitas de níveis que o jogador já alcançou (as novas dos níveis 6 a 10 entram direto).
   unlockRecipesUpTo(save, save.level);
+  ensureGoals(save);
   return save;
 }

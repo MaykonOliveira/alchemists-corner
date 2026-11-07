@@ -486,6 +486,8 @@ function onEvent(e: GameEvent) {
     case 'EXPEDITION_SENT':
     case 'EXPEDITION_BACK': return sfx.whoosh();
     case 'SEASON_STARTED': return sfx.season();
+    case 'GOAL_DONE': return e.allDone ? sfx.fanfare() : sfx.chime();
+    case 'CHEST_OPENED': return sfx.win();
     case 'DAY_CLOSED': {
       const s = save();
       const { medal } = dayMedal(s?.reports ?? [e.report]);

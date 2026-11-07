@@ -5,6 +5,7 @@ import { DAY_EVENTS } from '../domain/data/orders';
 import { RECIPES_BY_ID } from '../domain/data/recipes';
 import { REGULARS_BY_ID, SEASONS, TIP_HEARTS } from '../domain/data/world';
 import { ACHIEVEMENTS, giftLabel } from '../domain/rules/world';
+import { goalText } from '../domain/rules/goals';
 import { TALENTS_BY_ID } from '../domain/data/talents';
 import { UPGRADES_BY_ID } from '../domain/data/upgrades';
 import { EXPEDITIONS_BY_ID, FINDS_BY_ID } from '../domain/data/street';
@@ -15,7 +16,7 @@ import { gameEvents } from '../game/events';
 import { saveRepository } from '../persistence/saveRepository';
 
 export type PanelId =
-  | 'ingredients' | 'production' | 'recipes' | 'orders' | 'report' | 'shelves' | 'counter' | 'door' | 'upgrades' | 'grimoire' | 'album' | 'street';
+  | 'ingredients' | 'production' | 'recipes' | 'orders' | 'report' | 'shelves' | 'counter' | 'door' | 'upgrades' | 'grimoire' | 'album' | 'street' | 'goals';
 
 export interface HoverInfo {
   id: string;
@@ -233,6 +234,14 @@ export const useGameStore = create<StoreState>()(
         case 'FIND': {
           const f = FINDS_BY_ID[e.id];
           return f ? toast(`${f.icon} O Visitante deixou um achado lendário: ${f.name}!`, 'gold') : undefined;
+        }
+        case 'GOAL_DONE': {
+          const g = get().save?.goals.list.find((x) => x.id === e.goalId);
+          return toast(`🎯 Meta cumprida${g ? `: ${goalText(g)}` : ''}! +${e.coins} moedas, +${e.xp} XP${e.allDone ? '. As três metas do dia estão feitas!' : ''}`, 'gold');
+        }
+        case 'CHEST_OPENED': {
+          const units = e.items.reduce((n, i) => n + i.qty, 0);
+          return toast(`🎁 Baú da semana aberto: +${e.coins} moedas e ${units} ingredientes raros!`, 'gold');
         }
         case 'DAY_STARTED':
           if (e.event) toast(`${DAY_EVENTS[e.event].name}: ${DAY_EVENTS[e.event].text}`, 'gold');

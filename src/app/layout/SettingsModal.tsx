@@ -55,7 +55,7 @@ export function SettingsModal() {
           <button className="btn" onClick={backToMenu}>Menu principal</button>
         </div>
         {exporting && <SaveTransferDialog mode="export" onClose={() => setExporting(false)} />}
-        <p className="muted small">Atalhos: 1–9, 0 e R abrem os painéis, Esc fecha, espaço pausa.</p>
+        <p className="muted small">Atalhos: 1–9, 0, R e M abrem os painéis, Esc fecha, espaço pausa.</p>
         <button className="btn btn-primary" autoFocus onClick={() => dispatch({ type: 'OPEN_MODAL', modal: null })}>Voltar ao jogo</button>
       </div>
     </div>

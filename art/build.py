@@ -13,6 +13,7 @@ import lategame as L
 import expansion as X
 import cat as CAT
 import seasonal as SE  # registra poções e ingredientes da estação em items.py
+import story as ST
 from room import draw_room
 from customers import customer_sheet, LOOKS, FW, FH, FRAMES
 
@@ -127,6 +128,9 @@ def main():
               'expansion': {k: {'x': x, 'y': y} for k, (x, y) in X.POS.items()}}
     with open(os.path.join(OUT, 'layout.json'), 'w') as fh:
         json.dump(layout, fh, indent=1)
+    # Quadros da história de abertura (pacote G).
+    for name, cv in ST.frames().items():
+        save(cv, f'{name}.png')
     print('ok:', sorted(os.listdir(OUT)))
 
 

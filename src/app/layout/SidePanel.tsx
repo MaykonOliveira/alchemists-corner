@@ -10,6 +10,7 @@ import { UpgradesPanel } from '../../features/progression/UpgradesPanel';
 import { GrimoirePanel } from '../../features/mastery/GrimoirePanel';
 import { AlbumPanel } from '../../features/world/AlbumPanel';
 import { StreetPanel } from '../../features/world/StreetPanel';
+import { GoalsList, GoalsPanel } from '../../features/goals/GoalsPanel';
 import { useGameStore, type PanelId } from '../../store/gameStore';
 import { potionStock } from '../../domain/rules/economy';
 import { QuickServe } from '../../features/customers/QuickServe';
@@ -27,6 +28,7 @@ const TITLES: Record<PanelId, string> = {
   grimoire: 'Grimório do Mestre',
   album: 'Álbum da loja',
   street: 'A rua da loja',
+  goals: 'Metas do dia',
 };
 
 export function SidePanel() {
@@ -52,6 +54,7 @@ export function SidePanel() {
           </li>
           <li>Clientes no balcão: {save.customers.length}</li>
         </ul>
+        <GoalsList save={save} compact />
         <p className="panel-lead small">Toque nos objetos da loja ou use a barra de baixo.</p>
         {save.phase === 'preparacao' && (
           <button className="btn btn-primary btn-big" onClick={() => dispatch({ type: 'OPEN_SHOP' })}>Abrir a loja</button>
@@ -80,6 +83,7 @@ export function SidePanel() {
         {panel === 'grimoire' && <GrimoirePanel save={save} />}
         {panel === 'album' && <AlbumPanel save={save} />}
         {panel === 'street' && <StreetPanel save={save} />}
+        {panel === 'goals' && <GoalsPanel save={save} />}
       </div>
     </aside>
   );

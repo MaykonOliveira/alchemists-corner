@@ -82,7 +82,9 @@ export function vibrationFor(e: GameEvent): number | number[] | null {
     case 'ACHIEVEMENT': return [20, 40, 40];
     case 'RIVAL_RESULT': return e.win ? [30, 40, 30, 40, 90] : null;
     case 'ORDER_DONE':
-    case 'CONTRACT_DONE': return [25, 40, 50];
+    case 'CONTRACT_DONE':
+    case 'GOAL_DONE': return [25, 40, 50];
+    case 'CHEST_OPENED': return [30, 40, 30, 40, 90];
     default: return null;
   }
 }
