@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { seasonOf } from '../../domain/rules/world';
 import { levelProgress, masterRank, MASTER_STEP_XP, MAX_LEVEL, reputationTitle, xpForLevel } from '../../domain/rules/progression';
 import { dayProgress, formatClock, TIME_OF_DAY_LABEL, timeOfDay } from '../../domain/rules/time';
 import { useGameStore } from '../../store/gameStore';
@@ -34,8 +35,8 @@ export function Hud() {
   return (
     <header className="hud">
       <div className="hud-brand"><span className="brand-full">Alchemist's Corner</span><span className="brand-short">A.C.</span></div>
-      <div className="hud-stat" title="Dia e fase">
-        <span className="hud-label">Dia {save.day}</span>
+      <div className="hud-stat" title={`Dia e fase · ${seasonOf(save.day).name}`}>
+        <span className="hud-label">Dia {save.day} <span className="hud-season" aria-label={seasonOf(save.day).name}>{seasonOf(save.day).icon}</span></span>
         <span className="hud-value">{PHASE_LABEL[save.phase]}</span>
       </div>
       <div className="hud-stat hud-clock" title="Horário">

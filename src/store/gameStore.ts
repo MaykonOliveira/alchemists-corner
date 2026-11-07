@@ -3,6 +3,8 @@ import { subscribeWithSelector } from 'zustand/middleware';
 import { INGREDIENTS_BY_ID } from '../domain/data/ingredients';
 import { DAY_EVENTS } from '../domain/data/orders';
 import { RECIPES_BY_ID } from '../domain/data/recipes';
+import { REGULARS_BY_ID, SEASONS, TIP_HEARTS } from '../domain/data/world';
+import { ACHIEVEMENTS, giftLabel } from '../domain/rules/world';
 import { TALENTS_BY_ID } from '../domain/data/talents';
 import { UPGRADES_BY_ID } from '../domain/data/upgrades';
 import type { GameEvent, GameSave } from '../domain/models/types';
@@ -12,7 +14,7 @@ import { gameEvents } from '../game/events';
 import { saveRepository } from '../persistence/saveRepository';
 
 export type PanelId =
-  | 'ingredients' | 'production' | 'recipes' | 'orders' | 'report' | 'shelves' | 'counter' | 'door' | 'upgrades' | 'grimoire';
+  | 'ingredients' | 'production' | 'recipes' | 'orders' | 'report' | 'shelves' | 'counter' | 'door' | 'upgrades' | 'grimoire' | 'album';
 
 export interface HoverInfo {
   id: string;
@@ -189,6 +191,25 @@ export const useGameStore = create<StoreState>()(
         case 'GREENHOUSE_HARVEST': {
           const units = e.items.reduce((n, i) => n + i.qty, 0);
           return toast(`A estufa rendeu ${units} ervas fresquinhas para o armário.`, 'ok');
+        }
+        case 'REGULAR_HEART': {
+          const r = REGULARS_BY_ID[e.regularId];
+          if (e.hearts === TIP_HEARTS && !e.tip) return toast(`${r.name} ganhou ${TIP_HEARTS} corações: agora deixa gorjeta!`, 'ok');
+          return;
+        }
+        case 'REGULAR_GIFT': {
+          const r = REGULARS_BY_ID[e.regularId];
+          return toast(`💛 ${r.name} virou amigo da loja! "${r.thanks}" (+${giftLabel(r)})`, 'gold');
+        }
+        case 'ACHIEVEMENT': {
+          const a = ACHIEVEMENTS.find((x) => x.id === e.id);
+          return a ? toast(`🏆 Conquista no álbum: ${a.name}!`, 'gold') : undefined;
+        }
+        case 'CAT_PETTED':
+          return e.lucky ? toast('O gato ronronou. Sorte do dia: +1 reputação!', 'ok') : undefined;
+        case 'SEASON_STARTED': {
+          const se = SEASONS.find((x) => x.id === e.season);
+          return se ? toast(`${se.icon} Chegou ${se.id === 'verao' ? 'o' : se.id === 'outono' ? 'o' : se.id === 'inverno' ? 'o' : 'a'} ${se.name.toLowerCase()}! ${se.text}`, 'gold') : undefined;
         }
         case 'DAY_STARTED':
           if (e.event) toast(`${DAY_EVENTS[e.event].name}: ${DAY_EVENTS[e.event].text}`, 'gold');

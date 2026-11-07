@@ -807,3 +807,48 @@ button, .stage-canvas { touch-action: manipulation; -webkit-tap-highlight-color:
 }
 .card-expansion.card-owned { border-color: var(--ok); background: #e2eccf; }
 .card-expansion.card-locked { filter: saturate(.6); }
+
+/* ---------- Pacote D: mundo vivo (estações, fregueses, álbum, gato) ---------- */
+.hud-season { font-size: 13px; margin-left: 2px; }
+.season-card { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; border-width: 2px; }
+.season-icon { font-size: 34px; line-height: 1; filter: drop-shadow(0 2px 0 rgba(0, 0, 0, .2)); }
+.season-primavera { background: linear-gradient(135deg, #fde6ee, #f3e6c8); border-color: #d88aa8; }
+.season-verao { background: linear-gradient(135deg, #fff1b8, #f3e6c8); border-color: #d8a830; }
+.season-outono { background: linear-gradient(135deg, #f8d4a8, #f3e6c8); border-color: #c0602a; }
+.season-inverno { background: linear-gradient(135deg, #e2eefa, #f3e6c8); border-color: #7aa0c8; }
+
+.hearts { letter-spacing: 1px; font-size: 15px; }
+.heart-on { color: #d8404e; text-shadow: 0 1px 0 #7a1c26; }
+.heart-off { color: #b89c88; }
+.serve-hearts { color: #d8404e; font-size: 14px; letter-spacing: 1px; }
+.qs-regular { font-weight: 700; color: #7a2a20; }
+.qs-regular .heart-on { font-size: 12px; }
+
+.regulars { display: grid; gap: 8px; }
+.regular { display: flex; gap: 10px; align-items: center; }
+.regular-face {
+  width: 44px; height: 44px; flex: none; display: grid; place-items: center; font-size: 24px;
+  background: #e8d4a8; border: 2px solid #b89c68; border-radius: 50%;
+}
+.regular-friend { border: 2px solid #d8a830; background: linear-gradient(180deg, #fff4cc, #f6e2a8); box-shadow: 0 0 0 2px #fff0b0 inset; }
+.regular-friend .regular-face { background: #ffe08a; border-color: #d8a830; }
+.regular-body { min-width: 0; }
+.regular-body .card-text { margin: 2px 0; }
+.regular-gift { color: #6a4a10; }
+
+.achievements { list-style: none; padding: 0; margin: 0 0 12px; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+.achievement {
+  display: grid; grid-template-columns: 30px 1fr; grid-template-rows: auto auto; column-gap: 6px; align-items: center;
+  padding: 8px; border-radius: 6px; background: #e6dcc6; border: 2px dashed #b8a888; color: #8a7a68;
+}
+.achievement-icon { grid-row: span 2; font-size: 22px; text-align: center; filter: grayscale(1); opacity: .6; }
+.achievement-name { font-family: var(--font-pixel); font-size: 13px; }
+.achievement-text { font-size: 11px; line-height: 1.25; }
+.achievement-on { background: linear-gradient(180deg, #fff2c0, #f2d88a); border: 2px solid #c9a040; color: var(--ink); box-shadow: 0 2px 0 #9a7420; }
+.achievement-on .achievement-icon { filter: none; opacity: 1; }
+.album-cat { text-align: center; }
+/* 10 abas no desktop: em telas médias, esconde as teclas e aperta o espaçamento. */
+@media (min-width: 900px) and (max-width: 1500px) {
+  .bottombar .tab { padding: 5px 7px; gap: 4px; }
+  .bottombar .tab-key { display: none; }
+}

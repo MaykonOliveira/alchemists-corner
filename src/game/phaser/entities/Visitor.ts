@@ -30,7 +30,7 @@ export class Visitor {
     readonly archetype: CustomerArchetype,
     private readonly wantedRecipeId: string,
     public slotX: number,
-    private readonly opts: { reduceMotion: () => boolean; onClick: (v: Visitor) => void; instant?: boolean },
+    private readonly opts: { reduceMotion: () => boolean; onClick: (v: Visitor) => void; instant?: boolean; regular?: boolean },
   ) {
     const key = `customer-${archetype}`;
     this.sprite = scene.add.sprite(DOOR_X, DOOR_Y, key, 0).setOrigin(0.5, 1).setAlpha(0);
@@ -40,6 +40,8 @@ export class Visitor {
     const bg = scene.add.image(0, 0, 'bubble').setOrigin(0.5, 1);
     this.bubbleIcon = scene.add.image(0, -9, `potion-${wantedRecipeId}`).setOrigin(0.5, 0.5);
     this.bubble = scene.add.container(0, 0, [bg, this.bubbleIcon]).setVisible(false);
+    // Freguês fiel: um coraçãozinho no canto do balão.
+    if (opts.regular) this.bubble.add(scene.add.image(8, -17, 'heart').setOrigin(0.5, 0.5));
     bg.setInteractive({ useHandCursor: true }).on('pointerup', () => !this.leaving && this.opts.onClick(this));
     this.marker = scene.add.image(0, 0, 'marker').setOrigin(0.5, 1).setVisible(false);
     this.patience = scene.add.graphics().setVisible(false);

@@ -6,6 +6,7 @@ import { advance, closeDay, openShop, startNextDay } from './day';
 import { buyIngredient, buyUpgrade, setForSale, setPrice } from './economy';
 import { acceptContract, declineContract, deliverContract } from './contracts';
 import { setHelper } from './helpers';
+import { checkAchievements, petCat } from './world';
 import { deliverOrder } from './orders';
 import { buySeal, learnTalentCmd } from './progression';
 import { sponsorFestival } from './day';
@@ -31,6 +32,7 @@ export type DomainCommand =
   | { type: 'ACCEPT_CONTRACT' }
   | { type: 'DECLINE_CONTRACT' }
   | { type: 'DELIVER_CONTRACT' }
+  | { type: 'PET_CAT' }
   | { type: 'BUY_UPGRADE'; upgradeId: string }
   | { type: 'SET_HELPER'; upgradeId: string; on: boolean }
   | { type: 'EXPERIMENT'; ingredientIds: string[] }
@@ -52,6 +54,7 @@ export function applyCommand(save: GameSave, cmd: DomainCommand, ctx: RuleContex
   const d: Draft = { s: structuredClone(save), events: [], ctx };
   const changed = run(d, cmd);
   if (!changed) return { save, events: d.events };
+  checkAchievements(d);
   d.s.updatedAt = ctx.now;
   return { save: d.s, events: d.events };
 }
@@ -74,6 +77,7 @@ function run(d: Draft, cmd: DomainCommand): boolean {
     case 'ACCEPT_CONTRACT': return acceptContract(d);
     case 'DECLINE_CONTRACT': return declineContract(d);
     case 'DELIVER_CONTRACT': return deliverContract(d);
+    case 'PET_CAT': return petCat(d);
     case 'BUY_UPGRADE': return buyUpgrade(d, cmd.upgradeId);
     case 'SET_HELPER': return setHelper(d, cmd.upgradeId, cmd.on);
     case 'EXPERIMENT': return experiment(d, cmd.ingredientIds);

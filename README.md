@@ -63,6 +63,17 @@ Um robô-jogador (`src/tests/balance/bot.ts`) joga vários dias usando só as re
   Se vencer, o cliente paga metade do proporcional ao que recebeu e a loja perde reputação.
 - Prints em `prints-expansoes/`.
 
+## Mundo vivo
+
+- **Fregueses fiéis**: 6 personagens com nome (Dona Célia, Bram, Lia, Tobias, Vovô Zé e a Condessa) que voltam pedindo a favorita.
+  Cada entrega da favorita vale um coração: com 3 deixam gorjeta (15%), com 5 viram amigos e trazem um presente de ingredientes raros.
+  Na loja, o balão deles tem um coraçãozinho; no atendimento aparecem o nome e os corações.
+- **Estações** (7 dias cada): primavera (cura), verão (vigor), outono (mente) e inverno (utilidade). A categoria da estação é mais procurada
+  e paga 12% a mais, a partir do dia 3. Pela janela caem pétalas, brilhos de sol, folhas ou neve.
+- **Álbum** (aba 🏆, tecla 0): estação atual, fichas dos fregueses e 18 conquistas.
+- **Gato da loja**: passeia, senta, pisca e dorme no tapete à noite. Um toque faz carinho; uma vez por dia ele dá sorte (+1 reputação).
+- Prints em `prints-mundo-vivo/`.
+
 ## Celular
 
 - **Venda com um toque:** quando um cliente chega, o pedido aparece sobre a loja (ou no topo do painel, no celular) com o botão Vender, o preço e se ele deve aceitar. Opções abre o balcão completo.

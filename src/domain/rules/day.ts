@@ -5,6 +5,7 @@ import { harvestGreenhouse, helperWages, maintenanceCost, supplierStock } from '
 import { DAY_EVENTS } from '../data/orders';
 import { advanceHelpers, emptyHelperWork } from './helpers';
 import { updateContracts } from './contracts';
+import { seasonOf } from './world';
 import { expireOrder, maybeCreateOrder } from './orders';
 import { CLOSE_MIN, GAME_MIN_PER_SECOND, OPEN_MIN } from './time';
 import { advanceBrew } from './alchemy';
@@ -74,6 +75,7 @@ export function startNextDay(d: Draft): boolean {
   expireOrder(d);
   maybeCreateOrder(d);
   updateContracts(d);
+  if (seasonOf(s.day).id !== seasonOf(s.day - 1).id) d.events.push({ type: 'SEASON_STARTED', season: seasonOf(s.day).id });
   d.events.push({ type: 'DAY_STARTED', day: s.day, event: s.event });
   return true;
 }
