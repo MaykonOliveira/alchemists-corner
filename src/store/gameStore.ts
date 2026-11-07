@@ -76,6 +76,10 @@ interface StoreState {
   newGame: () => void;
   continueGame: () => void;
   backToMenu: () => void;
+  /** Save atual (em jogo) ou o guardado (no menu), para exportar. */
+  exportableSave: () => GameSave | null;
+  /** Troca a partida guardada por uma importada e já entra nela. */
+  importSave: (save: GameSave) => Promise<void>;
   dispatch: (cmd: GameCommand) => void;
 }
 
@@ -285,6 +289,17 @@ export const useGameStore = create<StoreState>()(
         flushSave();
         loadedSave = get().save;
         set({ status: 'menu', ui: initialUi });
+      },
+
+      exportableSave() {
+        return get().save ?? loadedSave;
+      },
+
+      async importSave(save) {
+        await saveRepository.save(save);
+        loadedSave = save;
+        set({ hasStoredSave: true, storageError: null });
+        get().continueGame();
       },
 
       dispatch(cmd) {

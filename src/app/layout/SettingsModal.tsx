@@ -1,10 +1,13 @@
+import { useState } from 'react';
 import { useGameStore } from '../../store/gameStore';
+import { SaveTransferDialog } from './SaveTransferDialog';
 
 export function SettingsModal() {
   const modal = useGameStore((s) => s.ui.modal);
   const settings = useGameStore((s) => s.save?.settings);
   const dispatch = useGameStore((s) => s.dispatch);
   const backToMenu = useGameStore((s) => s.backToMenu);
+  const [exporting, setExporting] = useState(false);
   if (modal !== 'settings' || !settings) return null;
   const set = (patch: Partial<typeof settings>) => dispatch({ type: 'SET_SETTINGS', settings: patch });
   return (
@@ -21,8 +24,10 @@ export function SettingsModal() {
         <label className="toggle"><input type="checkbox" checked={settings.reduceMotion} onChange={(e) => set({ reduceMotion: e.target.checked })} /> Reduzir animações e brilhos</label>
         <div className="btn-row">
           <button className="btn" onClick={() => { dispatch({ type: 'SET_TUTORIAL', step: 0 }); dispatch({ type: 'OPEN_MODAL', modal: null }); }}>Rever tutorial</button>
+          <button className="btn" onClick={() => setExporting(true)}>Levar a partida</button>
           <button className="btn" onClick={backToMenu}>Menu principal</button>
         </div>
+        {exporting && <SaveTransferDialog mode="export" onClose={() => setExporting(false)} />}
         <p className="muted small">Atalhos: 1–8 abrem os painéis, Esc fecha, espaço pausa.</p>
         <button className="btn btn-primary" autoFocus onClick={() => dispatch({ type: 'OPEN_MODAL', modal: null })}>Voltar ao jogo</button>
       </div>

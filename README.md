@@ -74,6 +74,19 @@ Um robô-jogador (`src/tests/balance/bot.ts`) joga vários dias usando só as re
 - **Gato da loja**: passeia, senta, pisca e dorme no tapete à noite. Um toque faz carinho; uma vez por dia ele dá sorte (+1 reputação).
 - Prints em `prints-mundo-vivo/`.
 
+## Jogar em qualquer lugar
+
+- **GitHub Pages:** a cada merge na `main`, a Action `.github/workflows/pages.yml` roda os testes, gera o build e publica em
+  https://maykonoliveira.github.io/alchemists-corner/. Para ativar (uma vez): *Settings → Pages → Build and deployment → Source: GitHub Actions*.
+- **Offline e instalável:** o service worker (`public/sw.js`) guarda todos os arquivos do build na primeira visita
+  (lista em `precache.json`, gerada pelo Vite). Depois o jogo abre sem internet. Ícones PNG 192 e 512 para instalar no celular.
+  Ele só é registrado no build de produção e fora de iframes.
+- **Levar a partida:** *Configurações → Levar a partida* gera um código (`AC1z.` + JSON comprimido) ou baixa um arquivo `.json`.
+  No menu, *Importar save* aceita o código ou o arquivo, mostra o resumo (dia, nível, moedas) e carrega. A importação usa a
+  mesma validação e migração do carregamento normal (`src/persistence/saveTransfer.ts`).
+- **Tela de título** com poções flutuando, Importar/Exportar save, Instalar como app (quando o navegador oferece) e créditos.
+- Prints em `prints-levar-o-save/`.
+
 ## Celular
 
 - **Venda com um toque:** quando um cliente chega, o pedido aparece sobre a loja (ou no topo do painel, no celular) com o botão Vender, o preço e se ele deve aceitar. Opções abre o balcão completo.
