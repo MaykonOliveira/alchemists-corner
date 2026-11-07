@@ -8,6 +8,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from pix import Canvas, check_palette, outline_mask
 import objects as O
 import items as I
+import helpers as H
 from room import draw_room
 from customers import customer_sheet, LOOKS, FW, FH, FRAMES
 
@@ -61,6 +62,20 @@ def main():
     })
     for f in range(3):
         shop[f'fire-{f}'] = O.fire(f)
+    # Ajudantes automáticos (cada quadro com contorno próprio para o hover)
+    helper_frames = {
+        'raven-0': H.raven(0), 'raven-1': H.raven(1), 'raven-2': H.raven(2),
+        'apprentice-idle-0': H.apprentice('idle', 0), 'apprentice-idle-1': H.apprentice('idle', 1),
+        'apprentice-stir-0': H.apprentice('stir', 0), 'apprentice-stir-1': H.apprentice('stir', 1),
+        'apprentice-stir-2': H.apprentice('stir', 2), 'apprentice-nap': H.apprentice('nap'),
+        'golem-idle-0': H.golem('idle', 0), 'golem-idle-1': H.golem('idle', 1), 'golem-serve': H.golem('serve'),
+        'golem-nap': H.golem('nap'),
+    }
+    for k, cv in helper_frames.items():
+        shop[k] = cv
+        shop[f'{k}-outline'] = outline_mask(cv)
+    shop.update({'raven-fly-0': H.raven_fly(0), 'raven-fly-1': H.raven_fly(1), 'raven-carry-0': H.raven_fly(0, True),
+                 'raven-carry-1': H.raven_fly(1, True), 'parcel': H.parcel(), 'perch': H.perch(), 'zz': H.zz()})
     for rid in I.LIQ:
         shop[f'potion-{rid}'] = I.potion_small(rid)
     sheet, meta = pack(shop, 512)
@@ -74,6 +89,7 @@ def main():
     # Ícones 16x16 da interface (poções e ingredientes), em grade de 8 colunas.
     icons = {f'potion-{r}': I.potion_icon(r) for r in I.LIQ}
     icons.update({f'ingredient-{i}': I.ingredient_icon(i) for i in I.INGREDIENTS})
+    icons.update({f'helper-{h}': H.portrait(h) for h in ('corvo-entregador', 'aprendiz', 'golem-balconista')})
     cols = 8
     grid = Canvas(16 * cols, 16 * ((len(icons) + cols - 1) // cols))
     index = {}

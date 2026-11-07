@@ -1,6 +1,6 @@
 import { RECIPES_BY_ID } from '../../domain/data/recipes';
 import type { GameSave } from '../../domain/models/types';
-import { maintenanceCost } from '../../domain/rules/economy';
+import { helperWages, maintenanceCost } from '../../domain/rules/economy';
 import { Coins } from '../../ui/widgets';
 
 export function ReportPanel({ save }: { save: GameSave }) {
@@ -19,7 +19,9 @@ export function ReportPanel({ save }: { save: GameSave }) {
         <div><dt>Perdidos</dt><dd>{st.lost}</dd></div>
         <div><dt>Mais vendida</dt><dd className="small">{best ? RECIPES_BY_ID[best[0]].shortName : '—'}</dd></div>
       </dl>
-      <p className="card-text small muted">Manutenção cobrada ao fechar: {maintenanceCost(save)} moedas (aluguel, lenha e velas).</p>
+      <p className="card-text small muted">
+        Manutenção cobrada ao fechar: {maintenanceCost(save)} moedas (aluguel, lenha e velas{helperWages(save) > 0 ? `, com ${helperWages(save)} de salários` : ''}).
+      </p>
 
       <h3 className="mini-title">Últimos dias</h3>
       {recent.length === 0 ? (

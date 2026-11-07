@@ -35,6 +35,13 @@ export interface BotProfile {
   targetStock: number;
   /** Moedas guardadas para ingredientes antes de comprar melhorias. */
   reserve: number;
+  /** Contrata os ajudantes automáticos (corvo, aprendiz e golem)? */
+  hireHelpers?: boolean;
+  /**
+   * A partir deste dia o jogador fica distraído: demora 20–45 s para atender e só mexe no
+   * caldeirão antes de abrir. Serve para medir o valor dos ajudantes.
+   */
+  distractedFrom?: number;
 }
 
 export const CASUAL: BotProfile = {
@@ -54,6 +61,11 @@ export const EFICIENTE: BotProfile = {
   targetStock: 6,
   reserve: 40,
 };
+
+/** Joga como o casual até o dia 5 e depois fica distraído. */
+export const DISTRAIDO: BotProfile = { ...CASUAL, name: 'distraído', distractedFrom: 6 };
+
+export const DISTRAIDO_COM_AJUDANTES: BotProfile = { ...DISTRAIDO, name: 'distraído + ajudantes', hireHelpers: true };
 
 export interface DaySummary extends DayReport {
   coinsEnd: number;
@@ -90,14 +102,22 @@ export function simulate(profile: BotProfile, days: number, seed: number): SimRe
     return r.events;
   };
 
+  const distracted = () => profile.distractedFrom !== undefined && s.day >= profile.distractedFrom;
+
   const demandWeight = (recipeId: string) =>
     Object.values(ARCHETYPES).reduce((n, a) => n + (a.wants.includes(recipeId) ? 1 / a.wants.length : 0), 0);
 
   const tryUpgrades = () => {
-    for (const up of [...UPGRADES].sort((a, b) => a.cost - b.cost)) {
+    // Quem contrata ajudantes dá prioridade a eles; os demais compram da mais barata para a mais cara.
+    const rank = (u: (typeof UPGRADES)[number]) => (profile.hireHelpers && u.category === 'ajudante' ? 0 : 1);
+    for (const up of [...UPGRADES].sort((a, b) => rank(a) - rank(b) || a.cost - b.cost)) {
       if (s.upgrades.includes(up.id) || s.level < up.requiredLevel) continue;
+      if (up.category === 'ajudante' && !profile.hireHelpers) continue;
       if (firstAffordableDay === null && s.coins >= up.cost) firstAffordableDay = s.day;
-      if (s.coins - up.cost < profile.reserve) continue;
+      if (s.coins - up.cost < profile.reserve) {
+        if (rank(up) === 0) break; // junta dinheiro para o ajudante
+        continue;
+      }
       cmd({ type: 'BUY_UPGRADE', upgradeId: up.id });
       if (firstUpgradeDay === null) firstUpgradeDay = s.day;
     }
@@ -139,7 +159,7 @@ export function simulate(profile: BotProfile, days: number, seed: number): SimRe
   const serve = () => {
     for (const c of [...s.customers]) {
       if (!reactAt.has(c.id)) {
-        const [lo, hi] = profile.reactionS;
+        const [lo, hi] = distracted() ? [20, 45] : profile.reactionS;
         reactAt.set(c.id, (lo + random() * (hi - lo)) * 1000);
       }
       if (c.waitedMs < reactAt.get(c.id)!) continue;
@@ -179,7 +199,7 @@ export function simulate(profile: BotProfile, days: number, seed: number): SimRe
     cmd({ type: 'OPEN_SHOP' });
     while (s.phase === 'expediente') {
       if (s.order && potionStock(s, s.order.recipeId) >= s.order.qty) cmd({ type: 'DELIVER_ORDER' });
-      tryBrew();
+      if (!distracted()) tryBrew();
       serve();
       cmd({ type: 'ADVANCE', ms: STEP_MS });
       elapsedS += STEP_MS / 1000;

@@ -4,6 +4,7 @@ import type { Draft, RuleContext } from './context';
 import { acceptOffer, declineOffer, dismissCustomer, serveCustomer } from './customers';
 import { advance, closeDay, openShop, startNextDay } from './day';
 import { buyIngredient, buyUpgrade, setForSale, setPrice } from './economy';
+import { setHelper } from './helpers';
 import { deliverOrder } from './orders';
 
 /**
@@ -25,6 +26,7 @@ export type DomainCommand =
   | { type: 'DISMISS_CUSTOMER'; customerId: string }
   | { type: 'DELIVER_ORDER' }
   | { type: 'BUY_UPGRADE'; upgradeId: string }
+  | { type: 'SET_HELPER'; upgradeId: string; on: boolean }
   | { type: 'EXPERIMENT'; ingredientIds: string[] }
   | { type: 'SET_SETTINGS'; settings: Partial<Settings> }
   | { type: 'SET_TUTORIAL'; step: number };
@@ -61,6 +63,7 @@ function run(d: Draft, cmd: DomainCommand): boolean {
     case 'DISMISS_CUSTOMER': return dismissCustomer(d, cmd.customerId);
     case 'DELIVER_ORDER': return deliverOrder(d);
     case 'BUY_UPGRADE': return buyUpgrade(d, cmd.upgradeId);
+    case 'SET_HELPER': return setHelper(d, cmd.upgradeId, cmd.on);
     case 'EXPERIMENT': return experiment(d, cmd.ingredientIds);
     case 'SET_SETTINGS':
       d.s.settings = { ...d.s.settings, ...cmd.settings };

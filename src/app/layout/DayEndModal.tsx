@@ -26,7 +26,7 @@ export function DayEndModal() {
             <tr><td>Vendas no balcão</td><td className="pos-text">+{r.revenue}</td></tr>
             {r.orderRewards > 0 && <tr><td>Pedidos especiais</td><td className="pos-text">+{r.orderRewards}</td></tr>}
             <tr><td>Ingredientes comprados</td><td className="neg-text">−{r.ingredientCost}</td></tr>
-            <tr><td>Manutenção (aluguel, lenha, velas)</td><td className="neg-text">−{r.maintenance}</td></tr>
+            <tr><td>Manutenção (aluguel, lenha, velas{r.wages ? ', salários' : ''})</td><td className="neg-text">−{r.maintenance}</td></tr>
             <tr className="ledger-total"><td>Lucro do dia</td><td className={r.profit >= 0 ? 'pos-text' : 'neg-text'}>{r.profit >= 0 ? '+' : ''}{r.profit}</td></tr>
           </tbody>
         </table>
@@ -36,6 +36,15 @@ export function DayEndModal() {
           <div><span className="muted small">Reputação</span><strong>{r.reputationDelta >= 0 ? '+' : ''}{r.reputationDelta}</strong></div>
           <div><span className="muted small">Experiência</span><strong>+{r.xpGained}</strong></div>
         </div>
+        {r.helperWork && (r.helperWork.brews + r.helperWork.served + r.helperWork.deliveries > 0) && (
+          <p className="card-text small">
+            Ajudantes: {[
+              r.helperWork.deliveries > 0 && `o corvo fez ${r.helperWork.deliveries} entrega${r.helperWork.deliveries > 1 ? 's' : ''}`,
+              r.helperWork.brews > 0 && `o aprendiz cuidou de ${r.helperWork.brews} preparo${r.helperWork.brews > 1 ? 's' : ''}`,
+              r.helperWork.served > 0 && `o golem vendeu ${r.helperWork.served} poç${r.helperWork.served > 1 ? 'ões' : 'ão'}`,
+            ].filter(Boolean).join(', ')}. Salários: {r.wages ?? 0} moedas (já na manutenção).
+          </p>
+        )}
         {sales.length > 0 && (
           <p className="card-text small">
             Mais vendidas: {sales.slice(0, 3).map(([id, n]) => `${RECIPES_BY_ID[id].shortName} (${n})`).join(', ')}

@@ -73,8 +73,28 @@ export interface ShopUpgrade {
   name: string;
   cost: number;
   effect: string;
-  category: 'funcional' | 'visual';
+  category: 'funcional' | 'visual' | 'ajudante';
   requiredLevel: number;
+  /** Salário diário (ajudantes), somado à manutenção no fechamento. */
+  upkeep?: number;
+}
+
+/** O que os ajudantes fizeram no dia. */
+export interface HelperWork {
+  brews: number;
+  served: number;
+  deliveries: number;
+  delivered: number;
+}
+
+/** Estado dos ajudantes automáticos. */
+export interface HelpersState {
+  /** Ajudantes contratados que o jogador mandou descansar (desligados). */
+  off: string[];
+  /** Tempo (ms reais) até o corvo conferir o armário de novo. */
+  ravenInMs: number;
+  /** Tempo (ms reais) até o golem poder atender de novo. */
+  golemInMs: number;
 }
 
 export interface BrewJob {
@@ -109,6 +129,7 @@ export interface DayStats {
   xpStart: number;
   levelStart: number;
   ordersDone: number;
+  helperWork: HelperWork;
 }
 
 export interface DayReport {
@@ -124,6 +145,9 @@ export interface DayReport {
   reputationDelta: number;
   xpGained: number;
   levelUps: number;
+  /** Parte da manutenção que foi salário dos ajudantes. */
+  wages?: number;
+  helperWork?: HelperWork;
 }
 
 export type DayPhase = 'preparacao' | 'expediente' | 'fechamento';
@@ -136,7 +160,7 @@ export interface Settings {
   reduceMotion: boolean;
 }
 
-export const SAVE_VERSION = 2 as const;
+export const SAVE_VERSION = 3 as const;
 
 export interface GameSave {
   saveVersion: typeof SAVE_VERSION;
@@ -157,6 +181,7 @@ export interface GameSave {
   prices: Record<string, number>;
   knownRecipes: string[];
   upgrades: string[];
+  helpers: HelpersState;
   brew: BrewJob | null;
   customers: Customer[];
   /** Tempo (ms reais de expediente) até o próximo cliente. */
@@ -176,10 +201,13 @@ export interface GameSave {
 /** Eventos emitidos pelas regras para a apresentação (sons, animações, avisos). */
 export type GameEvent =
   | { type: 'PURCHASE'; ingredientId: string; qty: number; cost: number }
-  | { type: 'BREW_STARTED'; recipeId: string; batches: number }
+  | { type: 'BREW_STARTED'; recipeId: string; batches: number; by?: 'aprendiz' }
   | { type: 'BREW_DONE'; recipeId: string; qty: number }
   | { type: 'CUSTOMER_ARRIVED'; customerId: string }
-  | { type: 'SALE'; customerId: string; recipeId: string; price: number; substitute: boolean }
+  | { type: 'SALE'; customerId: string; recipeId: string; price: number; substitute: boolean; by?: 'golem' }
+  | { type: 'RAVEN_DELIVERY'; items: { ingredientId: string; qty: number }[]; cost: number; fee: number }
+  | { type: 'GOLEM_DISMISSED'; customerId: string }
+  | { type: 'HELPER_TOGGLED'; upgradeId: string; on: boolean }
   | { type: 'COUNTER_OFFER'; customerId: string; price: number }
   | { type: 'CUSTOMER_REFUSED'; customerId: string; reason: 'produto' | 'preco' }
   | { type: 'CUSTOMER_LEFT'; customerId: string; reason: 'paciencia' | 'preco' | 'recusou-oferta' | 'fechou' | 'atendido' }

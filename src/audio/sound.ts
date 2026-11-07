@@ -129,6 +129,7 @@ function onEvent(e: GameEvent) {
     case 'UPGRADE_BOUGHT':
     case 'DISCOVERY': return sfx.sparkle();
     case 'PURCHASE': return sfx.click();
+    case 'RAVEN_DELIVERY': return sfx.click();
     case 'CUSTOMER_LEFT': if (e.reason === 'paciencia' || e.reason === 'preco') sfx.sad(); return;
     case 'ERROR': return sfx.error();
   }

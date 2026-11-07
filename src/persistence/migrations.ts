@@ -22,6 +22,7 @@ export function migrateSave(raw: unknown): GameSave | null {
   if (raw.saveVersion > SAVE_VERSION || raw.saveVersion < 1) return null;
 
   // v1 → v2: entraram preços, clientes, caldeirão, fornecedor, pedidos e tutorial.
+  // v2 → v3: entraram os ajudantes automáticos (helpers) e o trabalho deles no relatório.
   // Os campos novos recebem os valores padrão abaixo.
 
   const base = createNewGame(num(raw.createdAt, Date.now()));
@@ -48,13 +49,20 @@ export function migrateSave(raw: unknown): GameSave | null {
     prices: numRecord(raw.prices, base.prices),
     knownRecipes: arr(raw.knownRecipes, base.knownRecipes),
     upgrades: arr(raw.upgrades, base.upgrades),
+    helpers: {
+      off: isObj(raw.helpers) ? arr<string>(raw.helpers.off, []).filter((x) => typeof x === 'string') : [],
+      ravenInMs: isObj(raw.helpers) ? num(raw.helpers.ravenInMs, base.helpers.ravenInMs) : base.helpers.ravenInMs,
+      golemInMs: isObj(raw.helpers) ? num(raw.helpers.golemInMs, 0) : 0,
+    },
     brew: isObj(raw.brew) ? (raw.brew as unknown as GameSave['brew']) : null,
     customers: arr(raw.customers, []),
     spawnInMs: num(raw.spawnInMs, base.spawnInMs),
     supplier,
     order: isObj(raw.order) ? (raw.order as unknown as GameSave['order']) : null,
     event: raw.event === 'feira' || raw.event === 'caravana' || raw.event === 'chuva' ? raw.event : null,
-    stats: isObj(raw.stats) ? { ...base.stats, ...(raw.stats as object) } : base.stats,
+    stats: isObj(raw.stats)
+      ? { ...base.stats, ...(raw.stats as object), helperWork: { ...base.stats.helperWork, ...(isObj(raw.stats.helperWork) ? raw.stats.helperWork : {}) } }
+      : base.stats,
     reports: arr(raw.reports, base.reports),
     researchPoints: num(raw.researchPoints, 0),
     tutorialStep: num(raw.tutorialStep, raw.saveVersion === 1 ? 99 : 0),

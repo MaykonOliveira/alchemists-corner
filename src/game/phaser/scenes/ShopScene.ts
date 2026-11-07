@@ -6,6 +6,7 @@ import { useGameStore } from '../../../store/gameStore';
 import { gameEvents } from '../../events';
 import { outlinedText } from '../art/painter';
 import { GARLAND_BULBS, LANTERNS, SHELF_BOARDS } from '../art/sprites';
+import { HelperViews } from '../entities/Helpers';
 import { Visitor, type Mood } from '../entities/Visitor';
 import { HOTSPOTS, type HotspotDef } from '../interaction/hotspots';
 
@@ -52,6 +53,7 @@ export class ShopScene extends Phaser.Scene {
   private brewBar!: Phaser.GameObjects.Graphics;
   private badge!: Phaser.GameObjects.Image;
   private upgradeLayer: Phaser.GameObjects.GameObject[] = [];
+  private helpers!: HelperViews;
   private advanceAcc = 0;
   private nightness = 0;
   private unsubscribers: (() => void)[] = [];
@@ -85,6 +87,7 @@ export class ShopScene extends Phaser.Scene {
       this.glows.push(this.add.image(l.x, l.y, 'glow-warm').setDepth(1001).setBlendMode(Phaser.BlendModes.ADD));
     }
 
+    this.helpers = new HelperViews(this, this.reduceMotion);
     this.renderUpgrades(save);
     this.renderShelves(save);
     this.applyPhase(save);
@@ -262,6 +265,7 @@ export class ShopScene extends Phaser.Scene {
   // --------------------------------------------------------------- melhorias
 
   private renderUpgrades(save: GameSave) {
+    this.helpers.sync(save);
     this.upgradeLayer.forEach((o) => o.destroy());
     this.upgradeLayer = [];
     this.bulbGlows = [];
@@ -355,7 +359,11 @@ export class ShopScene extends Phaser.Scene {
   }
 
   private onGameEvent(e: GameEvent) {
+    this.helpers.onEvent(e);
     switch (e.type) {
+      case 'GOLEM_DISMISSED':
+        this.leaveReasons.set(e.customerId, 'neutro');
+        return;
       case 'CUSTOMER_LEFT': {
         const moods: Record<typeof e.reason, Mood> = { atendido: 'feliz', paciencia: 'triste', preco: 'bravo', 'recusou-oferta': 'bravo', fechou: 'neutro' };
         this.leaveReasons.set(e.customerId, moods[e.reason]);
@@ -417,6 +425,7 @@ export class ShopScene extends Phaser.Scene {
     this.bulbGlows.forEach((g, i) => g.setAlpha(0.5 + this.nightness * 0.5 + (this.reduceMotion() ? 0 : Math.sin(time / 400 + i) * 0.15)));
 
     for (const v of this.visitors.values()) v.update(time);
+    this.helpers.update(time);
 
     if (ui.paused || ui.modal || save.phase === 'fechamento') return;
     this.advanceAcc += Math.min(delta, 250);

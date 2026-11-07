@@ -34,6 +34,7 @@ export function createNewGame(now: number = Date.now()): GameSave {
     prices: Object.fromEntries(RECIPES.map((r) => [r.id, r.basePrice])),
     knownRecipes: ['cura-simples', 'tonico-energia', 'elixir-concentracao'],
     upgrades: [],
+    helpers: { off: [], ravenInMs: 1500, golemInMs: 0 },
     brew: null,
     customers: [],
     spawnInMs: 2500,

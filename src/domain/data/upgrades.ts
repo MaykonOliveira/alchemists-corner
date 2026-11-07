@@ -11,6 +11,15 @@ export const UPGRADES: ShopUpgrade[] = [
     effect: 'Uma placa pintada na fachada: chegam mais clientes.' },
   { id: 'iluminacao-aconchegante', name: 'Iluminação aconchegante', cost: 1100, category: 'visual', requiredLevel: 5,
     effect: 'Cordões de luz mágica no teto. A loja fica linda e a reputação cresce mais rápido.' },
+  // Ajudantes: automatizam uma parte do trabalho e recebem salário diário (somado à manutenção).
+  { id: 'corvo-entregador', name: 'Corvo entregador', cost: 600, category: 'ajudante', requiredLevel: 3, upkeep: 8,
+    effect: 'Confere o armário a cada hora e busca no fornecedor o que está acabando (taxa de 3 moedas por viagem).' },
+  { id: 'aprendiz', name: 'Aprendiz de alquimia', cost: 1000, category: 'ajudante', requiredLevel: 4, upkeep: 12,
+    effect: 'Quando o caldeirão fica livre, prepara a poção que está mais em falta. Dá prioridade ao pedido especial.' },
+  { id: 'golem-balconista', name: 'Golem balconista', cost: 1400, category: 'ajudante', requiredLevel: 5, upkeep: 15,
+    effect: 'Atende quem espera há alguns segundos e aceita contrapropostas. Sem a poção certa, dispensa com educação.' },
 ];
+
+export const HELPER_IDS = UPGRADES.filter((u) => u.category === 'ajudante').map((u) => u.id);
 
 export const UPGRADES_BY_ID: Record<string, ShopUpgrade> = Object.fromEntries(UPGRADES.map((u) => [u.id, u]));

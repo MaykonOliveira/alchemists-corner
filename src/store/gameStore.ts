@@ -108,8 +108,15 @@ export const useGameStore = create<StoreState>()(
           toast(`Comprou ${e.qty}× ${INGREDIENTS_BY_ID[e.ingredientId].name} por ${e.cost} moedas.`);
           return advanceTutorial(1);
         case 'BREW_STARTED':
+          if (e.by === 'aprendiz') return toast(`O aprendiz pôs no fogo: ${RECIPES_BY_ID[e.recipeId].name} (${e.batches} lote${e.batches > 1 ? 's' : ''}).`);
           toast(`O caldeirão começou a ferver: ${RECIPES_BY_ID[e.recipeId].name}.`);
           return advanceTutorial(2);
+        case 'RAVEN_DELIVERY': {
+          const units = e.items.reduce((n, i) => n + i.qty, 0);
+          return toast(`O corvo trouxe ${units} ingredientes do fornecedor (−${e.cost} moedas).`);
+        }
+        case 'HELPER_TOGGLED':
+          return toast(`${UPGRADES_BY_ID[e.upgradeId].name}: ${e.on ? 'de volta ao trabalho!' : 'descansando.'}`);
         case 'BREW_DONE': return toast(`${e.qty}× ${RECIPES_BY_ID[e.recipeId].name} prontas nas prateleiras!`, 'ok');
         case 'SALE':
           if (get().ui.selectedCustomerId === e.customerId) set((st) => ({ ui: { ...st.ui, selectedCustomerId: null } }));
@@ -132,7 +139,10 @@ export const useGameStore = create<StoreState>()(
         case 'ORDER_NEW': return toast('Novo pedido especial no quadro de avisos!', 'gold');
         case 'ORDER_DONE': return toast(`Pedido entregue! +${e.coins} moedas.`, 'gold');
         case 'ORDER_EXPIRED': return toast('Um pedido especial expirou. Sem problemas, outros virão.');
-        case 'UPGRADE_BOUGHT': return toast(`Melhoria instalada: ${UPGRADES_BY_ID[e.upgradeId].name}!`, 'gold');
+        case 'UPGRADE_BOUGHT': {
+          const up = UPGRADES_BY_ID[e.upgradeId];
+          return toast(up.category === 'ajudante' ? `${up.name} contratado! Já está trabalhando na loja.` : `Melhoria instalada: ${up.name}!`, 'gold');
+        }
         case 'DISCOVERY':
           set((st) => ({ ui: { ...st.ui, lastHint: null } }));
           return toast(`Descoberta! ${RECIPES_BY_ID[e.recipeId].name} foi anotada no livro.`, 'gold');
