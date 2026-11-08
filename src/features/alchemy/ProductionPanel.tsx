@@ -43,7 +43,10 @@ export function ProductionPanel({ save }: { save: GameSave }) {
           <BrewCard job={save.brew} slot={1} label={hasSecondCauldron(save) ? 'Caldeirão 1' : null} save={save} />
           {hasSecondCauldron(save) && <BrewCard job={save.brew2} slot={2} label="Caldeirão 2" save={save} />}
         </div>
-      ) : (
+      ) : null}
+      {save.brew && <StirGame key={`1-${save.brew.recipeId}-${save.brew.totalMs}`} save={save} job={save.brew} slot={1} label={hasSecondCauldron(save) ? 'Caldeirão 1' : undefined} />}
+      {save.brew2 && hasSecondCauldron(save) && <StirGame key={`2-${save.brew2.recipeId}-${save.brew2.totalMs}`} save={save} job={save.brew2} slot={2} label="Caldeirão 2" />}
+      {save.brew || save.brew2 ? null : (
         <p className="panel-lead">Escolha uma receita. Cada lote rende {perBatch} poções.{hasSecondCauldron(save) ? ' Você tem 2 caldeirões!' : ''}</p>
       )}
 
@@ -135,7 +138,7 @@ export function ProductionPanel({ save }: { save: GameSave }) {
   );
 }
 
-function BrewCard({ job, label, save, slot }: { job: BrewJob | null; label: string | null; save: GameSave; slot: 1 | 2 }) {
+function BrewCard({ job, label, save }: { job: BrewJob | null; label: string | null; save: GameSave; slot: 1 | 2 }) {
   if (!job) {
     return (
       <div className="card brewing brewing-idle">
@@ -155,7 +158,6 @@ function BrewCard({ job, label, save, slot }: { job: BrewJob | null; label: stri
         {job.batches * potionsPerBatch(save)} poções · faltam {secs(job.totalMs - job.elapsedMs)}
         {save.phase === 'preparacao' && !label ? '. Você pode abrir a loja enquanto isso.' : ''}
       </p>
-      <StirGame key={`${job.recipeId}-${job.totalMs}`} save={save} job={job} slot={slot} />
     </div>
   );
 }

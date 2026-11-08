@@ -11,7 +11,7 @@ const ZONES = [[38, 62], [41, 59], [43, 57]] as const;
  * Toque de mestre: um marcador vai e volta na barra; mexer com ele na faixa dourada é um acerto.
  * Três toques. 3 acertos = Primorosa, 2 = Fina. Opcional: sem mexer, a poção sai Comum.
  */
-export function StirGame({ save, job, slot }: { save: GameSave; job: BrewJob; slot: 1 | 2 }) {
+export function StirGame({ save, job, slot, label }: { save: GameSave; job: BrewJob; slot: 1 | 2; label?: string }) {
   const dispatch = useGameStore((s) => s.dispatch);
   const reduce = save.settings.reduceMotion;
   const [hits, setHits] = useState<boolean[]>([]);
@@ -38,7 +38,7 @@ export function StirGame({ save, job, slot }: { save: GameSave; job: BrewJob; sl
     const q = qualityFromHits(job.hits);
     return (
       <p className={`stir-result q-${q}`}>
-        {q === 3 ? '✨' : q === 2 ? '★' : '·'} Qualidade <b>{QUALITY_NAME[q]}</b>
+        {label ? `${label}: ` : ''}{q === 3 ? '✨' : q === 2 ? '★' : '·'} Qualidade <b>{QUALITY_NAME[q]}</b>
         {q > 1 ? ` · clientes pagam ${Math.round(QUALITY_BONUS[q] * 100)}% a mais` : ' · mexa no tempo certo no próximo preparo'}
       </p>
     );
@@ -54,7 +54,7 @@ export function StirGame({ save, job, slot }: { save: GameSave; job: BrewJob; sl
   return (
     <div className="stir" aria-label="Toque de mestre">
       <div className="stir-head">
-        <span className="row-title">✋ Toque de mestre</span>
+        <span className="row-title">✋ Toque de mestre{label ? <span className="stir-label"> · {label}</span> : null}</span>
         <span className="stir-dots" aria-label={`${hits.filter(Boolean).length} acertos`}>
           {Array.from({ length: STIR_TAPS }, (_, i) => <span key={i} className={i < hits.length ? (hits[i] ? 'hit' : 'miss') : ''} />)}
         </span>
