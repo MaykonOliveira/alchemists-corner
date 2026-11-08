@@ -1,15 +1,15 @@
 import { ARCHETYPES } from '../../domain/data/customers';
 import { regularOf, regularState } from '../../domain/rules/world';
 import { RECIPES_BY_ID } from '../../domain/data/recipes';
-import { bestOffer, priceVerdict, vipPrice } from '../../domain/rules/customers';
-import { getPrice } from '../../domain/rules/economy';
+import { bestOffer, priceVerdict, reservedForOrder, vipPrice } from '../../domain/rules/customers';
+import { getPrice, potionStock } from '../../domain/rules/economy';
 import { useGameStore } from '../../store/gameStore';
 import { useStageCards } from '../tutorial/stage';
 import { CoinIcon } from '../../ui/icons';
 import { PotionIcon } from '../../ui/SpriteIcon';
 import { Meter } from '../../ui/widgets';
 
-const VERDICT_LABEL = { sim: 'deve aceitar', negocia: 'vai pechinchar', nao: 'caro demais' } as const;
+const VERDICT_LABEL = { sim: 'O preço agrada', negocia: 'Vai pedir desconto', nao: 'Vai achar caro' } as const;
 
 /** Atendimento rápido sobre a loja: o cliente selecionado e um botão para vender com um toque. */
 export function QuickServe({ placement }: { placement: 'stage' | 'side' }) {
@@ -32,6 +32,23 @@ export function QuickServe({ placement }: { placement: 'stage' | 'side' }) {
   const offerId = c.offer ? null : bestOffer(save, c);
   const verdict = offerId ? priceVerdict(save, c, offerId) : null;
   const next = save.customers.length > 1 ? save.customers[(idx + 1) % save.customers.length] : null;
+  const reserved = !c.offer && !offerId && reservedForOrder(save, wanted.id) > 0 && potionStock(save, wanted.id) > 0;
+
+  // Sem nada para oferecer: uma linha só, para não ocupar a tela inteira enquanto o cliente espera.
+  if (!c.offer && !offerId) {
+    return (
+      <section className={`quick-serve qs-${placement} qs-compact`} aria-label={`Atender ${a.label}`}>
+        <PotionIcon recipeId={wanted.id} size={20} />
+        <span className="qs-none">
+          <span className="qs-face" aria-label="Humor">{left > 0.5 ? '🙂' : left > 0.25 ? '😐' : '😠'}</span> {c.vip ? c.vip.name : reg ? reg.name.split(',')[0] : a.label} quer {wanted.shortName}
+          <span className="muted small"> · {reserved ? 'as que você tem estão guardadas para o pedido' : 'acabou na prateleira'}</span>
+        </span>
+        {next && <button className="qs-icon" onClick={() => dispatch({ type: 'SELECT_CUSTOMER', id: next.id })} aria-label="Próximo cliente">{idx + 1}/{save.customers.length} ›</button>}
+        <button className="btn btn-small" onClick={() => dispatch({ type: 'DISMISS_CUSTOMER', customerId: c.id })}>Dispensar</button>
+        <button className="btn btn-small btn-ghost" onClick={() => dispatch({ type: 'OPEN_PANEL', panel: 'counter' })}>Opções</button>
+      </section>
+    );
+  }
 
   return (
     <section className={`quick-serve qs-${placement} ${c.vip ? 'qs-is-vip' : ''}`} aria-label={`Atender ${a.label}`}>

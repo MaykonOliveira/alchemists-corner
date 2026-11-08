@@ -21,7 +21,7 @@ export function freshStats(s: GameSave): DayStats {
   return {
     revenue: 0, ingredientCost: 0, orderRewards: 0, salesByRecipe: {}, served: 0, lost: 0,
     repStart: s.reputation, xpStart: s.xp, levelStart: s.level, ordersDone: 0,
-    helperWork: emptyHelperWork(), regularsSeen: [],
+    helperWork: emptyHelperWork(), regularsSeen: [], lostByRecipe: {},
   };
 }
 
@@ -59,6 +59,7 @@ export function closeDay(d: Draft): boolean {
     levelUps: s.level - st.levelStart,
     wages: Math.min(maintenance, helperWages(s)),
     helperWork: { ...st.helperWork },
+    lostByRecipe: { ...(st.lostByRecipe ?? {}) },
   };
   rivalOnClose(d, report);
   s.reports = [...s.reports, report].slice(-30);
