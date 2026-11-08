@@ -107,6 +107,13 @@ const isUi = (cmd: GameCommand): cmd is UiCommand => UI_TYPES.has(cmd.type);
 /** Último passo do tutorial; valores maiores significam "concluído". */
 export const TUTORIAL_DONE = 7;
 
+/**
+ * Sem ninguém no balcão, o relógio anda em 2× sozinho (só na velocidade normal e depois do tutorial):
+ * menos espera parada, e volta ao normal assim que alguém entra.
+ */
+export const autoFast = (save: GameSave | null, ui: Pick<UiState, 'speed' | 'paused'>): boolean =>
+  !!save && save.phase === 'expediente' && ui.speed === 1 && !ui.paused && save.customers.length === 0 && save.tutorialStep >= TUTORIAL_DONE;
+
 let toastSeq = 0;
 export const MAX_TOASTS = 2;
 let loadedSave: GameSave | null = null;

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { RECIPES_BY_ID } from '../../domain/data/recipes';
 import type { DayReport } from '../../domain/models/types';
 import { getPrice } from '../../domain/rules/economy';
+import { askReminderPermission, remindersSupported } from '../reminders';
 import { dayMedal, mostMissed, serviceRate } from '../../domain/rules/medals';
 import { useGameStore } from '../../store/gameStore';
 import { Coins } from '../../ui/widgets';
@@ -41,6 +42,33 @@ function WeekChart({ reports }: { reports: DayReport[] }) {
           <span className="week-day">{r.day}</span>
         </div>
       ))}
+    </div>
+  );
+}
+
+/**
+ * Do fim do dia 2 em diante, oferece o lembrete ali mesmo (e não escondido nas Configurações).
+ * Um "Agora não" e a oferta não volta.
+ */
+function ReminderOffer() {
+  const save = useGameStore((s) => s.save)!;
+  const dispatch = useGameStore((s) => s.dispatch);
+  const [asked, setAsked] = useState(false);
+  if (asked || save.day < 2 || save.settings.reminders || save.tipsSeen.includes('offer:reminders')) return null;
+  if (!remindersSupported() || Notification.permission === 'denied') return null;
+  const no = () => { setAsked(true); dispatch({ type: 'SEE_TIP', tipId: 'offer:reminders' }); };
+  const yes = async () => {
+    setAsked(true);
+    if (await askReminderPermission()) dispatch({ type: 'SET_SETTINGS', settings: { reminders: true } });
+    dispatch({ type: 'SEE_TIP', tipId: 'offer:reminders' });
+  };
+  return (
+    <div className="reminder-offer">
+      <span>🔔 Quer um aviso quando o caldeirão terminar? No máximo um por dia.</span>
+      <span className="btn-row">
+        <button className="btn btn-small btn-primary" onClick={yes}>Quero</button>
+        <button className="btn btn-small btn-ghost" onClick={no}>Agora não</button>
+      </span>
     </div>
   );
 }
@@ -139,6 +167,8 @@ export function DayEndModal() {
           <p className="challenge-line">⚔️ Desafio da semana {save.challenge.week}: <b>{save.challenge.score} pontos</b>{save.challengeBest?.score === save.challenge.score ? ' · seu recorde' : ''}</p>
         )}
         {charm(save) > 0 && <p className="card-text small">🎀 A decoração encantou a freguesia: +{charm(save)} de reputação.</p>}
+        <p className="card-text">Caixa agora: <Coins n={save.coins} /></p>
+        <button className="btn btn-share" onClick={() => dispatch({ type: 'OPEN_MODAL', modal: 'share' })}>📸 Mostrar a loja</button>
         <section className="tomorrow" aria-label="Amanhã na loja">
           <p className="tomorrow-title">Amanhã na loja</p>
           <ul>
@@ -146,9 +176,8 @@ export function DayEndModal() {
               <li key={l.text} className={l.tone ? `tone-${l.tone}` : ''}><span aria-hidden>{l.icon}</span> {l.text}</li>
             ))}
           </ul>
+          <ReminderOffer />
         </section>
-        <p className="card-text">Caixa agora: <Coins n={save.coins} /></p>
-        <button className="btn btn-share" onClick={() => dispatch({ type: 'OPEN_MODAL', modal: 'share' })}>📸 Mostrar a loja</button>
         <button ref={nextRef} className="btn btn-primary btn-big" onClick={() => dispatch({ type: 'START_NEXT_DAY' })}>
           Começar o dia {save.day + 1}
         </button>

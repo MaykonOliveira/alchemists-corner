@@ -3,7 +3,7 @@ import { CUSTOMER_URLS } from '../art/sprites';
 import { RECIPES_BY_ID } from '../../../domain/data/recipes';
 import type { Customer, GameEvent, GameSave } from '../../../domain/models/types';
 import { CLOSE_MIN, OPEN_MIN } from '../../../domain/rules/time';
-import { useGameStore } from '../../../store/gameStore';
+import { autoFast, useGameStore } from '../../../store/gameStore';
 import { seasonOf } from '../../../domain/rules/world';
 import { gameEvents } from '../../events';
 import { outlinedText } from '../art/painter';
@@ -771,7 +771,8 @@ export class ShopScene extends Phaser.Scene {
       const ms = this.advanceAcc;
       this.advanceAcc = 0;
       // No modo 2× o relógio, os clientes e o caldeirão andam no dobro da velocidade.
-      this.store.dispatch({ type: 'ADVANCE', ms: ms * ui.speed });
+      // Loja vazia anda em 2× sozinha (autoFast).
+      this.store.dispatch({ type: 'ADVANCE', ms: ms * (autoFast(save, ui) ? 2 : ui.speed) });
       const next = this.store.save;
       if (next?.brew || next?.brew2) this.drawBrewBar(next);
     }

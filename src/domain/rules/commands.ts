@@ -122,7 +122,7 @@ function run(d: Draft, cmd: DomainCommand): boolean {
       if (d.s.tipsSeen.includes(cmd.tipId)) return false;
       d.s.tipsSeen = [...d.s.tipsSeen, cmd.tipId];
       // Telas novas visitadas também ficam nesta lista, mas não contam como a dica do dia.
-      if (!cmd.tipId.startsWith('area:')) d.s.tipDay = d.s.day;
+      if (!cmd.tipId.includes(':')) d.s.tipDay = d.s.day;
       return true;
     case 'SEE_STORY':
       if (d.s.storySeen) return false;

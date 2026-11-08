@@ -1303,3 +1303,9 @@ html, button, input { font-variant-ligatures: none; font-feature-settings: "liga
 .sf-lamp-l { left: 6px; } .sf-lamp-r { right: 6px; animation-delay: -1.1s; }
 @keyframes sf-flicker { 50% { opacity: .78; } }
 @media (max-width: 520px) { .sf-front { grid-template-columns: 1fr 48px; } .sf-door { height: 76px; } }
+
+.hud-fast { font-size: .8em; opacity: .85; }
+
+/* Fechamento: oferta de lembrete dentro de "Amanhã na loja" */
+.reminder-offer { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 8px; padding-top: 8px; border-top: 1px dashed rgba(255,255,255,.25); font-size: 13px; }
+.reminder-offer .btn-row { margin: 0; }

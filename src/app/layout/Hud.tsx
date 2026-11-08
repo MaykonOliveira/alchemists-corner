@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { seasonOf } from '../../domain/rules/world';
 import { levelProgress, masterRank, MASTER_STEP_XP, MAX_LEVEL, reputationTitle, xpForLevel } from '../../domain/rules/progression';
 import { dayProgress, formatClock, TIME_OF_DAY_LABEL, timeOfDay } from '../../domain/rules/time';
-import { useGameStore } from '../../store/gameStore';
+import { autoFast, useGameStore } from '../../store/gameStore';
 import { CoinIcon, StarIcon } from '../../ui/icons';
 import { useAnimatedNumber } from '../../ui/useAnimatedNumber';
 
@@ -14,6 +14,7 @@ export function Hud() {
   const dispatch = useGameStore((s) => s.dispatch);
   const [confirmClose, setConfirmClose] = useState(false);
   const speed = useGameStore((s) => s.ui.speed);
+  const fast = useGameStore((s) => autoFast(s.save, s.ui));
   // Com o Início à vista, o botão grande "Abrir a loja" já está lá: o do topo só aparece com outra tela aberta.
   const homeVisible = useGameStore((s) => s.ui.activePanel === null);
   const coins = useAnimatedNumber(save.coins);
@@ -46,7 +47,7 @@ export function Hud() {
       </div>
       <div className="hud-stat hud-clock" title="Horário">
         <span className="hud-label">{TIME_OF_DAY_LABEL[timeOfDay(save.clockMin)]}</span>
-        <span className="hud-value">{formatClock(save.clockMin)}{paused && save.phase === 'expediente' ? ' ⏸' : ''}</span>
+        <span className="hud-value">{formatClock(save.clockMin)}{paused && save.phase === 'expediente' ? ' ⏸' : fast ? <span className="hud-fast" title="Loja vazia: o relógio anda mais rápido até alguém entrar"> ⏩</span> : ''}</span>
         <span className="bar" aria-hidden><span style={{ width: `${dayProgress(save.clockMin) * 100}%` }} /></span>
       </div>
       <div className="hud-stat hud-coins" title="Moedas">
