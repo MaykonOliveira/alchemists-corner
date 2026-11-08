@@ -1,5 +1,5 @@
 import { useGameStore } from '../../store/gameStore';
-import { groupOf, NAV_GROUPS, panelForGroup, SHORTCUTS, useBadges, type NavItem } from './nav';
+import { groupOf, panelForGroup, SHORTCUTS, useBadges, useVisibleGroups, type NavItem } from './nav';
 
 export { SHORTCUTS };
 
@@ -13,6 +13,7 @@ export function BottomBar() {
   const dispatch = useGameStore((s) => s.dispatch);
   const badgeFor = useBadges();
   const activeGroup = groupOf(active);
+  const groups = useVisibleGroups();
 
   const tab = (s: NavItem) => {
     const badge = badgeFor(s.panel);
@@ -46,7 +47,7 @@ export function BottomBar() {
           <span className="tab-icon" aria-hidden>🏠</span>
           <span className="tab-label">Início</span>
         </button>
-        {NAV_GROUPS.map((g) => (
+        {groups.map((g) => (
           <div key={g.id} className={`nav-group nav-${g.id} ${activeGroup?.id === g.id ? 'nav-group-on' : ''}`} role="group" aria-label={g.label}>
             <span className="nav-group-label" aria-hidden>{g.label}</span>
             <div className="nav-group-tabs">{g.items.map(tab)}</div>
@@ -64,7 +65,7 @@ export function BottomBar() {
           <span className="area-icon" aria-hidden>🏠</span>
           <span className="area-label">Início</span>
         </button>
-        {NAV_GROUPS.map((g) => {
+        {groups.map((g) => {
           const on = activeGroup?.id === g.id;
           const badges = g.items.map((i) => badgeFor(i.panel)).filter((b) => b !== null);
           const nums = badges.filter((b): b is number => typeof b === 'number');

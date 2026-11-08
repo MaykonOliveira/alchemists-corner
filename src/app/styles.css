@@ -1244,3 +1244,8 @@ html, button, input { font-variant-ligatures: none; font-feature-settings: "liga
 /* As abas da área quebram linha em vez de sumir pela direita */
 .subtabs { flex-wrap: wrap; overflow: visible; gap: 5px; }
 .subtab { font-size: 12.5px; padding: 4px 9px; }
+
+/* Subida de nível: duas novidades em destaque, o resto num "e mais" */
+.unlocks-more { margin: -4px 0 8px; font-size: 13px; position: relative; }
+.unlocks-more summary { cursor: pointer; color: var(--copper); font-weight: 700; }
+.unlocks-more .unlocks { margin-top: 6px; }

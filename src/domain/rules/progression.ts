@@ -108,5 +108,5 @@ export function reputationTitle(rep: number): string {
   if (rep >= 160) return 'Respeitada';
   if (rep >= 80) return 'Conhecida';
   if (rep >= 30) return 'Promissora';
-  return 'Desconhecida';
+  return 'Recém-aberta';
 }

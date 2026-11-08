@@ -1,6 +1,7 @@
 import { DAY_EVENTS } from '../../domain/data/orders';
 import { chestReady } from '../../domain/rules/goals';
 import { sealsAvailable } from '../../domain/rules/progression';
+import type { GameSave } from '../../domain/models/types';
 import { useGameStore, type PanelId } from '../../store/gameStore';
 
 /**
@@ -84,6 +85,39 @@ export const rememberPanel = (panel: PanelId | null) => {
   if (g && panel && ITEM_BY_PANEL.has(panel)) lastInGroup[g.id] = panel;
 };
 
+/**
+ * Telas que só aparecem quando passam a fazer sentido. Antes disso ficam escondidas,
+ * em vez de mostrar "desperta no nível 11" para quem está no dia 2.
+ * `fresh` diz até quando a tela recém-aberta ganha o selo "novo".
+ */
+const UNLOCK: Partial<Record<PanelId, { open: (s: GameSave) => boolean; fresh: (s: GameSave) => boolean }>> = {
+  upgrades: { open: (s) => s.level >= 2, fresh: (s) => s.level <= 3 },
+  report: { open: (s) => s.day >= 2, fresh: (s) => s.day <= 3 },
+  season: { open: (s) => s.day >= 3, fresh: (s) => s.day <= 4 },
+  street: { open: (s) => s.level >= 3, fresh: (s) => s.level <= 4 },
+  grimoire: { open: (s) => s.level >= 8 || sealsAvailable(s) > 0, fresh: (s) => s.level <= 9 },
+};
+
+export const panelUnlocked = (s: GameSave | null, panel: PanelId): boolean => !s || (UNLOCK[panel]?.open(s) ?? true);
+
+/** Tela que acabou de abrir e ainda não foi visitada: ganha o selo "novo". */
+export const panelIsNew = (s: GameSave, panel: PanelId): boolean => {
+  const u = UNLOCK[panel];
+  return !!u && u.open(s) && u.fresh(s) && !s.tipsSeen.includes(`area:${panel}`);
+};
+
+/** As áreas só com as telas já abertas (a tela ativa sempre aparece). */
+export function visibleGroups(s: GameSave | null, active: PanelId | null = null): NavGroup[] {
+  return NAV_GROUPS.map((g) => ({ ...g, items: g.items.filter((i) => i.panel === active || panelUnlocked(s, i.panel)) }));
+}
+
+/** Versão em hook: só recalcula quando muda o conjunto de telas abertas. */
+export function useVisibleGroups(): NavGroup[] {
+  const key = useGameStore((st) => SHORTCUTS.map((i) => (panelUnlocked(st.save, i.panel) || st.ui.activePanel === i.panel ? '1' : '0')).join(''));
+  return cache.key === key ? cache.groups : (cache = { key, groups: NAV_GROUPS.map((g) => ({ ...g, items: g.items.filter((i) => key[SHORTCUTS.indexOf(i)] === '1') })) }).groups;
+}
+let cache: { key: string; groups: NavGroup[] } = { key: '', groups: NAV_GROUPS };
+
 /** Selos das abas: o que pede atenção em cada tela (número, "!" ou um ícone). */
 export function useBadges() {
   const customers = useGameStore((s) => s.save?.customers.length ?? 0);
@@ -93,8 +127,10 @@ export function useBadges() {
   const chest = useGameStore((s) => (s.save ? chestReady(s.save) : false));
   const fest = useGameStore((s) => s.save?.event === 'festa-estacao');
   // Caldeirão parado com a loja aberta: a aba avisa, para ninguém esquecer dele em outra tela.
+  const fresh = useGameStore((s) => (s.save ? SHORTCUTS.filter((i) => panelIsNew(s.save!, i.panel)).map((i) => i.panel).join(',') : ''));
   const idlePot = useGameStore((s) => !!s.save && s.save.phase === 'expediente' && !s.save.brew && s.save.tutorialStep >= 5);
   return (panel: PanelId): string | number | null => {
+    if (fresh && fresh.split(',').includes(panel)) return 'novo';
     switch (panel) {
       case 'counter': return customers > 0 ? customers : null;
       case 'production': return idlePot ? '!' : null;
