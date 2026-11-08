@@ -1,7 +1,7 @@
 // Maestria de receitas e Grimório do Mestre (meta-progressão do late game).
 // Só depende dos dados: economia, alquimia e clientes importam daqui os bônus.
 import { RECIPES } from '../data/recipes';
-import { TALENTS_BY_ID, talentCost } from '../data/talents';
+import { ENDLESS_TALENT_LEVEL, TALENTS_BY_ID, talentCost } from '../data/talents';
 import type { GameSave } from '../models/types';
 import { fail, type Draft } from './context';
 
@@ -57,6 +57,7 @@ export function learnTalent(d: Draft, talentId: string, sealsAvailable: number):
   if (!t) return false;
   const rank = talentRank(d.s, talentId);
   if (rank >= t.max) return fail(d, 'Este talento já está no grau máximo.');
+  if (t.endless && d.s.level < ENDLESS_TALENT_LEVEL) return fail(d, `Talentos sem fim abrem no nível ${ENDLESS_TALENT_LEVEL}.`);
   const cost = talentCost(rank);
   if (sealsAvailable < cost) return fail(d, `Faltam Selos de Mestre (precisa de ${cost}).`);
   d.s.talents[talentId] = rank + 1;

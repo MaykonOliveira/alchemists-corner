@@ -21,9 +21,10 @@ import { CATALOG_BY_ID } from '../domain/data/catalog';
 import { SEASON_FESTS } from '../domain/data/retention';
 import { seasonOf } from '../domain/rules/world';
 import { funnel } from '../analytics/funnel';
+import { ROYAL_CHAPTERS } from '../domain/data/royal';
 
 export type PanelId =
-  | 'ingredients' | 'production' | 'recipes' | 'orders' | 'report' | 'shelves' | 'counter' | 'door' | 'upgrades' | 'grimoire' | 'album' | 'street' | 'goals' | 'season';
+  | 'ingredients' | 'production' | 'recipes' | 'orders' | 'report' | 'shelves' | 'counter' | 'door' | 'upgrades' | 'grimoire' | 'album' | 'street' | 'goals' | 'season' | 'royal';
 
 export interface HoverInfo {
   id: string;
@@ -39,7 +40,7 @@ export interface Toast {
   tone: 'info' | 'ok' | 'warn' | 'gold';
 }
 
-export type ModalId = 'settings' | 'levelup' | 'share' | null;
+export type ModalId = 'settings' | 'levelup' | 'share' | 'royal' | null;
 
 export type UiCommand =
   | { type: 'OPEN_PANEL'; panel: PanelId }
@@ -295,6 +296,16 @@ export const useGameStore = create<StoreState>()(
           return toast(`⚔️ Desafio da semana ${e.week}: abra a loja quando quiser. Os clientes de hoje são os mesmos para todo mundo!`, 'gold');
         case 'CHALLENGE_DONE':
           return toast(`⚔️ Desafio da semana: ${e.score} pontos${e.best ? ' (seu recorde)' : ''}! Compartilhe o placar.`, 'gold');
+        case 'ROYAL_INVITE':
+          return toast('📯 Uma carta com o selo da Coroa chegou: o Concurso Real de Alquimia começou!', 'gold');
+        case 'ROYAL_PROGRESS':
+          return e.progress < e.goal ? toast(`👑 Concurso Real: ${e.progress}/${e.goal}`, 'ok') : undefined;
+        case 'ROYAL_STREAK_LOST':
+          return toast('👑 Um nobre foi embora: a sequência do baile recomeçou.', 'warn');
+        case 'ROYAL_RETRY':
+          return toast(`👑 O prazo de “${ROYAL_CHAPTERS[e.chapter].title}” venceu. A Rainha deu mais tempo, e o que você entregou continua valendo.`, 'warn');
+        case 'RECORD':
+          return e.kind === 'bestSale' ? toast(`🏅 Recorde pessoal: venda de ${e.value} moedas!`, 'gold') : undefined;
         default:
           return;
       }

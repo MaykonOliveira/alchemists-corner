@@ -1,7 +1,7 @@
 import { RECIPES_BY_ID } from '../../domain/data/recipes';
 import { UPGRADES } from '../../domain/data/upgrades';
 import type { GameSave, ShopUpgrade } from '../../domain/models/types';
-import { APPRENTICE, apprenticePlan, GOLEM, helperActive, RAVEN } from '../../domain/rules/helpers';
+import { APPRENTICE, apprenticePlan, GOLEM, golemDelayMs, helperActive, RAVEN } from '../../domain/rules/helpers';
 import { useGameStore } from '../../store/gameStore';
 import { SpriteIcon } from '../../ui/SpriteIcon';
 import { Coins } from '../../ui/widgets';
@@ -25,7 +25,7 @@ function helperStatus(save: GameSave, id: string): string {
   }
   if (id === GOLEM) {
     if (save.phase !== 'expediente') return 'Esperando a loja abrir.';
-    return `Atende quem espera há mais de 4s. Hoje: ${plural(w.served, 'venda', 'vendas')}.`;
+    return `Atende quem espera há mais de ${Math.round(golemDelayMs(save) / 100) / 10}s. Hoje: ${plural(w.served, 'venda', 'vendas')}.`;
   }
   return '';
 }
@@ -43,6 +43,7 @@ function UpgradeCard({ save, u }: { save: GameSave; u: ShopUpgrade }) {
     <li className={`card ${locked ? 'card-locked' : ''} ${owned ? 'card-owned' : ''} ${helper ? 'card-helper' : ''} ${expansion ? 'card-expansion' : ''}`}>
       <div className="card-head">
         {helper && <SpriteIcon name={`helper-${u.id}`} size={32} muted={locked} />}
+        {u.category === 'treino' && u.requires && <SpriteIcon name={`helper-${u.requires}`} size={32} muted={locked} />}
         <span className="row-title">{u.name}</span>
         <span className={`tag ${u.category === 'visual' || expansion ? 'tag-gold' : ''} ${helper ? 'tag-helper' : ''}`}>{expansion ? 'expansão' : u.category}</span>
       </div>
@@ -76,7 +77,9 @@ function UpgradeCard({ save, u }: { save: GameSave; u: ShopUpgrade }) {
 export function UpgradesPanel({ save }: { save: GameSave }) {
   const helpers = UPGRADES.filter((u) => u.category === 'ajudante');
   const expansions = UPGRADES.filter((u) => u.category === 'expansao');
-  const others = UPGRADES.filter((u) => u.category !== 'ajudante' && u.category !== 'expansao');
+  const training = UPGRADES.filter((u) => u.category === 'treino');
+  const others = UPGRADES.filter((u) => u.category !== 'ajudante' && u.category !== 'expansao' && u.category !== 'treino');
+  const showTraining = save.level >= 13 || training.some((u) => save.upgrades.includes(u.id));
   return (
     <>
       <p className="panel-lead">Reinvista o lucro. Cada melhoria aparece na loja.</p>
@@ -85,6 +88,15 @@ export function UpgradesPanel({ save }: { save: GameSave }) {
       <ul className="list">
         {helpers.map((u) => <UpgradeCard key={u.id} save={save} u={u} />)}
       </ul>
+      {showTraining && (
+        <>
+          <h3 className="mini-title">🎓 Treino da equipe</h3>
+          <p className="card-text small muted">Cada ajudante pode evoluir uma vez, no nível máximo da loja.</p>
+          <ul className="list">
+            {training.map((u) => <UpgradeCard key={u.id} save={save} u={u} />)}
+          </ul>
+        </>
+      )}
       <h3 className="mini-title">🏰 Expansão da loja</h3>
       <p className="card-text small muted">Obras grandes, em etapas: cada uma abre a próxima. A loja cresce de verdade na tela.</p>
       <ol className="list expansion-track">

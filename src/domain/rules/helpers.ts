@@ -86,20 +86,33 @@ export function ravenShoppingList(s: GameSave): { ingredientId: string; qty: num
   return items;
 }
 
+/** Treino da equipe (pacote X): versões evoluídas dos ajudantes. */
+export const FAST_RAVEN = 'corvo-veloz';
+export const DEDICATED_APPRENTICE = 'aprendiz-dedicado';
+export const POLISHED_GOLEM = 'golem-polido';
+
+const ravenFee = (s: GameSave) => (has(s, FAST_RAVEN) ? 0 : RAVEN_FEE);
+const apprenticeTarget = (s: GameSave) => (has(s, DEDICATED_APPRENTICE) ? 10 : APPRENTICE_TARGET);
+const apprenticeMaxBatches = (s: GameSave) => (has(s, DEDICATED_APPRENTICE) ? 5 : APPRENTICE_MAX_BATCHES);
+/** Espera mínima do cliente antes de o golem atender (o golem polido é mais rápido). */
+export const golemDelayMs = (s: GameSave) => (has(s, POLISHED_GOLEM) ? 2_500 : GOLEM_DELAY_MS);
+const golemCooldownMs = (s: GameSave) => (has(s, POLISHED_GOLEM) ? 1_200 : GOLEM_COOLDOWN_MS);
+
 function runRaven(d: Draft, ms: number) {
   const s = d.s;
   s.helpers.ravenInMs -= ms;
   if (s.helpers.ravenInMs > 0) return;
-  s.helpers.ravenInMs = RAVEN_INTERVAL_MS;
+  s.helpers.ravenInMs = has(s, FAST_RAVEN) ? RAVEN_INTERVAL_MS / 2 : RAVEN_INTERVAL_MS;
   const items = ravenShoppingList(s);
   if (!items.length) return;
   let cost = 0;
+  const fee = ravenFee(s);
   for (const it of items) cost += applyPurchase(s, it.ingredientId, it.qty);
-  s.coins -= RAVEN_FEE;
-  s.stats.ingredientCost += RAVEN_FEE;
+  s.coins -= fee;
+  s.stats.ingredientCost += fee;
   s.stats.helperWork.deliveries += 1;
   s.stats.helperWork.delivered += items.reduce((n, it) => n + it.qty, 0);
-  d.events.push({ type: 'RAVEN_DELIVERY', items, cost: cost + RAVEN_FEE, fee: RAVEN_FEE });
+  d.events.push({ type: 'RAVEN_DELIVERY', items, cost: cost + fee, fee });
 }
 
 // ----------------------------------------------------------------- aprendiz
@@ -110,7 +123,7 @@ export function apprenticePlan(s: GameSave): { recipeId: string; batches: number
   const order = s.order;
   const plans = s.knownRecipes
     .map((id) => {
-      const target = order?.recipeId === id ? Math.max(APPRENTICE_TARGET, order.qty + 2) : APPRENTICE_TARGET;
+      const target = order?.recipeId === id ? Math.max(apprenticeTarget(s), order.qty + 2) : apprenticeTarget(s);
       return { id, target, stock: potionStock(s, id), max: maxBatches(s, id), priority: order?.recipeId === id && potionStock(s, id) < order.qty };
     })
     .filter((p) => p.stock < p.target && p.max > 0)
@@ -120,7 +133,7 @@ export function apprenticePlan(s: GameSave): { recipeId: string; batches: number
       RECIPES_BY_ID[b.id].basePrice - RECIPES_BY_ID[a.id].basePrice);
   const p = plans[0];
   if (!p) return null;
-  const batches = Math.min(p.max, APPRENTICE_MAX_BATCHES, Math.ceil((p.target - p.stock) / potionsPerBatch(s)));
+  const batches = Math.min(p.max, apprenticeMaxBatches(s), Math.ceil((p.target - p.stock) / potionsPerBatch(s)));
   return { recipeId: p.id, batches };
 }
 
@@ -150,7 +163,7 @@ function runGolem(d: Draft, ms: number) {
   s.helpers.golemInMs = Math.max(0, s.helpers.golemInMs - ms);
   if (s.helpers.golemInMs > 0 || s.phase !== 'expediente') return;
   for (const c of s.customers) {
-    if (c.waitedMs < GOLEM_DELAY_MS) continue;
+    if (c.waitedMs < golemDelayMs(s)) continue;
     const from = d.events.length;
     if (c.offer) {
       acceptOffer(d, c.id);
@@ -160,7 +173,7 @@ function runGolem(d: Draft, ms: number) {
         if (c.waitedMs < c.patienceMs * GOLEM_DISMISS_AT) continue;
         dismissCustomer(d, c.id);
         d.events.push({ type: 'GOLEM_DISMISSED', customerId: c.id });
-        s.helpers.golemInMs = GOLEM_COOLDOWN_MS;
+        s.helpers.golemInMs = golemCooldownMs(s);
         return;
       }
       serveCustomer(d, c.id, recipeId);
@@ -169,7 +182,7 @@ function runGolem(d: Draft, ms: number) {
     const sold = d.events.slice(from).filter((e) => e.type === 'SALE');
     for (const e of sold) if (e.type === 'SALE') e.by = 'golem';
     s.stats.helperWork.served += sold.length;
-    s.helpers.golemInMs = GOLEM_COOLDOWN_MS;
+    s.helpers.golemInMs = golemCooldownMs(s);
     return;
   }
 }

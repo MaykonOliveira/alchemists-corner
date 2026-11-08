@@ -78,6 +78,12 @@ export const RECIPES: Recipe[] = [
     durationMin: 120, basePrice: 68, unlockLevel: 5,
     need: 'Luz e alegria no inverno', customerProfile: 'Viajantes e nobres, só no inverno',
     hint: 'Uma flor que brilha sob a neve, algo que brilha nas cavernas e pó para firmar.' },
+  // Receita secreta do Concurso Real (pacote T): entra no livro na grande final.
+  { id: 'pocao-coroa', shortName: 'Coroa', request: 'Dizem que você serviu a própria Rainha. Tem a Poção da Coroa?', name: 'Poção da Coroa', category: 'utilidade', color: '#f2c95c', secret: true,
+    ingredients: [{ ingredientId: 'pena-fenix', qty: 1 }, { ingredientId: 'areia-estelar', qty: 1 }, { ingredientId: 'pluma-grifo', qty: 1 }],
+    durationMin: 200, basePrice: 320, unlockLevel: 99,
+    need: 'O brilho da realeza', customerProfile: 'Nobres, depois do Concurso Real',
+    hint: 'Só quem chega à final do Concurso Real conhece esta receita.' },
 ];
 
 export const RECIPES_BY_ID: Record<string, Recipe> = Object.fromEntries(RECIPES.map((r) => [r.id, r]));

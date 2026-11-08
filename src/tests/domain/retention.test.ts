@@ -9,6 +9,7 @@ import { levelFromXp, xpForLevel } from '../../domain/rules/progression';
 import { AWAY_MAX_MS, DEBUT_AT, dateKey, tomorrowPreview, trackPeriod } from '../../domain/rules/retention';
 import { challengeScore } from '../../domain/rules/social';
 import { OPEN_MIN } from '../../domain/rules/time';
+import { SAVE_VERSION } from '../../domain/models/types';
 import { migrateSave } from '../../persistence/migrations';
 
 const T0 = new Date(2026, 10, 8, 10, 0).getTime();
@@ -231,7 +232,7 @@ describe('save v9', () => {
     const old = { ...createNewGame(T0), saveVersion: 8, tutorialStep: 3 } as Record<string, unknown>;
     for (const k of ['shopName', 'awning', 'debutDone', 'letter', 'visits', 'crystals', 'owned', 'decor', 'track', 'challenge']) delete old[k];
     const s = migrateSave(old)!;
-    expect(s.saveVersion).toBe(9);
+    expect(s.saveVersion).toBe(SAVE_VERSION);
     expect(s.debutDone).toBe(true);
     expect(s.tutorialStep).toBe(99);
     expect(s.shopName).toBe('Loja da Esquina');

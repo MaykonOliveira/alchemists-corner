@@ -11,7 +11,10 @@ import { availableRegulars, befriend, REGULAR_CHANCE, seasonCategory } from './w
 import { SEASON_PRICE_BONUS } from '../data/world';
 import { eventCategoryFactor, inSeason, seasonalRecipe } from './street';
 import { letterVisitor, maybeSpawnVip, onVipServed } from './retention';
+import { noteSale } from './records';
 import { REGULARS_BY_ID } from '../data/world';
+import { BALL_NOBLE_BOOST } from '../data/royal';
+import { royalChapter, royalOnLost, royalOnSale, royalWon } from './royal';
 
 export const MAX_CUSTOMERS = 3;
 /** Clientes que cabem no balcão (o balcão duplo abre espaço para mais um). */
@@ -22,7 +25,7 @@ export const NEGOTIATION_MARGIN = 1.2;
 export function nextSpawnDelay(s: GameSave, random: () => number) {
   const event = s.event ? DAY_EVENTS[s.event].spawnFactor : 1;
   const sign = (has(s, 'letreiro-novo') ? 0.75 : 1) * (has(s, 'sino-encantado') ? 0.9 : 1) * (has(s, 'balcao-duplo') ? 0.9 : 1);
-  const fame = (1 + Math.min(s.reputation, 400) / 800) * (1 + talentBonus(s, 'fama'));
+  const fame = (1 + Math.min(s.reputation, 400) / 800) * (1 + talentBonus(s, 'fama')) * (1 + talentBonus(s, 'renome'));
   return Math.round((16000 * event * sign) / fame * (0.7 + random() * 0.6));
 }
 
@@ -54,12 +57,15 @@ export function spawnCustomer(d: Draft) {
   const noble = s.level >= NOBLE_LEVEL ? 0.6 + (has(s, 'vitral-arcano') ? 0.4 : 0) : 0;
   const weights = { aventureiro: 1, estudioso: 1, morador: 1.2, viajante: 0.8, nobre: noble } as Record<CustomerArchetype, number>;
   if (s.event) for (const [k, w] of Object.entries(DAY_EVENTS[s.event].archetypeBoost)) weights[k as CustomerArchetype] += w;
+  // No baile da nobreza (Concurso Real) a rua se enche de nobres.
+  if (royalChapter(s)?.goal.kind === 'nobres') weights.nobre += BALL_NOBLE_BOOST;
   if (s.level < NOBLE_LEVEL) weights.nobre = 0;
   const archetype = weightedPick(weights, ctx.random);
   const info = ARCHETYPES[archetype];
   // Ninguém pede o que só aparece muitos níveis depois.
   // Poções da estação só são pedidas na estação delas.
-  const wants = info.wants.filter((id) => RECIPES_BY_ID[id].unlockLevel <= s.level + 1 && inSeason(s, RECIPES_BY_ID[id]));
+  // A Poção da Coroa só vira pedido depois do Concurso Real.
+  const wants = info.wants.filter((id) => (RECIPES_BY_ID[id].secret ? royalWon(s) : RECIPES_BY_ID[id].unlockLevel <= s.level + 1) && inSeason(s, RECIPES_BY_ID[id]));
 
   // O primeiro cliente do jogo sempre pede algo que você tem, para ensinar a vender.
   const firstEver = s.day === 1 && s.stats.served === 0 && s.stats.lost === 0 && s.customers.length === 0;
@@ -101,7 +107,7 @@ export function maxPriceFor(s: GameSave, c: Customer, recipeId: string) {
   const substitute = recipeId !== c.wantedRecipeId;
   const fame = 1 + Math.min(s.reputation, 240) / 800;
   const decor = (has(s, 'prateleira-extra') ? 1.03 : 1) * (has(s, 'iluminacao-aconchegante') ? 1.04 : 1) * (has(s, 'vitral-arcano') ? 1.05 : 1) * (has(s, 'torre-alquimista') ? 1.08 : 1);
-  const skill = (1 + masteryStars(s, recipeId) * STAR_BONUS) * (1 + talentBonus(s, 'labia'));
+  const skill = (1 + masteryStars(s, recipeId) * STAR_BONUS) * (1 + talentBonus(s, 'labia')) * (1 + talentBonus(s, 'toque-de-ouro'));
   const season = r.category === seasonCategory(s) ? SEASON_PRICE_BONUS : 1;
   const event = eventCategoryFactor(s, recipeId);
   return Math.round(r.basePrice * c.budgetFactor * fame * decor * skill * season * event * (substitute ? 0.9 : 1));
@@ -154,6 +160,7 @@ function removeCustomer(d: Draft, c: Customer, reason: 'paciencia' | 'preco' | '
     d.s.stats.lost += 1;
     const lost = d.s.stats.lostByRecipe ?? {};
     d.s.stats.lostByRecipe = { ...lost, [c.wantedRecipeId]: (lost[c.wantedRecipeId] ?? 0) + 1 };
+    royalOnLost(d, c);
   }
 }
 
@@ -170,6 +177,8 @@ function completeSale(d: Draft, c: Customer, recipeId: string, price: number) {
   gainReputation(d, fair + cozy);
   s.lifetime = { sold: s.lifetime.sold + 1, earned: s.lifetime.earned + price };
   d.events.push({ type: 'SALE', customerId: c.id, recipeId, price, substitute: recipeId !== c.wantedRecipeId });
+  noteSale(d, price);
+  royalOnSale(d, c, recipeId);
   const tip = befriend(d, c, recipeId, price);
   if (tip) s.lifetime = { ...s.lifetime, earned: s.lifetime.earned + tip };
   removeCustomer(d, c, 'atendido');

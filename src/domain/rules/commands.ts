@@ -16,6 +16,7 @@ import { buyDecor, placeDecor } from './entitlements';
 import { claimVisitGift, rewardFromEvents, sessionStart } from './retention';
 import { challengeContext, redeemGift, sendGift, startChallenge, type GiftPayload } from './social';
 import { AWNINGS } from '../data/catalog';
+import { checkRoyalInvite, deliverRoyal, seeRoyal } from './royal';
 
 /**
  * Comandos tipados que alteram o estado canônico da partida.
@@ -61,7 +62,9 @@ export type DomainCommand =
   | { type: 'PLACE_DECOR'; itemId: string }
   | { type: 'SEND_GIFT' }
   | { type: 'REDEEM_GIFT'; gift: GiftPayload }
-  | { type: 'START_CHALLENGE' };
+  | { type: 'START_CHALLENGE' }
+  | { type: 'DELIVER_ROYAL' }
+  | { type: 'SEE_ROYAL' };
 
 export interface CommandResult {
   save: GameSave;
@@ -78,6 +81,7 @@ export function applyCommand(save: GameSave, cmd: DomainCommand, ctx: RuleContex
   const changed = run(d, cmd);
   if (!changed) return { save, events: d.events };
   trackGoals(d, 0);
+  checkRoyalInvite(d);
   checkAchievements(d);
   rewardFromEvents(d, [...d.events]);
   d.s.updatedAt = ctx.now;
@@ -152,5 +156,7 @@ function run(d: Draft, cmd: DomainCommand): boolean {
     case 'SEND_GIFT': return sendGift(d);
     case 'REDEEM_GIFT': return redeemGift(d, cmd.gift);
     case 'START_CHALLENGE': return startChallenge(d);
+    case 'DELIVER_ROYAL': return deliverRoyal(d);
+    case 'SEE_ROYAL': return seeRoyal(d);
   }
 }

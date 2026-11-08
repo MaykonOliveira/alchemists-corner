@@ -1,7 +1,7 @@
 import { RECIPES } from '../data/recipes';
 import type { GameSave } from '../models/types';
 import { fail, type Draft } from './context';
-import { learnTalent, masteredRecipes, sealsSpent } from './mastery';
+import { learnTalent, masteredRecipes, sealsSpent, talentBonus } from './mastery';
 import { LEVEL_GIFTS } from '../data/retention';
 import { addIngredients } from './street';
 import { restockUnlocked } from './economy';
@@ -79,7 +79,7 @@ export function unlockRecipesUpTo(s: GameSave, level: number): string[] {
 export function gainXp(d: Draft, amount: number) {
   const s = d.s;
   const rankBefore = masterRank(s.xp);
-  s.xp += Math.max(0, Math.round(amount));
+  s.xp += Math.max(0, Math.round(amount * (1 + talentBonus(s, 'sabedoria'))));
   const newLevel = levelFromXp(s.xp);
   while (s.level < newLevel) {
     s.level += 1;

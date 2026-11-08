@@ -1,4 +1,5 @@
 // Fase 3: primeiros minutos (pacote I), voltar amanhã (pacote J) e trilha da temporada (pacote K).
+import { ROYAL_CHAPTERS } from '../data/royal';
 import { ARCHETYPES } from '../data/customers';
 import { DAY_EVENTS } from '../data/orders';
 import { RECIPES, RECIPES_BY_ID } from '../data/recipes';
@@ -166,6 +167,11 @@ export function tomorrowPreview(s: GameSave): PreviewLine[] {
   }
   if (s.expedition?.returnDay === day) out.push({ icon: '🐦‍⬛', text: 'O corvo volta da expedição com ingredientes raros.' });
   if (s.contract?.accepted && s.contract.dueDay === day) out.push({ icon: '📜', text: `Último dia do contrato de ${s.contract.client}.`, tone: 'warn' });
+  const royal = s.royal && s.royal.chapter < ROYAL_CHAPTERS.length ? ROYAL_CHAPTERS[s.royal.chapter] : null;
+  if (royal && s.royal!.seen >= s.royal!.chapter) {
+    const last = s.royal!.dueDay === day;
+    out.push({ icon: '👑', text: `Concurso Real: ${royal.title}${last ? ' (último dia do prazo!)' : ''}. ${royal.task}`, tone: last ? 'warn' : 'gold' });
+  }
   if (s.order && s.order.dueDay === day) out.push({ icon: '📌', text: `O pedido de ${s.order.client} vence amanhã.`, tone: 'warn' });
   if (s.rival.week === weekOf(s.day) && weekOf(day) === weekOf(s.day) && (day - 1) % 7 === 6 && s.level >= 4 && s.day >= 8) {
     out.push({ icon: '⚔️', text: 'Último dia da disputa da semana com a Madame Vesper.' });

@@ -1,5 +1,5 @@
 import { RECIPES, RECIPES_BY_ID } from '../../domain/data/recipes';
-import { TALENTS, talentCost } from '../../domain/data/talents';
+import { ENDLESS_TALENT_LEVEL, TALENTS, talentCost } from '../../domain/data/talents';
 import type { GameSave } from '../../domain/models/types';
 import {
   MASTERY_STEPS, MAX_STARS, masteredRecipes, masteryCount, masteryProgress, masteryStars, talentRank,
@@ -60,7 +60,7 @@ export function GrimoirePanel({ save }: { save: GameSave }) {
 
       <h3 className="mini-title">Talentos</h3>
       <ul className="list">
-        {TALENTS.map((t) => {
+        {TALENTS.filter((t) => !t.endless).map((t) => {
           const r = talentRank(save, t.id);
           const maxed = r >= t.max;
           const cost = talentCost(r);
@@ -79,6 +79,34 @@ export function GrimoirePanel({ save }: { save: GameSave }) {
                 {maxed ? (
                   <span className="tag tag-ok">completo ✓</span>
                 ) : (
+                  <button className="btn btn-small btn-primary" disabled={free < cost} onClick={() => dispatch({ type: 'LEARN_TALENT', talentId: t.id })}>
+                    {free >= cost ? 'Aprender' : `Faltam ${cost - free}`}
+                  </button>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+
+      <h3 className="mini-title">Talentos sem fim</h3>
+      <p className="card-text small muted">Sem grau máximo: cada grau custa um Selo a mais que o anterior. {save.level < ENDLESS_TALENT_LEVEL ? `Abrem no nível ${ENDLESS_TALENT_LEVEL}.` : 'Seus Selos nunca ficam parados.'}</p>
+      <ul className="list">
+        {TALENTS.filter((t) => t.endless).map((t) => {
+          const r = talentRank(save, t.id);
+          const cost = talentCost(r);
+          const locked = save.level < ENDLESS_TALENT_LEVEL;
+          return (
+            <li key={t.id} className={`card talent talent-endless ${locked ? 'card-locked' : ''}`}>
+              <div className="card-head">
+                <span className="talent-icon" aria-hidden>{t.icon}</span>
+                <span className="row-title">{t.name}</span>
+                <span className="tag tag-gold">grau {r}</span>
+              </div>
+              <p className="card-text small">{t.perRank} <span className="muted">(por grau; agora {Math.round(r * t.value * 100)}%)</span></p>
+              <div className="card-foot">
+                <span className="muted small">Próximo grau: {cost} selo{cost > 1 ? 's' : ''}</span>
+                {locked ? <span className="tag">nível {ENDLESS_TALENT_LEVEL}</span> : (
                   <button className="btn btn-small btn-primary" disabled={free < cost} onClick={() => dispatch({ type: 'LEARN_TALENT', talentId: t.id })}>
                     {free >= cost ? 'Aprender' : `Faltam ${cost - free}`}
                   </button>

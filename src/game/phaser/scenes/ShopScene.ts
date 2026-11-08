@@ -7,7 +7,7 @@ import { autoFast, useGameStore } from '../../../store/gameStore';
 import { seasonOf } from '../../../domain/rules/world';
 import { gameEvents } from '../../events';
 import { outlinedText } from '../art/painter';
-import { DECOR_POS, EXPANSION, GARLAND_BULBS, LANTERNS, LATEGAME, SHELF_BOARDS } from '../art/sprites';
+import { DECOR_POS, EXPANSION, GARLAND_BULBS, LANTERNS, LATEGAME, ROYAL_POS, SHELF_BOARDS } from '../art/sprites';
 import { decorAt } from '../../../domain/rules/entitlements';
 import { CatView } from '../entities/Cat';
 import { HelperViews } from '../entities/Helpers';
@@ -68,6 +68,7 @@ export class ShopScene extends Phaser.Scene {
   private upgradeLayer: Phaser.GameObjects.GameObject[] = [];
   private decorLayer: Phaser.GameObjects.GameObject[] = [];
   private decorGlows: Phaser.GameObjects.Image[] = [];
+  private royalLayer: Phaser.GameObjects.GameObject[] = [];
   private helpers!: HelperViews;
   private cat!: CatView;
   private advanceAcc = 0;
@@ -111,6 +112,7 @@ export class ShopScene extends Phaser.Scene {
     this.cat = new CatView(this, this.reduceMotion);
     this.renderUpgrades(save);
     this.renderDecor(save);
+    this.renderRoyal(save);
     this.renderShelves(save);
     this.applyPhase(save);
     this.applyLight(save.clockMin);
@@ -128,6 +130,8 @@ export class ShopScene extends Phaser.Scene {
       sub((s) => s.save?.upgrades, () => this.store.save && this.renderUpgrades(this.store.save)),
       sub((s) => s.save?.order, (o) => this.badge.setVisible(!!o)),
       sub((s) => s.save?.decor, () => this.store.save && this.renderDecor(this.store.save)),
+      sub((s) => s.save?.royal?.chapter, () => this.store.save && this.renderRoyal(this.store.save)),
+      sub((s) => s.save?.upgrades.includes('letreiro-novo'), () => this.store.save && this.renderRoyal(this.store.save)),
       sub((s) => s.save?.event, () => this.store.save && this.renderDecor(this.store.save)),
       sub(
         (s) => s.save?.customers,
@@ -493,6 +497,29 @@ export class ShopScene extends Phaser.Scene {
     }
   }
 
+  // -------------------------------------------------------------- Concurso Real
+
+  /** Troféus do Concurso Real na estante embaixo do quadro, e a coroa na fachada para quem venceu. */
+  private renderRoyal(save: GameSave) {
+    this.royalLayer.forEach((o) => o.destroy());
+    this.royalLayer = [];
+    const won = Math.min(5, save.royal?.chapter ?? 0);
+    if (!save.royal) return;
+    const p = ROYAL_POS['trophy-shelf'];
+    this.royalLayer.push(this.add.image(p.x, p.y, 'trophy-shelf').setOrigin(0).setDepth(30));
+    for (let i = 0; i < won; i++) {
+      this.royalLayer.push(this.add.image(p.x + 2 + i * 8, p.y + 1, `trophy-${i}`).setOrigin(0, 1).setDepth(31));
+    }
+    if (won >= 5) {
+      // Placa nova: a coroa vai em cima dela; sem placa, fica sobre a porta.
+      const y = save.upgrades.includes('letreiro-novo') ? 1 : 20;
+      const c = this.add.image(321, y, 'crown').setOrigin(0.5, 0).setDepth(118);
+      const glow = this.add.image(321, y + 4, 'glow-warm').setDepth(1002).setBlendMode(Phaser.BlendModes.ADD).setScale(0.6).setAlpha(0.7);
+      this.royalLayer.push(c, glow);
+      if (!this.reduceMotion()) this.tweens.add({ targets: c, y: y - 1, yoyo: true, repeat: -1, duration: 900, ease: 'Sine.InOut' });
+    }
+  }
+
   // -------------------------------------------------------------- decoração
 
   /** Decoração escolhida pelo jogador (fase 3) e bandeirinhas na festa da estação. */
@@ -634,6 +661,13 @@ export class ShopScene extends Phaser.Scene {
         this.sparkleBurst(c.cx, c.y + 6, 10);
         return this.brewDoneFx(e.recipeId, e.qty, c.cx, c.y);
       }
+      case 'ROYAL_CHAPTER_DONE': {
+        const p = ROYAL_POS['trophy-shelf'];
+        this.sparkleBurst(p.x + 5 + e.chapter * 8, p.y - 4, 18);
+        return this.coinPopup(256, 60, e.coins);
+      }
+      case 'ROYAL_WON':
+        return this.sparkleBurst(321, 12, 28);
       case 'UPGRADE_BOUGHT':
       case 'LEVEL_UP':
       case 'DISCOVERY':

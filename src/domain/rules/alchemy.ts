@@ -108,7 +108,7 @@ export function experiment(d: Draft, ingredientIds: string[]): boolean {
   if (ids.some((id) => !INGREDIENTS_BY_ID[id] || (s.ingredients[id] ?? 0) < 1)) return fail(d, 'Você precisa de 1 unidade de cada ingrediente.');
 
   const key = [...ids].sort().join('|');
-  const match = RECIPES.find((r) => r.ingredients.map((i) => i.ingredientId).sort().join('|') === key);
+  const match = RECIPES.find((r) => !r.secret && r.ingredients.map((i) => i.ingredientId).sort().join('|') === key);
 
   if (match && !s.knownRecipes.includes(match.id)) {
     for (const id of ids) s.ingredients[id] -= 1;
@@ -122,7 +122,7 @@ export function experiment(d: Draft, ingredientIds: string[]): boolean {
   // Erro: consome apenas o primeiro ingrediente e revela uma pista concreta.
   s.ingredients[ids[0]] -= 1;
   s.researchPoints += 1;
-  const unknown = RECIPES.filter((r) => !s.knownRecipes.includes(r.id));
+  const unknown = RECIPES.filter((r) => !r.secret && !s.knownRecipes.includes(r.id));
   let hint: string;
   if (match) hint = `Você já conhece essa mistura: ${match.name}.`;
   else if (unknown.length === 0) hint = 'Você já descobriu todas as receitas do livro!';

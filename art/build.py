@@ -15,6 +15,7 @@ import cat as CAT
 import seasonal as SE  # registra poções e ingredientes da estação em items.py
 import story as ST
 import decor as DE
+import royal as RO  # registra a Poção da Coroa em items.py
 from room import draw_room
 from customers import customer_sheet, LOOKS, FW, FH, FRAMES
 
@@ -96,6 +97,8 @@ def main():
         shop[f'{k}-outline'] = outline_mask(cv)
     # Decoração da loja (fase 3)
     shop.update(DE.frames())
+    # Concurso Real (fase 4)
+    shop.update(RO.frames())
     for k in ('cauldron-2', 'counter-wing'):
         shop[f'{k}-outline'] = outline_mask(shop[k])
     for rid in I.LIQ:
@@ -113,6 +116,7 @@ def main():
     icons.update({f'ingredient-{i}': I.ingredient_icon(i) for i in I.INGREDIENTS})
     icons.update({f'helper-{h}': H.portrait(h) for h in ('corvo-entregador', 'aprendiz', 'golem-balconista')})
     icons['rival-vesper'] = SE.rival_portrait()
+    icons.update({f'trophy-{i}': RO.trophy_icon(i) for i in range(5)})
     cols = 8
     grid = Canvas(16 * cols, 16 * ((len(icons) + cols - 1) // cols))
     index = {}
@@ -129,7 +133,8 @@ def main():
               'shelfBoards': O.SHELF_BOARDS, 'customer': {'w': FW, 'h': FH, 'frames': FRAMES},
               'lategame': {k: {'x': x, 'y': y} for k, (x, y) in L.POS.items()},
               'expansion': {k: {'x': x, 'y': y} for k, (x, y) in X.POS.items()},
-              'decor': {k: {'x': x, 'y': y} for k, (x, y) in DE.POS.items()}}
+              'decor': {k: {'x': x, 'y': y} for k, (x, y) in DE.POS.items()},
+              'royal': {k: {'x': x, 'y': y} for k, (x, y) in RO.POS.items()}}
     with open(os.path.join(OUT, 'layout.json'), 'w') as fh:
         json.dump(layout, fh, indent=1)
     # Quadros da história de abertura (pacote G).

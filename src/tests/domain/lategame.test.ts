@@ -42,7 +42,7 @@ describe('conteúdo do late game', () => {
       const upgrade = UPGRADES.some((u) => u.requiredLevel === lvl);
       expect(recipe || upgrade || lvl === 11 || lvl === 13 || lvl === 15).toBe(true);
     }
-    expect(RECIPES.filter((r) => !r.season).length).toBe(11);
+    expect(RECIPES.filter((r) => !r.season && !r.secret).length).toBe(11);
   });
 
   it('cada receita tem uma combinação única de ingredientes (a bancada de experimentos funciona)', () => {

@@ -94,6 +94,8 @@ export function createNewGame(now: number = Date.now()): GameSave {
     talents: {},
     sealsBought: 0,
     festivalSponsored: false,
+    royal: null,
+    records: { revenue: 0, served: 0, bestSale: 0 },
     tutorialStep: 0,
     seq: 0,
     settings: { volume: 0.7, muted: false, music: true, reduceMotion: false, musicVolume: 0.6, sfxVolume: 0.8, ambienceVolume: 0.5, vibration: true, reminders: false },

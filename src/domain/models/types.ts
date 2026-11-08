@@ -49,6 +49,8 @@ export interface Recipe {
   color: string;
   /** Poção da estação: só é procurada nela (e só se prepara com o ingrediente dela). */
   season?: SeasonId;
+  /** Receita secreta: não libera por nível nem por experimento (a Poção da Coroa do Concurso Real). */
+  secret?: boolean;
 }
 
 export interface PotionStack {
@@ -91,7 +93,7 @@ export interface ShopUpgrade {
   name: string;
   cost: number;
   effect: string;
-  category: 'funcional' | 'visual' | 'ajudante' | 'expansao';
+  category: 'funcional' | 'visual' | 'ajudante' | 'expansao' | 'treino';
   requiredLevel: number;
   /** Melhoria que precisa ser comprada antes (etapas da expansão). */
   requires?: string;
@@ -204,6 +206,33 @@ export interface DayReport {
   rival?: { me: number; her: number; result: 'win' | 'loss' | null };
   /** O que os clientes que foram embora queriam (receita → quantos). */
   lostByRecipe?: Record<string, number>;
+  /** Recordes pessoais batidos neste dia. */
+  records?: RecordKind[];
+}
+
+/** Concurso Real de Alquimia (fase 4): campanha em 5 capítulos que abre no nível máximo. */
+export interface RoyalState {
+  /** Capítulo atual (0 a 4). 5 = concurso vencido. */
+  chapter: number;
+  /** Progresso do capítulo: vendas da categoria ou nobres atendidos em sequência. */
+  progress: number;
+  /** Poções já entregues neste capítulo, por receita. */
+  delivered: Record<string, number>;
+  /** Último dia para cumprir o capítulo (0 = sem prazo). */
+  dueDay: number;
+  /** Último capítulo cuja cena de abertura já foi vista (-1 = nenhum; 5 = a cerimônia final). */
+  seen: number;
+  /** Tentativas que venceram o prazo neste capítulo. */
+  retries: number;
+}
+
+export type RecordKind = 'revenue' | 'served' | 'bestSale';
+
+/** Recordes pessoais da loja. */
+export interface Records {
+  revenue: number;
+  served: number;
+  bestSale: number;
 }
 
 /** Disputa semanal de vendas com a Madame Vesper, a alquimista do outro lado da rua. */
@@ -313,7 +342,7 @@ export interface ChallengeState {
   score: number | null;
 }
 
-export const SAVE_VERSION = 9 as const;
+export const SAVE_VERSION = 10 as const;
 
 export interface GameSave {
   saveVersion: typeof SAVE_VERSION;
@@ -416,6 +445,10 @@ export interface GameSave {
   challenge: ChallengeState | null;
   /** Melhor pontuação no desafio, por semana. */
   challengeBest: { week: number; score: number } | null;
+  /** Concurso Real (null antes do nível máximo). */
+  royal: RoyalState | null;
+  /** Recordes pessoais (dia de maior faturamento, mais clientes, maior venda). */
+  records: Records;
   tutorialStep: number;
   seq: number;
   settings: Settings;
@@ -478,4 +511,11 @@ export type GameEvent =
   | { type: 'GIFT_REDEEMED'; from: string; crystals: number; items: { ingredientId: string; qty: number }[] }
   | { type: 'CHALLENGE_STARTED'; week: number }
   | { type: 'CHALLENGE_DONE'; week: number; score: number; best: boolean }
+  | { type: 'ROYAL_INVITE' }
+  | { type: 'ROYAL_PROGRESS'; chapter: number; progress: number; goal: number }
+  | { type: 'ROYAL_CHAPTER_DONE'; chapter: number; coins: number; crystals: number }
+  | { type: 'ROYAL_RETRY'; chapter: number }
+  | { type: 'ROYAL_STREAK_LOST'; chapter: number }
+  | { type: 'ROYAL_WON' }
+  | { type: 'RECORD'; kind: RecordKind; value: number; prev: number }
   | { type: 'ERROR'; message: string };

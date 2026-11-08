@@ -8,7 +8,8 @@ import type { Draft } from './context';
 import { countIngredients, has, ingredientCapacity } from './economy';
 import { APPRENTICE, GOLEM, RAVEN } from './helpers';
 import { masteredRecipes } from './mastery';
-import { gainReputation } from './progression';
+import { gainReputation, masterRank } from './progression';
+import { TALENTS } from '../data/talents';
 
 // ------------------------------------------------------------------ estações
 
@@ -104,7 +105,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'nivel-5', name: 'Loja conhecida', icon: '⭐', text: 'Chegue ao nível 5.', done: (s) => s.level >= 5 },
   { id: 'nivel-10', name: 'Loja famosa', icon: '🌟', text: 'Chegue ao nível 10.', done: (s) => s.level >= 10 },
   { id: 'nivel-15', name: 'Lenda da cidade', icon: '👑', text: 'Chegue ao nível 15.', done: (s) => s.level >= 15 },
-  { id: 'todas-receitas', name: 'Livro completo', icon: '📖', text: 'Conheça todas as receitas.', done: (s) => RECIPES.every((r) => s.knownRecipes.includes(r.id)) },
+  { id: 'todas-receitas', name: 'Livro completo', icon: '📖', text: 'Conheça todas as receitas.', done: (s) => RECIPES.every((r) => r.secret || s.knownRecipes.includes(r.id)) },
   { id: 'maestria', name: 'Mão de mestre', icon: '✨', text: 'Domine uma receita (5 estrelas).', done: (s) => masteredRecipes(s) >= 1 },
   { id: 'equipe', name: 'Equipe completa', icon: '🐦', text: 'Contrate o corvo, o aprendiz e o golem.', done: (s) => [RAVEN, APPRENTICE, GOLEM].every((id) => has(s, id)) },
   { id: 'primeiro-contrato', name: 'Palavra cumprida', icon: '📜', text: 'Cumpra um contrato.', done: (s) => s.contractsDone >= 1 },
@@ -121,6 +122,16 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'rainha-da-rua', name: 'Rainha da rua', icon: '👑', text: 'Vença 5 semanas contra a Madame Vesper.', done: (s) => s.rival.wins >= 5 },
   { id: 'explorador', name: 'Asas longas', icon: '🗺️', text: 'Complete 5 expedições com o corvo.', done: (s) => s.expeditionsDone >= 5 },
   { id: 'colecionador', name: 'Gabinete de curiosidades', icon: '🔮', text: 'Reúna 6 achados raros.', done: (s) => s.finds.length >= 6 },
+  // Conquistas de Mestre (pacote X)
+  { id: 'concurso-1', name: 'Convidada da Coroa', icon: '📯', text: 'Vença a primeira prova do Concurso Real.', done: (s) => (s.royal?.chapter ?? 0) >= 1 },
+  { id: 'grao-alquimista', name: 'Grão-Alquimista', icon: '👑', text: 'Vença o Concurso Real de Alquimia.', done: (s) => (s.royal?.chapter ?? 0) >= 5 },
+  { id: 'cinco-mil-vendas', name: 'Rio de poções', icon: '🌊', text: 'Venda 5.000 poções.', done: (s) => s.lifetime.sold >= 5000 },
+  { id: 'fortuna', name: 'Fortuna lendária', icon: '💎', text: 'Fature 250.000 moedas.', done: (s) => s.lifetime.earned >= 250000 },
+  { id: 'cinco-dominadas', name: 'Mãos de ouro', icon: '🌟', text: 'Domine 5 receitas (5 estrelas).', done: (s) => masteredRecipes(s) >= 5 },
+  { id: 'grau-10', name: 'Mestre dos mestres', icon: '🧙', text: 'Alcance o grau de Mestre 10.', done: (s) => masterRank(s.xp) >= 10 },
+  { id: 'dia-de-ouro', name: 'Dia de ouro', icon: '📈', text: 'Fature 5.000 moedas num só dia.', done: (s) => s.records.revenue >= 5000 },
+  { id: 'sem-fim', name: 'Estudo sem fim', icon: '📚', text: 'Leve um talento sem fim ao grau 5.',
+    done: (s) => TALENTS.some((t) => t.endless && (s.talents[t.id] ?? 0) >= 5) },
 ];
 
 /** Confere o álbum e anuncia o que acabou de ser conquistado. */

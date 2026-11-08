@@ -1,6 +1,7 @@
 import { DAY_EVENTS } from '../../domain/data/orders';
 import { chestReady } from '../../domain/rules/goals';
 import { sealsAvailable } from '../../domain/rules/progression';
+import { royalChapter, royalDeliverable, royalStarsMissing } from '../../domain/rules/royal';
 import type { GameSave } from '../../domain/models/types';
 import { useGameStore, type PanelId } from '../../store/gameStore';
 
@@ -54,6 +55,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { panel: 'upgrades', label: 'Melhorias', title: 'Melhorias e ajudantes', icon: '🔨', key: '8' },
       { panel: 'grimoire', label: 'Grimório', title: 'Grimório do Mestre', icon: '✨', key: '9' },
       { panel: 'report', label: 'Relatório', title: 'Caixa e relatório', icon: '📊', key: '0' },
+      { panel: 'royal', label: 'Concurso', title: 'Concurso Real de Alquimia', icon: '👑', key: 'c' },
     ],
   },
   {
@@ -96,6 +98,7 @@ const UNLOCK: Partial<Record<PanelId, { open: (s: GameSave) => boolean; fresh: (
   season: { open: (s) => s.day >= 3, fresh: (s) => s.day <= 4 },
   street: { open: (s) => s.level >= 3, fresh: (s) => s.level <= 4 },
   grimoire: { open: (s) => s.level >= 8 || sealsAvailable(s) > 0, fresh: (s) => s.level <= 9 },
+  royal: { open: (s) => !!s.royal, fresh: (s) => (s.royal?.chapter ?? 0) === 0 },
 };
 
 export const panelUnlocked = (s: GameSave | null, panel: PanelId): boolean => !s || (UNLOCK[panel]?.open(s) ?? true);
@@ -118,6 +121,13 @@ export function useVisibleGroups(): NavGroup[] {
 }
 let cache: { key: string; groups: NavGroup[] } = { key: '', groups: NAV_GROUPS };
 
+/** Selo do Concurso: entrega pronta ou capítulo novo para ler. */
+function royalBadge(s: GameSave): string | null {
+  if (!royalChapter(s)) return null;
+  if (s.royal!.seen < s.royal!.chapter) return '!';
+  return royalDeliverable(s).length && !royalStarsMissing(s) ? '📦' : null;
+}
+
 /** Selos das abas: o que pede atenção em cada tela (número, "!" ou um ícone). */
 export function useBadges() {
   const customers = useGameStore((s) => s.save?.customers.length ?? 0);
@@ -126,6 +136,7 @@ export function useBadges() {
   const rareEvent = useGameStore((s) => !!(s.save?.event && DAY_EVENTS[s.save.event].rare));
   const chest = useGameStore((s) => (s.save ? chestReady(s.save) : false));
   const fest = useGameStore((s) => s.save?.event === 'festa-estacao');
+  const royal = useGameStore((s) => (s.save ? royalBadge(s.save) : null));
   // Caldeirão parado com a loja aberta: a aba avisa, para ninguém esquecer dele em outra tela.
   const fresh = useGameStore((s) => (s.save ? SHORTCUTS.filter((i) => panelIsNew(s.save!, i.panel)).map((i) => i.panel).join(',') : ''));
   const idlePot = useGameStore((s) => !!s.save && s.save.phase === 'expediente' && !s.save.brew && s.save.tutorialStep >= 5);
@@ -139,6 +150,7 @@ export function useBadges() {
       case 'street': return rareEvent ? '!' : null;
       case 'goals': return chest ? '🎁' : null;
       case 'season': return fest ? '🎉' : null;
+      case 'royal': return royal;
       default: return null;
     }
   };

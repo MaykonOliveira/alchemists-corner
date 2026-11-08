@@ -8,12 +8,14 @@ import { masteryStars } from '../../domain/rules/mastery';
 import { Stars } from '../../ui/Stars';
 
 export function RecipesPanel({ save }: { save: GameSave }) {
-  const known = RECIPES.filter((r) => save.knownRecipes.includes(r.id)).length;
+  // A Poção da Coroa só aparece no livro depois que o Concurso Real a ensina.
+  const book = RECIPES.filter((r) => !r.secret || save.knownRecipes.includes(r.id));
+  const known = book.filter((r) => save.knownRecipes.includes(r.id)).length;
   return (
     <>
-      <p className="panel-lead">{known} de {RECIPES.length} receitas anotadas. Novas páginas se revelam com o nível da loja ou por experimentos.</p>
+      <p className="panel-lead">{known} de {book.length} receitas anotadas. Novas páginas se revelam com o nível da loja ou por experimentos.</p>
       <ul className="list">
-        {RECIPES.map((r) => {
+        {book.map((r) => {
           const isKnown = save.knownRecipes.includes(r.id);
           return (
             <li key={r.id} className={`card ${isKnown ? '' : 'card-locked'}`}>

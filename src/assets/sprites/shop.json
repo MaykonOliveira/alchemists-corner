@@ -362,7 +362,7 @@
   },
   "jar": {
    "frame": {
-    "x": 80,
+    "x": 124,
     "y": 326,
     "w": 6,
     "h": 8
@@ -402,7 +402,7 @@
   },
   "marker": {
    "frame": {
-    "x": 180,
+    "x": 224,
     "y": 326,
     "w": 7,
     "h": 6
@@ -422,7 +422,7 @@
   },
   "coin": {
    "frame": {
-    "x": 129,
+    "x": 173,
     "y": 326,
     "w": 7,
     "h": 7
@@ -442,7 +442,7 @@
   },
   "heart": {
    "frame": {
-    "x": 172,
+    "x": 216,
     "y": 326,
     "w": 7,
     "h": 6
@@ -462,7 +462,7 @@
   },
   "angry": {
    "frame": {
-    "x": 121,
+    "x": 165,
     "y": 326,
     "w": 7,
     "h": 7
@@ -482,7 +482,7 @@
   },
   "sad": {
    "frame": {
-    "x": 145,
+    "x": 189,
     "y": 326,
     "w": 5,
     "h": 7
@@ -502,7 +502,7 @@
   },
   "sparkle": {
    "frame": {
-    "x": 202,
+    "x": 287,
     "y": 326,
     "w": 5,
     "h": 5
@@ -522,7 +522,7 @@
   },
   "liquid": {
    "frame": {
-    "x": 87,
+    "x": 131,
     "y": 326,
     "w": 33,
     "h": 7
@@ -702,7 +702,7 @@
   },
   "dot-bubble": {
    "frame": {
-    "x": 208,
+    "x": 293,
     "y": 326,
     "w": 3,
     "h": 3
@@ -722,7 +722,7 @@
   },
   "px": {
    "frame": {
-    "x": 212,
+    "x": 297,
     "y": 326,
     "w": 2,
     "h": 2
@@ -742,7 +742,7 @@
   },
   "dot-steam": {
    "frame": {
-    "x": 196,
+    "x": 281,
     "y": 326,
     "w": 5,
     "h": 5
@@ -762,7 +762,7 @@
   },
   "fire-0": {
    "frame": {
-    "x": 437,
+    "x": 485,
     "y": 311,
     "w": 14,
     "h": 9
@@ -782,8 +782,8 @@
   },
   "fire-1": {
    "frame": {
-    "x": 452,
-    "y": 311,
+    "x": 0,
+    "y": 326,
     "w": 14,
     "h": 9
    },
@@ -802,8 +802,8 @@
   },
   "fire-2": {
    "frame": {
-    "x": 467,
-    "y": 311,
+    "x": 15,
+    "y": 326,
     "w": 14,
     "h": 9
    },
@@ -1422,7 +1422,7 @@
   },
   "parcel": {
    "frame": {
-    "x": 188,
+    "x": 232,
     "y": 326,
     "w": 7,
     "h": 6
@@ -1442,7 +1442,7 @@
   },
   "perch": {
    "frame": {
-    "x": 151,
+    "x": 195,
     "y": 326,
     "w": 20,
     "h": 6
@@ -1462,7 +1462,7 @@
   },
   "zz": {
    "frame": {
-    "x": 137,
+    "x": 181,
     "y": 326,
     "w": 7,
     "h": 7
@@ -1882,7 +1882,7 @@
   },
   "cat-sleep": {
    "frame": {
-    "x": 63,
+    "x": 93,
     "y": 326,
     "w": 16,
     "h": 8
@@ -2222,7 +2222,7 @@
   },
   "awning": {
    "frame": {
-    "x": 0,
+    "x": 30,
     "y": 326,
     "w": 62,
     "h": 8
@@ -2237,6 +2237,146 @@
    },
    "sourceSize": {
     "w": 62,
+    "h": 8
+   }
+  },
+  "trophy-0": {
+   "frame": {
+    "x": 445,
+    "y": 311,
+    "w": 7,
+    "h": 10
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 7,
+    "h": 10
+   },
+   "sourceSize": {
+    "w": 7,
+    "h": 10
+   }
+  },
+  "trophy-1": {
+   "frame": {
+    "x": 453,
+    "y": 311,
+    "w": 7,
+    "h": 10
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 7,
+    "h": 10
+   },
+   "sourceSize": {
+    "w": 7,
+    "h": 10
+   }
+  },
+  "trophy-2": {
+   "frame": {
+    "x": 461,
+    "y": 311,
+    "w": 7,
+    "h": 10
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 7,
+    "h": 10
+   },
+   "sourceSize": {
+    "w": 7,
+    "h": 10
+   }
+  },
+  "trophy-3": {
+   "frame": {
+    "x": 469,
+    "y": 311,
+    "w": 7,
+    "h": 10
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 7,
+    "h": 10
+   },
+   "sourceSize": {
+    "w": 7,
+    "h": 10
+   }
+  },
+  "trophy-4": {
+   "frame": {
+    "x": 477,
+    "y": 311,
+    "w": 7,
+    "h": 10
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 7,
+    "h": 10
+   },
+   "sourceSize": {
+    "w": 7,
+    "h": 10
+   }
+  },
+  "trophy-shelf": {
+   "frame": {
+    "x": 240,
+    "y": 326,
+    "w": 40,
+    "h": 5
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 40,
+    "h": 5
+   },
+   "sourceSize": {
+    "w": 40,
+    "h": 5
+   }
+  },
+  "crown": {
+   "frame": {
+    "x": 110,
+    "y": 326,
+    "w": 13,
+    "h": 8
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 13,
+    "h": 8
+   },
+   "sourceSize": {
+    "w": 13,
     "h": 8
    }
   },
@@ -2302,7 +2442,7 @@
   },
   "potion-tonico-energia": {
    "frame": {
-    "x": 421,
+    "x": 429,
     "y": 311,
     "w": 7,
     "h": 10
@@ -2342,7 +2482,7 @@
   },
   "potion-visao-noturna": {
    "frame": {
-    "x": 429,
+    "x": 437,
     "y": 311,
     "w": 7,
     "h": 10
@@ -2402,7 +2542,7 @@
   },
   "potion-pocao-sorte": {
    "frame": {
-    "x": 405,
+    "x": 413,
     "y": 311,
     "w": 7,
     "h": 10
@@ -2522,7 +2662,7 @@
   },
   "potion-refresco-solar": {
    "frame": {
-    "x": 413,
+    "x": 421,
     "y": 311,
     "w": 7,
     "h": 10
@@ -2579,13 +2719,33 @@
     "w": 7,
     "h": 10
    }
+  },
+  "potion-pocao-coroa": {
+   "frame": {
+    "x": 405,
+    "y": 311,
+    "w": 7,
+    "h": 10
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 7,
+    "h": 10
+   },
+   "sourceSize": {
+    "w": 7,
+    "h": 10
+   }
   }
  },
  "meta": {
   "image": "shop.png",
   "size": {
    "w": 512,
-   "h": 334
+   "h": 335
   },
   "scale": "1"
  }

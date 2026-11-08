@@ -1318,3 +1318,65 @@ html, button, input { font-variant-ligatures: none; font-feature-settings: "liga
 .brew-block .card-text { margin: 0; }
 .brew-block-space { border-color: #8a7ac0; background: rgba(138, 122, 192, 0.12); }
 .brew-wait { margin: 8px 0 0; }
+
+/* ------------------------------------------------ Concurso Real (fase 4, pacote T) */
+.royal-hero {
+  position: relative; border-radius: 8px; padding: 12px; margin-bottom: 10px; color: #fff4d6; overflow: hidden;
+  background: linear-gradient(160deg, #3a1d4e 0%, #251236 55%, #4a2a10 100%);
+  box-shadow: inset 0 0 0 2px rgba(242, 201, 92, .6), 0 0 16px rgba(242, 201, 92, .25);
+}
+.royal-hero::after {
+  content: ''; position: absolute; inset: -40% -10% auto auto; width: 160px; height: 160px; pointer-events: none;
+  background: radial-gradient(circle, rgba(242, 201, 92, .35), transparent 70%);
+}
+.royal-hero .card-text { color: #f3e6c8; }
+.royal-hero.won { background: linear-gradient(160deg, #6a4210 0%, #3a1d4e 70%); }
+.royal-kicker { font-family: var(--font-pixel); color: var(--gold); text-transform: uppercase; letter-spacing: .08em; font-size: 12px; margin: 0; }
+.royal-title { font-family: var(--font-pixel); font-size: 22px; margin: 2px 0 4px; color: #fff; text-shadow: 0 2px 0 #000; }
+.royal-stats { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; margin: 6px 0; font-size: 14px; }
+.royal-stats strong { font-family: var(--font-pixel); font-size: 18px; color: var(--gold); }
+.royal-hero .btn { margin-top: 6px; }
+.royal-hero .neg-text { color: #ffb09a; font-weight: 600; }
+.royal-deliver .btn-big { width: 100%; margin-top: 8px; }
+.mastery-row.done .row-title::after { content: ' ✓'; color: var(--ok); }
+.trophy-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: end; margin: 6px 0; }
+.trophy { display: grid; place-items: center; padding: 4px; border-radius: 6px; background: rgba(0, 0, 0, .18); }
+.trophy.on { background: radial-gradient(circle, rgba(242, 201, 92, .5), rgba(242, 201, 92, .08) 70%); box-shadow: 0 0 10px rgba(242, 201, 92, .45); }
+.trophy .sprite-icon-muted { filter: grayscale(1) brightness(.45); opacity: .7; }
+
+.royal-scene { background: radial-gradient(ellipse at 50% 20%, #4a2a5e 0%, #1a0e22 60%, #080409 100%); }
+.royal-card { position: relative; text-align: left; border-color: #6a4210; box-shadow: 0 0 0 3px var(--gold), 0 0 50px rgba(242, 201, 92, .35), 0 20px 60px rgba(0,0,0,.7); }
+.royal-seal {
+  position: absolute; top: -26px; right: 18px; width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; font-size: 28px;
+  background: radial-gradient(circle at 35% 35%, #e8705a, #8a1e22 70%); box-shadow: 0 4px 0 #3e1418, 0 0 0 3px #c8443e; animation: seal-in .6s ease-out;
+}
+.royal-headline { font-family: var(--font-pixel); font-size: 26px; margin: 0 0 8px; color: #4a1a5e; }
+.royal-line { min-height: 0; }
+.royal-task { display: grid; gap: 2px; background: #f8e6b0; border-left: 4px solid var(--gold); padding: 8px 10px; border-radius: 4px; margin: 6px 0 10px; }
+.royal-task span { font-size: 13px; color: var(--ink-soft); }
+.royal-card .story-foot { flex-wrap: wrap; justify-content: space-between; }
+.royal-card .trophy { background: rgba(74, 26, 94, .12); }
+.ceremony .royal-card { text-align: center; }
+.ceremony .royal-card .trophy-row { justify-content: center; }
+.ceremony-crown { display: grid; place-items: center; margin: 4px 0; animation: crown-bob 1.6s ease-in-out infinite; filter: drop-shadow(0 0 14px rgba(242, 201, 92, .9)); }
+.credits { height: 150px; overflow: hidden; position: relative; margin: 6px 0 10px; border-radius: 6px; background: #241430; color: #f3e6c8;
+  mask-image: linear-gradient(transparent, #000 20%, #000 80%, transparent); }
+.credits-roll { animation: credits 16s linear infinite; padding: 150px 0 0; }
+.credits.still { overflow-y: auto; }
+.credits.still .credits-roll { animation: none; padding: 8px 0; }
+.credits p { margin: 0 0 10px; display: grid; }
+.credits p span { font-size: 12px; color: var(--gold); text-transform: uppercase; letter-spacing: .08em; }
+.credits p b { font-family: var(--font-pixel); font-size: 18px; }
+.credits-end { font-family: var(--font-pixel); color: var(--gold); font-size: 16px; padding-top: 10px; }
+.fireworks { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
+.firework { position: absolute; width: 0; height: 0; animation: fw 2.6s ease-out infinite; }
+.firework i { position: absolute; left: 0; top: 0; width: 4px; height: 26px; border-radius: 2px; transform-origin: 2px 0;
+  background: linear-gradient(hsl(var(--hue), 95%, 70%), transparent); }
+.brand-crown { filter: drop-shadow(0 0 4px rgba(242, 201, 92, .8)); }
+.record-personal { color: #fff6d8; font-size: 15px; border-radius: 4px; background: linear-gradient(90deg, #6a4210, #b8693a); }
+.talent-endless { border-color: #c9a040; background: linear-gradient(180deg, #f8e6b0, var(--parchment-2)); }
+@keyframes seal-in { from { transform: scale(0) rotate(-40deg); } to { transform: none; } }
+@keyframes crown-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes credits { from { transform: translateY(0); } to { transform: translateY(-100%); } }
+@keyframes fw { 0% { transform: scale(.1); opacity: 0; } 15% { opacity: 1; } 70% { opacity: 1; } 100% { transform: scale(1.6); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .royal-seal, .ceremony-crown, .credits-roll, .firework { animation: none; } }

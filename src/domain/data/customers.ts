@@ -24,7 +24,7 @@ export const ARCHETYPES: Record<CustomerArchetype, ArchetypeInfo> = {
     wants: ['tonico-energia', 'pocao-brilho', 'visao-noturna', 'cura-simples', 'elixir-concentracao', 'pena-leve', 'elixir-geada', 'refresco-solar', 'aurora-boreal'],
     description: 'Pedidos variados, às vezes raros.' },
   nobre: { id: 'nobre', label: 'Nobre', budget: 1.4, patienceMs: 36000,
-    wants: ['pocao-brilho', 'pocao-sorte', 'pena-leve', 'elixir-estelar', 'elixir-fenix', 'nectar-primavera', 'aurora-boreal'],
+    wants: ['pocao-brilho', 'pocao-sorte', 'pena-leve', 'elixir-estelar', 'elixir-fenix', 'nectar-primavera', 'aurora-boreal', 'pocao-coroa'],
     description: 'Aparece a partir do nível 8. Só quer o que há de melhor e paga bem por isso.' },
 };
 
