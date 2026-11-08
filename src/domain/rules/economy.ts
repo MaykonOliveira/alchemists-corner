@@ -1,7 +1,7 @@
 import { INGREDIENTS, INGREDIENTS_BY_ID } from '../data/ingredients';
 import { RECIPES_BY_ID } from '../data/recipes';
 import { UPGRADES_BY_ID } from '../data/upgrades';
-import type { GameSave } from '../models/types';
+import type { GameSave, Ingredient } from '../models/types';
 import { fail, type Draft } from './context';
 import { masteryStars, STAR_BONUS, talentBonus } from './mastery';
 import { gainXp } from './progression';
@@ -43,14 +43,22 @@ export const maintenanceCost = (s: GameSave) => 10 + 5 * (s.level - 1) + 3 * s.u
 export const recipeCost = (s: GameSave, recipeId: string) =>
   RECIPES_BY_ID[recipeId].ingredients.reduce((n, i) => n + ingredientPrice(s, i.ingredientId) * i.qty, 0);
 
+/** Estoque de um ingrediente no fornecedor para o dia (0 = indisponível no nível atual). */
+export function ingredientStockFor(s: GameSave, i: Ingredient): number | null {
+  if (i.season) return seasonalStock(s, i);
+  if (s.level < i.supplierLevel) return 0;
+  // No Mercado da Lua Cheia os itens raros vêm em maior quantidade.
+  return i.dailyStock !== null && s.event === 'lua-cheia' ? i.dailyStock + MOON_MARKET_EXTRA : i.dailyStock;
+}
+
 /** Estoque do fornecedor para um novo dia. 0 = indisponível no nível atual. */
 export function supplierStock(s: GameSave): Record<string, number | null> {
-  return Object.fromEntries(INGREDIENTS.map((i) => {
-    if (i.season) return [i.id, seasonalStock(s, i)];
-    if (s.level < i.supplierLevel) return [i.id, 0];
-    // No Mercado da Lua Cheia os itens raros vêm em maior quantidade.
-    return [i.id, i.dailyStock !== null && s.event === 'lua-cheia' ? i.dailyStock + MOON_MARKET_EXTRA : i.dailyStock];
-  }));
+  return Object.fromEntries(INGREDIENTS.map((i) => [i.id, ingredientStockFor(s, i)]));
+}
+
+/** Subiu de nível no meio do dia: o fornecedor já traz hoje o que o nível novo liberou. */
+export function restockUnlocked(s: GameSave, level: number) {
+  for (const i of INGREDIENTS) if (i.supplierLevel === level) s.supplier[i.id] = ingredientStockFor(s, i);
 }
 
 /** Quantas unidades do ingrediente o fornecedor ainda tem hoje (Infinity = sem limite). */
@@ -91,6 +99,48 @@ export function buyIngredient(d: Draft, ingredientId: string, qty: number): bool
   if (err) return fail(d, err);
   const cost = applyPurchase(d.s, ingredientId, qty);
   d.events.push({ type: 'PURCHASE', ingredientId, qty, cost });
+  return true;
+}
+
+/** O que falta comprar para preparar `batches` lotes da receita. */
+export function missingFor(s: GameSave, recipeId: string, batches: number) {
+  const r = RECIPES_BY_ID[recipeId];
+  return r.ingredients
+    .map((i) => ({ ingredientId: i.ingredientId, qty: Math.max(0, i.qty * batches - (s.ingredients[i.ingredientId] ?? 0)) }))
+    .filter((m) => m.qty > 0);
+}
+
+/** Custo e possível impedimento de comprar tudo o que falta (null = dá para comprar). */
+export function missingPurchase(s: GameSave, recipeId: string, batches: number) {
+  const items = missingFor(s, recipeId, batches);
+  const cost = items.reduce((n, m) => n + ingredientPrice(s, m.ingredientId) * m.qty, 0);
+  const qty = items.reduce((n, m) => n + m.qty, 0);
+  let error: string | null = null;
+  if (s.phase === 'fechamento') error = 'O fornecedor já foi embora hoje.';
+  for (const m of items) {
+    if (error) break;
+    const ing = INGREDIENTS_BY_ID[m.ingredientId];
+    if (s.level < ing.supplierLevel) error = `${ing.name} só aparece no nível ${ing.supplierLevel}.`;
+    else if (supplierLeft(s, m.ingredientId) < m.qty) {
+      const left = supplierLeft(s, m.ingredientId);
+      error = left > 0 ? `O fornecedor só tem ${left} ${ing.name} hoje.` : `O fornecedor está sem ${ing.name} hoje.`;
+    }
+  }
+  if (!error && countIngredients(s) + qty > ingredientCapacity(s)) error = 'O armário está cheio.';
+  if (!error && cost > s.coins) error = `Faltam ${cost - s.coins} moedas.`;
+  return { items, cost, error };
+}
+
+/** Compra de uma vez tudo o que falta para a receita (ou nada, se algo impedir). */
+export function buyMissing(d: Draft, recipeId: string, batches: number): boolean {
+  if (!RECIPES_BY_ID[recipeId] || !Number.isInteger(batches) || batches < 1) return fail(d, 'Quantidade inválida.');
+  const { items, error } = missingPurchase(d.s, recipeId, batches);
+  if (!items.length) return fail(d, 'Você já tem tudo para esta receita.');
+  if (error) return fail(d, error);
+  for (const m of items) {
+    const cost = applyPurchase(d.s, m.ingredientId, m.qty);
+    d.events.push({ type: 'PURCHASE', ingredientId: m.ingredientId, qty: m.qty, cost });
+  }
   return true;
 }
 

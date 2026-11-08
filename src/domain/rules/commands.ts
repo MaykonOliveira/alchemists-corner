@@ -1,9 +1,9 @@
 import type { GameEvent, GameSave, Settings } from '../models/types';
-import { experiment, startBrew } from './alchemy';
+import { experiment, repeatBrew, startBrew } from './alchemy';
 import type { Draft, RuleContext } from './context';
 import { acceptOffer, declineOffer, dismissCustomer, serveCustomer } from './customers';
 import { advance, closeDay, openShop, startNextDay } from './day';
-import { buyIngredient, buyUpgrade, setForSale, setPrice } from './economy';
+import { buyIngredient, buyMissing, buyUpgrade, setForSale, setPrice } from './economy';
 import { acceptContract, declineContract, deliverContract } from './contracts';
 import { setHelper } from './helpers';
 import { checkAchievements, petCat } from './world';
@@ -24,6 +24,8 @@ import { AWNINGS } from '../data/catalog';
 export type DomainCommand =
   | { type: 'BUY_INGREDIENT'; ingredientId: string; qty: number }
   | { type: 'START_BREW'; recipeId: string; batches: number }
+  | { type: 'REPEAT_BREW' }
+  | { type: 'BUY_MISSING'; recipeId: string; batches: number }
   | { type: 'SET_PRICE'; recipeId: string; price: number }
   | { type: 'SET_FOR_SALE'; recipeId: string; forSale: boolean }
   | { type: 'OPEN_SHOP' }
@@ -86,6 +88,8 @@ function run(d: Draft, cmd: DomainCommand): boolean {
   switch (cmd.type) {
     case 'BUY_INGREDIENT': return buyIngredient(d, cmd.ingredientId, cmd.qty);
     case 'START_BREW': return startBrew(d, cmd.recipeId, cmd.batches);
+    case 'REPEAT_BREW': return repeatBrew(d);
+    case 'BUY_MISSING': return buyMissing(d, cmd.recipeId, cmd.batches);
     case 'SET_PRICE': return setPrice(d, cmd.recipeId, cmd.price);
     case 'SET_FOR_SALE': return setForSale(d, cmd.recipeId, cmd.forSale);
     case 'OPEN_SHOP': return openShop(d);
@@ -119,6 +123,8 @@ function run(d: Draft, cmd: DomainCommand): boolean {
     case 'SEE_TIP':
       if (d.s.tipsSeen.includes(cmd.tipId)) return false;
       d.s.tipsSeen = [...d.s.tipsSeen, cmd.tipId];
+      // Telas novas visitadas também ficam nesta lista, mas não contam como a dica do dia.
+      if (!cmd.tipId.includes(':')) d.s.tipDay = d.s.day;
       return true;
     case 'SEE_STORY':
       if (d.s.storySeen) return false;

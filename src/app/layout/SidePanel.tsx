@@ -14,7 +14,7 @@ import { GoalsList, GoalsPanel } from '../../features/goals/GoalsPanel';
 import { useEffect } from 'react';
 import type { GameSave } from '../../domain/models/types';
 import { useGameStore, type PanelId } from '../../store/gameStore';
-import { groupOf, NAV_GROUPS, panelForGroup, panelTitle, rememberPanel, useBadges } from './nav';
+import { groupOf, panelForGroup, panelIsNew, panelTitle, rememberPanel, useBadges, useVisibleGroups } from './nav';
 import { potionStock } from '../../domain/rules/economy';
 import { QuickServe } from '../../features/customers/QuickServe';
 import { SeasonPanel } from '../../features/season/SeasonPanel';
@@ -24,11 +24,16 @@ export function SidePanel() {
   const panel = useGameStore((s) => s.ui.activePanel);
   const dispatch = useGameStore((s) => s.dispatch);
   const badgeFor = useBadges();
+  const groups = useVisibleGroups();
   useEffect(() => rememberPanel(panel), [panel]);
+  // Abriu uma tela "novo": o selo some.
+  const isNew = !!panel && panelIsNew(save, panel);
+  useEffect(() => { if (isNew && panel) dispatch({ type: 'SEE_TIP', tipId: `area:${panel}` }); }, [isNew, panel, dispatch]);
 
   if (!panel) return <HomePanel save={save} />;
 
-  const group = groupOf(panel);
+  const full = groupOf(panel);
+  const group = full ? groups.find((g) => g.id === full.id) ?? full : null;
   return (
     <aside className={`side ${group ? `side-${group.id}` : ''}`} aria-label={panelTitle(panel)}>
       <div className="side-top">
@@ -86,6 +91,7 @@ const PHASE = { preparacao: 'Preparação', expediente: 'Loja aberta', fechament
 function HomePanel({ save }: { save: GameSave }) {
   const dispatch = useGameStore((s) => s.dispatch);
   const badgeFor = useBadges();
+  const groups = useVisibleGroups();
   const go = (panel: PanelId) => dispatch({ type: 'OPEN_PANEL', panel });
   const stock = save.potions.reduce((n, p) => n + p.quantity, 0);
   const twoPots = save.upgrades.includes('sala-dos-fundos');
@@ -111,7 +117,7 @@ function HomePanel({ save }: { save: GameSave }) {
         <span className={`home-phase phase-${save.phase}`}>{PHASE[save.phase]}</span>
       </div>
       {save.phase === 'preparacao' && (
-        <button className="btn btn-primary btn-big home-open" onClick={() => dispatch({ type: 'OPEN_SHOP' })}>Abrir a loja</button>
+        <button data-tut="open-shop" className="btn btn-primary btn-big btn-glow home-open" onClick={() => dispatch({ type: 'OPEN_SHOP' })}>Abrir a loja</button>
       )}
       <h3 className="mini-title">O que fazer agora</h3>
       <ul className="todo-list">
@@ -130,7 +136,7 @@ function HomePanel({ save }: { save: GameSave }) {
       </button>
       <h3 className="mini-title">Áreas da loja</h3>
       <div className="area-map">
-        {NAV_GROUPS.map((g) => {
+        {groups.map((g) => {
           const alert = g.items.some((i) => badgeFor(i.panel) !== null);
           return (
             <button key={g.id} className={`area-card area-${g.id}`} onClick={() => go(panelForGroup(g, badgeFor))}>

@@ -1,3 +1,4 @@
+import { CauldronAlert } from '../features/alchemy/CauldronAlert';
 import { SceneSpotlight } from '../features/tutorial/Spotlight';
 import Phaser from 'phaser';
 import { useEffect, useRef } from 'react';
@@ -50,6 +51,7 @@ export function PhaserGame() {
         <div ref={canvasRef} className="stage-canvas" aria-label="Interior da loja" role="img" />
         <HotspotTooltip />
         <SceneSpotlight />
+        <CauldronAlert />
       </div>
     </div>
   );

@@ -18,12 +18,12 @@ export interface Tip {
 const potions = (s: GameSave) => s.potions.reduce((n, p) => n + p.quantity, 0);
 
 export const TIPS: Tip[] = [
-  { id: 'metas', icon: '🎯', title: 'Metas do dia', panel: 'goals',
-    text: 'Todo dia chegam três metas novas. Cada uma paga moedas e XP, e 10 metas na semana abrem o baú.',
-    when: (s) => s.day >= 2 && s.phase === 'preparacao' },
   { id: 'prateleira-vazia', icon: '🧪', title: 'Prateleira vazia', panel: 'production',
     text: 'Sem poções prontas os clientes vão embora. Ponha algo no caldeirão antes de abrir a loja.',
     when: (s) => s.day >= 2 && s.phase === 'preparacao' && potions(s) === 0 && !s.brew },
+  { id: 'metas', icon: '🎯', title: 'Metas do dia', panel: 'goals',
+    text: 'Todo dia chegam três metas novas. Cada uma paga moedas e XP, e 10 metas na semana abrem o baú.',
+    when: (s) => s.day >= 2 && s.phase === 'preparacao' },
   { id: 'armario-cheio', icon: '🗄️', title: 'Armário cheio', panel: 'ingredients',
     text: 'Não cabe mais nada no armário, então o corvo não consegue comprar. Use ingredientes ou compre a melhoria de espaço.',
     when: (s) => has(s, RAVEN) && countIngredients(s) >= ingredientCapacity(s) },
@@ -59,5 +59,5 @@ export const TIPS: Tip[] = [
     when: (s) => !!s.goals && !s.goals.chestClaimed && s.goals.weekDone >= 10 },
 ];
 
-/** A primeira dica ainda não vista que vale agora. */
-export const nextTip = (s: GameSave): Tip | null => TIPS.find((t) => !s.tipsSeen.includes(t.id) && t.when(s)) ?? null;
+/** A primeira dica ainda não vista que vale agora (no máximo uma por dia). */
+export const nextTip = (s: GameSave): Tip | null => s.tipDay === s.day ? null : TIPS.find((t) => !s.tipsSeen.includes(t.id) && t.when(s)) ?? null;

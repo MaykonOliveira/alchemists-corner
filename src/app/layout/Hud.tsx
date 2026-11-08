@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { seasonOf } from '../../domain/rules/world';
 import { levelProgress, masterRank, MASTER_STEP_XP, MAX_LEVEL, reputationTitle, xpForLevel } from '../../domain/rules/progression';
 import { dayProgress, formatClock, TIME_OF_DAY_LABEL, timeOfDay } from '../../domain/rules/time';
-import { useGameStore } from '../../store/gameStore';
+import { autoFast, useGameStore } from '../../store/gameStore';
 import { CoinIcon, StarIcon } from '../../ui/icons';
 import { useAnimatedNumber } from '../../ui/useAnimatedNumber';
 
@@ -14,6 +14,9 @@ export function Hud() {
   const dispatch = useGameStore((s) => s.dispatch);
   const [confirmClose, setConfirmClose] = useState(false);
   const speed = useGameStore((s) => s.ui.speed);
+  const fast = useGameStore((s) => autoFast(s.save, s.ui));
+  // Com o Início à vista, o botão grande "Abrir a loja" já está lá: o do topo só aparece com outra tela aberta.
+  const homeVisible = useGameStore((s) => s.ui.activePanel === null);
   const coins = useAnimatedNumber(save.coins);
   // Moedas "pulam" e mostram a diferença quando o saldo muda.
   const [delta, setDelta] = useState<{ n: number; key: number } | null>(null);
@@ -35,7 +38,7 @@ export function Hud() {
   return (
     <header className="hud">
       <div className="hud-brand" title="Alchemist's Corner">
-        <span className="brand-full">{save.shopName}</span><span className="brand-short">{save.shopName.split(' ').map((w) => w[0]).join('').slice(0, 3)}</span>
+        <span className="brand-full">{save.shopName}</span>
         <button className="hud-crystals" onClick={() => dispatch({ type: 'TOGGLE_PANEL', panel: 'season' })} title="Cristais de luar: ganhe jogando e use na decoração (aba Temporada)">🌙 {save.crystals}</button>
       </div>
       <div className="hud-stat" title={`Dia e fase · ${seasonOf(save.day).name}`}>
@@ -44,7 +47,7 @@ export function Hud() {
       </div>
       <div className="hud-stat hud-clock" title="Horário">
         <span className="hud-label">{TIME_OF_DAY_LABEL[timeOfDay(save.clockMin)]}</span>
-        <span className="hud-value">{formatClock(save.clockMin)}{paused && save.phase === 'expediente' ? ' ⏸' : ''}</span>
+        <span className="hud-value">{formatClock(save.clockMin)}{paused && save.phase === 'expediente' ? ' ⏸' : fast ? <span className="hud-fast" title="Loja vazia: o relógio anda mais rápido até alguém entrar"> ⏩</span> : ''}</span>
         <span className="bar" aria-hidden><span style={{ width: `${dayProgress(save.clockMin) * 100}%` }} /></span>
       </div>
       <div className="hud-stat hud-coins" title="Moedas">
@@ -66,7 +69,7 @@ export function Hud() {
         <span className="hud-xp">{xpIn}/{xpSpan} XP</span>
       </div>
       <div className="hud-actions">
-        {save.phase === 'preparacao' && (
+        {save.phase === 'preparacao' && !homeVisible && (
           <button data-tut="open-shop" className="btn btn-primary btn-glow" onClick={() => dispatch({ type: 'OPEN_SHOP' })}>Abrir loja</button>
         )}
         {save.phase === 'expediente' && (

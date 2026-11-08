@@ -33,6 +33,7 @@ export function OrdersPanel({ save }: { save: GameSave }) {
           <p className="card-text small">
             Você tem {potionStock(save, o.recipeId)} de {o.qty}. Prazo: até o fim do dia {o.dueDay}
             {o.dueDay === save.day ? ' (hoje!)' : ''}.
+            {' '}🔒 Ficam guardadas: o botão Vender do balcão não usa estas poções.
           </p>
           <p className="card-text">
             Recompensa: <Coins n={o.rewardCoins} /> · +{o.rewardRep} reputação · +{o.rewardXp} XP

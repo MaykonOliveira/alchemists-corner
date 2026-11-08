@@ -5,6 +5,9 @@ import { DAY_EVENTS } from '../domain/data/orders';
 import { RECIPES_BY_ID } from '../domain/data/recipes';
 import { REGULARS_BY_ID, SEASONS, TIP_HEARTS } from '../domain/data/world';
 import { ACHIEVEMENTS, giftLabel } from '../domain/rules/world';
+
+/** Conquistas mostradas em tela cheia (src/features/celebrate/Milestone.tsx). */
+const BIG_ACHIEVEMENT_IDS = ['primeira-venda', 'mil-moedas', 'primeiro-contrato', 'amigo', 'maestria', 'rival-vencida'];
 import { goalText } from '../domain/rules/goals';
 import { TALENTS_BY_ID } from '../domain/data/talents';
 import { UPGRADES_BY_ID } from '../domain/data/upgrades';
@@ -73,7 +76,7 @@ export interface UiState {
   welcome: boolean;
 }
 
-interface StoreState {
+export interface StoreState {
   status: 'loading' | 'menu' | 'playing';
   save: GameSave | null;
   hasStoredSave: boolean;
@@ -103,6 +106,13 @@ const isUi = (cmd: GameCommand): cmd is UiCommand => UI_TYPES.has(cmd.type);
 
 /** Último passo do tutorial; valores maiores significam "concluído". */
 export const TUTORIAL_DONE = 7;
+
+/**
+ * Sem ninguém no balcão, o relógio anda em 2× sozinho (só na velocidade normal e depois do tutorial):
+ * menos espera parada, e volta ao normal assim que alguém entra.
+ */
+export const autoFast = (save: GameSave | null, ui: Pick<UiState, 'speed' | 'paused'>): boolean =>
+  !!save && save.phase === 'expediente' && ui.speed === 1 && !ui.paused && save.customers.length === 0 && save.tutorialStep >= TUTORIAL_DONE;
 
 let toastSeq = 0;
 export const MAX_TOASTS = 2;
@@ -222,7 +232,8 @@ export const useGameStore = create<StoreState>()(
         }
         case 'ACHIEVEMENT': {
           const a = ACHIEVEMENTS.find((x) => x.id === e.id);
-          return a ? toast(`🏆 Conquista no álbum: ${a.name}!`, 'gold') : undefined;
+          // As grandes viram um momento na tela (Milestone); aqui fica só o aviso das outras.
+          return a && !BIG_ACHIEVEMENT_IDS.includes(a.id) ? toast(`🏆 Conquista no álbum: ${a.name}!`, 'gold') : undefined;
         }
         case 'CAT_PETTED':
           return e.lucky ? toast('O gato ronronou. Sorte do dia: +1 reputação!', 'ok') : undefined;
@@ -305,6 +316,8 @@ export const useGameStore = create<StoreState>()(
         case 'TOGGLE_SPEED':
           return { ...ui, speed: ui.speed === 1 ? 2 : 1 };
         case 'SHOW_WELCOME':
+          // Durante o tutorial o bem-vindo não aparece (e não fica guardado para depois).
+          if ((get().save?.tutorialStep ?? TUTORIAL_DONE) < TUTORIAL_DONE) return ui;
           return { ...ui, welcome: true, paused: get().save?.phase === 'expediente' ? true : ui.paused };
         case 'DISMISS_WELCOME':
           return ui.welcome ? { ...ui, welcome: false, paused: false } : ui;
@@ -352,7 +365,7 @@ export const useGameStore = create<StoreState>()(
       continueGame() {
         if (!loadedSave) return get().newGame();
         // No meio do expediente, o jogo volta pausado até o jogador fechar o "bem-vindo de volta".
-        set({ status: 'playing', save: loadedSave, ui: { ...initialUi, welcome: true, paused: loadedSave.phase === 'expediente' } });
+        set({ status: 'playing', save: loadedSave, ui: { ...initialUi, welcome: loadedSave.tutorialStep >= TUTORIAL_DONE, paused: loadedSave.phase === 'expediente' && loadedSave.tutorialStep >= TUTORIAL_DONE } });
         funnel.session();
         // Livro do caixa (o que a loja fez enquanto você esteve fora), presente de visita e temporada.
         get().dispatch({ type: 'SESSION_START' });

@@ -127,12 +127,18 @@ export function priceVerdict(s: GameSave, c: Customer, recipeId: string): 'sim' 
   return 'nao';
 }
 
+/** Quantas poções desta receita ficam guardadas para o pedido especial em aberto. */
+export function reservedForOrder(save: GameSave, recipeId: string): number {
+  return save.order && save.order.recipeId === recipeId ? save.order.qty : 0;
+}
+
 /**
  * A melhor poção para oferecer: a pedida, se houver; senão a substituta parecida
  * que o cliente aceita pagar (ou a mais barata das parecidas).
  */
 export function bestOffer(save: GameSave, c: Customer): string | null {
-  const forSale = save.potions.filter((p) => p.forSale && p.quantity > 0).map((p) => p.recipeId);
+  // Poções guardadas para o pedido especial não saem no atendimento rápido.
+  const forSale = save.potions.filter((p) => p.forSale && p.quantity - reservedForOrder(save, p.recipeId) > 0).map((p) => p.recipeId);
   if (forSale.includes(c.wantedRecipeId)) return c.wantedRecipeId;
   if (c.vip) return forSale.filter((id) => suits(c, id)).sort((a, b) => RECIPES_BY_ID[b].basePrice - RECIPES_BY_ID[a].basePrice)[0] ?? null;
   const similar = forSale.filter((id) => suits(c, id));
@@ -144,7 +150,11 @@ export function bestOffer(save: GameSave, c: Customer): string | null {
 function removeCustomer(d: Draft, c: Customer, reason: 'paciencia' | 'preco' | 'recusou-oferta' | 'fechou' | 'atendido') {
   d.s.customers = d.s.customers.filter((x) => x.id !== c.id);
   d.events.push({ type: 'CUSTOMER_LEFT', customerId: c.id, reason });
-  if (reason !== 'atendido' && reason !== 'fechou') d.s.stats.lost += 1;
+  if (reason !== 'atendido' && reason !== 'fechou') {
+    d.s.stats.lost += 1;
+    const lost = d.s.stats.lostByRecipe ?? {};
+    d.s.stats.lostByRecipe = { ...lost, [c.wantedRecipeId]: (lost[c.wantedRecipeId] ?? 0) + 1 };
+  }
 }
 
 function completeSale(d: Draft, c: Customer, recipeId: string, price: number) {

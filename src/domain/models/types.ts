@@ -180,6 +180,8 @@ export interface DayStats {
   helperWork: HelperWork;
   /** Fregueses fiéis atendidos hoje (para as cartas do fechamento). */
   regularsSeen?: string[];
+  /** O que os clientes que foram embora queriam (receita → quantos). */
+  lostByRecipe?: Record<string, number>;
 }
 
 export interface DayReport {
@@ -200,6 +202,8 @@ export interface DayReport {
   helperWork?: HelperWork;
   /** Placar da semana contra a rival, depois deste dia. */
   rival?: { me: number; her: number; result: 'win' | 'loss' | null };
+  /** O que os clientes que foram embora queriam (receita → quantos). */
+  lostByRecipe?: Record<string, number>;
 }
 
 /** Disputa semanal de vendas com a Madame Vesper, a alquimista do outro lado da rua. */
@@ -378,6 +382,10 @@ export interface GameSave {
   goals: GoalsState;
   /** Dicas de contexto que o jogador já viu (ids). */
   tipsSeen: string[];
+  /** Último preparo (receita e lotes): tocar no caldeirão parado repete. */
+  lastBrew?: { recipeId: string; batches: number };
+  /** Dia da última dica mostrada: no máximo uma dica por dia. */
+  tipDay?: number;
   /** A história de abertura já foi vista. */
   storySeen: boolean;
   /** Nome da loja e cor do toldo, escolhidos na abertura (fase 3). */

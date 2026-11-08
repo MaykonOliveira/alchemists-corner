@@ -22,12 +22,18 @@ export function brewDurationMs(s: GameSave, recipeId: string, batches: number) {
   return Math.round(r.durationMin * MS_PER_BREW_MIN * (1 + 0.5 * (batches - 1)) * speed);
 }
 
+/** O que limita os lotes de uma receita: ingredientes, espaço nas prateleiras e o tamanho do caldeirão. */
+export function brewLimits(s: GameSave, recipeId: string) {
+  const r = RECIPES_BY_ID[recipeId];
+  const byIngredients = Math.max(0, Math.min(...r.ingredients.map((i) => Math.floor((s.ingredients[i.ingredientId] ?? 0) / i.qty))));
+  const bySpace = Math.max(0, Math.floor((potionCapacity(s) - countPotions(s)) / potionsPerBatch(s)));
+  return { byIngredients, bySpace, cap: maxBatchesCap(s) };
+}
+
 /** Quantos lotes dá para preparar com os ingredientes e o espaço disponíveis. */
 export function maxBatches(s: GameSave, recipeId: string) {
-  const r = RECIPES_BY_ID[recipeId];
-  const byIngredients = Math.min(...r.ingredients.map((i) => Math.floor((s.ingredients[i.ingredientId] ?? 0) / i.qty)));
-  const bySpace = Math.floor((potionCapacity(s) - countPotions(s)) / potionsPerBatch(s));
-  return Math.max(0, Math.min(maxBatchesCap(s), byIngredients, bySpace));
+  const { byIngredients, bySpace, cap } = brewLimits(s, recipeId);
+  return Math.min(cap, byIngredients, bySpace);
 }
 
 /** A loja tem o segundo caldeirão (expansão "Sala dos fundos")? */
@@ -53,10 +59,25 @@ export function startBrew(d: Draft, recipeId: string, batches: number): boolean 
   }
   for (const i of r.ingredients) s.ingredients[i.ingredientId] -= i.qty * batches;
   const job = { recipeId, batches, elapsedMs: 0, totalMs: brewDurationMs(s, recipeId, batches) };
+  s.lastBrew = { recipeId, batches };
   if (slot === 1) s.brew = job;
   else s.brew2 = job;
   d.events.push(slot === 1 ? { type: 'BREW_STARTED', recipeId, batches } : { type: 'BREW_STARTED', recipeId, batches, slot: 2 });
   return true;
+}
+
+/** Quantos lotes o "repetir" do caldeirão faria agora (0 = não dá para repetir). */
+export function repeatBatches(s: GameSave): number {
+  const last = s.lastBrew;
+  if (!last || !s.knownRecipes.includes(last.recipeId) || !freeCauldron(s) || s.phase === 'fechamento') return 0;
+  return Math.min(last.batches, maxBatches(s, last.recipeId));
+}
+
+/** Repete o último preparo com um toque (o máximo que der, até a quantidade de antes). */
+export function repeatBrew(d: Draft): boolean {
+  const n = repeatBatches(d.s);
+  if (n < 1) return fail(d, d.s.lastBrew ? 'Faltam ingredientes para repetir o último preparo.' : 'Escolha uma receita no caldeirão.');
+  return startBrew(d, d.s.lastBrew!.recipeId, n);
 }
 
 export function advanceBrew(d: Draft, ms: number) {

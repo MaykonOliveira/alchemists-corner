@@ -8,12 +8,14 @@ import { UiSpotlight } from '../../features/tutorial/Spotlight';
 import { QuickServe } from '../../features/customers/QuickServe';
 import { useGameStore } from '../../store/gameStore';
 import { BottomBar, SHORTCUTS } from '../layout/BottomBar';
+import { panelUnlocked } from '../layout/nav';
 import { DayEndModal } from '../layout/DayEndModal';
 import { Hud } from '../layout/Hud';
 import { LevelUpModal } from '../layout/LevelUpModal';
 import { SettingsModal } from '../layout/SettingsModal';
 import { SidePanel } from '../layout/SidePanel';
 import { Toasts } from '../layout/Toasts';
+import { Milestone } from '../../features/celebrate/Milestone';
 import { ShareModal } from '../../features/share/ShareModal';
 
 export function GameScreen() {
@@ -37,7 +39,7 @@ export function GameScreen() {
         dispatch({ type: 'TOGGLE_PAUSE' });
       } else {
         const sc = SHORTCUTS.find((s) => s.key === e.key.toLowerCase());
-        if (sc) dispatch({ type: 'TOGGLE_PANEL', panel: sc.panel });
+        if (sc && panelUnlocked(useGameStore.getState().save, sc.panel)) dispatch({ type: 'TOGGLE_PANEL', panel: sc.panel });
       }
     };
     window.addEventListener('keydown', onKey);
@@ -55,6 +57,7 @@ export function GameScreen() {
           <WelcomeBack />
           <QuickServe placement="stage" />
           <Toasts />
+          <Milestone />
         </div>
         <SidePanel />
       </main>

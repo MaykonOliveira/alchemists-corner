@@ -5,6 +5,7 @@ import { CoinIcon } from '../../ui/icons';
 import { visitGift } from '../../domain/rules/retention';
 import { VISIT_GIFTS } from '../../domain/data/retention';
 import { REGULARS_BY_ID } from '../../domain/data/world';
+import { useStageCards } from './stage';
 import type { AwayReport } from '../../domain/models/types';
 
 const hoursLabel = (ms: number) => {
@@ -28,7 +29,7 @@ function AwayBook({ away }: { away: AwayReport }) {
 
 /** Cartão "bem-vindo de volta": onde a partida parou e qual o próximo passo. */
 export function WelcomeBack() {
-  const welcome = useGameStore((s) => s.ui.welcome);
+  const welcome = useStageCards().welcome;
   const save = useGameStore((s) => s.save);
   const tutorial = useGameStore((s) => (s.save?.tutorialStep ?? 99) < 7);
   const dispatch = useGameStore((s) => s.dispatch);

@@ -1,13 +1,15 @@
 import { nextTip } from '../../domain/data/tips';
 import { TUTORIAL_DONE, useGameStore } from '../../store/gameStore';
+import { useStageCards } from './stage';
 
 /** Dica de contexto: aparece uma vez quando a situação pede, depois do tutorial. */
 export function TipCard() {
   const save = useGameStore((s) => s.save);
   const modal = useGameStore((s) => s.ui.modal);
   const welcome = useGameStore((s) => s.ui.welcome);
+  const stage = useStageCards();
   const dispatch = useGameStore((s) => s.dispatch);
-  if (!save || save.tutorialStep < TUTORIAL_DONE || modal || welcome || !save.storySeen) return null;
+  if (!save || save.tutorialStep < TUTORIAL_DONE || modal || welcome || !stage.tip || !save.storySeen) return null;
   const tip = nextTip(save);
   if (!tip) return null;
   const seen = () => dispatch({ type: 'SEE_TIP', tipId: tip.id });
