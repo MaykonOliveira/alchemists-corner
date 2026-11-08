@@ -9,6 +9,7 @@ import { useGameStore } from '../../store/gameStore';
 import { Coins } from '../../ui/widgets';
 import { tomorrowPreview } from '../../domain/rules/retention';
 import { charm } from '../../domain/rules/entitlements';
+import { RECORD_LABEL } from '../../domain/rules/records';
 
 const MEDAL_LABEL = { ouro: 'Medalha de ouro', prata: 'Medalha de prata', bronze: 'Medalha de bronze' } as const;
 
@@ -99,7 +100,7 @@ export function DayEndModal() {
   return (
     <div className="modal-backdrop">
       <div className={`modal modal-report ${medal ? `medal-${medal}` : ''}`} role="dialog" aria-modal="true" aria-labelledby="day-end-title">
-        {(medal === 'ouro' || record) && <div className="confetti" aria-hidden />}
+        {(medal === 'ouro' || record || !!r.records?.length) && <div className="confetti" aria-hidden />}
         <div className="report-head">
           <div>
             <p className="modal-kicker">Fechamento</p>
@@ -112,6 +113,9 @@ export function DayEndModal() {
           )}
         </div>
         {record && <p className="record-banner">Novo recorde de lucro!</p>}
+        {r.records?.map((k) => (
+          <p key={k} className="record-banner record-personal">🏅 Recorde pessoal: {RECORD_LABEL[k].toLowerCase()} ({k === 'revenue' ? `${r.revenue} moedas` : `${r.customersServed} clientes`})</p>
+        ))}
         <div className={`profit-hero ${r.profit >= 0 ? 'pos' : 'neg'}`}>
           <span className="muted small">Lucro do dia</span>
           <strong>{r.profit >= 0 ? '+' : '−'}<CountUp value={Math.abs(r.profit)} /></strong>

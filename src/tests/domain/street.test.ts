@@ -9,6 +9,7 @@ import { createNewGame } from '../../domain/rules/initialState';
 import { xpForLevel } from '../../domain/rules/progression';
 import { helperActive, RAVEN } from '../../domain/rules/helpers';
 import { rivalDaysLeft } from '../../domain/rules/street';
+import { SAVE_VERSION } from '../../domain/models/types';
 import { migrateSave } from '../../persistence/migrations';
 
 const ctxWith = (r: number) => ({ now: 0, random: () => r });
@@ -165,6 +166,6 @@ describe('save v7', () => {
     expect(s.rival).toEqual({ week: 0, me: 0, her: 0, wins: 0, losses: 0 });
     expect(s.finds).toEqual([]);
     expect(s.expedition).toBeNull();
-    expect(s.saveVersion).toBe(9);
+    expect(s.saveVersion).toBe(SAVE_VERSION);
   });
 });

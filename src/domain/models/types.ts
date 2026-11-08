@@ -49,6 +49,12 @@ export interface Recipe {
   color: string;
   /** Poção da estação: só é procurada nela (e só se prepara com o ingrediente dela). */
   season?: SeasonId;
+  /** Receita secreta: não libera por nível nem por experimento (a Poção da Coroa do Concurso Real). */
+  secret?: boolean;
+  /** Receita lendária (pacote U): só se descobre experimentando, com a ajuda das páginas rasgadas. */
+  legend?: boolean;
+  /** Charada do Cliente misterioso (pacote V): descreve o problema sem dizer a poção. */
+  riddle?: string;
 }
 
 export interface PotionStack {
@@ -56,6 +62,9 @@ export interface PotionStack {
   quantity: number;
   quality: number;
   forSale: boolean;
+  /** Quantas desta pilha são de qualidade Fina e Primorosa (pacote V). O resto é Comum. */
+  fine?: number;
+  prime?: number;
 }
 
 export type CustomerArchetype = 'aventureiro' | 'estudioso' | 'morador' | 'viajante' | 'nobre';
@@ -74,6 +83,8 @@ export interface Customer {
   remark: string | null;
   /** Freguês fiel (id em REGULARS), se for um. */
   regularId?: string | null;
+  /** Cliente misterioso (pacote V): fala uma charada e só aceita a poção exata. */
+  mystery?: boolean;
   /** Visita especial (Condessa no dia 1, convidado da festa da estação): nome próprio e preço fixo. */
   vip?: { name: string; pays: number; kind: 'estreia' | 'festa' | 'carta' };
 }
@@ -91,7 +102,7 @@ export interface ShopUpgrade {
   name: string;
   cost: number;
   effect: string;
-  category: 'funcional' | 'visual' | 'ajudante' | 'expansao';
+  category: 'funcional' | 'visual' | 'ajudante' | 'expansao' | 'treino';
   requiredLevel: number;
   /** Melhoria que precisa ser comprada antes (etapas da expansão). */
   requires?: string;
@@ -122,6 +133,10 @@ export interface BrewJob {
   batches: number;
   elapsedMs: number;
   totalMs: number;
+  /** Toque de mestre (pacote V): acertos ao mexer (0 a 3). Ausente = ninguém mexeu. */
+  hits?: number;
+  /** Preparo do aprendiz: sem toque de mestre. */
+  byHelper?: boolean;
 }
 
 export interface SpecialOrder {
@@ -182,6 +197,8 @@ export interface DayStats {
   regularsSeen?: string[];
   /** O que os clientes que foram embora queriam (receita → quantos). */
   lostByRecipe?: Record<string, number>;
+  /** Cliente misterioso já apareceu hoje. */
+  mystery?: boolean;
 }
 
 export interface DayReport {
@@ -204,6 +221,33 @@ export interface DayReport {
   rival?: { me: number; her: number; result: 'win' | 'loss' | null };
   /** O que os clientes que foram embora queriam (receita → quantos). */
   lostByRecipe?: Record<string, number>;
+  /** Recordes pessoais batidos neste dia. */
+  records?: RecordKind[];
+}
+
+/** Concurso Real de Alquimia (fase 4): campanha em 5 capítulos que abre no nível máximo. */
+export interface RoyalState {
+  /** Capítulo atual (0 a 4). 5 = concurso vencido. */
+  chapter: number;
+  /** Progresso do capítulo: vendas da categoria ou nobres atendidos em sequência. */
+  progress: number;
+  /** Poções já entregues neste capítulo, por receita. */
+  delivered: Record<string, number>;
+  /** Último dia para cumprir o capítulo (0 = sem prazo). */
+  dueDay: number;
+  /** Último capítulo cuja cena de abertura já foi vista (-1 = nenhum; 5 = a cerimônia final). */
+  seen: number;
+  /** Tentativas que venceram o prazo neste capítulo. */
+  retries: number;
+}
+
+export type RecordKind = 'revenue' | 'served' | 'bestSale';
+
+/** Recordes pessoais da loja. */
+export interface Records {
+  revenue: number;
+  served: number;
+  bestSale: number;
 }
 
 /** Disputa semanal de vendas com a Madame Vesper, a alquimista do outro lado da rua. */
@@ -313,7 +357,7 @@ export interface ChallengeState {
   score: number | null;
 }
 
-export const SAVE_VERSION = 9 as const;
+export const SAVE_VERSION = 10 as const;
 
 export interface GameSave {
   saveVersion: typeof SAVE_VERSION;
@@ -416,6 +460,14 @@ export interface GameSave {
   challenge: ChallengeState | null;
   /** Melhor pontuação no desafio, por semana. */
   challengeBest: { week: number; score: number } | null;
+  /** Concurso Real (null antes do nível máximo). */
+  royal: RoyalState | null;
+  /** Recordes pessoais (dia de maior faturamento, mais clientes, maior venda). */
+  records: Records;
+  /** Obras da vila: etapas concluídas (0 a 3) por obra (pacote W). */
+  village: Record<string, number>;
+  /** Receitas lendárias (pacote U): quantos ingredientes de cada uma as páginas rasgadas já revelaram. */
+  pages: Record<string, number>;
   tutorialStep: number;
   seq: number;
   settings: Settings;
@@ -425,9 +477,9 @@ export interface GameSave {
 export type GameEvent =
   | { type: 'PURCHASE'; ingredientId: string; qty: number; cost: number }
   | { type: 'BREW_STARTED'; recipeId: string; batches: number; by?: 'aprendiz'; slot?: 2 }
-  | { type: 'BREW_DONE'; recipeId: string; qty: number; slot?: 2 }
+  | { type: 'BREW_DONE'; recipeId: string; qty: number; slot?: 2; quality?: 2 | 3 }
   | { type: 'CUSTOMER_ARRIVED'; customerId: string }
-  | { type: 'SALE'; customerId: string; recipeId: string; price: number; substitute: boolean; by?: 'golem' }
+  | { type: 'SALE'; customerId: string; recipeId: string; price: number; substitute: boolean; by?: 'golem'; quality?: 2 | 3 }
   | { type: 'RAVEN_DELIVERY'; items: { ingredientId: string; qty: number }[]; cost: number; fee: number }
   | { type: 'GOLEM_DISMISSED'; customerId: string }
   | { type: 'HELPER_TOGGLED'; upgradeId: string; on: boolean }
@@ -444,7 +496,7 @@ export type GameEvent =
   | { type: 'CONTRACT_DONE'; contractId: string; coins: number; seal: boolean }
   | { type: 'CONTRACT_FAILED'; contractId: string; coins: number }
   | { type: 'UPGRADE_BOUGHT'; upgradeId: string }
-  | { type: 'DISCOVERY'; recipeId: string }
+  | { type: 'DISCOVERY'; recipeId: string; legend?: boolean }
   | { type: 'EXPERIMENT_FAILED'; hint: string }
   | { type: 'DAY_CLOSED'; report: DayReport }
   | { type: 'DAY_STARTED'; day: number; event: DayEventId | null }
@@ -478,4 +530,17 @@ export type GameEvent =
   | { type: 'GIFT_REDEEMED'; from: string; crystals: number; items: { ingredientId: string; qty: number }[] }
   | { type: 'CHALLENGE_STARTED'; week: number }
   | { type: 'CHALLENGE_DONE'; week: number; score: number; best: boolean }
+  | { type: 'ROYAL_INVITE' }
+  | { type: 'ROYAL_PROGRESS'; chapter: number; progress: number; goal: number }
+  | { type: 'ROYAL_CHAPTER_DONE'; chapter: number; coins: number; crystals: number }
+  | { type: 'ROYAL_RETRY'; chapter: number }
+  | { type: 'ROYAL_STREAK_LOST'; chapter: number }
+  | { type: 'ROYAL_WON' }
+  | { type: 'RECORD'; kind: RecordKind; value: number; prev: number }
+  | { type: 'VILLAGE_STAGE'; projectId: string; stage: number }
+  | { type: 'STIRRED'; hits: number; slot: 1 | 2 }
+  | { type: 'MYSTERY_ARRIVED'; customerId: string }
+  | { type: 'MYSTERY_SOLVED'; recipeId: string; coins: number; crystals: number }
+  | { type: 'MYSTERY_WRONG'; customerId: string }
+  | { type: 'PAGE_FOUND'; recipeId: string; ingredientId: string; source: string }
   | { type: 'ERROR'; message: string };

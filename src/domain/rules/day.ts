@@ -16,12 +16,14 @@ import { charm } from './entitlements';
 import { finishChallenge } from './social';
 import { daysToNextSeason } from './world';
 import { gainReputation, gainXp, xpForLevel } from './progression';
+import { noteDay } from './records';
+import { royalNewDay } from './royal';
 
 export function freshStats(s: GameSave): DayStats {
   return {
     revenue: 0, ingredientCost: 0, orderRewards: 0, salesByRecipe: {}, served: 0, lost: 0,
     repStart: s.reputation, xpStart: s.xp, levelStart: s.level, ordersDone: 0,
-    helperWork: emptyHelperWork(), regularsSeen: [], lostByRecipe: {},
+    helperWork: emptyHelperWork(), regularsSeen: [], lostByRecipe: {}, mystery: false,
   };
 }
 
@@ -61,6 +63,8 @@ export function closeDay(d: Draft): boolean {
     helperWork: { ...st.helperWork },
     lostByRecipe: { ...(st.lostByRecipe ?? {}) },
   };
+  const records = noteDay(d, report);
+  if (records.length) report.records = records;
   rivalOnClose(d, report);
   s.reports = [...s.reports, report].slice(-30);
   s.phase = 'fechamento';
@@ -99,6 +103,7 @@ export function startNextDay(d: Draft): boolean {
   maybeCreateOrder(d);
   checkVisit(d);
   updateContracts(d);
+  royalNewDay(d);
   if (seasonOf(s.day).id !== seasonOf(s.day - 1).id) d.events.push({ type: 'SEASON_STARTED', season: seasonOf(s.day).id });
   ensureGoals(s);
   d.events.push({ type: 'DAY_STARTED', day: s.day, event: s.event });

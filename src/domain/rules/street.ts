@@ -10,6 +10,7 @@ import { fail, nextId, pick, type Draft } from './context';
 import { countIngredients, has, ingredientCapacity } from './economy';
 import { RAVEN } from './helpers';
 import { gainReputation } from './progression';
+import { findPage } from './legends';
 import { seasonOf } from './world';
 
 // ------------------------------------------------------------- estação
@@ -73,6 +74,7 @@ export function rivalOnClose(d: Draft, report: DayReport) {
       const rares = INGREDIENTS.filter((i) => i.rarity === 'raro' && !i.season && s.level >= i.supplierLevel);
       if (rares.length) addIngredients(s, [{ ingredientId: pick(rares, d.ctx.random).id, qty: 3 }]);
       s.rival = { ...s.rival, wins: s.rival.wins + 1 };
+      findPage(d, 'a despensa da Vesper');
     } else {
       s.rival = { ...s.rival, losses: s.rival.losses + 1 };
     }

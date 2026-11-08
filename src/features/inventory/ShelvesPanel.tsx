@@ -6,6 +6,7 @@ import { masteryStars } from '../../domain/rules/mastery';
 import { Stars } from '../../ui/Stars';
 import { useGameStore } from '../../store/gameStore';
 import { Meter, PotionName } from '../../ui/widgets';
+import { stackQualities } from '../../domain/rules/quality';
 
 function priceLabel(price: number, base: number) {
   const r = price / base;
@@ -41,6 +42,12 @@ export function ShelvesPanel({ save }: { save: GameSave }) {
                 <Stars n={masteryStars(save, id)} />
                 <span className={`qty ${stock === 0 ? 'qty-low' : ''}`}>{stock}</span>
               </div>
+              {stack && (stack.prime || stack.fine) ? (
+                <p className="quality-line small">
+                  {stackQualities(stack).prime > 0 && <span className="q-3">✨ {stackQualities(stack).prime} Primorosas (+50%)</span>}
+                  {stackQualities(stack).fine > 0 && <span className="q-2">★ {stackQualities(stack).fine} Finas (+20%)</span>}
+                </p>
+              ) : null}
               <div className="price-row">
                 <input
                   type="range"

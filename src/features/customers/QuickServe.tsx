@@ -34,6 +34,33 @@ export function QuickServe({ placement }: { placement: 'stage' | 'side' }) {
   const next = save.customers.length > 1 ? save.customers[(idx + 1) % save.customers.length] : null;
   const reserved = !c.offer && !offerId && reservedForOrder(save, wanted.id) > 0 && potionStock(save, wanted.id) > 0;
 
+  // Cliente misterioso: não diz o que quer, só deixa uma charada.
+  if (c.mystery) {
+    const stock = save.potions.filter((p) => p.forSale && p.quantity > 0);
+    return (
+      <section className={`quick-serve qs-${placement} qs-mystery`} aria-label="Atender o cliente misterioso">
+        <div className="qs-head">
+          <span className="qs-mystery-icon" aria-hidden>❓</span>
+          <div className="qs-who">
+            <span className="qs-name">Viajante encapuzado <span className="muted">· paga 3× e deixa cristais</span></span>
+            <Meter ratio={left} tone={left > 0.5 ? 'ok' : left > 0.25 ? 'gold' : 'warn'} label="Paciência" />
+          </div>
+          <button className="qs-icon" onClick={() => dispatch({ type: 'SELECT_CUSTOMER', id: null })} aria-label="Fechar atendimento">×</button>
+        </div>
+        <p className="qs-remark qs-riddle">“{c.remark}”</p>
+        <div className="qs-guess">
+          {stock.length === 0 ? <span className="qs-none">Nada nas prateleiras para arriscar.</span> : stock.slice(0, 8).map((p) => (
+            <button key={p.recipeId} className="qs-guess-btn" title={RECIPES_BY_ID[p.recipeId].name} onClick={() => dispatch({ type: 'SERVE_CUSTOMER', customerId: c.id, recipeId: p.recipeId })}>
+              <PotionIcon recipeId={p.recipeId} size={22} />
+              <span>{RECIPES_BY_ID[p.recipeId].shortName}</span>
+            </button>
+          ))}
+        </div>
+        <p className="small muted">Errar não custa a poção, mas ele perde a paciência mais rápido.</p>
+      </section>
+    );
+  }
+
   // Sem nada para oferecer: uma linha só, para não ocupar a tela inteira enquanto o cliente espera.
   if (!c.offer && !offerId) {
     return (

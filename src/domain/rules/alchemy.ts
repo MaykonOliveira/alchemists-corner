@@ -5,6 +5,9 @@ import { fail, type Draft } from './context';
 import { addPotions, countPotions, has, potionCapacity } from './economy';
 import { addMastery, talentBonus } from './mastery';
 import { gainXp } from './progression';
+import { grantCrystals } from './entitlements';
+import { LEGEND_CRYSTALS, LEGEND_XP } from './legends';
+import { markQuality, qualityFromHits } from './quality';
 
 export const MAX_BATCHES = 5;
 export const POTIONS_PER_BATCH = 2;
@@ -88,9 +91,12 @@ export function advanceBrew(d: Draft, ms: number) {
     if (b.elapsedMs < b.totalMs) continue;
     const qty = b.batches * potionsPerBatch(d.s);
     addPotions(d.s, b.recipeId, qty);
+    markQuality(d.s, b.recipeId, qty, qualityFromHits(b.hits));
     if (slot === 1) d.s.brew = null;
     else d.s.brew2 = null;
-    d.events.push(slot === 1 ? { type: 'BREW_DONE', recipeId: b.recipeId, qty } : { type: 'BREW_DONE', recipeId: b.recipeId, qty, slot: 2 });
+    const q = qualityFromHits(b.hits);
+    const quality = q > 1 ? { quality: q as 2 | 3 } : {};
+    d.events.push(slot === 1 ? { type: 'BREW_DONE', recipeId: b.recipeId, qty, ...quality } : { type: 'BREW_DONE', recipeId: b.recipeId, qty, slot: 2, ...quality });
     addMastery(d, b.recipeId, qty);
     gainXp(d, 3 * b.batches);
   }
@@ -108,21 +114,27 @@ export function experiment(d: Draft, ingredientIds: string[]): boolean {
   if (ids.some((id) => !INGREDIENTS_BY_ID[id] || (s.ingredients[id] ?? 0) < 1)) return fail(d, 'Você precisa de 1 unidade de cada ingrediente.');
 
   const key = [...ids].sort().join('|');
-  const match = RECIPES.find((r) => r.ingredients.map((i) => i.ingredientId).sort().join('|') === key);
+  const match = RECIPES.find((r) => !r.secret && r.ingredients.map((i) => i.ingredientId).sort().join('|') === key);
 
   if (match && !s.knownRecipes.includes(match.id)) {
     for (const id of ids) s.ingredients[id] -= 1;
     s.knownRecipes.push(match.id);
     s.prices[match.id] ??= match.basePrice;
-    d.events.push({ type: 'DISCOVERY', recipeId: match.id });
-    gainXp(d, 30);
+    if (match.legend) {
+      d.events.push({ type: 'DISCOVERY', recipeId: match.id, legend: true });
+      grantCrystals(d, LEGEND_CRYSTALS, 'lenda');
+      gainXp(d, LEGEND_XP);
+    } else {
+      d.events.push({ type: 'DISCOVERY', recipeId: match.id });
+      gainXp(d, 30);
+    }
     return true;
   }
 
   // Erro: consome apenas o primeiro ingrediente e revela uma pista concreta.
   s.ingredients[ids[0]] -= 1;
   s.researchPoints += 1;
-  const unknown = RECIPES.filter((r) => !s.knownRecipes.includes(r.id));
+  const unknown = RECIPES.filter((r) => !r.secret && !r.legend && !s.knownRecipes.includes(r.id));
   let hint: string;
   if (match) hint = `Você já conhece essa mistura: ${match.name}.`;
   else if (unknown.length === 0) hint = 'Você já descobriu todas as receitas do livro!';

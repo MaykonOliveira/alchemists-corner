@@ -7,6 +7,7 @@ import { missingPurchase, recipeCost } from '../../domain/rules/economy';
 import { useGameStore } from '../../store/gameStore';
 import { PotionIcon } from '../../ui/SpriteIcon';
 import { Coins, Meter, PotionName, Stepper } from '../../ui/widgets';
+import { StirGame } from './StirGame';
 
 const secs = (ms: number) => `${Math.ceil(ms / 1000)}s`;
 
@@ -39,10 +40,13 @@ export function ProductionPanel({ save }: { save: GameSave }) {
     <>
       {save.brew || save.brew2 ? (
         <div className={hasSecondCauldron(save) ? 'cauldron-pair' : ''}>
-          <BrewCard job={save.brew} label={hasSecondCauldron(save) ? 'Caldeirão 1' : null} save={save} />
-          {hasSecondCauldron(save) && <BrewCard job={save.brew2} label="Caldeirão 2" save={save} />}
+          <BrewCard job={save.brew} slot={1} label={hasSecondCauldron(save) ? 'Caldeirão 1' : null} save={save} />
+          {hasSecondCauldron(save) && <BrewCard job={save.brew2} slot={2} label="Caldeirão 2" save={save} />}
         </div>
-      ) : (
+      ) : null}
+      {save.brew && <StirGame key={`1-${save.brew.recipeId}-${save.brew.totalMs}`} save={save} job={save.brew} slot={1} label={hasSecondCauldron(save) ? 'Caldeirão 1' : undefined} />}
+      {save.brew2 && hasSecondCauldron(save) && <StirGame key={`2-${save.brew2.recipeId}-${save.brew2.totalMs}`} save={save} job={save.brew2} slot={2} label="Caldeirão 2" />}
+      {save.brew || save.brew2 ? null : (
         <p className="panel-lead">Escolha uma receita. Cada lote rende {perBatch} poções.{hasSecondCauldron(save) ? ' Você tem 2 caldeirões!' : ''}</p>
       )}
 
@@ -134,7 +138,7 @@ export function ProductionPanel({ save }: { save: GameSave }) {
   );
 }
 
-function BrewCard({ job, label, save }: { job: BrewJob | null; label: string | null; save: GameSave }) {
+function BrewCard({ job, label, save }: { job: BrewJob | null; label: string | null; save: GameSave; slot: 1 | 2 }) {
   if (!job) {
     return (
       <div className="card brewing brewing-idle">

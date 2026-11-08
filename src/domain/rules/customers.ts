@@ -11,7 +11,13 @@ import { availableRegulars, befriend, REGULAR_CHANCE, seasonCategory } from './w
 import { SEASON_PRICE_BONUS } from '../data/world';
 import { eventCategoryFactor, inSeason, seasonalRecipe } from './street';
 import { letterVisitor, maybeSpawnVip, onVipServed } from './retention';
+import { noteSale } from './records';
+import { villageBonus } from './villageBonus';
+import { QUALITY_BONUS, takeBestQuality } from './quality';
+import { grantCrystals } from './entitlements';
 import { REGULARS_BY_ID } from '../data/world';
+import { BALL_NOBLE_BOOST } from '../data/royal';
+import { royalChapter, royalOnLost, royalOnSale, royalWon } from './royal';
 
 export const MAX_CUSTOMERS = 3;
 /** Clientes que cabem no balcão (o balcão duplo abre espaço para mais um). */
@@ -22,12 +28,40 @@ export const NEGOTIATION_MARGIN = 1.2;
 export function nextSpawnDelay(s: GameSave, random: () => number) {
   const event = s.event ? DAY_EVENTS[s.event].spawnFactor : 1;
   const sign = (has(s, 'letreiro-novo') ? 0.75 : 1) * (has(s, 'sino-encantado') ? 0.9 : 1) * (has(s, 'balcao-duplo') ? 0.9 : 1);
-  const fame = (1 + Math.min(s.reputation, 400) / 800) * (1 + talentBonus(s, 'fama'));
+  const fame = (1 + Math.min(s.reputation, 400) / 800) * (1 + talentBonus(s, 'fama')) * (1 + talentBonus(s, 'renome')) * (1 + villageBonus(s, 'movimento'));
   return Math.round((16000 * event * sign) / fame * (0.7 + random() * 0.6));
+}
+
+/** Nível em que o Cliente misterioso começa a aparecer (no máximo um por dia). */
+export const MYSTERY_LEVEL = 7;
+/** O Cliente misterioso paga este tanto do preço-base e deixa cristais. */
+export const MYSTERY_PAYS = 3;
+export const MYSTERY_CRYSTALS = 3;
+
+/** Receitas que o Cliente misterioso pode pedir (as que têm charada e a loja conhece). */
+export const mysteryRecipes = (s: GameSave) => s.knownRecipes.filter((id) => RECIPES_BY_ID[id]?.riddle);
+
+function maybeSpawnMystery(d: Draft): boolean {
+  const { s, ctx } = d;
+  if (s.level < MYSTERY_LEVEL || s.stats.mystery || s.clockMin > 15 * 60 || s.day < 3) return false;
+  const pool = mysteryRecipes(s);
+  if (!pool.length || ctx.random() >= 0.12) return false;
+  const id = pick(pool, ctx.random);
+  s.stats.mystery = true;
+  const c: Customer = {
+    id: nextId(d, 'c'), archetype: 'viajante', wantedRecipeId: id, budgetFactor: 1,
+    patienceMs: Math.round(60000 * patienceFactor(s)), waitedMs: 0, offer: null,
+    remark: RECIPES_BY_ID[id].riddle!, mystery: true,
+  };
+  s.customers.push(c);
+  d.events.push({ type: 'CUSTOMER_ARRIVED', customerId: c.id });
+  d.events.push({ type: 'MYSTERY_ARRIVED', customerId: c.id });
+  return true;
 }
 
 export function spawnCustomer(d: Draft) {
   const { s, ctx } = d;
+  if (maybeSpawnMystery(d)) return;
   // De vez em quando quem entra é um freguês fiel, que já chega pedindo o de sempre.
   const regulars = s.day >= 2 ? availableRegulars(s) : [];
   // Quem mandou carta ontem entra primeiro, como prometeu.
@@ -54,12 +88,15 @@ export function spawnCustomer(d: Draft) {
   const noble = s.level >= NOBLE_LEVEL ? 0.6 + (has(s, 'vitral-arcano') ? 0.4 : 0) : 0;
   const weights = { aventureiro: 1, estudioso: 1, morador: 1.2, viajante: 0.8, nobre: noble } as Record<CustomerArchetype, number>;
   if (s.event) for (const [k, w] of Object.entries(DAY_EVENTS[s.event].archetypeBoost)) weights[k as CustomerArchetype] += w;
+  // No baile da nobreza (Concurso Real) a rua se enche de nobres.
+  if (royalChapter(s)?.goal.kind === 'nobres') weights.nobre += BALL_NOBLE_BOOST;
   if (s.level < NOBLE_LEVEL) weights.nobre = 0;
   const archetype = weightedPick(weights, ctx.random);
   const info = ARCHETYPES[archetype];
   // Ninguém pede o que só aparece muitos níveis depois.
   // Poções da estação só são pedidas na estação delas.
-  const wants = info.wants.filter((id) => RECIPES_BY_ID[id].unlockLevel <= s.level + 1 && inSeason(s, RECIPES_BY_ID[id]));
+  // A Poção da Coroa só vira pedido depois do Concurso Real.
+  const wants = info.wants.filter((id) => (RECIPES_BY_ID[id].legend ? s.knownRecipes.includes(id) : RECIPES_BY_ID[id].secret ? royalWon(s) : RECIPES_BY_ID[id].unlockLevel <= s.level + 1) && inSeason(s, RECIPES_BY_ID[id]));
 
   // O primeiro cliente do jogo sempre pede algo que você tem, para ensinar a vender.
   const firstEver = s.day === 1 && s.stats.served === 0 && s.stats.lost === 0 && s.customers.length === 0;
@@ -93,7 +130,7 @@ export function spawnCustomer(d: Draft) {
 }
 
 /** Multiplicador de paciência (sino encantado e talento "Freguesia fiel"). */
-export const patienceFactor = (s: GameSave) => (has(s, 'sino-encantado') ? 1.3 : 1) * (1 + talentBonus(s, 'freguesia'));
+export const patienceFactor = (s: GameSave) => (has(s, 'sino-encantado') ? 1.3 : 1) * (1 + talentBonus(s, 'freguesia')) * (1 + villageBonus(s, 'paciencia'));
 
 /** Preço máximo que o cliente aceita por uma poção. */
 export function maxPriceFor(s: GameSave, c: Customer, recipeId: string) {
@@ -101,7 +138,7 @@ export function maxPriceFor(s: GameSave, c: Customer, recipeId: string) {
   const substitute = recipeId !== c.wantedRecipeId;
   const fame = 1 + Math.min(s.reputation, 240) / 800;
   const decor = (has(s, 'prateleira-extra') ? 1.03 : 1) * (has(s, 'iluminacao-aconchegante') ? 1.04 : 1) * (has(s, 'vitral-arcano') ? 1.05 : 1) * (has(s, 'torre-alquimista') ? 1.08 : 1);
-  const skill = (1 + masteryStars(s, recipeId) * STAR_BONUS) * (1 + talentBonus(s, 'labia'));
+  const skill = (1 + masteryStars(s, recipeId) * STAR_BONUS) * (1 + talentBonus(s, 'labia')) * (1 + talentBonus(s, 'toque-de-ouro')) * (1 + villageBonus(s, 'preco'));
   const season = r.category === seasonCategory(s) ? SEASON_PRICE_BONUS : 1;
   const event = eventCategoryFactor(s, recipeId);
   return Math.round(r.basePrice * c.budgetFactor * fame * decor * skill * season * event * (substitute ? 0.9 : 1));
@@ -109,6 +146,8 @@ export function maxPriceFor(s: GameSave, c: Customer, recipeId: string) {
 
 /** Uma poção serve para o cliente? (a pedida, ou outra da mesma categoria como substituta) */
 export function suits(c: Customer, recipeId: string) {
+  // O Cliente misterioso só aceita a poção exata da charada.
+  if (c.mystery) return recipeId === c.wantedRecipeId;
   // A Condessa da estreia aceita qualquer poção da loja nova.
   if (c.vip?.kind === 'estreia') return true;
   return recipeId === c.wantedRecipeId || RECIPES_BY_ID[recipeId].category === RECIPES_BY_ID[c.wantedRecipeId].category;
@@ -138,6 +177,8 @@ export function reservedForOrder(save: GameSave, recipeId: string): number {
  */
 export function bestOffer(save: GameSave, c: Customer): string | null {
   // Poções guardadas para o pedido especial não saem no atendimento rápido.
+  // A charada é para o jogador resolver: o atendimento rápido não entrega a resposta.
+  if (c.mystery) return null;
   const forSale = save.potions.filter((p) => p.forSale && p.quantity - reservedForOrder(save, p.recipeId) > 0).map((p) => p.recipeId);
   if (forSale.includes(c.wantedRecipeId)) return c.wantedRecipeId;
   if (c.vip) return forSale.filter((id) => suits(c, id)).sort((a, b) => RECIPES_BY_ID[b].basePrice - RECIPES_BY_ID[a].basePrice)[0] ?? null;
@@ -154,12 +195,16 @@ function removeCustomer(d: Draft, c: Customer, reason: 'paciencia' | 'preco' | '
     d.s.stats.lost += 1;
     const lost = d.s.stats.lostByRecipe ?? {};
     d.s.stats.lostByRecipe = { ...lost, [c.wantedRecipeId]: (lost[c.wantedRecipeId] ?? 0) + 1 };
+    royalOnLost(d, c);
   }
 }
 
 function completeSale(d: Draft, c: Customer, recipeId: string, price: number) {
   const s = d.s;
   const r = RECIPES_BY_ID[recipeId];
+  // Poções Finas e Primorosas saem primeiro e valem mais (toque de mestre).
+  const quality = takeBestQuality(s, recipeId);
+  price = Math.round(price * (1 + QUALITY_BONUS[quality]));
   takePotions(s, recipeId, 1);
   s.coins += price;
   s.stats.revenue += price;
@@ -169,7 +214,9 @@ function completeSale(d: Draft, c: Customer, recipeId: string, price: number) {
   const cozy = (has(s, 'iluminacao-aconchegante') ? 1 : 0) + (has(s, 'vitral-arcano') && c.archetype === 'nobre' ? 1 : 0);
   gainReputation(d, fair + cozy);
   s.lifetime = { sold: s.lifetime.sold + 1, earned: s.lifetime.earned + price };
-  d.events.push({ type: 'SALE', customerId: c.id, recipeId, price, substitute: recipeId !== c.wantedRecipeId });
+  d.events.push({ type: 'SALE', customerId: c.id, recipeId, price, substitute: recipeId !== c.wantedRecipeId, ...(quality > 1 ? { quality: quality as 2 | 3 } : {}) });
+  noteSale(d, price);
+  royalOnSale(d, c, recipeId);
   const tip = befriend(d, c, recipeId, price);
   if (tip) s.lifetime = { ...s.lifetime, earned: s.lifetime.earned + tip };
   removeCustomer(d, c, 'atendido');
@@ -183,6 +230,19 @@ export function serveCustomer(d: Draft, customerId: string, recipeId: string): b
   if (s.phase !== 'expediente') return fail(d, 'A loja está fechada.');
   const stack = s.potions.find((p) => p.recipeId === recipeId);
   if (!stack || stack.quantity < 1 || !stack.forSale) return fail(d, 'Essa poção não está à venda.');
+  if (c.mystery) {
+    if (recipeId !== c.wantedRecipeId) {
+      c.remark = `Hmm… não era bem isso. ${RECIPES_BY_ID[c.wantedRecipeId].riddle}`;
+      c.waitedMs += c.patienceMs * 0.15;
+      d.events.push({ type: 'MYSTERY_WRONG', customerId });
+      return true;
+    }
+    const price = RECIPES_BY_ID[recipeId].basePrice * MYSTERY_PAYS;
+    completeSale(d, c, recipeId, price);
+    grantCrystals(d, MYSTERY_CRYSTALS, 'misterio');
+    d.events.push({ type: 'MYSTERY_SOLVED', recipeId, coins: price, crystals: MYSTERY_CRYSTALS });
+    return true;
+  }
   if (!suits(c, recipeId)) {
     c.remark = 'Hmm… não é bem disso que eu preciso.';
     d.events.push({ type: 'CUSTOMER_REFUSED', customerId, reason: 'produto' });

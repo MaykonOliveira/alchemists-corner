@@ -6,14 +6,47 @@ import { useGameStore } from '../../store/gameStore';
 import { IngredientIcon, PotionIcon } from '../../ui/SpriteIcon';
 import { masteryStars } from '../../domain/rules/mastery';
 import { Stars } from '../../ui/Stars';
+import { LEGEND_LEVEL, LEGENDS, legendKnown, pagesFor } from '../../domain/rules/legends';
+
+/** Lendas do grimório (pacote U): seis receitas fora do livro, montadas com páginas rasgadas e experimentos. */
+function Legends({ save }: { save: GameSave }) {
+  const anyPage = LEGENDS.some((r) => pagesFor(save, r.id) > 0 || save.knownRecipes.includes(r.id));
+  if (save.level < LEGEND_LEVEL && !anyPage) return null;
+  return (
+    <section className="group legends">
+      <h3>📜 Lendas perdidas <span className="muted small">{legendKnown(save)} de {LEGENDS.length}</span></h3>
+      <p className="card-text small">Seis receitas que nenhum livro guarda. Páginas rasgadas aparecem no baú da semana, nos contratos, na vitória sobre a Vesper e no Concurso Real. Cada página revela um ingrediente: junte os três na bancada.</p>
+      <ul className="legend-grid">
+        {LEGENDS.map((r) => {
+          const known = save.knownRecipes.includes(r.id);
+          const pages = pagesFor(save, r.id);
+          return (
+            <li key={r.id} className={`legend-card ${known ? 'legend-known' : ''}`}>
+              <PotionIcon recipeId={r.id} size={32} muted={!known} />
+              <span className="row-title">{known ? r.name : pages ? `Lenda de ${r.category}` : '??? lenda perdida'}</span>
+              <span className="legend-pages" aria-label={`${pages} de ${r.ingredients.length} páginas`}>
+                {r.ingredients.map((i, k) => (k < pages || known
+                  ? <span key={k} className="legend-slot on" title={INGREDIENTS_BY_ID[i.ingredientId].name}><IngredientIcon ingredientId={i.ingredientId} /></span>
+                  : <span key={k} className="legend-slot">?</span>))}
+              </span>
+              <span className="small muted">{known ? `preço-base ${r.basePrice}` : pages >= r.ingredients.length ? 'Receita completa: misture na bancada!' : `${pages}/${r.ingredients.length} páginas`}</span>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
 
 export function RecipesPanel({ save }: { save: GameSave }) {
-  const known = RECIPES.filter((r) => save.knownRecipes.includes(r.id)).length;
+  // A Poção da Coroa só aparece no livro depois que o Concurso Real a ensina.
+  const book = RECIPES.filter((r) => !r.legend && (!r.secret || save.knownRecipes.includes(r.id)));
+  const known = book.filter((r) => save.knownRecipes.includes(r.id)).length;
   return (
     <>
-      <p className="panel-lead">{known} de {RECIPES.length} receitas anotadas. Novas páginas se revelam com o nível da loja ou por experimentos.</p>
+      <p className="panel-lead">{known} de {book.length} receitas anotadas. Novas páginas se revelam com o nível da loja ou por experimentos.</p>
       <ul className="list">
-        {RECIPES.map((r) => {
+        {book.map((r) => {
           const isKnown = save.knownRecipes.includes(r.id);
           return (
             <li key={r.id} className={`card ${isKnown ? '' : 'card-locked'}`}>
@@ -36,6 +69,7 @@ export function RecipesPanel({ save }: { save: GameSave }) {
           );
         })}
       </ul>
+      <Legends save={save} />
       <Experiment save={save} />
     </>
   );

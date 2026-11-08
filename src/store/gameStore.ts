@@ -21,9 +21,12 @@ import { CATALOG_BY_ID } from '../domain/data/catalog';
 import { SEASON_FESTS } from '../domain/data/retention';
 import { seasonOf } from '../domain/rules/world';
 import { funnel } from '../analytics/funnel';
+import { ROYAL_CHAPTERS } from '../domain/data/royal';
+import { STIR_LEVEL } from '../domain/rules/quality';
+import { STAGE_NAMES, VILLAGE_BY_ID } from '../domain/data/village';
 
 export type PanelId =
-  | 'ingredients' | 'production' | 'recipes' | 'orders' | 'report' | 'shelves' | 'counter' | 'door' | 'upgrades' | 'grimoire' | 'album' | 'street' | 'goals' | 'season';
+  | 'ingredients' | 'production' | 'recipes' | 'orders' | 'report' | 'shelves' | 'counter' | 'door' | 'upgrades' | 'grimoire' | 'album' | 'street' | 'goals' | 'season' | 'royal' | 'village';
 
 export interface HoverInfo {
   id: string;
@@ -39,7 +42,7 @@ export interface Toast {
   tone: 'info' | 'ok' | 'warn' | 'gold';
 }
 
-export type ModalId = 'settings' | 'levelup' | 'share' | null;
+export type ModalId = 'settings' | 'levelup' | 'share' | 'royal' | null;
 
 export type UiCommand =
   | { type: 'OPEN_PANEL'; panel: PanelId }
@@ -150,7 +153,7 @@ export const useGameStore = create<StoreState>()(
           return advanceTutorial(3);
         case 'BREW_STARTED':
           if (e.by === 'aprendiz') return toast(`O aprendiz pôs no fogo: ${RECIPES_BY_ID[e.recipeId].name} (${e.batches} lote${e.batches > 1 ? 's' : ''}).`);
-          toast(`O caldeirão começou a ferver: ${RECIPES_BY_ID[e.recipeId].name}.`);
+          toast(`O caldeirão começou a ferver: ${RECIPES_BY_ID[e.recipeId].name}.${(get().save?.level ?? 0) >= STIR_LEVEL ? ' Dê o toque de mestre para um lote melhor!' : ''}`);
           return advanceTutorial(4);
         case 'RAVEN_DELIVERY': {
           const units = e.items.reduce((n, i) => n + i.qty, 0);
@@ -158,7 +161,19 @@ export const useGameStore = create<StoreState>()(
         }
         case 'HELPER_TOGGLED':
           return toast(`${UPGRADES_BY_ID[e.upgradeId].name}: ${e.on ? 'de volta ao trabalho!' : 'descansando.'}`);
-        case 'BREW_DONE': return toast(`${e.qty}× ${RECIPES_BY_ID[e.recipeId].name} prontas nas prateleiras!`, 'ok');
+        case 'BREW_DONE':
+          if (e.quality) return toast(`${e.qty}× ${RECIPES_BY_ID[e.recipeId].name} ${e.quality === 3 ? 'primorosas ✦✦' : 'finas ✦'} nas prateleiras! Vendem ${e.quality === 3 ? '50' : '20'}% mais caro.`, 'gold');
+          return toast(`${e.qty}× ${RECIPES_BY_ID[e.recipeId].name} prontas nas prateleiras!`, 'ok');
+        case 'STIRRED':
+          return toast(e.hits >= 3 ? '🥄 Mexida perfeita! O lote sai Primoroso.' : e.hits === 2 ? '🥄 Boa mexida: o lote sai Fino.' : '🥄 A mexida saiu torta. O lote sai comum.', e.hits >= 2 ? 'gold' : undefined);
+        case 'PAGE_FOUND':
+          return toast(`📜 Uma página rasgada veio com ${e.source}: uma lenda perdida leva ${INGREDIENTS_BY_ID[e.ingredientId].name}. Veja em Receitas.`, 'gold');
+        case 'MYSTERY_ARRIVED':
+          return toast('❓ Um viajante encapuzado entrou. Ele não diz o que quer: decifre a charada!', 'gold');
+        case 'MYSTERY_SOLVED':
+          return toast(`❓ Charada resolvida! Era ${RECIPES_BY_ID[e.recipeId].name}: +${e.coins} moedas e +${e.crystals} cristais.`, 'gold');
+        case 'MYSTERY_WRONG':
+          return toast('❓ “Não é isso…” O viajante ficou impaciente. Tente outra.', 'warn');
         case 'SALE':
           selectNextAfter(e.customerId);
           funnel.mark('first_sale');
@@ -195,6 +210,7 @@ export const useGameStore = create<StoreState>()(
         }
         case 'DISCOVERY':
           set((st) => ({ ui: { ...st.ui, lastHint: null } }));
+          if (e.legend) return toast(`📜 LENDA DESCOBERTA! ${RECIPES_BY_ID[e.recipeId].name} saiu do caldeirão. +5 cristais, e os clientes já ouviram falar.`, 'gold');
           return toast(`Descoberta! ${RECIPES_BY_ID[e.recipeId].name} foi anotada no livro.`, 'gold');
         case 'EXPERIMENT_FAILED':
           set((st) => ({ ui: { ...st.ui, lastHint: e.hint } }));
@@ -295,6 +311,20 @@ export const useGameStore = create<StoreState>()(
           return toast(`⚔️ Desafio da semana ${e.week}: abra a loja quando quiser. Os clientes de hoje são os mesmos para todo mundo!`, 'gold');
         case 'CHALLENGE_DONE':
           return toast(`⚔️ Desafio da semana: ${e.score} pontos${e.best ? ' (seu recorde)' : ''}! Compartilhe o placar.`, 'gold');
+        case 'ROYAL_INVITE':
+          return toast('📯 Uma carta com o selo da Coroa chegou: o Concurso Real de Alquimia começou!', 'gold');
+        case 'ROYAL_PROGRESS':
+          return e.progress < e.goal ? toast(`👑 Concurso Real: ${e.progress}/${e.goal}`, 'ok') : undefined;
+        case 'ROYAL_STREAK_LOST':
+          return toast('👑 Um nobre foi embora: a sequência do baile recomeçou.', 'warn');
+        case 'ROYAL_RETRY':
+          return toast(`👑 O prazo de “${ROYAL_CHAPTERS[e.chapter].title}” venceu. A Rainha deu mais tempo, e o que você entregou continua valendo.`, 'warn');
+        case 'VILLAGE_STAGE': {
+          const p = VILLAGE_BY_ID[e.projectId];
+          return toast(e.stage >= 3 ? `${p.icon} ${p.name} inaugurada! ${p.bonusText}` : `${p.icon} ${p.name}: ${STAGE_NAMES[e.stage - 1].toLowerCase()} pronta.`, 'gold');
+        }
+        case 'RECORD':
+          return e.kind === 'bestSale' ? toast(`🏅 Recorde pessoal: venda de ${e.value} moedas!`, 'gold') : undefined;
         default:
           return;
       }

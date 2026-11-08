@@ -5,6 +5,7 @@ import type { Contract, GameSave } from '../models/types';
 import { fail, nextId, pick, type Draft } from './context';
 import { has, ingredientCapacity, countIngredients, potionStock, takePotions } from './economy';
 import { talentBonus } from './mastery';
+import { findPage } from './legends';
 import { gainReputation, gainXp } from './progression';
 
 /** Nível a partir do qual a loja recebe contratos de vários dias. */
@@ -136,6 +137,7 @@ function completeContract(d: Draft, c: Contract) {
   s.nextContractDay = s.day + 2;
   gainReputation(d, c.rewardRep);
   d.events.push({ type: 'CONTRACT_DONE', contractId: c.id, coins: c.rewardCoins, seal: c.rewardSeal });
+  findPage(d, 'o cliente do contrato');
   gainXp(d, c.rewardXp);
 }
 

@@ -362,7 +362,7 @@
   },
   "jar": {
    "frame": {
-    "x": 80,
+    "x": 171,
     "y": 326,
     "w": 6,
     "h": 8
@@ -402,7 +402,7 @@
   },
   "marker": {
    "frame": {
-    "x": 180,
+    "x": 271,
     "y": 326,
     "w": 7,
     "h": 6
@@ -422,7 +422,7 @@
   },
   "coin": {
    "frame": {
-    "x": 129,
+    "x": 220,
     "y": 326,
     "w": 7,
     "h": 7
@@ -442,7 +442,7 @@
   },
   "heart": {
    "frame": {
-    "x": 172,
+    "x": 263,
     "y": 326,
     "w": 7,
     "h": 6
@@ -462,7 +462,7 @@
   },
   "angry": {
    "frame": {
-    "x": 121,
+    "x": 212,
     "y": 326,
     "w": 7,
     "h": 7
@@ -482,7 +482,7 @@
   },
   "sad": {
    "frame": {
-    "x": 145,
+    "x": 236,
     "y": 326,
     "w": 5,
     "h": 7
@@ -502,7 +502,7 @@
   },
   "sparkle": {
    "frame": {
-    "x": 202,
+    "x": 334,
     "y": 326,
     "w": 5,
     "h": 5
@@ -522,7 +522,7 @@
   },
   "liquid": {
    "frame": {
-    "x": 87,
+    "x": 178,
     "y": 326,
     "w": 33,
     "h": 7
@@ -702,7 +702,7 @@
   },
   "dot-bubble": {
    "frame": {
-    "x": 208,
+    "x": 340,
     "y": 326,
     "w": 3,
     "h": 3
@@ -722,7 +722,7 @@
   },
   "px": {
    "frame": {
-    "x": 212,
+    "x": 344,
     "y": 326,
     "w": 2,
     "h": 2
@@ -742,7 +742,7 @@
   },
   "dot-steam": {
    "frame": {
-    "x": 196,
+    "x": 328,
     "y": 326,
     "w": 5,
     "h": 5
@@ -762,8 +762,8 @@
   },
   "fire-0": {
    "frame": {
-    "x": 437,
-    "y": 311,
+    "x": 32,
+    "y": 326,
     "w": 14,
     "h": 9
    },
@@ -782,8 +782,8 @@
   },
   "fire-1": {
    "frame": {
-    "x": 452,
-    "y": 311,
+    "x": 47,
+    "y": 326,
     "w": 14,
     "h": 9
    },
@@ -802,8 +802,8 @@
   },
   "fire-2": {
    "frame": {
-    "x": 467,
-    "y": 311,
+    "x": 62,
+    "y": 326,
     "w": 14,
     "h": 9
    },
@@ -1422,7 +1422,7 @@
   },
   "parcel": {
    "frame": {
-    "x": 188,
+    "x": 279,
     "y": 326,
     "w": 7,
     "h": 6
@@ -1442,7 +1442,7 @@
   },
   "perch": {
    "frame": {
-    "x": 151,
+    "x": 242,
     "y": 326,
     "w": 20,
     "h": 6
@@ -1462,7 +1462,7 @@
   },
   "zz": {
    "frame": {
-    "x": 137,
+    "x": 228,
     "y": 326,
     "w": 7,
     "h": 7
@@ -1882,7 +1882,7 @@
   },
   "cat-sleep": {
    "frame": {
-    "x": 63,
+    "x": 140,
     "y": 326,
     "w": 16,
     "h": 8
@@ -2222,7 +2222,7 @@
   },
   "awning": {
    "frame": {
-    "x": 0,
+    "x": 77,
     "y": 326,
     "w": 62,
     "h": 8
@@ -2237,6 +2237,166 @@
    },
    "sourceSize": {
     "w": 62,
+    "h": 8
+   }
+  },
+  "trophy-0": {
+   "frame": {
+    "x": 501,
+    "y": 311,
+    "w": 7,
+    "h": 10
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 7,
+    "h": 10
+   },
+   "sourceSize": {
+    "w": 7,
+    "h": 10
+   }
+  },
+  "trophy-1": {
+   "frame": {
+    "x": 0,
+    "y": 326,
+    "w": 7,
+    "h": 10
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 7,
+    "h": 10
+   },
+   "sourceSize": {
+    "w": 7,
+    "h": 10
+   }
+  },
+  "trophy-2": {
+   "frame": {
+    "x": 8,
+    "y": 326,
+    "w": 7,
+    "h": 10
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 7,
+    "h": 10
+   },
+   "sourceSize": {
+    "w": 7,
+    "h": 10
+   }
+  },
+  "trophy-3": {
+   "frame": {
+    "x": 16,
+    "y": 326,
+    "w": 7,
+    "h": 10
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 7,
+    "h": 10
+   },
+   "sourceSize": {
+    "w": 7,
+    "h": 10
+   }
+  },
+  "trophy-4": {
+   "frame": {
+    "x": 24,
+    "y": 326,
+    "w": 7,
+    "h": 10
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 7,
+    "h": 10
+   },
+   "sourceSize": {
+    "w": 7,
+    "h": 10
+   }
+  },
+  "potion-misterio": {
+   "frame": {
+    "x": 413,
+    "y": 311,
+    "w": 7,
+    "h": 10
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 7,
+    "h": 10
+   },
+   "sourceSize": {
+    "w": 7,
+    "h": 10
+   }
+  },
+  "trophy-shelf": {
+   "frame": {
+    "x": 287,
+    "y": 326,
+    "w": 40,
+    "h": 5
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 40,
+    "h": 5
+   },
+   "sourceSize": {
+    "w": 40,
+    "h": 5
+   }
+  },
+  "crown": {
+   "frame": {
+    "x": 157,
+    "y": 326,
+    "w": 13,
+    "h": 8
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 13,
+    "h": 8
+   },
+   "sourceSize": {
+    "w": 13,
     "h": 8
    }
   },
@@ -2282,7 +2442,7 @@
   },
   "potion-cura-simples": {
    "frame": {
-    "x": 341,
+    "x": 349,
     "y": 311,
     "w": 7,
     "h": 10
@@ -2302,7 +2462,7 @@
   },
   "potion-tonico-energia": {
    "frame": {
-    "x": 421,
+    "x": 477,
     "y": 311,
     "w": 7,
     "h": 10
@@ -2322,7 +2482,7 @@
   },
   "potion-elixir-concentracao": {
    "frame": {
-    "x": 349,
+    "x": 357,
     "y": 311,
     "w": 7,
     "h": 10
@@ -2342,7 +2502,7 @@
   },
   "potion-visao-noturna": {
    "frame": {
-    "x": 429,
+    "x": 493,
     "y": 311,
     "w": 7,
     "h": 10
@@ -2382,7 +2542,7 @@
   },
   "potion-pocao-brilho": {
    "frame": {
-    "x": 397,
+    "x": 437,
     "y": 311,
     "w": 7,
     "h": 10
@@ -2402,7 +2562,7 @@
   },
   "potion-pocao-sorte": {
    "frame": {
-    "x": 405,
+    "x": 461,
     "y": 311,
     "w": 7,
     "h": 10
@@ -2422,7 +2582,7 @@
   },
   "potion-elixir-geada": {
    "frame": {
-    "x": 373,
+    "x": 397,
     "y": 311,
     "w": 7,
     "h": 10
@@ -2442,7 +2602,7 @@
   },
   "potion-pena-leve": {
    "frame": {
-    "x": 389,
+    "x": 429,
     "y": 311,
     "w": 7,
     "h": 10
@@ -2462,7 +2622,7 @@
   },
   "potion-elixir-estelar": {
    "frame": {
-    "x": 357,
+    "x": 381,
     "y": 311,
     "w": 7,
     "h": 10
@@ -2482,7 +2642,7 @@
   },
   "potion-elixir-fenix": {
    "frame": {
-    "x": 365,
+    "x": 389,
     "y": 311,
     "w": 7,
     "h": 10
@@ -2502,7 +2662,7 @@
   },
   "potion-nectar-primavera": {
    "frame": {
-    "x": 381,
+    "x": 421,
     "y": 311,
     "w": 7,
     "h": 10
@@ -2522,7 +2682,7 @@
   },
   "potion-refresco-solar": {
    "frame": {
-    "x": 413,
+    "x": 469,
     "y": 311,
     "w": 7,
     "h": 10
@@ -2542,7 +2702,7 @@
   },
   "potion-cha-colheita": {
    "frame": {
-    "x": 333,
+    "x": 341,
     "y": 311,
     "w": 7,
     "h": 10
@@ -2579,13 +2739,153 @@
     "w": 7,
     "h": 10
    }
+  },
+  "potion-pocao-coroa": {
+   "frame": {
+    "x": 445,
+    "y": 311,
+    "w": 7,
+    "h": 10
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 7,
+    "h": 10
+   },
+   "sourceSize": {
+    "w": 7,
+    "h": 10
+   }
+  },
+  "potion-elixir-eco": {
+   "frame": {
+    "x": 373,
+    "y": 311,
+    "w": 7,
+    "h": 10
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 7,
+    "h": 10
+   },
+   "sourceSize": {
+    "w": 7,
+    "h": 10
+   }
+  },
+  "potion-tonico-gigante": {
+   "frame": {
+    "x": 485,
+    "y": 311,
+    "w": 7,
+    "h": 10
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 7,
+    "h": 10
+   },
+   "sourceSize": {
+    "w": 7,
+    "h": 10
+   }
+  },
+  "potion-pocao-invisivel": {
+   "frame": {
+    "x": 453,
+    "y": 311,
+    "w": 7,
+    "h": 10
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 7,
+    "h": 10
+   },
+   "sourceSize": {
+    "w": 7,
+    "h": 10
+   }
+  },
+  "potion-balsamo-sereia": {
+   "frame": {
+    "x": 333,
+    "y": 311,
+    "w": 7,
+    "h": 10
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 7,
+    "h": 10
+   },
+   "sourceSize": {
+    "w": 7,
+    "h": 10
+   }
+  },
+  "potion-elixir-sonhos": {
+   "frame": {
+    "x": 405,
+    "y": 311,
+    "w": 7,
+    "h": 10
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 7,
+    "h": 10
+   },
+   "sourceSize": {
+    "w": 7,
+    "h": 10
+   }
+  },
+  "potion-elixir-dragao": {
+   "frame": {
+    "x": 365,
+    "y": 311,
+    "w": 7,
+    "h": 10
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 7,
+    "h": 10
+   },
+   "sourceSize": {
+    "w": 7,
+    "h": 10
+   }
   }
  },
  "meta": {
   "image": "shop.png",
   "size": {
    "w": 512,
-   "h": 334
+   "h": 336
   },
   "scale": "1"
  }

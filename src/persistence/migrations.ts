@@ -3,6 +3,9 @@ import { ensureGoals } from '../domain/rules/goals';
 import { createNewGame } from '../domain/rules/initialState';
 import { MAX_LEVEL, unlockRecipesUpTo, xpForLevel } from '../domain/rules/progression';
 import { DAY_EVENTS } from '../domain/data/orders';
+import { ROYAL_CHAPTERS } from '../domain/data/royal';
+import { recordsFromReports } from '../domain/rules/records';
+import type { DayReport } from '../domain/models/types';
 
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 const num = (v: unknown, fallback: number) => (typeof v === 'number' && Number.isFinite(v) ? v : fallback);
@@ -24,6 +27,19 @@ function lifetimeFromReports(reports: unknown[]) {
     if (isObj(r.salesByRecipe)) for (const v of Object.values(r.salesByRecipe)) sold += Math.max(0, num(v, 0));
   }
   return { sold, earned };
+}
+
+function migrateRoyal(v: unknown): GameSave['royal'] {
+  if (!isObj(v)) return null;
+  const chapter = Math.max(0, Math.min(ROYAL_CHAPTERS.length, Math.floor(num(v.chapter, 0))));
+  return {
+    chapter,
+    progress: Math.max(0, Math.floor(num(v.progress, 0))),
+    delivered: numRecord(v.delivered, {}),
+    dueDay: Math.max(0, Math.floor(num(v.dueDay, 0))),
+    seen: Math.max(-1, Math.min(chapter, Math.floor(num(v.seen, -1)))),
+    retries: Math.max(0, Math.floor(num(v.retries, 0))),
+  };
 }
 
 /**
@@ -175,6 +191,13 @@ export function migrateSave(raw: unknown): GameSave | null {
     challengeBest: isObj(raw.challengeBest) && typeof raw.challengeBest.week === 'number'
       ? { week: raw.challengeBest.week, score: num(raw.challengeBest.score, 0) }
       : null,
+    royal: migrateRoyal(raw.royal),
+    village: numRecord(raw.village, {}),
+    pages: numRecord(raw.pages, {}),
+    // Saves antigos: os recordes começam dos melhores dias guardados nos relatórios.
+    records: isObj(raw.records)
+      ? { revenue: Math.max(0, num(raw.records.revenue, 0)), served: Math.max(0, num(raw.records.served, 0)), bestSale: Math.max(0, num(raw.records.bestSale, 0)) }
+      : recordsFromReports(arr<DayReport>(raw.reports, []).filter(isObj) as DayReport[]),
     seq: num(raw.seq, 0),
     settings: {
       volume: num(settings.volume, base.settings.volume),

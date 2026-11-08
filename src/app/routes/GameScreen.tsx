@@ -17,6 +17,7 @@ import { SidePanel } from '../layout/SidePanel';
 import { Toasts } from '../layout/Toasts';
 import { Milestone } from '../../features/celebrate/Milestone';
 import { ShareModal } from '../../features/share/ShareModal';
+import { RoyalScene } from '../../features/royal/RoyalScene';
 
 export function GameScreen() {
   const dispatch = useGameStore((s) => s.dispatch);
@@ -68,6 +69,7 @@ export function GameScreen() {
       <ShareModal />
       <UiSpotlight />
       <StoryIntro />
+      <RoyalScene />
     </div>
   );
 }

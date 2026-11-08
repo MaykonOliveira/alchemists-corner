@@ -7,7 +7,7 @@ describe('navegação em áreas', () => {
   it('cada tela está em exatamente uma área, com tecla única', () => {
     const panels = SHORTCUTS.map((s) => s.panel);
     expect(new Set(panels).size).toBe(panels.length);
-    expect(panels).toHaveLength(13);
+    expect(panels).toHaveLength(15);
     const keys = SHORTCUTS.map((s) => s.key);
     expect(new Set(keys).size).toBe(keys.length);
     expect(NAV_GROUPS.map((g) => g.id)).toEqual(['oficina', 'loja', 'progresso', 'mundo']);

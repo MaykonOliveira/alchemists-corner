@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { RECIPES_BY_ID } from '../../domain/data/recipes';
+import { ROYAL_CHAPTERS } from '../../domain/data/royal';
 import { gameEvents } from '../../game/events';
 import { sfx } from '../../audio/sound';
 import { useGameStore } from '../../store/gameStore';
+import { SpriteIcon } from '../../ui/SpriteIcon';
 
 /** Conquistas que viram um momento na tela (as outras continuam como aviso pequeno). */
 export const BIG_ACHIEVEMENTS: Record<string, { icon: string; title: string; text: string }> = {
@@ -14,7 +16,7 @@ export const BIG_ACHIEVEMENTS: Record<string, { icon: string; title: string; tex
   'rival-vencida': { icon: '🏆', title: 'Vitória na rua!', text: 'A Madame Vesper vai ter que caprichar.' },
 };
 
-interface Moment { key: number; icon: string; title: string; text: string }
+interface Moment { key: number; icon: string; title: string; text: string; trophy?: number }
 
 /** Momentos grandes sobre a loja: moedas caindo, brilho e som. Some sozinho ou com um toque. */
 export function Milestone() {
@@ -23,6 +25,14 @@ export function Milestone() {
   useEffect(() => gameEvents.on((e) => {
     if (e.type === 'ACHIEVEMENT' && BIG_ACHIEVEMENTS[e.id]) {
       setM({ key: Date.now(), ...BIG_ACHIEVEMENTS[e.id] });
+      sfx.sparkle();
+    } else if (e.type === 'ROYAL_CHAPTER_DONE') {
+      const c = ROYAL_CHAPTERS[e.chapter];
+      setM({ key: Date.now(), icon: c.icon, trophy: e.chapter, title: `${c.trophy}!`, text: `Prova vencida: ${c.title}. +${e.coins} moedas e ${e.crystals} cristais.` });
+      sfx.sparkle();
+    } else if (e.type === 'DISCOVERY' && e.legend) {
+      const r = RECIPES_BY_ID[e.recipeId];
+      setM({ key: Date.now(), icon: '📜', title: 'Lenda descoberta!', text: `${r.name}: ${r.need.toLowerCase()}. Nenhum livro guardava esta receita.` });
       sfx.sparkle();
     } else if (e.type === 'BREW_DONE') {
       const s = useGameStore.getState().save;
@@ -46,7 +56,7 @@ export function Milestone() {
           {Array.from({ length: 14 }, (_, i) => <i key={i} style={{ left: `${(i * 37) % 100}%`, animationDelay: `${(i % 7) * 0.12}s` }} />)}
         </span>
       )}
-      <span className="milestone-icon" aria-hidden>{m.icon}</span>
+      <span className="milestone-icon" aria-hidden>{m.trophy !== undefined ? <SpriteIcon name={`trophy-${m.trophy}`} size={64} /> : m.icon}</span>
       <span className="milestone-title">{m.title}</span>
       <span className="milestone-text">{m.text}</span>
     </button>

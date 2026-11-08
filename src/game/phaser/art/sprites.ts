@@ -38,6 +38,9 @@ export const EXPANSION: Record<'cauldron-2' | 'counter-wing' | 'astrolabe', { x:
 /** Lugares da decoração da loja (fase 3): tapete, quadro, luminária, planta e toldo da janela. */
 export const DECOR_POS: Record<'rug' | 'frame' | 'lamp' | 'plant' | 'awning', { x: number; y: number }> = layout.decor;
 
+/** Concurso Real (fase 4): estante dos troféus embaixo do quadro de avisos. */
+export const ROYAL_POS: Record<'trophy-shelf', { x: number; y: number }> = layout.royal;
+
 /** Linhas (y relativo) das tábuas onde os frascos ficam apoiados. */
 export const SHELF_BOARDS: number[] = layout.shelfBoards;
 

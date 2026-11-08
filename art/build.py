@@ -15,6 +15,9 @@ import cat as CAT
 import seasonal as SE  # registra poções e ingredientes da estação em items.py
 import story as ST
 import decor as DE
+import royal as RO  # registra a Poção da Coroa em items.py
+import legends as LG  # registra as receitas lendárias em items.py
+import village as VI
 from room import draw_room
 from customers import customer_sheet, LOOKS, FW, FH, FRAMES
 
@@ -96,6 +99,8 @@ def main():
         shop[f'{k}-outline'] = outline_mask(cv)
     # Decoração da loja (fase 3)
     shop.update(DE.frames())
+    # Concurso Real (fase 4)
+    shop.update(RO.frames())
     for k in ('cauldron-2', 'counter-wing'):
         shop[f'{k}-outline'] = outline_mask(shop[k])
     for rid in I.LIQ:
@@ -113,6 +118,7 @@ def main():
     icons.update({f'ingredient-{i}': I.ingredient_icon(i) for i in I.INGREDIENTS})
     icons.update({f'helper-{h}': H.portrait(h) for h in ('corvo-entregador', 'aprendiz', 'golem-balconista')})
     icons['rival-vesper'] = SE.rival_portrait()
+    icons.update({f'trophy-{i}': RO.trophy_icon(i) for i in range(5)})
     cols = 8
     grid = Canvas(16 * cols, 16 * ((len(icons) + cols - 1) // cols))
     index = {}
@@ -129,9 +135,20 @@ def main():
               'shelfBoards': O.SHELF_BOARDS, 'customer': {'w': FW, 'h': FH, 'frames': FRAMES},
               'lategame': {k: {'x': x, 'y': y} for k, (x, y) in L.POS.items()},
               'expansion': {k: {'x': x, 'y': y} for k, (x, y) in X.POS.items()},
-              'decor': {k: {'x': x, 'y': y} for k, (x, y) in DE.POS.items()}}
+              'decor': {k: {'x': x, 'y': y} for k, (x, y) in DE.POS.items()},
+              'royal': {k: {'x': x, 'y': y} for k, (x, y) in RO.POS.items()}}
     with open(os.path.join(OUT, 'layout.json'), 'w') as fh:
         json.dump(layout, fh, indent=1)
+    # Obras da vila (fase 4, pacote W): grade de 4 estados por obra.
+    vf = VI.frames()
+    names = list(VI.BUILDINGS)
+    vsheet = Canvas(VI.W * 4, VI.H * len(names))
+    for row, name in enumerate(names):
+        for st in range(4):
+            vsheet.blit(vf[f'{name}-{st}'], st * VI.W, row * VI.H)
+    save(vsheet, 'village.png')
+    with open(os.path.join(OUT, 'village.json'), 'w') as fh:
+        json.dump({'w': VI.W, 'h': VI.H, 'rows': names}, fh, indent=1)
     # Quadros da história de abertura (pacote G).
     for name, cv in ST.frames().items():
         save(cv, f'{name}.png')

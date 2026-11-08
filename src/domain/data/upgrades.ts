@@ -36,6 +36,13 @@ export const UPGRADES: ShopUpgrade[] = [
     effect: 'Quando o caldeirão fica livre, prepara a poção que está mais em falta. Dá prioridade ao pedido especial.' },
   { id: 'golem-balconista', name: 'Golem balconista', cost: 1400, category: 'ajudante', requiredLevel: 5, upkeep: 15,
     effect: 'Atende quem espera há alguns segundos e aceita contrapropostas. Sem a poção certa, dispensa com educação.' },
+  // Treino da equipe (pacote X): cada ajudante pode evoluir uma vez no fim de jogo.
+  { id: 'corvo-veloz', name: 'Corvo veloz', cost: 9000, category: 'treino', requiredLevel: 15, requires: 'corvo-entregador',
+    effect: 'O corvo confere o armário duas vezes por hora e não cobra mais a taxa da viagem.' },
+  { id: 'aprendiz-dedicado', name: 'Aprendiz dedicado', cost: 12000, category: 'treino', requiredLevel: 15, requires: 'aprendiz',
+    effect: 'O aprendiz prepara até 5 lotes de uma vez e mantém 10 poções de cada receita nas prateleiras.' },
+  { id: 'golem-polido', name: 'Golem polido', cost: 15000, category: 'treino', requiredLevel: 15, requires: 'golem-balconista',
+    effect: 'Engrenagens novas: o golem atende duas vezes mais rápido e espera menos antes de dar a vez a você.' },
 ];
 
 export const HELPER_IDS = UPGRADES.filter((u) => u.category === 'ajudante').map((u) => u.id);
