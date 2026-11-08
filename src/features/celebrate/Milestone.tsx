@@ -30,6 +30,10 @@ export function Milestone() {
       const c = ROYAL_CHAPTERS[e.chapter];
       setM({ key: Date.now(), icon: c.icon, trophy: e.chapter, title: `${c.trophy}!`, text: `Prova vencida: ${c.title}. +${e.coins} moedas e ${e.crystals} cristais.` });
       sfx.sparkle();
+    } else if (e.type === 'DISCOVERY' && e.legend) {
+      const r = RECIPES_BY_ID[e.recipeId];
+      setM({ key: Date.now(), icon: '📜', title: 'Lenda descoberta!', text: `${r.name}: ${r.need.toLowerCase()}. Nenhum livro guardava esta receita.` });
+      sfx.sparkle();
     } else if (e.type === 'BREW_DONE') {
       const s = useGameStore.getState().save;
       const total = s ? Object.values(s.mastery).reduce((n, q) => n + q, 0) : 0;

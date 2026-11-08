@@ -166,6 +166,8 @@ export const useGameStore = create<StoreState>()(
           return toast(`${e.qty}× ${RECIPES_BY_ID[e.recipeId].name} prontas nas prateleiras!`, 'ok');
         case 'STIRRED':
           return toast(e.hits >= 3 ? '🥄 Mexida perfeita! O lote sai Primoroso.' : e.hits === 2 ? '🥄 Boa mexida: o lote sai Fino.' : '🥄 A mexida saiu torta. O lote sai comum.', e.hits >= 2 ? 'gold' : undefined);
+        case 'PAGE_FOUND':
+          return toast(`📜 Uma página rasgada veio com ${e.source}: uma lenda perdida leva ${INGREDIENTS_BY_ID[e.ingredientId].name}. Veja em Receitas.`, 'gold');
         case 'MYSTERY_ARRIVED':
           return toast('❓ Um viajante encapuzado entrou. Ele não diz o que quer: decifre a charada!', 'gold');
         case 'MYSTERY_SOLVED':
@@ -208,6 +210,7 @@ export const useGameStore = create<StoreState>()(
         }
         case 'DISCOVERY':
           set((st) => ({ ui: { ...st.ui, lastHint: null } }));
+          if (e.legend) return toast(`📜 LENDA DESCOBERTA! ${RECIPES_BY_ID[e.recipeId].name} saiu do caldeirão. +5 cristais, e os clientes já ouviram falar.`, 'gold');
           return toast(`Descoberta! ${RECIPES_BY_ID[e.recipeId].name} foi anotada no livro.`, 'gold');
         case 'EXPERIMENT_FAILED':
           set((st) => ({ ui: { ...st.ui, lastHint: e.hint } }));

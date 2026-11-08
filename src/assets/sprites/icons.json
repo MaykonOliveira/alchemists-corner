@@ -67,108 +67,132 @@
    112,
    16
   ],
-  "ingredient-folha-lunar": [
+  "potion-elixir-eco": [
    0,
+   32
+  ],
+  "potion-tonico-gigante": [
+   16,
+   32
+  ],
+  "potion-pocao-invisivel": [
+   32,
+   32
+  ],
+  "potion-balsamo-sereia": [
+   48,
+   32
+  ],
+  "potion-elixir-sonhos": [
+   64,
+   32
+  ],
+  "potion-elixir-dragao": [
+   80,
+   32
+  ],
+  "ingredient-folha-lunar": [
+   96,
    32
   ],
   "ingredient-hortela-brava": [
-   16,
+   112,
    32
   ],
   "ingredient-cristal-ambar": [
-   32,
-   32
+   0,
+   48
   ],
   "ingredient-po-de-pedra": [
-   48,
-   32
+   16,
+   48
   ],
   "ingredient-orvalho-feerico": [
-   64,
-   32
+   32,
+   48
   ],
   "ingredient-essencia-azul": [
-   80,
-   32
+   48,
+   48
   ],
   "ingredient-escama-salamandra": [
-   96,
-   32
+   64,
+   48
   ],
   "ingredient-cogumelo-lanterna": [
-   112,
-   32
+   80,
+   48
   ],
   "ingredient-raiz-mandragora": [
-   0,
+   96,
    48
   ],
   "ingredient-cristal-geada": [
-   16,
+   112,
    48
   ],
   "ingredient-pluma-grifo": [
-   32,
-   48
+   0,
+   64
   ],
   "ingredient-areia-estelar": [
-   48,
-   48
+   16,
+   64
   ],
   "ingredient-pena-fenix": [
-   64,
-   48
+   32,
+   64
   ],
   "ingredient-petala-aurora": [
-   80,
-   48
+   48,
+   64
   ],
   "ingredient-fruta-sol": [
-   96,
-   48
+   64,
+   64
   ],
   "ingredient-folha-rubra": [
-   112,
-   48
+   80,
+   64
   ],
   "ingredient-flor-neve": [
-   0,
+   96,
    64
   ],
   "helper-corvo-entregador": [
-   16,
-   64
-  ],
-  "helper-aprendiz": [
-   32,
-   64
-  ],
-  "helper-golem-balconista": [
-   48,
-   64
-  ],
-  "rival-vesper": [
-   64,
-   64
-  ],
-  "trophy-0": [
-   80,
-   64
-  ],
-  "trophy-1": [
-   96,
-   64
-  ],
-  "trophy-2": [
    112,
    64
   ],
-  "trophy-3": [
+  "helper-aprendiz": [
    0,
    80
   ],
-  "trophy-4": [
+  "helper-golem-balconista": [
    16,
+   80
+  ],
+  "rival-vesper": [
+   32,
+   80
+  ],
+  "trophy-0": [
+   48,
+   80
+  ],
+  "trophy-1": [
+   64,
+   80
+  ],
+  "trophy-2": [
+   80,
+   80
+  ],
+  "trophy-3": [
+   96,
+   80
+  ],
+  "trophy-4": [
+   112,
    80
   ]
  }

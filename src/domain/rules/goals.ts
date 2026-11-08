@@ -7,6 +7,7 @@ import { RECIPES_BY_ID } from '../data/recipes';
 import type { DailyGoal, GameEvent, GameSave, GoalKind, GoalsState, RecipeCategory } from '../models/types';
 import type { Draft } from './context';
 import { gainXp } from './progression';
+import { findPage } from './legends';
 import { addIngredients, inSeason, weekOf } from './street';
 
 /** Metas cumpridas na semana para abrir o baú (de 21 possíveis). */
@@ -131,6 +132,7 @@ export function claimChest(d: Draft): boolean {
   addIngredients(s, items);
   s.goals.chestClaimed = true;
   d.events.push({ type: 'CHEST_OPENED', coins, items });
+  findPage(d, 'o baú da semana');
   return true;
 }
 

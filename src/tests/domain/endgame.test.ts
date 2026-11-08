@@ -27,7 +27,7 @@ const customer = (over: Partial<Customer> = {}): Customer => ({
 /** Loja no nível máximo, aberta, com todas as receitas do livro. */
 const endgame = (over: Partial<GameSave> = {}): GameSave => {
   const s = { ...createNewGame(0), level: MAX_LEVEL, xp: xpForLevel(MAX_LEVEL), coins: 1000, day: 30, tutorialStep: 99, storySeen: true };
-  s.knownRecipes = RECIPES.filter((r) => !r.secret).map((r) => r.id);
+  s.knownRecipes = RECIPES.filter((r) => !r.secret && !r.legend).map((r) => r.id);
   s.phase = 'expediente';
   s.clockMin = OPEN_MIN + 60;
   return { ...s, ...over };
@@ -223,5 +223,47 @@ describe('Toque de mestre e cliente misterioso (pacote V)', () => {
     const solved = right.events.find((e) => e.type === 'MYSTERY_SOLVED');
     expect(solved && solved.type === 'MYSTERY_SOLVED' ? solved.coins : 0).toBe(RECIPES.find((r) => r.id === 'cura-simples')!.basePrice * 3);
     expect(right.save.crystals).toBeGreaterThan(s.crystals);
+  });
+});
+
+describe('Receitas lendárias (pacote U)', () => {
+  it('ficam fora do livro, não entram nas pistas e só saem por experimento', async () => {
+    const { LEGENDS } = await import('../../domain/rules/legends');
+    expect(LEGENDS.length).toBe(6);
+    const base = endgame();
+    expect(base.knownRecipes.some((id) => LEGENDS.some((r) => r.id === id))).toBe(false);
+    const eco = LEGENDS.find((r) => r.id === 'elixir-eco')!;
+    const ids = eco.ingredients.map((i) => i.ingredientId);
+    const r = run({ ...base, ingredients: Object.fromEntries(ids.map((id) => [id, 2])) }, { type: 'EXPERIMENT', ingredientIds: ids });
+    expect(r.save.knownRecipes).toContain('elixir-eco');
+    const ev = r.events.find((e) => e.type === 'DISCOVERY');
+    expect(ev && ev.type === 'DISCOVERY' ? ev.legend : false).toBe(true);
+    expect(r.save.crystals).toBeGreaterThan(base.crystals);
+    // Um erro não dá pista de lenda.
+    const miss = run({ ...base, ingredients: { 'folha-lunar': 3, 'pena-fenix': 3 } }, { type: 'EXPERIMENT', ingredientIds: ['folha-lunar', 'pena-fenix'] });
+    const hint = miss.events.find((e) => e.type === 'EXPERIMENT_FAILED');
+    expect(hint && hint.type === 'EXPERIMENT_FAILED' ? LEGENDS.some((l) => hint.hint.includes(l.name)) : true).toBe(false);
+  });
+
+  it('páginas rasgadas revelam ingredientes em ordem, no baú e nos contratos', async () => {
+    const { findPage, pagesFor } = await import('../../domain/rules/legends');
+    const s = endgame();
+    const d = { s: structuredClone(s), events: [] as GameEvent[], ctx };
+    for (let i = 0; i < 18; i++) findPage(d, 'teste');
+    expect(d.events.filter((e) => e.type === 'PAGE_FOUND').length).toBe(18);
+    expect(findPage(d, 'teste')).toBe(false);
+    expect(pagesFor(d.s, 'elixir-dragao')).toBe(3);
+    const low = { s: { ...structuredClone(s), level: 9 }, events: [] as GameEvent[], ctx };
+    expect(findPage(low, 'teste')).toBe(false);
+  });
+
+  it('clientes só pedem lendas que a loja conhece', () => {
+    const s = endgame();
+    let asked = false;
+    for (let i = 0; i < 200 && !asked; i++) {
+      const r = run({ ...s, customers: [], nextCustomerInMs: 0 } as GameSave, { type: 'ADVANCE', ms: 200 });
+      asked = r.save.customers.some((c) => ['elixir-eco', 'tonico-gigante', 'pocao-invisivel', 'balsamo-sereia', 'elixir-sonhos', 'elixir-dragao'].includes(c.wantedRecipeId));
+    }
+    expect(asked).toBe(false);
   });
 });

@@ -96,7 +96,7 @@ export function spawnCustomer(d: Draft) {
   // Ninguém pede o que só aparece muitos níveis depois.
   // Poções da estação só são pedidas na estação delas.
   // A Poção da Coroa só vira pedido depois do Concurso Real.
-  const wants = info.wants.filter((id) => (RECIPES_BY_ID[id].secret ? royalWon(s) : RECIPES_BY_ID[id].unlockLevel <= s.level + 1) && inSeason(s, RECIPES_BY_ID[id]));
+  const wants = info.wants.filter((id) => (RECIPES_BY_ID[id].legend ? s.knownRecipes.includes(id) : RECIPES_BY_ID[id].secret ? royalWon(s) : RECIPES_BY_ID[id].unlockLevel <= s.level + 1) && inSeason(s, RECIPES_BY_ID[id]));
 
   // O primeiro cliente do jogo sempre pede algo que você tem, para ensinar a vender.
   const firstEver = s.day === 1 && s.stats.served === 0 && s.stats.lost === 0 && s.customers.length === 0;

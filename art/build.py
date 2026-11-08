@@ -16,6 +16,7 @@ import seasonal as SE  # registra poções e ingredientes da estação em items.
 import story as ST
 import decor as DE
 import royal as RO  # registra a Poção da Coroa em items.py
+import legends as LG  # registra as receitas lendárias em items.py
 import village as VI
 from room import draw_room
 from customers import customer_sheet, LOOKS, FW, FH, FRAMES

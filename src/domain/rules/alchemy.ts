@@ -5,6 +5,8 @@ import { fail, type Draft } from './context';
 import { addPotions, countPotions, has, potionCapacity } from './economy';
 import { addMastery, talentBonus } from './mastery';
 import { gainXp } from './progression';
+import { grantCrystals } from './entitlements';
+import { LEGEND_CRYSTALS, LEGEND_XP } from './legends';
 import { markQuality, qualityFromHits } from './quality';
 
 export const MAX_BATCHES = 5;
@@ -118,15 +120,21 @@ export function experiment(d: Draft, ingredientIds: string[]): boolean {
     for (const id of ids) s.ingredients[id] -= 1;
     s.knownRecipes.push(match.id);
     s.prices[match.id] ??= match.basePrice;
-    d.events.push({ type: 'DISCOVERY', recipeId: match.id });
-    gainXp(d, 30);
+    if (match.legend) {
+      d.events.push({ type: 'DISCOVERY', recipeId: match.id, legend: true });
+      grantCrystals(d, LEGEND_CRYSTALS, 'lenda');
+      gainXp(d, LEGEND_XP);
+    } else {
+      d.events.push({ type: 'DISCOVERY', recipeId: match.id });
+      gainXp(d, 30);
+    }
     return true;
   }
 
   // Erro: consome apenas o primeiro ingrediente e revela uma pista concreta.
   s.ingredients[ids[0]] -= 1;
   s.researchPoints += 1;
-  const unknown = RECIPES.filter((r) => !r.secret && !s.knownRecipes.includes(r.id));
+  const unknown = RECIPES.filter((r) => !r.secret && !r.legend && !s.knownRecipes.includes(r.id));
   let hint: string;
   if (match) hint = `Você já conhece essa mistura: ${match.name}.`;
   else if (unknown.length === 0) hint = 'Você já descobriu todas as receitas do livro!';

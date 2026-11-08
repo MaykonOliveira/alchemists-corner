@@ -466,6 +466,8 @@ export interface GameSave {
   records: Records;
   /** Obras da vila: etapas concluídas (0 a 3) por obra (pacote W). */
   village: Record<string, number>;
+  /** Receitas lendárias (pacote U): quantos ingredientes de cada uma as páginas rasgadas já revelaram. */
+  pages: Record<string, number>;
   tutorialStep: number;
   seq: number;
   settings: Settings;
@@ -494,7 +496,7 @@ export type GameEvent =
   | { type: 'CONTRACT_DONE'; contractId: string; coins: number; seal: boolean }
   | { type: 'CONTRACT_FAILED'; contractId: string; coins: number }
   | { type: 'UPGRADE_BOUGHT'; upgradeId: string }
-  | { type: 'DISCOVERY'; recipeId: string }
+  | { type: 'DISCOVERY'; recipeId: string; legend?: boolean }
   | { type: 'EXPERIMENT_FAILED'; hint: string }
   | { type: 'DAY_CLOSED'; report: DayReport }
   | { type: 'DAY_STARTED'; day: number; event: DayEventId | null }

@@ -6,6 +6,7 @@ import { fail, type Draft } from './context';
 import { potionStock, takePotions } from './economy';
 import { masteryStars } from './mastery';
 import { gainXp, MAX_LEVEL } from './progression';
+import { findPage } from './legends';
 import { grantCrystals } from './entitlements';
 
 export const ROYAL_DONE = ROYAL_CHAPTERS.length;
@@ -77,6 +78,7 @@ function completeChapter(d: Draft) {
   grantCrystals(d, ch.reward.crystals, 'concurso');
   gainXp(d, 400 + 200 * r.chapter);
   d.events.push({ type: 'ROYAL_CHAPTER_DONE', chapter: r.chapter, coins: ch.reward.coins, crystals: ch.reward.crystals });
+  findPage(d, 'o arquivo da Coroa');
   const next = r.chapter + 1;
   if (next >= ROYAL_DONE) {
     s.royal = { ...r, chapter: ROYAL_DONE, progress: 0, delivered: {}, dueDay: 0 };
