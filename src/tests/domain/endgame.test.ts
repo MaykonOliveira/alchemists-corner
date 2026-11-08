@@ -154,3 +154,31 @@ describe('Metas sem teto (pacote X)', () => {
     expect(d && d.type === 'RAVEN_DELIVERY' ? d.fee : -1).toBe(0);
   });
 });
+
+describe('Reconstruir a vila (pacote W)', () => {
+  it('cada etapa cobra moedas; a inauguração pede as poções doadas e liga o bônus', async () => {
+    const { ingredientPrice } = await import('../../domain/rules/economy');
+    let s = endgame({ coins: 30000, potions: [] });
+    const before = ingredientPrice(s, 'folha-lunar');
+    s = run(s, { type: 'BUILD_VILLAGE', projectId: 'fonte' }, { type: 'BUILD_VILLAGE', projectId: 'fonte' }).save;
+    expect(s.village.fonte).toBe(2);
+    expect(s.coins).toBe(30000 - 7000);
+    // Sem as 10 Poções de Cura, a fonte não inaugura.
+    expect(run(s, { type: 'BUILD_VILLAGE', projectId: 'fonte' }).save.village.fonte).toBe(2);
+    s = { ...s, potions: [{ recipeId: 'cura-simples', quantity: 12, quality: 1, forSale: true }] };
+    const r = run(s, { type: 'BUILD_VILLAGE', projectId: 'fonte' });
+    expect(r.save.village.fonte).toBe(3);
+    expect(r.save.potions[0].quantity).toBe(2);
+    // O mercado pronto barateia o fornecedor.
+    let m = endgame({ coins: 30000 });
+    for (let i = 0; i < 3; i++) m = run(m, { type: 'BUILD_VILLAGE', projectId: 'mercado' }).save;
+    expect(m.village.mercado).toBe(3);
+    expect(ingredientPrice(m, 'pena-fenix')).toBeLessThan(ingredientPrice(endgame(), 'pena-fenix'));
+    expect(before).toBeGreaterThan(0);
+  });
+
+  it('a prefeitura só aceita ajuda a partir do nível 12', () => {
+    const s = run({ ...endgame({ coins: 30000 }), level: 11 }, { type: 'BUILD_VILLAGE', projectId: 'fonte' }).save;
+    expect(s.village.fonte).toBeUndefined();
+  });
+});

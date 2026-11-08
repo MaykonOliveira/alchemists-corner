@@ -59,9 +59,10 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    id: 'mundo', label: 'Mundo', icon: '🗺️', hint: 'A rua, a temporada e o álbum',
+    id: 'mundo', label: 'Mundo', icon: '🗺️', hint: 'A rua, a vila, a temporada e o álbum',
     items: [
       { panel: 'street', label: 'Rua', title: 'A rua da loja', icon: '🏘️', key: 'r' },
+      { panel: 'village', label: 'Vila', title: 'Reconstruir a vila', icon: '🏗️', key: 'v' },
       { panel: 'season', label: 'Temporada', title: 'Temporada e decoração', icon: '🌙', key: 't' },
       { panel: 'album', label: 'Álbum', title: 'Álbum da loja', icon: '🏆', key: 'a' },
     ],
@@ -98,6 +99,7 @@ const UNLOCK: Partial<Record<PanelId, { open: (s: GameSave) => boolean; fresh: (
   season: { open: (s) => s.day >= 3, fresh: (s) => s.day <= 4 },
   street: { open: (s) => s.level >= 3, fresh: (s) => s.level <= 4 },
   grimoire: { open: (s) => s.level >= 8 || sealsAvailable(s) > 0, fresh: (s) => s.level <= 9 },
+  village: { open: (s) => s.level >= 10, fresh: (s) => s.level <= 12 && Object.keys(s.village ?? {}).length === 0 },
   royal: { open: (s) => !!s.royal, fresh: (s) => (s.royal?.chapter ?? 0) === 0 },
 };
 

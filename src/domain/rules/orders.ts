@@ -1,4 +1,5 @@
 import { ORDER_CLIENTS, ROYAL_CLIENTS } from '../data/orders';
+import { villageBonus } from './villageBonus';
 import { RECIPES_BY_ID } from '../data/recipes';
 import { fail, nextId, pick, type Draft } from './context';
 import { potionStock, takePotions } from './economy';
@@ -21,7 +22,7 @@ export function maybeCreateOrder(d: Draft) {
     text: tpl.text,
     recipeId,
     qty,
-    rewardCoins: Math.round(r.basePrice * qty * 1.6 * (royal ? 1.25 : 1) * (1 + talentBonus(s, 'contatos'))),
+    rewardCoins: Math.round(r.basePrice * qty * 1.6 * (royal ? 1.25 : 1) * (1 + talentBonus(s, 'contatos')) * (1 + villageBonus(s, 'pedidos'))),
     rewardRep: 3 + Math.floor(qty / 2),
     rewardXp: 25 + qty * 6,
     dueDay: s.day + 2,

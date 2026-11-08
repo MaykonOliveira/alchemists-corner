@@ -12,6 +12,7 @@ import { SEASON_PRICE_BONUS } from '../data/world';
 import { eventCategoryFactor, inSeason, seasonalRecipe } from './street';
 import { letterVisitor, maybeSpawnVip, onVipServed } from './retention';
 import { noteSale } from './records';
+import { villageBonus } from './villageBonus';
 import { REGULARS_BY_ID } from '../data/world';
 import { BALL_NOBLE_BOOST } from '../data/royal';
 import { royalChapter, royalOnLost, royalOnSale, royalWon } from './royal';
@@ -25,7 +26,7 @@ export const NEGOTIATION_MARGIN = 1.2;
 export function nextSpawnDelay(s: GameSave, random: () => number) {
   const event = s.event ? DAY_EVENTS[s.event].spawnFactor : 1;
   const sign = (has(s, 'letreiro-novo') ? 0.75 : 1) * (has(s, 'sino-encantado') ? 0.9 : 1) * (has(s, 'balcao-duplo') ? 0.9 : 1);
-  const fame = (1 + Math.min(s.reputation, 400) / 800) * (1 + talentBonus(s, 'fama')) * (1 + talentBonus(s, 'renome'));
+  const fame = (1 + Math.min(s.reputation, 400) / 800) * (1 + talentBonus(s, 'fama')) * (1 + talentBonus(s, 'renome')) * (1 + villageBonus(s, 'movimento'));
   return Math.round((16000 * event * sign) / fame * (0.7 + random() * 0.6));
 }
 
@@ -99,7 +100,7 @@ export function spawnCustomer(d: Draft) {
 }
 
 /** Multiplicador de paciência (sino encantado e talento "Freguesia fiel"). */
-export const patienceFactor = (s: GameSave) => (has(s, 'sino-encantado') ? 1.3 : 1) * (1 + talentBonus(s, 'freguesia'));
+export const patienceFactor = (s: GameSave) => (has(s, 'sino-encantado') ? 1.3 : 1) * (1 + talentBonus(s, 'freguesia')) * (1 + villageBonus(s, 'paciencia'));
 
 /** Preço máximo que o cliente aceita por uma poção. */
 export function maxPriceFor(s: GameSave, c: Customer, recipeId: string) {
@@ -107,7 +108,7 @@ export function maxPriceFor(s: GameSave, c: Customer, recipeId: string) {
   const substitute = recipeId !== c.wantedRecipeId;
   const fame = 1 + Math.min(s.reputation, 240) / 800;
   const decor = (has(s, 'prateleira-extra') ? 1.03 : 1) * (has(s, 'iluminacao-aconchegante') ? 1.04 : 1) * (has(s, 'vitral-arcano') ? 1.05 : 1) * (has(s, 'torre-alquimista') ? 1.08 : 1);
-  const skill = (1 + masteryStars(s, recipeId) * STAR_BONUS) * (1 + talentBonus(s, 'labia')) * (1 + talentBonus(s, 'toque-de-ouro'));
+  const skill = (1 + masteryStars(s, recipeId) * STAR_BONUS) * (1 + talentBonus(s, 'labia')) * (1 + talentBonus(s, 'toque-de-ouro')) * (1 + villageBonus(s, 'preco'));
   const season = r.category === seasonCategory(s) ? SEASON_PRICE_BONUS : 1;
   const event = eventCategoryFactor(s, recipeId);
   return Math.round(r.basePrice * c.budgetFactor * fame * decor * skill * season * event * (substitute ? 0.9 : 1));

@@ -19,6 +19,7 @@ import { potionStock } from '../../domain/rules/economy';
 import { QuickServe } from '../../features/customers/QuickServe';
 import { SeasonPanel } from '../../features/season/SeasonPanel';
 import { RoyalPanel } from '../../features/royal/RoyalPanel';
+import { VillagePanel } from '../../features/world/VillagePanel';
 
 export function SidePanel() {
   const save = useGameStore((s) => s.save)!;
@@ -82,6 +83,7 @@ export function SidePanel() {
         {panel === 'goals' && <GoalsPanel save={save} />}
         {panel === 'season' && <SeasonPanel save={save} />}
         {panel === 'royal' && <RoyalPanel save={save} />}
+        {panel === 'village' && <VillagePanel save={save} />}
       </div>
     </aside>
   );

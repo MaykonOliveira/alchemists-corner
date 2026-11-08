@@ -449,6 +449,8 @@ export interface GameSave {
   royal: RoyalState | null;
   /** Recordes pessoais (dia de maior faturamento, mais clientes, maior venda). */
   records: Records;
+  /** Obras da vila: etapas concluídas (0 a 3) por obra (pacote W). */
+  village: Record<string, number>;
   tutorialStep: number;
   seq: number;
   settings: Settings;
@@ -518,4 +520,5 @@ export type GameEvent =
   | { type: 'ROYAL_STREAK_LOST'; chapter: number }
   | { type: 'ROYAL_WON' }
   | { type: 'RECORD'; kind: RecordKind; value: number; prev: number }
+  | { type: 'VILLAGE_STAGE'; projectId: string; stage: number }
   | { type: 'ERROR'; message: string };

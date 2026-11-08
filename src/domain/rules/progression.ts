@@ -5,6 +5,7 @@ import { learnTalent, masteredRecipes, sealsSpent, talentBonus } from './mastery
 import { LEVEL_GIFTS } from '../data/retention';
 import { addIngredients } from './street';
 import { restockUnlocked } from './economy';
+import { villageBonus } from './villageBonus';
 
 export const MAX_LEVEL = 15;
 /** A partir deste nível cada nível novo rende 1 Selo de Mestre. */
@@ -79,7 +80,7 @@ export function unlockRecipesUpTo(s: GameSave, level: number): string[] {
 export function gainXp(d: Draft, amount: number) {
   const s = d.s;
   const rankBefore = masterRank(s.xp);
-  s.xp += Math.max(0, Math.round(amount * (1 + talentBonus(s, 'sabedoria'))));
+  s.xp += Math.max(0, Math.round(amount * (1 + talentBonus(s, 'sabedoria')) * (1 + villageBonus(s, 'experiencia'))));
   const newLevel = levelFromXp(s.xp);
   while (s.level < newLevel) {
     s.level += 1;

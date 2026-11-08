@@ -130,6 +130,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'cinco-dominadas', name: 'Mãos de ouro', icon: '🌟', text: 'Domine 5 receitas (5 estrelas).', done: (s) => masteredRecipes(s) >= 5 },
   { id: 'grau-10', name: 'Mestre dos mestres', icon: '🧙', text: 'Alcance o grau de Mestre 10.', done: (s) => masterRank(s.xp) >= 10 },
   { id: 'dia-de-ouro', name: 'Dia de ouro', icon: '📈', text: 'Fature 5.000 moedas num só dia.', done: (s) => s.records.revenue >= 5000 },
+  { id: 'vila-nova', name: 'Vila renascida', icon: '🏘️', text: 'Inaugure as seis obras da vila.', done: (s) => Object.values(s.village ?? {}).filter((n) => n >= 3).length >= 6 },
   { id: 'sem-fim', name: 'Estudo sem fim', icon: '📚', text: 'Leve um talento sem fim ao grau 5.',
     done: (s) => TALENTS.some((t) => t.endless && (s.talents[t.id] ?? 0) >= 5) },
 ];

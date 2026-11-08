@@ -95,6 +95,7 @@ export function createNewGame(now: number = Date.now()): GameSave {
     sealsBought: 0,
     festivalSponsored: false,
     royal: null,
+    village: {},
     records: { revenue: 0, served: 0, bestSale: 0 },
     tutorialStep: 0,
     seq: 0,

@@ -192,6 +192,7 @@ export function migrateSave(raw: unknown): GameSave | null {
       ? { week: raw.challengeBest.week, score: num(raw.challengeBest.score, 0) }
       : null,
     royal: migrateRoyal(raw.royal),
+    village: numRecord(raw.village, {}),
     // Saves antigos: os recordes começam dos melhores dias guardados nos relatórios.
     records: isObj(raw.records)
       ? { revenue: Math.max(0, num(raw.records.revenue, 0)), served: Math.max(0, num(raw.records.served, 0)), bestSale: Math.max(0, num(raw.records.bestSale, 0)) }

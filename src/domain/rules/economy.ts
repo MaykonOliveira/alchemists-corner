@@ -6,6 +6,7 @@ import { fail, type Draft } from './context';
 import { masteryStars, STAR_BONUS, talentBonus } from './mastery';
 import { gainXp } from './progression';
 import { MOON_MARKET_EXTRA, seasonalStock } from './street';
+import { villageBonus } from './villageBonus';
 
 export const PRICE_MIN_FACTOR = 0.8;
 export const PRICE_MAX_FACTOR = 1.3;
@@ -21,7 +22,7 @@ export function priceRange(s: GameSave, recipeId: string) {
 
 /** Preço de um ingrediente no fornecedor (com o desconto do talento "Amigo do fornecedor"). */
 export const ingredientPrice = (s: GameSave, ingredientId: string) =>
-  Math.max(1, Math.round(INGREDIENTS_BY_ID[ingredientId].price * (1 - talentBonus(s, 'fornecedor-amigo'))));
+  Math.max(1, Math.round(INGREDIENTS_BY_ID[ingredientId].price * (1 - talentBonus(s, 'fornecedor-amigo')) * (1 - villageBonus(s, 'fornecedor'))));
 
 export const getPrice = (s: GameSave, recipeId: string) => s.prices[recipeId] ?? RECIPES_BY_ID[recipeId].basePrice;
 

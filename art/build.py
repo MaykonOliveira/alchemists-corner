@@ -16,6 +16,7 @@ import seasonal as SE  # registra poções e ingredientes da estação em items.
 import story as ST
 import decor as DE
 import royal as RO  # registra a Poção da Coroa em items.py
+import village as VI
 from room import draw_room
 from customers import customer_sheet, LOOKS, FW, FH, FRAMES
 
@@ -137,6 +138,16 @@ def main():
               'royal': {k: {'x': x, 'y': y} for k, (x, y) in RO.POS.items()}}
     with open(os.path.join(OUT, 'layout.json'), 'w') as fh:
         json.dump(layout, fh, indent=1)
+    # Obras da vila (fase 4, pacote W): grade de 4 estados por obra.
+    vf = VI.frames()
+    names = list(VI.BUILDINGS)
+    vsheet = Canvas(VI.W * 4, VI.H * len(names))
+    for row, name in enumerate(names):
+        for st in range(4):
+            vsheet.blit(vf[f'{name}-{st}'], st * VI.W, row * VI.H)
+    save(vsheet, 'village.png')
+    with open(os.path.join(OUT, 'village.json'), 'w') as fh:
+        json.dump({'w': VI.W, 'h': VI.H, 'rows': names}, fh, indent=1)
     # Quadros da história de abertura (pacote G).
     for name, cv in ST.frames().items():
         save(cv, f'{name}.png')

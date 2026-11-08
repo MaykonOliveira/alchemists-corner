@@ -22,9 +22,10 @@ import { SEASON_FESTS } from '../domain/data/retention';
 import { seasonOf } from '../domain/rules/world';
 import { funnel } from '../analytics/funnel';
 import { ROYAL_CHAPTERS } from '../domain/data/royal';
+import { STAGE_NAMES, VILLAGE_BY_ID } from '../domain/data/village';
 
 export type PanelId =
-  | 'ingredients' | 'production' | 'recipes' | 'orders' | 'report' | 'shelves' | 'counter' | 'door' | 'upgrades' | 'grimoire' | 'album' | 'street' | 'goals' | 'season' | 'royal';
+  | 'ingredients' | 'production' | 'recipes' | 'orders' | 'report' | 'shelves' | 'counter' | 'door' | 'upgrades' | 'grimoire' | 'album' | 'street' | 'goals' | 'season' | 'royal' | 'village';
 
 export interface HoverInfo {
   id: string;
@@ -304,6 +305,10 @@ export const useGameStore = create<StoreState>()(
           return toast('👑 Um nobre foi embora: a sequência do baile recomeçou.', 'warn');
         case 'ROYAL_RETRY':
           return toast(`👑 O prazo de “${ROYAL_CHAPTERS[e.chapter].title}” venceu. A Rainha deu mais tempo, e o que você entregou continua valendo.`, 'warn');
+        case 'VILLAGE_STAGE': {
+          const p = VILLAGE_BY_ID[e.projectId];
+          return toast(e.stage >= 3 ? `${p.icon} ${p.name} inaugurada! ${p.bonusText}` : `${p.icon} ${p.name}: ${STAGE_NAMES[e.stage - 1].toLowerCase()} pronta.`, 'gold');
+        }
         case 'RECORD':
           return e.kind === 'bestSale' ? toast(`🏅 Recorde pessoal: venda de ${e.value} moedas!`, 'gold') : undefined;
         default:
