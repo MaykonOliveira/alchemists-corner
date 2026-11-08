@@ -22,6 +22,7 @@ import { SEASON_FESTS } from '../domain/data/retention';
 import { seasonOf } from '../domain/rules/world';
 import { funnel } from '../analytics/funnel';
 import { ROYAL_CHAPTERS } from '../domain/data/royal';
+import { STIR_LEVEL } from '../domain/rules/quality';
 import { STAGE_NAMES, VILLAGE_BY_ID } from '../domain/data/village';
 
 export type PanelId =
@@ -152,7 +153,7 @@ export const useGameStore = create<StoreState>()(
           return advanceTutorial(3);
         case 'BREW_STARTED':
           if (e.by === 'aprendiz') return toast(`O aprendiz pôs no fogo: ${RECIPES_BY_ID[e.recipeId].name} (${e.batches} lote${e.batches > 1 ? 's' : ''}).`);
-          toast(`O caldeirão começou a ferver: ${RECIPES_BY_ID[e.recipeId].name}.`);
+          toast(`O caldeirão começou a ferver: ${RECIPES_BY_ID[e.recipeId].name}.${(get().save?.level ?? 0) >= STIR_LEVEL ? ' Dê o toque de mestre para um lote melhor!' : ''}`);
           return advanceTutorial(4);
         case 'RAVEN_DELIVERY': {
           const units = e.items.reduce((n, i) => n + i.qty, 0);
@@ -160,7 +161,17 @@ export const useGameStore = create<StoreState>()(
         }
         case 'HELPER_TOGGLED':
           return toast(`${UPGRADES_BY_ID[e.upgradeId].name}: ${e.on ? 'de volta ao trabalho!' : 'descansando.'}`);
-        case 'BREW_DONE': return toast(`${e.qty}× ${RECIPES_BY_ID[e.recipeId].name} prontas nas prateleiras!`, 'ok');
+        case 'BREW_DONE':
+          if (e.quality) return toast(`${e.qty}× ${RECIPES_BY_ID[e.recipeId].name} ${e.quality === 3 ? 'primorosas ✦✦' : 'finas ✦'} nas prateleiras! Vendem ${e.quality === 3 ? '50' : '20'}% mais caro.`, 'gold');
+          return toast(`${e.qty}× ${RECIPES_BY_ID[e.recipeId].name} prontas nas prateleiras!`, 'ok');
+        case 'STIRRED':
+          return toast(e.hits >= 3 ? '🥄 Mexida perfeita! O lote sai Primoroso.' : e.hits === 2 ? '🥄 Boa mexida: o lote sai Fino.' : '🥄 A mexida saiu torta. O lote sai comum.', e.hits >= 2 ? 'gold' : undefined);
+        case 'MYSTERY_ARRIVED':
+          return toast('❓ Um viajante encapuzado entrou. Ele não diz o que quer: decifre a charada!', 'gold');
+        case 'MYSTERY_SOLVED':
+          return toast(`❓ Charada resolvida! Era ${RECIPES_BY_ID[e.recipeId].name}: +${e.coins} moedas e +${e.crystals} cristais.`, 'gold');
+        case 'MYSTERY_WRONG':
+          return toast('❓ “Não é isso…” O viajante ficou impaciente. Tente outra.', 'warn');
         case 'SALE':
           selectNextAfter(e.customerId);
           funnel.mark('first_sale');

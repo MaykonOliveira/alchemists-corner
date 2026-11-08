@@ -143,6 +143,8 @@ function runApprentice(d: Draft) {
   const from = d.events.length;
   if (!startBrew(d, plan.recipeId, plan.batches)) return;
   for (const e of d.events.slice(from)) if (e.type === 'BREW_STARTED') e.by = 'aprendiz';
+  // O aprendiz não tem o toque de mestre: o preparo dele sai Comum.
+  for (const job of [d.s.brew, d.s.brew2]) if (job && job.elapsedMs === 0 && job.hits === undefined) job.byHelper = true;
   d.s.stats.helperWork.brews += 1;
 }
 
@@ -163,7 +165,8 @@ function runGolem(d: Draft, ms: number) {
   s.helpers.golemInMs = Math.max(0, s.helpers.golemInMs - ms);
   if (s.helpers.golemInMs > 0 || s.phase !== 'expediente') return;
   for (const c of s.customers) {
-    if (c.waitedMs < golemDelayMs(s)) continue;
+    // A charada do Cliente misterioso é só para o jogador.
+    if (c.mystery || c.waitedMs < golemDelayMs(s)) continue;
     const from = d.events.length;
     if (c.offer) {
       acceptOffer(d, c.id);

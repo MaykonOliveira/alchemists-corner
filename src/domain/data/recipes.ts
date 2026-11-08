@@ -86,4 +86,20 @@ export const RECIPES: Recipe[] = [
     hint: 'Só quem chega à final do Concurso Real conhece esta receita.' },
 ];
 
+/** Charadas do Cliente misterioso (pacote V): o problema, sem dizer o nome da poção. */
+const RIDDLES: Record<string, string> = {
+  'cura-simples': 'Caí do cavalo na estrada e o joelho ainda sangra. O que resolve?',
+  'tonico-energia': 'Tenho três dias de caminhada pela frente e as pernas já estão moles…',
+  'elixir-concentracao': 'Leio a mesma página dez vezes e nada entra na cabeça.',
+  'visao-noturna': 'Lá embaixo, nas galerias, não enxergo nem a minha mão.',
+  'balsamo-calmante': 'Conto carneiros até o sol nascer. Já são quatro noites assim.',
+  'pocao-brilho': 'Minha vela apaga com qualquer vento. Quero uma luz que dure.',
+  'pocao-sorte': 'Amanhã jogo dados com o barão. Preciso que eles caiam do meu lado.',
+  'elixir-geada': 'Vou cruzar as dunas ao meio-dia. Meus pés já queimam só de pensar.',
+  'pena-leve': 'Moro no último andar e a escada desabou. Como desço sem quebrar nada?',
+  'elixir-estelar': 'Hoje à noite as estrelas vão falar, e eu quero entender o que dizem.',
+  'elixir-fenix': 'Um velho guerreiro quase não respira. Só um milagre das cinzas o salva.',
+};
+for (const r of RECIPES) if (RIDDLES[r.id]) r.riddle = RIDDLES[r.id];
+
 export const RECIPES_BY_ID: Record<string, Recipe> = Object.fromEntries(RECIPES.map((r) => [r.id, r]));

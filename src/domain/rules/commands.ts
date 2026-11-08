@@ -18,6 +18,7 @@ import { challengeContext, redeemGift, sendGift, startChallenge, type GiftPayloa
 import { AWNINGS } from '../data/catalog';
 import { checkRoyalInvite, deliverRoyal, seeRoyal } from './royal';
 import { buildVillage } from './village';
+import { stir } from './quality';
 
 /**
  * Comandos tipados que alteram o estado canônico da partida.
@@ -66,7 +67,8 @@ export type DomainCommand =
   | { type: 'START_CHALLENGE' }
   | { type: 'DELIVER_ROYAL' }
   | { type: 'SEE_ROYAL' }
-  | { type: 'BUILD_VILLAGE'; projectId: string };
+  | { type: 'BUILD_VILLAGE'; projectId: string }
+  | { type: 'STIR'; slot: 1 | 2; hits: number };
 
 export interface CommandResult {
   save: GameSave;
@@ -161,5 +163,6 @@ function run(d: Draft, cmd: DomainCommand): boolean {
     case 'DELIVER_ROYAL': return deliverRoyal(d);
     case 'SEE_ROYAL': return seeRoyal(d);
     case 'BUILD_VILLAGE': return buildVillage(d, cmd.projectId);
+    case 'STIR': return stir(d, cmd.slot, cmd.hits);
   }
 }

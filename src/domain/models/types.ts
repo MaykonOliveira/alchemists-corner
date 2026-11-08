@@ -51,6 +51,10 @@ export interface Recipe {
   season?: SeasonId;
   /** Receita secreta: não libera por nível nem por experimento (a Poção da Coroa do Concurso Real). */
   secret?: boolean;
+  /** Receita lendária (pacote U): só se descobre experimentando, com a ajuda das páginas rasgadas. */
+  legend?: boolean;
+  /** Charada do Cliente misterioso (pacote V): descreve o problema sem dizer a poção. */
+  riddle?: string;
 }
 
 export interface PotionStack {
@@ -58,6 +62,9 @@ export interface PotionStack {
   quantity: number;
   quality: number;
   forSale: boolean;
+  /** Quantas desta pilha são de qualidade Fina e Primorosa (pacote V). O resto é Comum. */
+  fine?: number;
+  prime?: number;
 }
 
 export type CustomerArchetype = 'aventureiro' | 'estudioso' | 'morador' | 'viajante' | 'nobre';
@@ -76,6 +83,8 @@ export interface Customer {
   remark: string | null;
   /** Freguês fiel (id em REGULARS), se for um. */
   regularId?: string | null;
+  /** Cliente misterioso (pacote V): fala uma charada e só aceita a poção exata. */
+  mystery?: boolean;
   /** Visita especial (Condessa no dia 1, convidado da festa da estação): nome próprio e preço fixo. */
   vip?: { name: string; pays: number; kind: 'estreia' | 'festa' | 'carta' };
 }
@@ -124,6 +133,10 @@ export interface BrewJob {
   batches: number;
   elapsedMs: number;
   totalMs: number;
+  /** Toque de mestre (pacote V): acertos ao mexer (0 a 3). Ausente = ninguém mexeu. */
+  hits?: number;
+  /** Preparo do aprendiz: sem toque de mestre. */
+  byHelper?: boolean;
 }
 
 export interface SpecialOrder {
@@ -184,6 +197,8 @@ export interface DayStats {
   regularsSeen?: string[];
   /** O que os clientes que foram embora queriam (receita → quantos). */
   lostByRecipe?: Record<string, number>;
+  /** Cliente misterioso já apareceu hoje. */
+  mystery?: boolean;
 }
 
 export interface DayReport {
@@ -460,9 +475,9 @@ export interface GameSave {
 export type GameEvent =
   | { type: 'PURCHASE'; ingredientId: string; qty: number; cost: number }
   | { type: 'BREW_STARTED'; recipeId: string; batches: number; by?: 'aprendiz'; slot?: 2 }
-  | { type: 'BREW_DONE'; recipeId: string; qty: number; slot?: 2 }
+  | { type: 'BREW_DONE'; recipeId: string; qty: number; slot?: 2; quality?: 2 | 3 }
   | { type: 'CUSTOMER_ARRIVED'; customerId: string }
-  | { type: 'SALE'; customerId: string; recipeId: string; price: number; substitute: boolean; by?: 'golem' }
+  | { type: 'SALE'; customerId: string; recipeId: string; price: number; substitute: boolean; by?: 'golem'; quality?: 2 | 3 }
   | { type: 'RAVEN_DELIVERY'; items: { ingredientId: string; qty: number }[]; cost: number; fee: number }
   | { type: 'GOLEM_DISMISSED'; customerId: string }
   | { type: 'HELPER_TOGGLED'; upgradeId: string; on: boolean }
@@ -521,4 +536,9 @@ export type GameEvent =
   | { type: 'ROYAL_WON' }
   | { type: 'RECORD'; kind: RecordKind; value: number; prev: number }
   | { type: 'VILLAGE_STAGE'; projectId: string; stage: number }
+  | { type: 'STIRRED'; hits: number; slot: 1 | 2 }
+  | { type: 'MYSTERY_ARRIVED'; customerId: string }
+  | { type: 'MYSTERY_SOLVED'; recipeId: string; coins: number; crystals: number }
+  | { type: 'MYSTERY_WRONG'; customerId: string }
+  | { type: 'PAGE_FOUND'; recipeId: string; ingredientId: string; source: string }
   | { type: 'ERROR'; message: string };

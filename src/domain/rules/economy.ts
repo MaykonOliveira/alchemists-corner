@@ -7,6 +7,7 @@ import { masteryStars, STAR_BONUS, talentBonus } from './mastery';
 import { gainXp } from './progression';
 import { MOON_MARKET_EXTRA, seasonalStock } from './street';
 import { villageBonus } from './villageBonus';
+import { clampQualities } from './quality';
 
 export const PRICE_MIN_FACTOR = 0.8;
 export const PRICE_MAX_FACTOR = 1.3;
@@ -184,6 +185,7 @@ export function takePotions(s: GameSave, recipeId: string, qty: number) {
   if (!stack || stack.quantity < qty) return false;
   stack.quantity -= qty;
   if (stack.quantity === 0) s.potions = s.potions.filter((p) => p !== stack);
+  else clampQualities(stack);
   return true;
 }
 

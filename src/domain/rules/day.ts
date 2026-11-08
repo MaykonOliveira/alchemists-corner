@@ -23,7 +23,7 @@ export function freshStats(s: GameSave): DayStats {
   return {
     revenue: 0, ingredientCost: 0, orderRewards: 0, salesByRecipe: {}, served: 0, lost: 0,
     repStart: s.reputation, xpStart: s.xp, levelStart: s.level, ordersDone: 0,
-    helperWork: emptyHelperWork(), regularsSeen: [], lostByRecipe: {},
+    helperWork: emptyHelperWork(), regularsSeen: [], lostByRecipe: {}, mystery: false,
   };
 }
 

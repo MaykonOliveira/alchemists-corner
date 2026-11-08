@@ -182,3 +182,46 @@ describe('Reconstruir a vila (pacote W)', () => {
     expect(s.village.fonte).toBeUndefined();
   });
 });
+
+describe('Toque de mestre e cliente misterioso (pacote V)', () => {
+  const brewing = (hits?: number) => {
+    const s = endgame({ ingredients: { 'folha-lunar': 10, 'agua-nascente': 10, 'cogumelo-lanterna': 10, 'raiz-mandragora': 10 } });
+    s.brew = { recipeId: 'cura-simples', batches: 2, elapsedMs: 0, totalMs: 1000, ...(hits !== undefined ? { hits } : {}) };
+    s.potions = [];
+    return s;
+  };
+
+  it('mexer bem deixa o lote Primoroso e a venda paga 50% a mais', () => {
+    const plain = run(brewing(), { type: 'ADVANCE', ms: 1200 }).save;
+    const stirred = run(brewing(), { type: 'STIR', slot: 1, hits: 3 }, { type: 'ADVANCE', ms: 1200 });
+    expect(stirred.events.some((e) => e.type === 'STIRRED')).toBe(true);
+    const stack = stirred.save.potions.find((p) => p.recipeId === 'cura-simples')!;
+    expect(stack.prime).toBe(stack.quantity);
+    const sell = (s: GameSave) => {
+      const r = run({ ...s, customers: [customer()] }, { type: 'SERVE_CUSTOMER', customerId: 'c-x', recipeId: 'cura-simples' });
+      const sale = r.events.find((e) => e.type === 'SALE');
+      return sale && sale.type === 'SALE' ? sale.price : 0;
+    };
+    expect(sell(stirred.save)).toBeGreaterThan(sell(plain) * 1.3);
+  });
+
+  it('só se mexe uma vez e o aprendiz não mexe', () => {
+    const once = run(brewing(), { type: 'STIR', slot: 1, hits: 1 }, { type: 'STIR', slot: 1, hits: 3 }).save;
+    expect(once.brew!.hits).toBe(1);
+    const s = brewing();
+    s.brew!.byHelper = true;
+    expect(run(s, { type: 'STIR', slot: 1, hits: 3 }).save.brew!.hits).toBeUndefined();
+  });
+
+  it('o cliente misterioso só aceita a poção certa e paga 3×', () => {
+    const s = endgame({ potions: [{ recipeId: 'cura-simples', quantity: 3, quality: 1, forSale: true }, { recipeId: 'tonico-energia', quantity: 3, quality: 1, forSale: true }] });
+    const m = customer({ archetype: 'viajante', mystery: true, remark: 'charada', patienceMs: 60000 });
+    const wrong = run({ ...s, customers: [m] }, { type: 'SERVE_CUSTOMER', customerId: 'c-x', recipeId: 'tonico-energia' });
+    expect(wrong.events.some((e) => e.type === 'MYSTERY_WRONG')).toBe(true);
+    expect(wrong.save.customers[0].waitedMs).toBeGreaterThan(0);
+    const right = run(wrong.save, { type: 'SERVE_CUSTOMER', customerId: 'c-x', recipeId: 'cura-simples' });
+    const solved = right.events.find((e) => e.type === 'MYSTERY_SOLVED');
+    expect(solved && solved.type === 'MYSTERY_SOLVED' ? solved.coins : 0).toBe(RECIPES.find((r) => r.id === 'cura-simples')!.basePrice * 3);
+    expect(right.save.crystals).toBeGreaterThan(s.crystals);
+  });
+});

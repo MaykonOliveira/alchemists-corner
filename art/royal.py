@@ -279,8 +279,27 @@ def crown():
     return c
 
 
+def mystery_small():
+    """Balão do cliente misterioso: um ponto de interrogação dourado, 7x10."""
+    c = Canvas(7, 10)
+    c.sprite("""
+    .kkkkk.
+    kaAAAak
+    kAk.kAk
+    .k.kAk.
+    ..kAk..
+    ..kAk..
+    ...k...
+    ..kkk..
+    ..kAk..
+    ...k...
+    """, {'k': 'k1', 'a': 'a3', 'A': 'a4'})
+    return c
+
+
 def frames():
     out = {f'trophy-{i}': trophy_small(i) for i in range(5)}
+    out['potion-misterio'] = mystery_small()
     out['trophy-shelf'] = trophy_shelf()
     out['crown'] = crown()
     return out

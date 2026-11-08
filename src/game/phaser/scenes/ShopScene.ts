@@ -617,7 +617,7 @@ export class ShopScene extends Phaser.Scene {
       const slotX = COUNTER_SLOTS[idx] ?? COUNTER_SLOTS[COUNTER_SLOTS.length - 1];
       let v = this.visitors.get(c.id);
       if (!v) {
-        v = new Visitor(this, c.id, c.archetype, c.wantedRecipeId, slotX, {
+        v = new Visitor(this, c.id, c.archetype, c.mystery ? 'misterio' : c.wantedRecipeId, slotX, {
           instant,
           regular: !!c.regularId,
           reduceMotion: this.reduceMotion,

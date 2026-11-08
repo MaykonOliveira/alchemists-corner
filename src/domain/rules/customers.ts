@@ -13,6 +13,8 @@ import { eventCategoryFactor, inSeason, seasonalRecipe } from './street';
 import { letterVisitor, maybeSpawnVip, onVipServed } from './retention';
 import { noteSale } from './records';
 import { villageBonus } from './villageBonus';
+import { QUALITY_BONUS, takeBestQuality } from './quality';
+import { grantCrystals } from './entitlements';
 import { REGULARS_BY_ID } from '../data/world';
 import { BALL_NOBLE_BOOST } from '../data/royal';
 import { royalChapter, royalOnLost, royalOnSale, royalWon } from './royal';
@@ -30,8 +32,36 @@ export function nextSpawnDelay(s: GameSave, random: () => number) {
   return Math.round((16000 * event * sign) / fame * (0.7 + random() * 0.6));
 }
 
+/** Nível em que o Cliente misterioso começa a aparecer (no máximo um por dia). */
+export const MYSTERY_LEVEL = 7;
+/** O Cliente misterioso paga este tanto do preço-base e deixa cristais. */
+export const MYSTERY_PAYS = 3;
+export const MYSTERY_CRYSTALS = 3;
+
+/** Receitas que o Cliente misterioso pode pedir (as que têm charada e a loja conhece). */
+export const mysteryRecipes = (s: GameSave) => s.knownRecipes.filter((id) => RECIPES_BY_ID[id]?.riddle);
+
+function maybeSpawnMystery(d: Draft): boolean {
+  const { s, ctx } = d;
+  if (s.level < MYSTERY_LEVEL || s.stats.mystery || s.clockMin > 15 * 60 || s.day < 3) return false;
+  const pool = mysteryRecipes(s);
+  if (!pool.length || ctx.random() >= 0.12) return false;
+  const id = pick(pool, ctx.random);
+  s.stats.mystery = true;
+  const c: Customer = {
+    id: nextId(d, 'c'), archetype: 'viajante', wantedRecipeId: id, budgetFactor: 1,
+    patienceMs: Math.round(60000 * patienceFactor(s)), waitedMs: 0, offer: null,
+    remark: RECIPES_BY_ID[id].riddle!, mystery: true,
+  };
+  s.customers.push(c);
+  d.events.push({ type: 'CUSTOMER_ARRIVED', customerId: c.id });
+  d.events.push({ type: 'MYSTERY_ARRIVED', customerId: c.id });
+  return true;
+}
+
 export function spawnCustomer(d: Draft) {
   const { s, ctx } = d;
+  if (maybeSpawnMystery(d)) return;
   // De vez em quando quem entra é um freguês fiel, que já chega pedindo o de sempre.
   const regulars = s.day >= 2 ? availableRegulars(s) : [];
   // Quem mandou carta ontem entra primeiro, como prometeu.
@@ -116,6 +146,8 @@ export function maxPriceFor(s: GameSave, c: Customer, recipeId: string) {
 
 /** Uma poção serve para o cliente? (a pedida, ou outra da mesma categoria como substituta) */
 export function suits(c: Customer, recipeId: string) {
+  // O Cliente misterioso só aceita a poção exata da charada.
+  if (c.mystery) return recipeId === c.wantedRecipeId;
   // A Condessa da estreia aceita qualquer poção da loja nova.
   if (c.vip?.kind === 'estreia') return true;
   return recipeId === c.wantedRecipeId || RECIPES_BY_ID[recipeId].category === RECIPES_BY_ID[c.wantedRecipeId].category;
@@ -145,6 +177,8 @@ export function reservedForOrder(save: GameSave, recipeId: string): number {
  */
 export function bestOffer(save: GameSave, c: Customer): string | null {
   // Poções guardadas para o pedido especial não saem no atendimento rápido.
+  // A charada é para o jogador resolver: o atendimento rápido não entrega a resposta.
+  if (c.mystery) return null;
   const forSale = save.potions.filter((p) => p.forSale && p.quantity - reservedForOrder(save, p.recipeId) > 0).map((p) => p.recipeId);
   if (forSale.includes(c.wantedRecipeId)) return c.wantedRecipeId;
   if (c.vip) return forSale.filter((id) => suits(c, id)).sort((a, b) => RECIPES_BY_ID[b].basePrice - RECIPES_BY_ID[a].basePrice)[0] ?? null;
@@ -168,6 +202,9 @@ function removeCustomer(d: Draft, c: Customer, reason: 'paciencia' | 'preco' | '
 function completeSale(d: Draft, c: Customer, recipeId: string, price: number) {
   const s = d.s;
   const r = RECIPES_BY_ID[recipeId];
+  // Poções Finas e Primorosas saem primeiro e valem mais (toque de mestre).
+  const quality = takeBestQuality(s, recipeId);
+  price = Math.round(price * (1 + QUALITY_BONUS[quality]));
   takePotions(s, recipeId, 1);
   s.coins += price;
   s.stats.revenue += price;
@@ -177,7 +214,7 @@ function completeSale(d: Draft, c: Customer, recipeId: string, price: number) {
   const cozy = (has(s, 'iluminacao-aconchegante') ? 1 : 0) + (has(s, 'vitral-arcano') && c.archetype === 'nobre' ? 1 : 0);
   gainReputation(d, fair + cozy);
   s.lifetime = { sold: s.lifetime.sold + 1, earned: s.lifetime.earned + price };
-  d.events.push({ type: 'SALE', customerId: c.id, recipeId, price, substitute: recipeId !== c.wantedRecipeId });
+  d.events.push({ type: 'SALE', customerId: c.id, recipeId, price, substitute: recipeId !== c.wantedRecipeId, ...(quality > 1 ? { quality: quality as 2 | 3 } : {}) });
   noteSale(d, price);
   royalOnSale(d, c, recipeId);
   const tip = befriend(d, c, recipeId, price);
@@ -193,6 +230,19 @@ export function serveCustomer(d: Draft, customerId: string, recipeId: string): b
   if (s.phase !== 'expediente') return fail(d, 'A loja está fechada.');
   const stack = s.potions.find((p) => p.recipeId === recipeId);
   if (!stack || stack.quantity < 1 || !stack.forSale) return fail(d, 'Essa poção não está à venda.');
+  if (c.mystery) {
+    if (recipeId !== c.wantedRecipeId) {
+      c.remark = `Hmm… não era bem isso. ${RECIPES_BY_ID[c.wantedRecipeId].riddle}`;
+      c.waitedMs += c.patienceMs * 0.15;
+      d.events.push({ type: 'MYSTERY_WRONG', customerId });
+      return true;
+    }
+    const price = RECIPES_BY_ID[recipeId].basePrice * MYSTERY_PAYS;
+    completeSale(d, c, recipeId, price);
+    grantCrystals(d, MYSTERY_CRYSTALS, 'misterio');
+    d.events.push({ type: 'MYSTERY_SOLVED', recipeId, coins: price, crystals: MYSTERY_CRYSTALS });
+    return true;
+  }
   if (!suits(c, recipeId)) {
     c.remark = 'Hmm… não é bem disso que eu preciso.';
     d.events.push({ type: 'CUSTOMER_REFUSED', customerId, reason: 'produto' });
