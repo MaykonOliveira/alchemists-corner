@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { CUSTOMER_URLS } from '../art/sprites';
 import { RECIPES_BY_ID } from '../../../domain/data/recipes';
 import type { Customer, GameEvent, GameSave } from '../../../domain/models/types';
 import { CLOSE_MIN, OPEN_MIN } from '../../../domain/rules/time';
@@ -71,6 +72,7 @@ export class ShopScene extends Phaser.Scene {
   private cat!: CatView;
   private advanceAcc = 0;
   private seasonFxAt = 0;
+  private passerbyAt = 4000;
   private rareSky: Phaser.GameObjects.Graphics | null = null;
   private rareSkyEvent: string | null = null;
   private nightness = 0;
@@ -225,6 +227,31 @@ export class ShopScene extends Phaser.Scene {
       targets: p, x: tx, y: look.rise ? W.top + 6 : W.bottom, angle: season === 'outono' ? 180 : 0,
       alpha: { from: 0.9, to: 0 }, duration: look.rise ? 2600 : 2200 + Phaser.Math.Between(0, 800), ease: 'Sine.InOut',
       onComplete: () => p.destroy(),
+    });
+  }
+
+  /**
+   * Gente passando na rua, vista pela janela: a loja parece parte de uma cidade viva,
+   * mesmo quando ninguém entrou ainda. Mais movimento em dia de feira, menos à noite.
+   */
+  private passerby(time: number) {
+    if (this.reduceMotion() || time < this.passerbyAt) return;
+    const save = this.store.save;
+    const busy = save?.event === 'feira' ? 0.5 : save && save.clockMin >= 18 * 60 ? 1.8 : 1;
+    this.passerbyAt = time + (3500 + Math.random() * 5000) * busy;
+    const W = { x0: 55, x1: 100, top: 26, bottom: 48 };
+    const kinds = Object.keys(CUSTOMER_URLS) as (keyof typeof CUSTOMER_URLS)[];
+    const key = `customer-${kinds[Phaser.Math.Between(0, kinds.length - 1)]}`;
+    if (!this.textures.exists(key)) return;
+    const rtl = Math.random() < 0.5;
+    const mask = this.make.graphics({}, false).fillRect(W.x0, W.top, W.x1 - W.x0, W.bottom - W.top).createGeometryMask();
+    // Só a parte de cima aparece na janela; um pouco mais escuro, como quem está do lado de fora.
+    const p = this.add.sprite(rtl ? W.x1 + 8 : W.x0 - 8, W.bottom + 12, key, 0).setOrigin(0.5, 1)
+      .setDepth(1.45).setTint(0xb8a890).setAlpha(0.9).setFlipX(rtl).setMask(mask);
+    if (this.anims.exists(`${key}-walk`)) p.play(`${key}-walk`);
+    this.tweens.add({
+      targets: p, x: rtl ? W.x0 - 8 : W.x1 + 8, duration: 3800 + Math.random() * 1800,
+      onComplete: () => { p.destroy(); mask.geometryMask.destroy(); mask.destroy(); },
     });
   }
 
@@ -736,6 +763,7 @@ export class ShopScene extends Phaser.Scene {
     this.cat.update(time);
     this.seasonFx(time);
     this.rareWindow(time);
+    this.passerby(time);
 
     if (ui.paused || ui.modal || save.phase === 'fechamento') return;
     this.advanceAcc += Math.min(delta, 250);

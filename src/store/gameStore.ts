@@ -5,6 +5,9 @@ import { DAY_EVENTS } from '../domain/data/orders';
 import { RECIPES_BY_ID } from '../domain/data/recipes';
 import { REGULARS_BY_ID, SEASONS, TIP_HEARTS } from '../domain/data/world';
 import { ACHIEVEMENTS, giftLabel } from '../domain/rules/world';
+
+/** Conquistas mostradas em tela cheia (src/features/celebrate/Milestone.tsx). */
+const BIG_ACHIEVEMENT_IDS = ['primeira-venda', 'mil-moedas', 'primeiro-contrato', 'amigo', 'maestria', 'rival-vencida'];
 import { goalText } from '../domain/rules/goals';
 import { TALENTS_BY_ID } from '../domain/data/talents';
 import { UPGRADES_BY_ID } from '../domain/data/upgrades';
@@ -222,7 +225,8 @@ export const useGameStore = create<StoreState>()(
         }
         case 'ACHIEVEMENT': {
           const a = ACHIEVEMENTS.find((x) => x.id === e.id);
-          return a ? toast(`🏆 Conquista no álbum: ${a.name}!`, 'gold') : undefined;
+          // As grandes viram um momento na tela (Milestone); aqui fica só o aviso das outras.
+          return a && !BIG_ACHIEVEMENT_IDS.includes(a.id) ? toast(`🏆 Conquista no álbum: ${a.name}!`, 'gold') : undefined;
         }
         case 'CAT_PETTED':
           return e.lucky ? toast('O gato ronronou. Sorte do dia: +1 reputação!', 'ok') : undefined;

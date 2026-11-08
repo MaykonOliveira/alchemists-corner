@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import roomUrl from '../../assets/sprites/room.png';
+import { AWNINGS } from '../../domain/data/catalog';
 import { useGameStore } from '../../store/gameStore';
 import { PotionIcon } from '../../ui/SpriteIcon';
 import { SaveTransferDialog } from '../layout/SaveTransferDialog';
@@ -7,16 +9,40 @@ import { PrivacyDialog } from '../layout/PrivacyDialog';
 
 const TITLE_POTIONS = ['cura-simples', 'tonico-energia', 'elixir-concentracao', 'pocao-sorte', 'elixir-estelar', 'elixir-fenix'];
 
+/** Fachada da loja na tela de título: o nome e o toldo do jogador, com a loja acesa lá dentro. */
+function Storefront({ name, awning }: { name: string; awning: string }) {
+  return (
+    <div className="storefront" style={{ ['--awning' as string]: awning }} aria-hidden>
+      <span className="sf-lamp sf-lamp-l" />
+      <span className="sf-lamp sf-lamp-r" />
+      <div className="sf-facade">
+        <span className="awning-band sf-awning" />
+        <span className="sf-sign">{name}</span>
+        <div className="sf-front">
+          <div className="sf-window"><img src={roomUrl} alt="" /><span className="sf-glow" /></div>
+          <div className="sf-door"><span className="sf-door-sign">Aberto</span></div>
+        </div>
+      </div>
+      <span className="sf-street" />
+    </div>
+  );
+}
+
 export function MenuScreen() {
   const { hasStoredSave, storageError, newGame, continueGame } = useGameStore();
+  const stored = useGameStore((s) => (s.hasStoredSave ? s.exportableSave() : null));
+  const awning = AWNINGS.find((a) => a.id === stored?.awning)?.color ?? AWNINGS[0].color;
   const [confirming, setConfirming] = useState(false);
   const [dialog, setDialog] = useState<'import' | 'export' | null>(null);
   const [credits, setCredits] = useState(false);
   const [privacy, setPrivacy] = useState(false);
   const install = useInstallPrompt();
+  // O navegador só toca som depois de um toque: este botão deixa isso claro (e qualquer toque já liga a trilha).
+  const [sound, setSound] = useState(false);
 
   return (
     <main className="menu">
+      <Storefront name={stored?.shopName || "Alchemist's Corner"} awning={awning} />
       <div className="menu-card">
         <div className="menu-potions" aria-hidden="true">
           {TITLE_POTIONS.map((id, i) => (
@@ -53,6 +79,7 @@ export function MenuScreen() {
             <button className="link-btn" onClick={() => setDialog('import')}>Importar save</button>
             {hasStoredSave && <button className="link-btn" onClick={() => setDialog('export')}>Exportar save</button>}
             {install && <button className="link-btn" onClick={install}>Instalar como app</button>}
+            <button className="link-btn" onClick={() => setSound(true)} aria-pressed={sound}>{sound ? '🔊 Som ligado' : '🔈 Ligar o som'}</button>
             <button className="link-btn" onClick={() => setCredits((c) => !c)}>Créditos</button>
             <button className="link-btn" onClick={() => setPrivacy(true)}>Privacidade</button>
           </div>

@@ -15,6 +15,7 @@ import { LevelUpModal } from '../layout/LevelUpModal';
 import { SettingsModal } from '../layout/SettingsModal';
 import { SidePanel } from '../layout/SidePanel';
 import { Toasts } from '../layout/Toasts';
+import { Milestone } from '../../features/celebrate/Milestone';
 import { ShareModal } from '../../features/share/ShareModal';
 
 export function GameScreen() {
@@ -56,6 +57,7 @@ export function GameScreen() {
           <WelcomeBack />
           <QuickServe placement="stage" />
           <Toasts />
+          <Milestone />
         </div>
         <SidePanel />
       </main>
