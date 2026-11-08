@@ -14,6 +14,8 @@ export function Hud() {
   const dispatch = useGameStore((s) => s.dispatch);
   const [confirmClose, setConfirmClose] = useState(false);
   const speed = useGameStore((s) => s.ui.speed);
+  // Com o Início à vista, o botão grande "Abrir a loja" já está lá: o do topo só aparece com outra tela aberta.
+  const homeVisible = useGameStore((s) => s.ui.activePanel === null);
   const coins = useAnimatedNumber(save.coins);
   // Moedas "pulam" e mostram a diferença quando o saldo muda.
   const [delta, setDelta] = useState<{ n: number; key: number } | null>(null);
@@ -35,7 +37,7 @@ export function Hud() {
   return (
     <header className="hud">
       <div className="hud-brand" title="Alchemist's Corner">
-        <span className="brand-full">{save.shopName}</span><span className="brand-short">{save.shopName.split(' ').map((w) => w[0]).join('').slice(0, 3)}</span>
+        <span className="brand-full">{save.shopName}</span>
         <button className="hud-crystals" onClick={() => dispatch({ type: 'TOGGLE_PANEL', panel: 'season' })} title="Cristais de luar: ganhe jogando e use na decoração (aba Temporada)">🌙 {save.crystals}</button>
       </div>
       <div className="hud-stat" title={`Dia e fase · ${seasonOf(save.day).name}`}>
@@ -66,7 +68,7 @@ export function Hud() {
         <span className="hud-xp">{xpIn}/{xpSpan} XP</span>
       </div>
       <div className="hud-actions">
-        {save.phase === 'preparacao' && (
+        {save.phase === 'preparacao' && !homeVisible && (
           <button data-tut="open-shop" className="btn btn-primary btn-glow" onClick={() => dispatch({ type: 'OPEN_SHOP' })}>Abrir loja</button>
         )}
         {save.phase === 'expediente' && (

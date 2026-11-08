@@ -73,7 +73,7 @@ export interface UiState {
   welcome: boolean;
 }
 
-interface StoreState {
+export interface StoreState {
   status: 'loading' | 'menu' | 'playing';
   save: GameSave | null;
   hasStoredSave: boolean;
@@ -305,6 +305,8 @@ export const useGameStore = create<StoreState>()(
         case 'TOGGLE_SPEED':
           return { ...ui, speed: ui.speed === 1 ? 2 : 1 };
         case 'SHOW_WELCOME':
+          // Durante o tutorial o bem-vindo não aparece (e não fica guardado para depois).
+          if ((get().save?.tutorialStep ?? TUTORIAL_DONE) < TUTORIAL_DONE) return ui;
           return { ...ui, welcome: true, paused: get().save?.phase === 'expediente' ? true : ui.paused };
         case 'DISMISS_WELCOME':
           return ui.welcome ? { ...ui, welcome: false, paused: false } : ui;
@@ -352,7 +354,7 @@ export const useGameStore = create<StoreState>()(
       continueGame() {
         if (!loadedSave) return get().newGame();
         // No meio do expediente, o jogo volta pausado até o jogador fechar o "bem-vindo de volta".
-        set({ status: 'playing', save: loadedSave, ui: { ...initialUi, welcome: true, paused: loadedSave.phase === 'expediente' } });
+        set({ status: 'playing', save: loadedSave, ui: { ...initialUi, welcome: loadedSave.tutorialStep >= TUTORIAL_DONE, paused: loadedSave.phase === 'expediente' && loadedSave.tutorialStep >= TUTORIAL_DONE } });
         funnel.session();
         // Livro do caixa (o que a loja fez enquanto você esteve fora), presente de visita e temporada.
         get().dispatch({ type: 'SESSION_START' });

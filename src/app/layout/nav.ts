@@ -92,9 +92,12 @@ export function useBadges() {
   const rareEvent = useGameStore((s) => !!(s.save?.event && DAY_EVENTS[s.save.event].rare));
   const chest = useGameStore((s) => (s.save ? chestReady(s.save) : false));
   const fest = useGameStore((s) => s.save?.event === 'festa-estacao');
+  // Caldeirão parado com a loja aberta: a aba avisa, para ninguém esquecer dele em outra tela.
+  const idlePot = useGameStore((s) => !!s.save && s.save.phase === 'expediente' && !s.save.brew && s.save.tutorialStep >= 5);
   return (panel: PanelId): string | number | null => {
     switch (panel) {
       case 'counter': return customers > 0 ? customers : null;
+      case 'production': return idlePot ? '!' : null;
       case 'orders': return order ? '!' : null;
       case 'grimoire': return seals > 0 ? seals : null;
       case 'street': return rareEvent ? '!' : null;

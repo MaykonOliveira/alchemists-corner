@@ -378,6 +378,10 @@ export interface GameSave {
   goals: GoalsState;
   /** Dicas de contexto que o jogador já viu (ids). */
   tipsSeen: string[];
+  /** Último preparo (receita e lotes): tocar no caldeirão parado repete. */
+  lastBrew?: { recipeId: string; batches: number };
+  /** Dia da última dica mostrada: no máximo uma dica por dia. */
+  tipDay?: number;
   /** A história de abertura já foi vista. */
   storySeen: boolean;
   /** Nome da loja e cor do toldo, escolhidos na abertura (fase 3). */

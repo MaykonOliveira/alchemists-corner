@@ -9,11 +9,14 @@ import { PotionIcon } from '../../ui/SpriteIcon';
 import { Meter, PotionName, Stepper } from '../../ui/widgets';
 
 const secs = (ms: number) => `${Math.ceil(ms / 1000)}s`;
+/** "Encher": o passo de lotes começa no máximo possível. */
+const FILL = 99;
 
 export function ProductionPanel({ save }: { save: GameSave }) {
   const dispatch = useGameStore((s) => s.dispatch);
-  const [selected, setSelected] = useState(save.knownRecipes[0]);
-  const [batches, setBatches] = useState(1);
+  // Começa na última receita preparada e no máximo de lotes que dá: o caldeirão não fica parado à toa.
+  const [selected, setSelected] = useState(save.lastBrew && save.knownRecipes.includes(save.lastBrew.recipeId) ? save.lastBrew.recipeId : save.knownRecipes[0]);
+  const [batches, setBatches] = useState(FILL);
   const r = RECIPES_BY_ID[selected];
   const max = maxBatches(save, selected);
   const b = Math.max(1, Math.min(batches, Math.max(1, max)));
@@ -40,7 +43,7 @@ export function ProductionPanel({ save }: { save: GameSave }) {
               role="radio"
               aria-checked={selected === id}
               className={`recipe-chip ${selected === id ? 'on' : ''} ${can ? '' : 'dim'}`}
-              onClick={() => { setSelected(id); setBatches(1); }}
+              onClick={() => { setSelected(id); setBatches(FILL); }}
             >
               <PotionIcon recipeId={id} />
               <span>{RECIPES_BY_ID[id].shortName}</span>
@@ -77,7 +80,7 @@ export function ProductionPanel({ save }: { save: GameSave }) {
             disabled={!slot || max < 1 || save.phase === 'fechamento'}
             onClick={() => dispatch({ type: 'START_BREW', recipeId: selected, batches: b })}
           >
-            {!slot ? (hasSecondCauldron(save) ? 'Caldeirões ocupados' : 'Caldeirão ocupado') : max < 1 ? 'Faltam ingredientes' : `Preparar ${b} lote${b > 1 ? 's' : ''}${hasSecondCauldron(save) ? ` no caldeirão ${slot}` : ''}`}
+            {!slot ? (hasSecondCauldron(save) ? 'Caldeirões ocupados' : 'Caldeirão ocupado') : max < 1 ? 'Faltam ingredientes' : `Preparar ${b} lote${b > 1 ? 's' : ''}${b === max && max > 1 ? ' (máx.)' : ''}${hasSecondCauldron(save) ? ` no caldeirão ${slot}` : ''}`}
           </button>
         </div>
       </div>

@@ -4,6 +4,7 @@ import { RECIPES_BY_ID } from '../../domain/data/recipes';
 import { bestOffer, priceVerdict, vipPrice } from '../../domain/rules/customers';
 import { getPrice } from '../../domain/rules/economy';
 import { useGameStore } from '../../store/gameStore';
+import { useStageCards } from '../tutorial/stage';
 import { CoinIcon } from '../../ui/icons';
 import { PotionIcon } from '../../ui/SpriteIcon';
 import { Meter } from '../../ui/widgets';
@@ -17,8 +18,9 @@ export function QuickServe({ placement }: { placement: 'stage' | 'side' }) {
   const panel = useGameStore((s) => s.ui.activePanel);
   const modal = useGameStore((s) => s.ui.modal);
   const dispatch = useGameStore((s) => s.dispatch);
+  const { welcome } = useStageCards();
 
-  if (!save || save.phase !== 'expediente' || panel === 'counter' || modal) return null;
+  if (!save || save.phase !== 'expediente' || panel === 'counter' || modal || welcome) return null;
   const idx = save.customers.findIndex((c) => c.id === selectedId);
   if (idx < 0) return null;
   const c = save.customers[idx];

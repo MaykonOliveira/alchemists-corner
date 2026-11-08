@@ -111,7 +111,7 @@ function HomePanel({ save }: { save: GameSave }) {
         <span className={`home-phase phase-${save.phase}`}>{PHASE[save.phase]}</span>
       </div>
       {save.phase === 'preparacao' && (
-        <button className="btn btn-primary btn-big home-open" onClick={() => dispatch({ type: 'OPEN_SHOP' })}>Abrir a loja</button>
+        <button data-tut="open-shop" className="btn btn-primary btn-big btn-glow home-open" onClick={() => dispatch({ type: 'OPEN_SHOP' })}>Abrir a loja</button>
       )}
       <h3 className="mini-title">O que fazer agora</h3>
       <ul className="todo-list">

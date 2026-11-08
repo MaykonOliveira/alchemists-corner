@@ -53,10 +53,25 @@ export function startBrew(d: Draft, recipeId: string, batches: number): boolean 
   }
   for (const i of r.ingredients) s.ingredients[i.ingredientId] -= i.qty * batches;
   const job = { recipeId, batches, elapsedMs: 0, totalMs: brewDurationMs(s, recipeId, batches) };
+  s.lastBrew = { recipeId, batches };
   if (slot === 1) s.brew = job;
   else s.brew2 = job;
   d.events.push(slot === 1 ? { type: 'BREW_STARTED', recipeId, batches } : { type: 'BREW_STARTED', recipeId, batches, slot: 2 });
   return true;
+}
+
+/** Quantos lotes o "repetir" do caldeirão faria agora (0 = não dá para repetir). */
+export function repeatBatches(s: GameSave): number {
+  const last = s.lastBrew;
+  if (!last || !s.knownRecipes.includes(last.recipeId) || !freeCauldron(s) || s.phase === 'fechamento') return 0;
+  return Math.min(last.batches, maxBatches(s, last.recipeId));
+}
+
+/** Repete o último preparo com um toque (o máximo que der, até a quantidade de antes). */
+export function repeatBrew(d: Draft): boolean {
+  const n = repeatBatches(d.s);
+  if (n < 1) return fail(d, d.s.lastBrew ? 'Faltam ingredientes para repetir o último preparo.' : 'Escolha uma receita no caldeirão.');
+  return startBrew(d, d.s.lastBrew!.recipeId, n);
 }
 
 export function advanceBrew(d: Draft, ms: number) {

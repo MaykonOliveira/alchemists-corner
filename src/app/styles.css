@@ -395,6 +395,9 @@ kbd {
   background: var(--parchment); color: var(--ink); border: 3px solid var(--wood); box-shadow: 0 0 0 2px var(--gold), 0 8px 24px rgba(0,0,0,.5);
   border-radius: 8px; padding: 10px 12px; animation: pop .3s ease-out;
 }
+.tutorial.tut-right { left: auto; right: 16px; }
+.tutorial-compact { display: flex; align-items: center; gap: 8px; width: auto; max-width: calc(100% - 32px); padding: 6px 12px; cursor: pointer; font: inherit; text-align: left; }
+.tutorial-compact .tutorial-title { font-size: 14px; margin: 0; }
 .tutorial-head { display: flex; justify-content: space-between; align-items: center; }
 .tutorial-step { font-family: var(--font-pixel); font-size: 12px; color: var(--copper); }
 .tutorial-title { font-family: var(--font-pixel); font-size: 18px; margin: 2px 0; color: var(--wood); }
@@ -419,7 +422,6 @@ kbd {
 }
 .hud-coins .hud-value { color: #ffe08a; }
 .bar-xp > span { background: #8fd0ff; }
-.brand-short { display: none; }
 
 /* Menu mais vivo */
 .menu { position: relative; overflow: hidden; }
@@ -441,8 +443,7 @@ kbd {
 @media (max-width: 860px) {
   body { font-size: 14px; }
   .hud { gap: 10px; padding: 6px 10px; }
-  .brand-full { display: none; }
-  .brand-short { display: inline; }
+  .brand-full { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 12px; line-height: 1.1; max-width: 96px; overflow-wrap: anywhere; }
   .hud-stat { min-width: 0; }
   .hud-label { font-size: 11px; }
   .hud-value { font-size: 15px; }
@@ -473,9 +474,10 @@ button, .stage-canvas { touch-action: manipulation; -webkit-tap-highlight-color:
   .game-main { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); }
   .stage-host { padding: 6px; aspect-ratio: 16 / 9; width: 100%; height: auto; }
   .side { border-left: none; border-top: 3px solid #120b0d; box-shadow: inset 0 3px 0 var(--parchment-edge); padding: 10px 12px; }
-  .tutorial { position: fixed; left: 8px; right: 8px; bottom: 70px; width: auto; }
+  .tutorial, .tutorial.tut-right { position: fixed; left: 8px; right: 8px; bottom: 70px; width: auto; }
+  .tutorial-compact { max-width: none; }
   /* Com um painel aberto, a dica sobe para cima da cena e deixa os botões do painel livres. */
-  .game.panel-open .tutorial { position: absolute; top: 6px; bottom: auto; left: 6px; right: 6px; padding: 6px 10px; }
+  .game.panel-open .tutorial, .game.panel-open .tutorial.tut-right { position: absolute; top: 6px; bottom: auto; left: 6px; right: 6px; padding: 6px 10px; }
   .game.panel-open .tutorial-text { font-size: 13px; }
   .toasts { position: fixed; top: 60px; }
 
@@ -487,8 +489,7 @@ button, .stage-canvas { touch-action: manipulation; -webkit-tap-highlight-color:
   .hud-label { font-size: 10px; }
   .hud-value { font-size: 13px; }
   .bar { width: 48px; height: 4px; }
-  .brand-full { display: none; }
-  .brand-short { display: inline; font-size: 14px; }
+  .brand-full { font-size: 12px; max-width: 110px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-block; }
   .hide-sm { display: none; }
   .hud-actions .btn { padding: 3px 8px; font-size: 12px; }
   .game-main { grid-template-columns: minmax(0, 1fr) 260px; }
@@ -897,6 +898,23 @@ button, .stage-canvas { touch-action: manipulation; -webkit-tap-highlight-color:
 .now-playing { margin: -4px 0 6px; font-style: italic; }
 
 /* ===================== Pacote G: tutorial na cena, história, metas e dicas ===================== */
+/* Caldeirão parado: balão clicável sobre ele na cena */
+.cauldron-alert {
+  position: absolute; z-index: 5; transform: translate(-50%, calc(-100% - 6px));
+  font: inherit; font-size: 13px; font-weight: 700; white-space: nowrap; cursor: pointer;
+  background: var(--parchment); color: var(--ink); border: 2px solid var(--wood); border-radius: 8px;
+  padding: 4px 10px; box-shadow: 0 0 0 2px #e06a3a, 0 4px 12px rgba(0,0,0,.45);
+  animation: pot-nudge 1.4s ease-in-out infinite;
+}
+.cauldron-alert::after {
+  content: ''; position: absolute; left: 50%; bottom: -8px; transform: translateX(-50%);
+  border: 6px solid transparent; border-top-color: var(--wood);
+}
+.cauldron-alert.can-repeat { box-shadow: 0 0 0 2px var(--gold), 0 4px 12px rgba(0,0,0,.45); }
+.cauldron-alert:hover, .cauldron-alert:focus-visible { background: #fff6dc; outline: none; }
+@keyframes pot-nudge { 50% { transform: translate(-50%, calc(-100% - 10px)); } }
+@media (max-width: 860px) { .cauldron-alert { font-size: 12px; padding: 3px 8px; } }
+@media (prefers-reduced-motion: reduce) { .cauldron-alert { animation: none; } }
 .scene-spot {
   position: absolute; pointer-events: none; z-index: 4; border-radius: 6px;
   box-shadow: 0 0 0 3px var(--gold), 0 0 18px 6px rgba(242, 201, 92, .55);

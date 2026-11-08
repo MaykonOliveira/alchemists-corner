@@ -31,6 +31,13 @@ export function SceneSpotlight() {
   );
 }
 
+/** Parte visível da tela onde o botão pode aparecer: acima da barra de baixo e abaixo do topo. */
+function visibleBand() {
+  const top = document.querySelector('.hud')?.getBoundingClientRect().bottom ?? 0;
+  const bottom = document.querySelector('.bottombar')?.getBoundingClientRect().top ?? window.innerHeight;
+  return { top, bottom };
+}
+
 /** Botão da interface que o tutorial pede para tocar: anel dourado por cima, sem bloquear o toque. */
 export function UiSpotlight() {
   const step = useStep();
@@ -38,15 +45,28 @@ export function UiSpotlight() {
   const [rect, setRect] = useState<DOMRect | null>(null);
   useEffect(() => {
     if (!selector) { setRect(null); return; }
+    let raf = 0;
+    let scrolledFor: HTMLElement | null = null;
     const find = () => {
       const el = [...document.querySelectorAll<HTMLElement>(selector)].find((e) => e.offsetParent !== null && !(e as HTMLButtonElement).disabled)
         ?? document.querySelector<HTMLElement>(selector);
-      const r = el && el.offsetParent !== null ? el.getBoundingClientRect() : null;
-      setRect((old) => (r && r.width > 0 ? (old && old.x === r.x && old.y === r.y && old.width === r.width ? old : r) : null));
+      let r = el && el.offsetParent !== null ? el.getBoundingClientRect() : null;
+      if (el && r && r.width > 0) {
+        const band = visibleBand();
+        const outside = r.top < band.top || r.bottom > band.bottom;
+        // O botão está escondido (abaixo da dobra ou atrás da barra): rola até ele uma vez.
+        if (outside && scrolledFor !== el) {
+          scrolledFor = el;
+          el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        }
+        // Enquanto ainda está fora da área visível, não desenha o anel num lugar errado.
+        if (outside) r = null;
+      }
+      setRect((old) => (r && r.width > 0 ? (old && old.x === r.x && old.y === r.y && old.width === r.width && old.height === r.height ? old : r) : null));
+      raf = requestAnimationFrame(find);
     };
-    find();
-    const t = setInterval(find, 250);
-    return () => clearInterval(t);
+    raf = requestAnimationFrame(find);
+    return () => cancelAnimationFrame(raf);
   }, [selector]);
   if (!rect) return null;
   return (
