@@ -14,7 +14,7 @@ interface Step {
 export const TUTORIAL_STEPS: Step[] = [
   { title: 'Abra as portas!', text: 'O antigo dono deixou 5 poções na prateleira. Abra a loja e faça sua primeira venda agora mesmo.', spot: 'door', ui: '[data-tut="open-shop"]' },
   { title: 'Seu primeiro cliente', text: 'O pedido aparece sobre a loja. Toque em Vender para atender com um toque.', spot: 'counter', ui: '[data-tut="quick-sell"]' },
-  { title: 'Primeira venda!', text: 'As moedas já estão no caixa. Agora vamos repor o estoque: abra o armário para comprar ingredientes.', action: { label: 'Abrir o armário', panel: 'ingredients' }, spot: 'cabinet', ui: '[data-tut="tab-ingredients"]' },
+  { title: 'Primeira venda!', text: 'As moedas já estão no caixa. Agora vamos repor o estoque: abra o armário para comprar ingredientes.', action: { label: 'Abrir o armário', panel: 'ingredients' }, spot: 'cabinet', ui: '[data-tut~="tab-ingredients"]' },
   { title: 'Compre ingredientes', text: 'A Poção de Cura leva Folha lunar e Pó de pedra. Escolha a quantidade e toque em Comprar.', spot: 'cabinet', ui: '[data-tut="buy"]' },
   { title: 'Hora de ferver', text: 'Toque no caldeirão, escolha uma receita e quantos lotes quer. Cada lote rende 2 poções, e ele trabalha sozinho.', action: { label: 'Ir ao caldeirão', panel: 'production' }, spot: 'cauldron', ui: '[data-tut="brew"]' },
   { title: 'Muito bem!', text: 'Atenda quem aparecer. Hoje o dia passa rápido, e dizem que uma visita importante vem à tarde… Ao anoitecer (ou quando quiser) encerre o dia.', spot: 'register', ui: '[data-tut="close-day"]' },

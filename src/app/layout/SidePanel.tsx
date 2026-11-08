@@ -11,65 +11,53 @@ import { GrimoirePanel } from '../../features/mastery/GrimoirePanel';
 import { AlbumPanel } from '../../features/world/AlbumPanel';
 import { StreetPanel } from '../../features/world/StreetPanel';
 import { GoalsList, GoalsPanel } from '../../features/goals/GoalsPanel';
+import { useEffect } from 'react';
+import type { GameSave } from '../../domain/models/types';
 import { useGameStore, type PanelId } from '../../store/gameStore';
+import { groupOf, NAV_GROUPS, panelForGroup, panelTitle, rememberPanel, useBadges } from './nav';
 import { potionStock } from '../../domain/rules/economy';
 import { QuickServe } from '../../features/customers/QuickServe';
 import { SeasonPanel } from '../../features/season/SeasonPanel';
-
-const TITLES: Record<PanelId, string> = {
-  ingredients: 'Armário e fornecedor',
-  production: 'Caldeirão',
-  recipes: 'Livro de receitas',
-  orders: 'Quadro de avisos',
-  report: 'Caixa e relatório',
-  shelves: 'Prateleiras e preços',
-  counter: 'Balcão',
-  door: 'Porta da loja',
-  upgrades: 'Melhorias',
-  grimoire: 'Grimório do Mestre',
-  album: 'Álbum da loja',
-  street: 'A rua da loja',
-  goals: 'Metas do dia',
-  season: 'Temporada e decoração',
-};
 
 export function SidePanel() {
   const save = useGameStore((s) => s.save)!;
   const panel = useGameStore((s) => s.ui.activePanel);
   const dispatch = useGameStore((s) => s.dispatch);
+  const badgeFor = useBadges();
+  useEffect(() => rememberPanel(panel), [panel]);
 
-  if (!panel) {
-    const stock = save.potions.reduce((n, p) => n + p.quantity, 0);
-    return (
-      <aside className="side side-idle" aria-label="Resumo">
-        <QuickServe placement="side" />
-        <h2 className="side-title">Dia {save.day}</h2>
-        <ul className="checklist">
-          <li className={stock > 0 ? 'done' : ''}>Poções nas prateleiras: <strong>{stock}</strong></li>
-          <li className={save.brew || save.brew2 ? 'done' : ''}>
-            {save.upgrades.includes('sala-dos-fundos')
-              ? `Caldeirões: ${[save.brew, save.brew2].filter(Boolean).length} de 2 fervendo`
-              : `Caldeirão: ${save.brew ? 'fervendo…' : 'livre'}`}
-          </li>
-          <li className={save.order ? 'todo' : ''}>
-            Pedido especial: {save.order ? `${potionStock(save, save.order.recipeId)}/${save.order.qty}` : 'nenhum'}
-          </li>
-          <li>Clientes no balcão: {save.customers.length}</li>
-        </ul>
-        <GoalsList save={save} compact />
-        <p className="panel-lead small">Toque nos objetos da loja ou use a barra de baixo.</p>
-        {save.phase === 'preparacao' && (
-          <button className="btn btn-primary btn-big" onClick={() => dispatch({ type: 'OPEN_SHOP' })}>Abrir a loja</button>
-        )}
-      </aside>
-    );
-  }
+  if (!panel) return <HomePanel save={save} />;
 
+  const group = groupOf(panel);
   return (
-    <aside className="side" aria-label={TITLES[panel]}>
+    <aside className={`side ${group ? `side-${group.id}` : ''}`} aria-label={panelTitle(panel)}>
+      <div className="side-top">
       <div className="side-head">
-        <h2 className="side-title">{TITLES[panel]}</h2>
-        <button className="icon-btn" onClick={() => dispatch({ type: 'CLOSE_PANEL' })} aria-label="Fechar painel" title="Fechar (Esc)">×</button>
+        <div className="side-head-text">
+          {group && <span className="side-area">{group.icon} {group.label}</span>}
+          <h2 className="side-title">{panelTitle(panel)}</h2>
+        </div>
+        <button className="icon-btn" onClick={() => dispatch({ type: 'CLOSE_PANEL' })} aria-label="Voltar ao início" title="Voltar ao início (Esc)">×</button>
+      </div>
+      {group && (
+        <div className="subtabs" role="tablist" aria-label={`Telas de ${group.label}`}>
+          {group.items.map((i) => {
+            const badge = badgeFor(i.panel);
+            return (
+              <button
+                key={i.panel}
+                role="tab"
+                aria-selected={panel === i.panel}
+                className={`subtab ${panel === i.panel ? 'subtab-on' : ''}`}
+                onClick={() => dispatch({ type: 'OPEN_PANEL', panel: i.panel })}
+              >
+                <span aria-hidden>{i.icon}</span> {i.label}
+                {badge !== null && <span className="subtab-badge">{badge}</span>}
+              </button>
+            );
+          })}
+        </div>
+      )}
       </div>
       <QuickServe placement="side" />
       <div className="side-body">
@@ -88,6 +76,72 @@ export function SidePanel() {
         {panel === 'goals' && <GoalsPanel save={save} />}
         {panel === 'season' && <SeasonPanel save={save} />}
       </div>
+    </aside>
+  );
+}
+
+const PHASE = { preparacao: 'Preparação', expediente: 'Loja aberta', fechamento: 'Fechamento' } as const;
+
+/** Início: o que fazer agora (cada linha leva à tela certa) e o mapa das 4 áreas. */
+function HomePanel({ save }: { save: GameSave }) {
+  const dispatch = useGameStore((s) => s.dispatch);
+  const badgeFor = useBadges();
+  const go = (panel: PanelId) => dispatch({ type: 'OPEN_PANEL', panel });
+  const stock = save.potions.reduce((n, p) => n + p.quantity, 0);
+  const twoPots = save.upgrades.includes('sala-dos-fundos');
+  const boiling = [save.brew, save.brew2].filter(Boolean).length;
+  const potsFree = twoPots ? boiling < 2 : boiling === 0;
+  const lowStock = Object.values(save.ingredients).reduce((n, q) => n + q, 0) < 4;
+
+  type Row = { panel: PanelId; icon: string; text: React.ReactNode; state: 'done' | 'todo' | '' };
+  const rows: Row[] = [
+    { panel: 'counter', icon: '🛎️', text: <>Clientes no balcão: <strong>{save.customers.length}</strong></>, state: save.customers.length > 0 ? 'todo' : '' },
+    { panel: 'production', icon: '🔥', text: twoPots ? <>Caldeirões: <strong>{boiling} de 2</strong> fervendo</> : <>Caldeirão: <strong>{boiling ? 'fervendo' : 'livre'}</strong></>, state: potsFree ? 'todo' : 'done' },
+    { panel: 'shelves', icon: '🧪', text: <>Poções nas prateleiras: <strong>{stock}</strong></>, state: stock > 0 ? 'done' : 'todo' },
+    { panel: 'ingredients', icon: '🌿', text: <>Ingredientes no armário: <strong>{lowStock ? 'acabando' : 'ok'}</strong></>, state: lowStock ? 'todo' : 'done' },
+    { panel: 'orders', icon: '📜', text: save.order ? <>Pedido especial: <strong>{potionStock(save, save.order.recipeId)}/{save.order.qty}</strong></> : <>Pedido especial: nenhum</>, state: save.order ? 'todo' : '' },
+  ];
+  const next = rows.find((r) => r.state === 'todo');
+
+  return (
+    <aside className="side side-idle" aria-label="Início">
+      <QuickServe placement="side" />
+      <div className="home-head">
+        <h2 className="side-title">Dia {save.day}</h2>
+        <span className={`home-phase phase-${save.phase}`}>{PHASE[save.phase]}</span>
+      </div>
+      {save.phase === 'preparacao' && (
+        <button className="btn btn-primary btn-big home-open" onClick={() => dispatch({ type: 'OPEN_SHOP' })}>Abrir a loja</button>
+      )}
+      <h3 className="mini-title">O que fazer agora</h3>
+      <ul className="todo-list">
+        {rows.map((r) => (
+          <li key={r.panel}>
+            <button className={`todo-row ${r.state} ${next === r ? 'todo-next' : ''}`} onClick={() => go(r.panel)}>
+              <span className="todo-icon" aria-hidden>{r.icon}</span>
+              <span className="todo-text">{r.text}</span>
+              <span className="todo-go" aria-hidden>{next === r ? 'Ir ›' : '›'}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+      <button className="home-goals" onClick={() => go('goals')} aria-label="Abrir metas do dia">
+        <GoalsList save={save} compact />
+      </button>
+      <h3 className="mini-title">Áreas da loja</h3>
+      <div className="area-map">
+        {NAV_GROUPS.map((g) => {
+          const alert = g.items.some((i) => badgeFor(i.panel) !== null);
+          return (
+            <button key={g.id} className={`area-card area-${g.id}`} onClick={() => go(panelForGroup(g, badgeFor))}>
+              <span className="area-card-head"><span aria-hidden>{g.icon}</span> {g.label}{alert && <span className="area-dot" aria-label="tem novidade" />}</span>
+              <span className="area-card-hint">{g.hint}</span>
+              <span className="area-card-items" aria-hidden>{g.items.map((i) => i.icon).join(' ')}</span>
+            </button>
+          );
+        })}
+      </div>
+      <p className="panel-lead small home-tip">Dica: tocar nos objetos da loja (armário, caldeirão, balcão…) também abre a tela certa.</p>
     </aside>
   );
 }

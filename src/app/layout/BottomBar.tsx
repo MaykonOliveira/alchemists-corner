@@ -1,86 +1,90 @@
-import { chestReady } from '../../domain/rules/goals';
-import { useState } from 'react';
-import { DAY_EVENTS } from '../../domain/data/orders';
-import { sealsAvailable } from '../../domain/rules/progression';
-import { useGameStore, type PanelId } from '../../store/gameStore';
+import { useGameStore } from '../../store/gameStore';
+import { groupOf, NAV_GROUPS, panelForGroup, SHORTCUTS, useBadges, type NavItem } from './nav';
 
-export const SHORTCUTS: { key: string; label: string; panel: PanelId; icon: string; primary?: boolean; short?: string }[] = [
-  { key: '1', label: 'Ingredientes', short: 'Armário', panel: 'ingredients', icon: '🌿', primary: true },
-  { key: '2', label: 'Caldeirão', panel: 'production', icon: '⚗️', primary: true },
-  { key: '3', label: 'Prateleiras', short: 'Preços', panel: 'shelves', icon: '🧪', primary: true },
-  { key: '4', label: 'Balcão', panel: 'counter', icon: '🛎️', primary: true },
-  { key: '5', label: 'Receitas', panel: 'recipes', icon: '📖' },
-  { key: '6', label: 'Pedidos', panel: 'orders', icon: '📜' },
-  { key: '7', label: 'Melhorias', panel: 'upgrades', icon: '🔨' },
-  { key: '8', label: 'Mestre', panel: 'grimoire', icon: '✨' },
-  { key: '9', label: 'Relatório', panel: 'report', icon: '📊' },
-  { key: '0', label: 'Álbum', panel: 'album', icon: '🏆' },
-  { key: 'r', label: 'Rua', panel: 'street', icon: '🗺️' },
-  { key: 'm', label: 'Metas', panel: 'goals', icon: '🎯' },
-  { key: 't', label: 'Temporada', panel: 'season', icon: '🌙' },
-];
+export { SHORTCUTS };
 
 /**
- * Barra de atalhos. No desktop mostra as 9 abas; no celular mostra as 4 principais
- * e um botão "Mais" que abre as outras numa gaveta (com selo quando há novidade lá dentro).
+ * Barra de navegação.
+ * - Computador: as 13 telas em 4 grupos com nome (Oficina, Loja, Progresso, Mundo), com tecla de atalho.
+ * - Celular: 5 botões grandes (Início + as 4 áreas). Cada área abre um painel com abas para as telas dela.
  */
 export function BottomBar() {
   const active = useGameStore((s) => s.ui.activePanel);
-  const customers = useGameStore((s) => s.save?.customers.length ?? 0);
-  const order = useGameStore((s) => !!s.save?.order || (!!s.save?.contract && !s.save.contract.accepted));
-  const seals = useGameStore((s) => (s.save ? sealsAvailable(s.save) : 0));
-  const rareEvent = useGameStore((s) => !!(s.save?.event && DAY_EVENTS[s.save.event].rare));
-  const chest = useGameStore((s) => (s.save ? chestReady(s.save) : false));
-  const fest = useGameStore((s) => s.save?.event === 'festa-estacao');
   const dispatch = useGameStore((s) => s.dispatch);
-  const [moreOpen, setMoreOpen] = useState(false);
+  const badgeFor = useBadges();
+  const activeGroup = groupOf(active);
 
-  const badgeFor = (panel: PanelId) =>
-    panel === 'counter' && customers > 0 ? customers : panel === 'orders' && order ? '!' : panel === 'grimoire' && seals > 0 ? seals
-      : panel === 'street' && rareEvent ? '!' : panel === 'goals' && chest ? '🎁' : panel === 'season' && fest ? '🎉' : null;
-  const secondary = SHORTCUTS.filter((s) => !s.primary);
-  const moreBadge = secondary.some((s) => badgeFor(s.panel) !== null);
-  const moreActive = secondary.some((s) => s.panel === active);
-
-  const tab = (s: (typeof SHORTCUTS)[number], extra = '') => {
+  const tab = (s: NavItem) => {
     const badge = badgeFor(s.panel);
     return (
       <button
         key={s.panel}
         data-tut={`tab-${s.panel}`}
-        className={`tab ${extra} ${active === s.panel ? 'tab-active' : ''}`}
+        className={`tab ${active === s.panel ? 'tab-active' : ''}`}
         aria-pressed={active === s.panel}
-        onClick={() => { setMoreOpen(false); dispatch({ type: 'TOGGLE_PANEL', panel: s.panel }); }}
+        title={`${s.title} (tecla ${s.key.toUpperCase()})`}
+        onClick={() => dispatch({ type: 'TOGGLE_PANEL', panel: s.panel })}
       >
         <span className="tab-icon" aria-hidden>{s.icon}</span>
-        <span className="tab-label">{s.short ? <><span className="label-full">{s.label}</span><span className="label-short">{s.short}</span></> : s.label}</span>
-        <kbd className="tab-key">{s.key}</kbd>
+        <span className="tab-label">{s.label}</span>
+        <kbd className="tab-key">{s.key.toUpperCase()}</kbd>
         {badge !== null && <span className="tab-badge">{badge}</span>}
       </button>
     );
   };
 
   return (
-    <nav className="bottombar" aria-label="Atalhos">
-      {SHORTCUTS.map((s) => tab(s, s.primary ? '' : 'tab-secondary'))}
-      <button
-        className={`tab tab-more ${moreActive || moreOpen ? 'tab-active' : ''}`}
-        aria-expanded={moreOpen}
-        aria-haspopup="menu"
-        onClick={() => setMoreOpen((o) => !o)}
-      >
-        <span className="tab-icon" aria-hidden>☰</span>
-        <span className="tab-label">Mais</span>
-        {moreBadge && <span className="tab-badge">!</span>}
-      </button>
-      {moreOpen && (
-        <>
-          <div className="more-backdrop" onClick={() => setMoreOpen(false)} aria-hidden />
-          <div className="more-sheet" role="menu" aria-label="Mais painéis">
-            {secondary.map((s) => tab(s))}
+    <nav className="bottombar" aria-label="Navegação">
+      {/* Computador: grupos com rótulo */}
+      <div className="nav-desk">
+        <button
+          className={`tab tab-home ${active === null ? 'tab-active' : ''}`}
+          aria-pressed={active === null}
+          title="Resumo do dia (Esc)"
+          onClick={() => dispatch({ type: 'CLOSE_PANEL' })}
+        >
+          <span className="tab-icon" aria-hidden>🏠</span>
+          <span className="tab-label">Início</span>
+        </button>
+        {NAV_GROUPS.map((g) => (
+          <div key={g.id} className={`nav-group nav-${g.id} ${activeGroup?.id === g.id ? 'nav-group-on' : ''}`} role="group" aria-label={g.label}>
+            <span className="nav-group-label" aria-hidden>{g.label}</span>
+            <div className="nav-group-tabs">{g.items.map(tab)}</div>
           </div>
-        </>
-      )}
+        ))}
+      </div>
+
+      {/* Celular: Início + 4 áreas */}
+      <div className="nav-mobile">
+        <button
+          className={`area ${active === null ? 'area-on' : ''}`}
+          aria-pressed={active === null}
+          onClick={() => dispatch({ type: 'CLOSE_PANEL' })}
+        >
+          <span className="area-icon" aria-hidden>🏠</span>
+          <span className="area-label">Início</span>
+        </button>
+        {NAV_GROUPS.map((g) => {
+          const on = activeGroup?.id === g.id;
+          const badges = g.items.map((i) => badgeFor(i.panel)).filter((b) => b !== null);
+          const nums = badges.filter((b): b is number => typeof b === 'number');
+          const badge = badges.length === 0 ? null : nums.length === badges.length ? nums.reduce((a, b) => a + b, 0) : badges.find((b) => typeof b === 'string') ?? '!';
+          return (
+            <button
+              key={g.id}
+              data-tut={['group-' + g.id, ...g.items.map((i) => `tab-${i.panel}`)].join(' ')}
+              className={`area area-${g.id} ${on ? 'area-on' : ''}`}
+              aria-pressed={on}
+              aria-label={`${g.label}: ${g.hint}`}
+              onClick={() => (on ? dispatch({ type: 'CLOSE_PANEL' }) : dispatch({ type: 'OPEN_PANEL', panel: panelForGroup(g, badgeFor) }))}
+            >
+              <span className="area-icon" aria-hidden>{g.icon}</span>
+              <span className="area-label">{g.label}</span>
+              {badge !== null && <span className="tab-badge">{badge}</span>}
+            </button>
+          );
+        })}
+      </div>
     </nav>
   );
 }

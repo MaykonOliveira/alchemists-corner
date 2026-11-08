@@ -42,7 +42,7 @@ Um robô-jogador (`src/tests/balance/bot.ts`) joga vários dias usando só as re
 - **Cliente Nobre** (a partir do nível 8), que paga bem pelas poções caras, e o evento **Festival das Lanternas**. A partir do nível 10, a Corte e o Observatório fazem encomendas mais generosas.
 - **5 melhorias novas**, todas visíveis na loja: estufa no quintal (ervas grátis toda manhã), alambique de prata (3 poções por lote), despensa encantada (+40 ingredientes, +12 poções), vitral arcano e sino encantado.
 - **Maestria das receitas:** estrelas aos 10, 30, 70, 140 e 250 preparos. Cada estrela faz o cliente aceitar pagar 4% a mais, sobe o teto de preço e dá XP extra por venda.
-- **Grimório do Mestre (tecla 8):** Selos de Mestre vêm dos níveis 11+, dos graus de Mestre (a cada 3000 XP depois do nível 15, sem fim), das receitas com 5 estrelas e das doações à Guilda. Os Selos compram 7 talentos permanentes. Moedas sobrando também patrocinam o festival.
+- **Grimório do Mestre (área Progresso, tecla 9):** Selos de Mestre vêm dos níveis 11+, dos graus de Mestre (a cada 3000 XP depois do nível 15, sem fim), das receitas com 5 estrelas e das doações à Guilda. Os Selos compram 7 talentos permanentes. Moedas sobrando também patrocinam o festival.
 - Saves antigos migram para a `saveVersion` 4: as receitas dos níveis já alcançados entram direto, a maestria é estimada pelas vendas dos relatórios e a XP acumulada no nível 10 fica guardada na porta do 11.
 
 ## Loja que reage
@@ -70,11 +70,11 @@ Um robô-jogador (`src/tests/balance/bot.ts`) joga vários dias usando só as re
   Na loja, o balão deles tem um coraçãozinho; no atendimento aparecem o nome e os corações.
 - **Estações** (7 dias cada): primavera (cura), verão (vigor), outono (mente) e inverno (utilidade). A categoria da estação é mais procurada
   e paga 12% a mais, a partir do dia 3. Pela janela caem pétalas, brilhos de sol, folhas ou neve.
-- **Álbum** (aba 🏆, tecla 0): estação atual, fichas dos fregueses e 18 conquistas.
+- **Álbum** (área Mundo, tecla A): estação atual, fichas dos fregueses e 18 conquistas.
 - **Gato da loja**: passeia, senta, pisca e dorme no tapete à noite. Um toque faz carinho; uma vez por dia ele dá sorte (+1 reputação).
 - Prints em `prints-mundo-vivo/`.
 
-## A rua da loja (aba 🗺️ Rua, tecla R)
+## A rua da loja (área Mundo, tecla R)
 
 - **Poções da estação** (nível 5): cada estação traz um ingrediente raro que o fornecedor só vende nela
   (pétala-da-aurora, fruta-do-sol, folha rubra e flor-de-neve) e uma poção própria: Néctar da Primavera, Refresco Solar,
@@ -95,7 +95,7 @@ Um robô-jogador (`src/tests/balance/bot.ts`) joga vários dias usando só as re
   o caldeirão aceso) contam como a loja chegou até você. Dá para pular. Saves antigos não veem a história.
 - **Tutorial na cena:** cada passo do tutorial acende o objeto certo da loja (contorno pulsando e seta) e o botão que
   precisa ser tocado na interface (anel dourado). No celular, com um painel aberto, a dica sobe para cima da cena.
-- **Metas do dia** (aba 🎯 Metas, tecla M, e no resumo ao lado da cena): três metas por dia sorteadas com a semente do dia
+- **Metas do dia** (área Progresso, tecla 7, e no Início): três metas por dia sorteadas com a semente do dia
   (vender, faturar, vender de uma categoria, preparar uma receita, atender sem trocar a poção, entregar o pedido, carinho no gato).
   Cada uma paga moedas e XP na hora. O primeiro dia acompanha o tutorial.
 - **Baú da semana:** 10 metas cumpridas na semana abrem o baú (moedas e ingredientes raros que a loja já pode comprar).
@@ -132,7 +132,7 @@ Um robô-jogador (`src/tests/balance/bot.ts`) joga vários dias usando só as re
 ## Celular
 
 - **Venda com um toque:** quando um cliente chega, o pedido aparece sobre a loja (ou no topo do painel, no celular) com o botão Vender, o preço e se ele deve aceitar. Opções abre o balcão completo.
-- **Barra com 5 abas** no celular (Armário, Caldeirão, Preços, Balcão e Mais); as outras ficam no menu Mais, com selo quando há novidade.
+- **Barra com 5 botões** no celular: Início e as 4 áreas (veja Navegação).
 - **Avisos curtos:** no máximo 2 na tela, sem repetir e sempre dentro do palco.
 - **Velocidade 2×** durante o expediente e cartão de **bem-vindo de volta** ao continuar a partida.
 
@@ -152,7 +152,7 @@ npm run build && npx cap add android && npx cap sync
 - **Voltar amanhã:** ao reabrir depois de 10 minutos (até 8 horas contam), o **livro do caixa** mostra o que o golem vendeu e o
   que o aprendiz preparou. Há um **presente de visita** por dia real (calendário de 7), **cartas** dos fregueses que visitaram a
   loja e uma prévia de **amanhã na loja** no fechamento. Nada se perde se o jogador faltar um dia.
-- **Temporada e decoração** (aba 🌙 Temporada, tecla T): **cristais de luar** vêm das metas, do baú, das conquistas e dos presentes.
+- **Temporada e decoração** (área Mundo, tecla T): **cristais de luar** vêm das metas, do baú, das conquistas e dos presentes.
   Servem só para decorar: tapete, quadro, luminária, planta e toldo aparecem na cena, e alguns dão **encanto** (+1 de reputação
   por dia, até 3). A **trilha** de 28 dias reais tem 30 recompensas grátis. No último dia de cada estação há uma **festa** com um
   convidado especial e uma lembrança.
@@ -176,3 +176,19 @@ Em modo dev, `window.__store` expõe o store no console.
 
 - `src/audio/`: efeitos e música sintetizados com WebAudio.
 - `src/game/events.ts`: eventos das regras para sons e animações (nunca alteram a economia).
+
+## Navegação
+
+As 13 telas ficam em 4 áreas com nome fixo, iguais no computador e no celular (mapa em `src/app/layout/nav.ts`):
+
+| Área | Telas (tecla) |
+| --- | --- |
+| ⚗️ Oficina | Armário (1), Caldeirão (2), Receitas (3) |
+| 🛎️ Loja | Prateleiras (4), Balcão (5), Pedidos (6) |
+| 🎯 Progresso | Metas (7), Melhorias (8), Grimório (9), Relatório (0) |
+| 🗺️ Mundo | Rua (R), Temporada (T), Álbum (A) |
+
+- **Computador:** a barra de baixo mostra as áreas como grupos coloridos, com todas as telas e as teclas. Esc volta ao Início.
+- **Celular:** 5 botões grandes (Início, Oficina, Loja, Progresso, Mundo). Tocar numa área abre a tela que tem novidade, senão a última que você abriu ali.
+- **Dentro de cada painel:** o nome da área no topo e abas para as outras telas da mesma área.
+- **Início:** o resumo do dia virou "O que fazer agora". Cada linha leva à tela certa e a próxima tarefa vem destacada; embaixo, o mapa das 4 áreas.

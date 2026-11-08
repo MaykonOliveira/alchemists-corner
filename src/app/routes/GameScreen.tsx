@@ -36,7 +36,7 @@ export function GameScreen() {
         e.preventDefault();
         dispatch({ type: 'TOGGLE_PAUSE' });
       } else {
-        const sc = SHORTCUTS.find((s) => s.key === e.key);
+        const sc = SHORTCUTS.find((s) => s.key === e.key.toLowerCase());
         if (sc) dispatch({ type: 'TOGGLE_PANEL', panel: sc.panel });
       }
     };
