@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { WORLD_H, WORLD_W } from './phaser/art/sprites';
 import { createGameConfig } from './phaser/config';
+import { setCurrentGame } from './gameRef';
 
 /** Maior escala inteira que cabe no espaço disponível (PRD 6.3). */
 function fitZoom(el: HTMLElement) {
@@ -27,6 +28,7 @@ export function PhaserGame() {
     const zoom = fitZoom(host);
     dispatch({ type: 'SET_ZOOM', zoom });
     const game = new Phaser.Game(createGameConfig(parent, zoom));
+    setCurrentGame(game);
 
     const ro = new ResizeObserver(() => {
       const z = fitZoom(host);
@@ -37,6 +39,7 @@ export function PhaserGame() {
 
     return () => {
       ro.disconnect();
+      setCurrentGame(null);
       game.destroy(true);
     };
   }, [dispatch]);

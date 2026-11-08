@@ -12,9 +12,10 @@ describe.each([CASUAL, EFICIENTE])('balanceamento ($name)', (profile) => {
   it('o primeiro ciclo (comprar, produzir, vender e fechar) cabe em 10 minutos e dá lucro', () => {
     for (const r of runs) {
       const d1 = r.days[0];
-      expect(d1.elapsedS).toBeLessThanOrEqual(10 * 60);
+      // Fase 3: o dia 1 dura metade (cerca de 3 minutos de expediente).
+      expect(d1.elapsedS).toBeLessThanOrEqual(6 * 60);
       expect(d1.ingredientCost).toBeGreaterThan(0);
-      expect(d1.customersServed).toBeGreaterThanOrEqual(12);
+      expect(d1.customersServed).toBeGreaterThanOrEqual(7);
       expect(d1.profit).toBeGreaterThan(0);
     }
   });
@@ -26,7 +27,9 @@ describe.each([CASUAL, EFICIENTE])('balanceamento ($name)', (profile) => {
 
   it('a primeira melhoria vem nos primeiros dias, sem ser imediata', () => {
     for (const r of runs) {
-      expect(r.days[0].coinsEnd).toBeLessThan(cheapest);
+      // Fase 3: a Condessa da estreia e o presente do nível 2 deixam o caixa do dia 1 mais cheio,
+      // mas a primeira compra continua ficando para o dia 2 ou 3.
+      expect(r.days[0].coinsEnd).toBeLessThan(cheapest * 2);
       expect(r.firstUpgradeDay).not.toBeNull();
       expect(r.firstUpgradeDay!).toBeGreaterThanOrEqual(2);
       expect(r.firstUpgradeDay!).toBeLessThanOrEqual(3);

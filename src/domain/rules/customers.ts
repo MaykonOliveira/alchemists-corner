@@ -10,6 +10,8 @@ import { CLOSE_MIN } from './time';
 import { availableRegulars, befriend, REGULAR_CHANCE, seasonCategory } from './world';
 import { SEASON_PRICE_BONUS } from '../data/world';
 import { eventCategoryFactor, inSeason, seasonalRecipe } from './street';
+import { letterVisitor, maybeSpawnVip, onVipServed } from './retention';
+import { REGULARS_BY_ID } from '../data/world';
 
 export const MAX_CUSTOMERS = 3;
 /** Clientes que cabem no balcão (o balcão duplo abre espaço para mais um). */
@@ -28,18 +30,21 @@ export function spawnCustomer(d: Draft) {
   const { s, ctx } = d;
   // De vez em quando quem entra é um freguês fiel, que já chega pedindo o de sempre.
   const regulars = s.day >= 2 ? availableRegulars(s) : [];
-  if (regulars.length && ctx.random() < REGULAR_CHANCE) {
-    const r = pick(regulars, ctx.random);
+  // Quem mandou carta ontem entra primeiro, como prometeu.
+  const promised = letterVisitor(s);
+  if (promised || (regulars.length && ctx.random() < REGULAR_CHANCE)) {
+    const r = promised ? REGULARS_BY_ID[promised] : pick(regulars, ctx.random);
+    if (promised && s.letter) s.letter = { ...s.letter, done: true };
     const info = ARCHETYPES[r.archetype];
     const regular: Customer = {
       id: nextId(d, 'c'),
       archetype: r.archetype,
       wantedRecipeId: r.favorite,
-      budgetFactor: +(info.budget + 0.08).toFixed(3),
+      budgetFactor: +(info.budget + (promised ? 0.4 : 0.08)).toFixed(3),
       patienceMs: Math.round(info.patienceMs * 1.3 * patienceFactor(s)),
       waitedMs: 0,
       offer: null,
-      remark: r.greeting,
+      remark: promised ? 'Como prometi na carta! Hoje pago bem pelo de sempre.' : r.greeting,
       regularId: r.id,
     };
     s.customers.push(regular);
@@ -104,11 +109,17 @@ export function maxPriceFor(s: GameSave, c: Customer, recipeId: string) {
 
 /** Uma poção serve para o cliente? (a pedida, ou outra da mesma categoria como substituta) */
 export function suits(c: Customer, recipeId: string) {
+  // A Condessa da estreia aceita qualquer poção da loja nova.
+  if (c.vip?.kind === 'estreia') return true;
   return recipeId === c.wantedRecipeId || RECIPES_BY_ID[recipeId].category === RECIPES_BY_ID[c.wantedRecipeId].category;
 }
 
 /** Chance estimada de aceitar, para orientar o jogador: 'sim' | 'negocia' | 'nao'. */
+/** Quanto uma visita especial paga (preço fixo, várias vezes o preço-base). */
+export const vipPrice = (c: Customer, recipeId: string) => Math.round(RECIPES_BY_ID[recipeId].basePrice * (c.vip?.pays ?? 1));
+
 export function priceVerdict(s: GameSave, c: Customer, recipeId: string): 'sim' | 'negocia' | 'nao' {
+  if (c.vip) return 'sim';
   const max = maxPriceFor(s, c, recipeId);
   const price = getPrice(s, recipeId);
   if (price <= max) return 'sim';
@@ -123,6 +134,7 @@ export function priceVerdict(s: GameSave, c: Customer, recipeId: string): 'sim' 
 export function bestOffer(save: GameSave, c: Customer): string | null {
   const forSale = save.potions.filter((p) => p.forSale && p.quantity > 0).map((p) => p.recipeId);
   if (forSale.includes(c.wantedRecipeId)) return c.wantedRecipeId;
+  if (c.vip) return forSale.filter((id) => suits(c, id)).sort((a, b) => RECIPES_BY_ID[b].basePrice - RECIPES_BY_ID[a].basePrice)[0] ?? null;
   const similar = forSale.filter((id) => suits(c, id));
   if (similar.length === 0) return null;
   const rank = { sim: 0, negocia: 1, nao: 2 } as const;
@@ -164,6 +176,12 @@ export function serveCustomer(d: Draft, customerId: string, recipeId: string): b
   if (!suits(c, recipeId)) {
     c.remark = 'Hmm… não é bem disso que eu preciso.';
     d.events.push({ type: 'CUSTOMER_REFUSED', customerId, reason: 'produto' });
+    return true;
+  }
+  if (c.vip) {
+    const price = vipPrice(c, recipeId);
+    completeSale(d, c, recipeId, price);
+    onVipServed(d, c, price);
     return true;
   }
   const price = getPrice(s, recipeId);
@@ -216,6 +234,8 @@ export function advanceCustomers(d: Draft, ms: number) {
     }
   }
   s.spawnInMs -= ms;
+  // Visitas especiais (Condessa no dia 1, convidado da festa) entram na hora marcada.
+  if (maybeSpawnVip(d, s.customers.length < maxCustomers(s) && s.clockMin < CLOSE_MIN - 30)) return;
   if (s.spawnInMs <= 0) {
     s.spawnInMs = nextSpawnDelay(s, d.ctx.random);
     // Ninguém entra nos últimos 30 minutos do expediente.

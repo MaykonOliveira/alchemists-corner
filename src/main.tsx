@@ -6,6 +6,7 @@ import './app/styles.css';
 import { App } from './app/App';
 import { initAudio } from './audio/sound';
 import { registerServiceWorker } from './app/pwa';
+import { initReminders } from './app/reminders';
 
 initAudio();
 registerServiceWorker();
@@ -17,6 +18,8 @@ createRoot(document.getElementById('root')!).render(
 );
 
 // Acesso ao store pelo console durante o desenvolvimento (útil para testes e depuração).
+initReminders();
+
 if (import.meta.env.DEV) {
   void import('./store/gameStore').then(({ useGameStore }) => {
     (window as unknown as { __store: typeof useGameStore }).__store = useGameStore;

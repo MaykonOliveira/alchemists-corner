@@ -14,6 +14,7 @@ import { LevelUpModal } from '../layout/LevelUpModal';
 import { SettingsModal } from '../layout/SettingsModal';
 import { SidePanel } from '../layout/SidePanel';
 import { Toasts } from '../layout/Toasts';
+import { ShareModal } from '../../features/share/ShareModal';
 
 export function GameScreen() {
   const dispatch = useGameStore((s) => s.dispatch);
@@ -61,6 +62,7 @@ export function GameScreen() {
       <DayEndModal />
       <LevelUpModal />
       <SettingsModal />
+      <ShareModal />
       <UiSpotlight />
       <StoryIntro />
     </div>

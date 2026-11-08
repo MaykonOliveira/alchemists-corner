@@ -34,6 +34,11 @@ export function LevelUpModal() {
           {extras.map((t) => <li key={t}>{t}</li>)}
           {recipes.length + ings.length + ups.length + extras.length === 0 && <li>Clientes confiam mais em você e pedidos maiores chegam.</li>}
         </ul>
+        {ui.levelUp.gift && (
+          <p className="level-gift">🎁 Presente do nível: +{ui.levelUp.gift.coins} moedas
+            {ui.levelUp.gift.crystals > 0 && `, +${ui.levelUp.gift.crystals} Cristais de luar`}
+            {ui.levelUp.gift.items.length > 0 && `, ${ui.levelUp.gift.items.map((i) => `${i.qty}× ${INGREDIENTS.find((x) => x.id === i.ingredientId)?.name}`).join(', ')}`}</p>
+        )}
         {recipes.length > 0 && <p className="card-text small muted">{RECIPES_BY_ID[recipes[0]].need}: novos clientes vão procurar por isso.</p>}
         <button className="btn btn-primary btn-big" autoFocus onClick={() => dispatch({ type: 'OPEN_MODAL', modal: null })}>Que maravilha!</button>
       </div>

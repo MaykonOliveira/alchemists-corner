@@ -35,6 +35,9 @@ export const LATEGAME: Record<'greenhouse' | 'alembic' | 'cabinet-runes' | 'vitr
 /** Posições das expansões da loja (2º caldeirão, ala do balcão e astrolábio da torre). */
 export const EXPANSION: Record<'cauldron-2' | 'counter-wing' | 'astrolabe', { x: number; y: number }> = layout.expansion;
 
+/** Lugares da decoração da loja (fase 3): tapete, quadro, luminária, planta e toldo da janela. */
+export const DECOR_POS: Record<'rug' | 'frame' | 'lamp' | 'plant' | 'awning', { x: number; y: number }> = layout.decor;
+
 /** Linhas (y relativo) das tábuas onde os frascos ficam apoiados. */
 export const SHELF_BOARDS: number[] = layout.shelfBoards;
 

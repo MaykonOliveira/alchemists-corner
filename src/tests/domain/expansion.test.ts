@@ -96,7 +96,8 @@ describe('contratos de vários dias', () => {
 
     const b = run({ ...a.save, potions: stock([['cura-simples', 5], ['tonico-energia', 2]]) }, { type: 'DELIVER_CONTRACT' });
     expect(b.save.contract).toBeNull();
-    expect(b.save.coins).toBe(s.coins + 1000);
+    // +50 da primeira recompensa da Trilha da Temporada (o contrato vale 30 pontos).
+    expect(b.save.coins).toBe(s.coins + 1000 + 50);
     expect(b.save.contractsDone).toBe(1);
     expect(b.save.ingredients['folha-lunar']).toBeGreaterThan(s.ingredients['folha-lunar'] ?? 0);
     expect(sealsAvailable(b.save)).toBe(seals + 1);

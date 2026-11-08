@@ -74,6 +74,8 @@ export interface Customer {
   remark: string | null;
   /** Freguês fiel (id em REGULARS), se for um. */
   regularId?: string | null;
+  /** Visita especial (Condessa no dia 1, convidado da festa da estação): nome próprio e preço fixo. */
+  vip?: { name: string; pays: number; kind: 'estreia' | 'festa' | 'carta' };
 }
 
 /** Amizade com um freguês fiel. */
@@ -162,7 +164,7 @@ export interface Contract {
   accepted: boolean;
 }
 
-export type DayEventId = 'feira' | 'caravana' | 'chuva' | 'festival' | 'eclipse' | 'lua-cheia' | 'visitante';
+export type DayEventId = 'feira' | 'caravana' | 'chuva' | 'festival' | 'eclipse' | 'lua-cheia' | 'visitante' | 'festa-estacao';
 
 export interface DayStats {
   revenue: number;
@@ -176,6 +178,8 @@ export interface DayStats {
   levelStart: number;
   ordersDone: number;
   helperWork: HelperWork;
+  /** Fregueses fiéis atendidos hoje (para as cartas do fechamento). */
+  regularsSeen?: string[];
 }
 
 export interface DayReport {
@@ -252,9 +256,60 @@ export interface Settings {
   ambienceVolume: number;
   /** Vibração curta no celular em vendas, níveis e conquistas. */
   vibration: boolean;
+  /** Lembretes do app instalado (caldeirão pronto, corvo de volta). Desligados por padrão. */
+  reminders: boolean;
 }
 
-export const SAVE_VERSION = 8 as const;
+// ------------------------------------------------------------ fase 3
+
+/** Cartas que chegam no fechamento e anunciam uma visita para amanhã. */
+export interface Letter {
+  /** Freguês fiel (id) ou 'condessa-estreia'. */
+  from: string;
+  text: string;
+  /** Dia em que a visita (ou a encomenda) acontece. */
+  day: number;
+  done: boolean;
+}
+
+/** O que a loja fez enquanto o jogador esteve fora (livro do caixa). */
+export interface AwayReport {
+  awayMs: number;
+  sold: number;
+  coins: number;
+  xp: number;
+  brewed: Record<string, number>;
+  /** Havia ajudantes para trabalhar? */
+  helpers: boolean;
+}
+
+/** Calendário de presentes de visita: nunca zera, só espera. */
+export interface VisitsState {
+  /** Último dia real (AAAA-MM-DD, horário local) em que a loja foi aberta. */
+  lastDate: string;
+  /** Presentes já recebidos. */
+  count: number;
+  ready: boolean;
+}
+
+/** Trilha da Temporada: 28 dias reais, 30 recompensas gratuitas. */
+export interface TrackState {
+  period: number;
+  points: number;
+  /** Recompensas já entregues nesta temporada. */
+  tier: number;
+}
+
+/** Desafio da semana: um dia jogado com a mesma semente para todos. */
+export interface ChallengeState {
+  week: number;
+  active: boolean;
+  /** Estado do gerador de números (mulberry32). */
+  rng: number;
+  score: number | null;
+}
+
+export const SAVE_VERSION = 9 as const;
 
 export interface GameSave {
   saveVersion: typeof SAVE_VERSION;
@@ -325,6 +380,34 @@ export interface GameSave {
   tipsSeen: string[];
   /** A história de abertura já foi vista. */
   storySeen: boolean;
+  /** Nome da loja e cor do toldo, escolhidos na abertura (fase 3). */
+  shopName: string;
+  awning: string;
+  /** A Condessa já fez a visita de estreia (dia 1). */
+  debutDone: boolean;
+  /** Carta para amanhã (freguês fiel ou Condessa). */
+  letter: Letter | null;
+  /** Evento sorteado no fechamento para o dia seguinte (a prévia do relatório mostra). */
+  nextEvent: DayEventId | null;
+  /** Livro do caixa da última volta (null depois de lido). */
+  away: AwayReport | null;
+  visits: VisitsState;
+  /** Cristais de luar: ganhos só jogando, servem para decoração. */
+  crystals: number;
+  /** Itens que o jogador tem (decoração, títulos). Ver data/catalog.ts. */
+  owned: string[];
+  /** Decoração colocada em cada lugar da loja. */
+  decor: Record<string, string>;
+  track: TrackState;
+  /** Festas da estação já celebradas (dia em que aconteceram). */
+  festsDone: number[];
+  /** Presentes de amigos já usados (ids) e o último dia real em que a loja mandou um. */
+  giftsRedeemed: string[];
+  giftSentDate: string;
+  giftsSent: number;
+  challenge: ChallengeState | null;
+  /** Melhor pontuação no desafio, por semana. */
+  challengeBest: { week: number; score: number } | null;
   tutorialStep: number;
   seq: number;
   settings: Settings;
@@ -343,7 +426,7 @@ export type GameEvent =
   | { type: 'COUNTER_OFFER'; customerId: string; price: number }
   | { type: 'CUSTOMER_REFUSED'; customerId: string; reason: 'produto' | 'preco' }
   | { type: 'CUSTOMER_LEFT'; customerId: string; reason: 'paciencia' | 'preco' | 'recusou-oferta' | 'fechou' | 'atendido' }
-  | { type: 'LEVEL_UP'; level: number; recipes: string[] }
+  | { type: 'LEVEL_UP'; level: number; recipes: string[]; gift?: { coins: number; crystals: number; items: { ingredientId: string; qty: number }[] } }
   | { type: 'ORDER_NEW'; orderId: string }
   | { type: 'ORDER_DONE'; orderId: string; coins: number }
   | { type: 'ORDER_EXPIRED'; orderId: string }
@@ -374,4 +457,17 @@ export type GameEvent =
   | { type: 'FIND'; id: string }
   | { type: 'GOAL_DONE'; goalId: string; coins: number; xp: number; allDone: boolean }
   | { type: 'CHEST_OPENED'; coins: number; items: { ingredientId: string; qty: number }[] }
+  | { type: 'VIP_ARRIVED'; customerId: string; name: string }
+  | { type: 'VIP_SERVED'; name: string; coins: number; kind: 'estreia' | 'festa' | 'carta' }
+  | { type: 'LETTER'; from: string }
+  | { type: 'AWAY_REPORT'; report: AwayReport }
+  | { type: 'VISIT_GIFT'; n: number; coins: number; crystals: number; items: { ingredientId: string; qty: number }[]; decor: string | null }
+  | { type: 'CRYSTALS'; n: number; reason: string }
+  | { type: 'TRACK_TIER'; tier: number; reward: string }
+  | { type: 'DECOR_BOUGHT'; itemId: string }
+  | { type: 'ITEM_GRANTED'; itemId: string; source: string }
+  | { type: 'GIFT_SENT'; first: boolean }
+  | { type: 'GIFT_REDEEMED'; from: string; crystals: number; items: { ingredientId: string; qty: number }[] }
+  | { type: 'CHALLENGE_STARTED'; week: number }
+  | { type: 'CHALLENGE_DONE'; week: number; score: number; best: boolean }
   | { type: 'ERROR'; message: string };

@@ -12,6 +12,10 @@ import { buySeal, learnTalentCmd } from './progression';
 import { sponsorFestival } from './day';
 import { sendExpedition } from './street';
 import { claimChest, trackGoals } from './goals';
+import { buyDecor, placeDecor } from './entitlements';
+import { claimVisitGift, rewardFromEvents, sessionStart } from './retention';
+import { challengeContext, redeemGift, sendGift, startChallenge, type GiftPayload } from './social';
+import { AWNINGS } from '../data/catalog';
 
 /**
  * Comandos tipados que alteram o estado canônico da partida.
@@ -46,7 +50,16 @@ export type DomainCommand =
   | { type: 'SET_TUTORIAL'; step: number }
   | { type: 'CLAIM_CHEST' }
   | { type: 'SEE_TIP'; tipId: string }
-  | { type: 'SEE_STORY' };
+  | { type: 'SEE_STORY' }
+  | { type: 'SET_SHOP'; name: string; awning: string }
+  | { type: 'SESSION_START' }
+  | { type: 'DISMISS_AWAY' }
+  | { type: 'CLAIM_VISIT_GIFT' }
+  | { type: 'BUY_DECOR'; itemId: string }
+  | { type: 'PLACE_DECOR'; itemId: string }
+  | { type: 'SEND_GIFT' }
+  | { type: 'REDEEM_GIFT'; gift: GiftPayload }
+  | { type: 'START_CHALLENGE' };
 
 export interface CommandResult {
   save: GameSave;
@@ -58,10 +71,13 @@ const defaultCtx = (): RuleContext => ({ now: Date.now(), random: Math.random })
 /** Aplica um comando. Função pura: o save recebido nunca é alterado. */
 export function applyCommand(save: GameSave, cmd: DomainCommand, ctx: RuleContext = defaultCtx()): CommandResult {
   const d: Draft = { s: structuredClone(save), events: [], ctx };
+  // No desafio da semana, os sorteios usam a semente da semana (igual para todos).
+  d.ctx = challengeContext(d.s, ctx);
   const changed = run(d, cmd);
   if (!changed) return { save, events: d.events };
   trackGoals(d, 0);
   checkAchievements(d);
+  rewardFromEvents(d, [...d.events]);
   d.s.updatedAt = ctx.now;
   return { save: d.s, events: d.events };
 }
@@ -108,5 +124,27 @@ function run(d: Draft, cmd: DomainCommand): boolean {
       if (d.s.storySeen) return false;
       d.s.storySeen = true;
       return true;
+    case 'SET_SHOP': {
+      const name = cmd.name.replace(/\s+/g, ' ').trim().slice(0, 28);
+      if (!name) return false;
+      d.s.shopName = name;
+      if (AWNINGS.some((a) => a.id === cmd.awning)) {
+        if (!d.s.owned.includes(cmd.awning)) d.s.owned = [...d.s.owned, cmd.awning];
+        d.s.awning = cmd.awning;
+        d.s.decor = { ...d.s.decor, toldo: cmd.awning };
+      }
+      return true;
+    }
+    case 'SESSION_START': return sessionStart(d);
+    case 'DISMISS_AWAY':
+      if (!d.s.away) return false;
+      d.s.away = null;
+      return true;
+    case 'CLAIM_VISIT_GIFT': return claimVisitGift(d);
+    case 'BUY_DECOR': return buyDecor(d, cmd.itemId);
+    case 'PLACE_DECOR': return placeDecor(d, cmd.itemId);
+    case 'SEND_GIFT': return sendGift(d);
+    case 'REDEEM_GIFT': return redeemGift(d, cmd.gift);
+    case 'START_CHALLENGE': return startChallenge(d);
   }
 }

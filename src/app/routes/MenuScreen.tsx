@@ -3,6 +3,7 @@ import { useGameStore } from '../../store/gameStore';
 import { PotionIcon } from '../../ui/SpriteIcon';
 import { SaveTransferDialog } from '../layout/SaveTransferDialog';
 import { useInstallPrompt } from '../pwa';
+import { PrivacyDialog } from '../layout/PrivacyDialog';
 
 const TITLE_POTIONS = ['cura-simples', 'tonico-energia', 'elixir-concentracao', 'pocao-sorte', 'elixir-estelar', 'elixir-fenix'];
 
@@ -11,6 +12,7 @@ export function MenuScreen() {
   const [confirming, setConfirming] = useState(false);
   const [dialog, setDialog] = useState<'import' | 'export' | null>(null);
   const [credits, setCredits] = useState(false);
+  const [privacy, setPrivacy] = useState(false);
   const install = useInstallPrompt();
 
   return (
@@ -52,6 +54,7 @@ export function MenuScreen() {
             {hasStoredSave && <button className="link-btn" onClick={() => setDialog('export')}>Exportar save</button>}
             {install && <button className="link-btn" onClick={install}>Instalar como app</button>}
             <button className="link-btn" onClick={() => setCredits((c) => !c)}>Créditos</button>
+            <button className="link-btn" onClick={() => setPrivacy(true)}>Privacidade</button>
           </div>
         )}
         {credits && (
@@ -61,7 +64,8 @@ export function MenuScreen() {
           </p>
         )}
       </div>
-      <p className="menu-foot">Versão 0.9 · Jogue em qualquer lugar: offline, instalável e com o save no bolso</p>
+      <p className="menu-foot">Versão 1.0 · Dê nome à sua loja, decore, volte amanhã e mostre para os amigos</p>
+      {privacy && <PrivacyDialog onClose={() => setPrivacy(false)} />}
       {dialog && <SaveTransferDialog mode={dialog} onClose={() => setDialog(null)} />}
     </main>
   );

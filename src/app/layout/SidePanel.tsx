@@ -14,6 +14,7 @@ import { GoalsList, GoalsPanel } from '../../features/goals/GoalsPanel';
 import { useGameStore, type PanelId } from '../../store/gameStore';
 import { potionStock } from '../../domain/rules/economy';
 import { QuickServe } from '../../features/customers/QuickServe';
+import { SeasonPanel } from '../../features/season/SeasonPanel';
 
 const TITLES: Record<PanelId, string> = {
   ingredients: 'Armário e fornecedor',
@@ -29,6 +30,7 @@ const TITLES: Record<PanelId, string> = {
   album: 'Álbum da loja',
   street: 'A rua da loja',
   goals: 'Metas do dia',
+  season: 'Temporada e decoração',
 };
 
 export function SidePanel() {
@@ -84,6 +86,7 @@ export function SidePanel() {
         {panel === 'album' && <AlbumPanel save={save} />}
         {panel === 'street' && <StreetPanel save={save} />}
         {panel === 'goals' && <GoalsPanel save={save} />}
+        {panel === 'season' && <SeasonPanel save={save} />}
       </div>
     </aside>
   );

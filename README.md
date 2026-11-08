@@ -144,6 +144,26 @@ npx cap init "Alchemist's Corner" com.seudominio.alchemistscorner --web-dir dist
 npm run build && npx cap add android && npx cap sync
 ```
 
+## Vontade de começar e de voltar (fase 3)
+
+- **Primeiros 5 minutos:** depois da história, o jogador dá nome à loja e escolhe a cor do toldo. O tutorial começa por uma
+  venda (já há poções na prateleira), o primeiro dia corre 2× mais rápido, a Condessa Amélia aparece às 14h e paga 10× o preço,
+  e o dia 1 sempre termina no nível 2. Os níveis 2 a 5 trazem um presente (moedas, cristais, ingredientes).
+- **Voltar amanhã:** ao reabrir depois de 10 minutos (até 8 horas contam), o **livro do caixa** mostra o que o golem vendeu e o
+  que o aprendiz preparou. Há um **presente de visita** por dia real (calendário de 7), **cartas** dos fregueses que visitaram a
+  loja e uma prévia de **amanhã na loja** no fechamento. Nada se perde se o jogador faltar um dia.
+- **Temporada e decoração** (aba 🌙 Temporada, tecla T): **cristais de luar** vêm das metas, do baú, das conquistas e dos presentes.
+  Servem só para decorar: tapete, quadro, luminária, planta e toldo aparecem na cena, e alguns dão **encanto** (+1 de reputação
+  por dia, até 3). A **trilha** de 28 dias reais tem 30 recompensas grátis. No último dia de cada estação há uma **festa** com um
+  convidado especial e uma lembrança.
+- **Mostrar a loja:** cartão 1080×1080 com a foto da loja para compartilhar ou baixar; **presentes entre amigos** por código
+  (`AC1g.…`, um por dia); **desafio da semana** com a mesma semente para todos os jogadores. Prévia de link (`og-image.png`).
+- **Alicerce para monetizar:** catálogo em `src/domain/data/catalog.ts`, posse em `src/domain/rules/entitlements.ts` e a
+  interface de loja em `src/monetization/entitlements.ts` (`PURCHASES_ENABLED = false`). Princípios: nada de caixas pagas,
+  energia, espera paga, vantagem paga ou sequência que zera. O funil (`src/analytics/funnel.ts`) fica só no aparelho e aparece em
+  *Configurações → Números deste aparelho*.
+- Save versão 9, com migração. Prints em `prints-fase3/`.
+
 ## Arquitetura
 
 - `src/domain/`: tipos, dados (ingredientes, receitas, arquétipos, melhorias) e regras puras. Não depende de React nem de Phaser.

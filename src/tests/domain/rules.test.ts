@@ -132,7 +132,8 @@ describe('ciclo do dia', () => {
     let { save } = run(createNewGame(0), { type: 'OPEN_SHOP' });
     expect(save.phase).toBe('expediente');
     ({ save } = run(save, { type: 'ADVANCE', ms: 15_000 }));
-    expect(save.clockMin).toBe(OPEN_MIN + 30);
+    // O dia 1 corre duas vezes mais rápido (fase 3).
+    expect(save.clockMin).toBe(OPEN_MIN + 60);
     const coins = save.coins;
     const maint = maintenanceCost(save);
     let events;
@@ -142,14 +143,16 @@ describe('ciclo do dia', () => {
     expect(save.customers).toHaveLength(0);
     expect(events.some((e) => e.type === 'DAY_CLOSED')).toBe(true);
     expect(save.reports.at(-1)!.maintenance).toBe(maint);
-    expect(save.coins).toBeLessThanOrEqual(coins);
+    // O fechamento do dia 1 dá o presente do nível 2 (+40 moedas).
+    expect(save.coins).toBeLessThanOrEqual(coins + 40);
     ({ save } = run(save, { type: 'START_NEXT_DAY' }));
     expect(save).toMatchObject({ day: 2, phase: 'preparacao', clockMin: OPEN_MIN });
     expect(save.order).not.toBeNull();
   });
 
   it('manutenção nunca deixa o saldo negativo', () => {
-    const s = { ...run(createNewGame(0), { type: 'OPEN_SHOP' }).save, coins: 3 };
+    // Dia 2: no dia 1 o fechamento dá o presente do nível 2.
+    const s = { ...run(createNewGame(0), { type: 'OPEN_SHOP' }).save, coins: 3, day: 2 };
     const r = run(s, { type: 'CLOSE_SHOP' });
     expect(r.save.coins).toBe(0);
   });

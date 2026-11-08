@@ -2,6 +2,8 @@ import { RECIPES } from '../data/recipes';
 import type { GameSave } from '../models/types';
 import { fail, type Draft } from './context';
 import { learnTalent, masteredRecipes, sealsSpent } from './mastery';
+import { LEVEL_GIFTS } from '../data/retention';
+import { addIngredients } from './street';
 
 export const MAX_LEVEL = 15;
 /** A partir deste nível cada nível novo rende 1 Selo de Mestre. */
@@ -10,8 +12,12 @@ export const SEAL_LEVEL = 11;
 export const MASTER_STEP_XP = 3000;
 
 /** XP total necessário para alcançar o nível informado (nível 1 = 0 XP). */
+/** Os níveis 2 a 5 ficaram mais curtos na fase 3, para a primeira meia hora ter ritmo. */
+const EARLY_LEVELS: Record<number, number> = { 2: 120, 3: 360, 4: 760, 5: 1400 };
+
 export function xpForLevel(level: number): number {
   if (level <= 1) return 0;
+  if (EARLY_LEVELS[level] !== undefined) return EARLY_LEVELS[level];
   // Curva: 205, 540, 1035, 1720, 2625... (nível 10 perto de 9000 XP, nível 15 perto de 25600)
   const n = level - 1;
   return 150 * n + 50 * n * n + 5 * n * n * n;
@@ -77,7 +83,13 @@ export function gainXp(d: Draft, amount: number) {
   while (s.level < newLevel) {
     s.level += 1;
     const recipes = unlockRecipesUpTo(s, s.level);
-    d.events.push({ type: 'LEVEL_UP', level: s.level, recipes });
+    const gift = LEVEL_GIFTS[s.level];
+    if (gift) {
+      s.coins += gift.coins;
+      s.crystals = (s.crystals ?? 0) + gift.crystals;
+      addIngredients(s, gift.items);
+    }
+    d.events.push({ type: 'LEVEL_UP', level: s.level, recipes, gift });
   }
   const rank = masterRank(s.xp);
   if (rank > rankBefore) d.events.push({ type: 'MASTER_RANK', rank });
