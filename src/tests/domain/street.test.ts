@@ -165,6 +165,6 @@ describe('save v7', () => {
     expect(s.rival).toEqual({ week: 0, me: 0, her: 0, wins: 0, losses: 0 });
     expect(s.finds).toEqual([]);
     expect(s.expedition).toBeNull();
-    expect(s.saveVersion).toBe(8);
+    expect(s.saveVersion).toBe(9);
   });
 });

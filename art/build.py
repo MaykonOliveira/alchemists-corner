@@ -14,6 +14,7 @@ import expansion as X
 import cat as CAT
 import seasonal as SE  # registra poções e ingredientes da estação em items.py
 import story as ST
+import decor as DE
 from room import draw_room
 from customers import customer_sheet, LOOKS, FW, FH, FRAMES
 
@@ -93,6 +94,8 @@ def main():
                   'cat-walk-1': CAT.cat_walk(1), 'cat-sleep': CAT.cat_sleep()}.items():
         shop[k] = cv
         shop[f'{k}-outline'] = outline_mask(cv)
+    # Decoração da loja (fase 3)
+    shop.update(DE.frames())
     for k in ('cauldron-2', 'counter-wing'):
         shop[f'{k}-outline'] = outline_mask(shop[k])
     for rid in I.LIQ:
@@ -125,7 +128,8 @@ def main():
     layout = {'garlandBulbs': [{'x': x, 'y': y, 'color': P[c]} for x, y, c in O.garland_bulbs()],
               'shelfBoards': O.SHELF_BOARDS, 'customer': {'w': FW, 'h': FH, 'frames': FRAMES},
               'lategame': {k: {'x': x, 'y': y} for k, (x, y) in L.POS.items()},
-              'expansion': {k: {'x': x, 'y': y} for k, (x, y) in X.POS.items()}}
+              'expansion': {k: {'x': x, 'y': y} for k, (x, y) in X.POS.items()},
+              'decor': {k: {'x': x, 'y': y} for k, (x, y) in DE.POS.items()}}
     with open(os.path.join(OUT, 'layout.json'), 'w') as fh:
         json.dump(layout, fh, indent=1)
     # Quadros da história de abertura (pacote G).

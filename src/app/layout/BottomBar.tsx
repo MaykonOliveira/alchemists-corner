@@ -17,6 +17,7 @@ export const SHORTCUTS: { key: string; label: string; panel: PanelId; icon: stri
   { key: '0', label: 'Álbum', panel: 'album', icon: '🏆' },
   { key: 'r', label: 'Rua', panel: 'street', icon: '🗺️' },
   { key: 'm', label: 'Metas', panel: 'goals', icon: '🎯' },
+  { key: 't', label: 'Temporada', panel: 'season', icon: '🌙' },
 ];
 
 /**
@@ -30,12 +31,13 @@ export function BottomBar() {
   const seals = useGameStore((s) => (s.save ? sealsAvailable(s.save) : 0));
   const rareEvent = useGameStore((s) => !!(s.save?.event && DAY_EVENTS[s.save.event].rare));
   const chest = useGameStore((s) => (s.save ? chestReady(s.save) : false));
+  const fest = useGameStore((s) => s.save?.event === 'festa-estacao');
   const dispatch = useGameStore((s) => s.dispatch);
   const [moreOpen, setMoreOpen] = useState(false);
 
   const badgeFor = (panel: PanelId) =>
     panel === 'counter' && customers > 0 ? customers : panel === 'orders' && order ? '!' : panel === 'grimoire' && seals > 0 ? seals
-      : panel === 'street' && rareEvent ? '!' : panel === 'goals' && chest ? '🎁' : null;
+      : panel === 'street' && rareEvent ? '!' : panel === 'goals' && chest ? '🎁' : panel === 'season' && fest ? '🎉' : null;
   const secondary = SHORTCUTS.filter((s) => !s.primary);
   const moreBadge = secondary.some((s) => badgeFor(s.panel) !== null);
   const moreActive = secondary.some((s) => s.panel === active);

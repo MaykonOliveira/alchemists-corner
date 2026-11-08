@@ -16,6 +16,8 @@ export function createGameConfig(parent: HTMLElement, zoom: number): Phaser.Type
     banner: false,
     audio: { noAudio: true },
     scale: { mode: Phaser.Scale.NONE },
+    // Só toques no próprio canvas contam (cliques em janelas e cartões por cima da cena não acionam objetos).
+    input: { windowEvents: false },
     scene: [BootScene, ShopScene],
   };
 }

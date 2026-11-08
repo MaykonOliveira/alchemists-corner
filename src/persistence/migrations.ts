@@ -42,6 +42,8 @@ export function migrateSave(raw: unknown): GameSave | null {
   // v5 → v6: fregueses fiéis, estações, álbum de conquistas e o gato da loja.
   // v6 → v7: ingredientes e poções da estação, rival da rua, eventos raros e expedições.
   // v7 → v8: metas do dia, baú da semana, dicas de contexto e história de abertura.
+  // v8 → v9: nome da loja, cartas, livro do caixa, presentes de visita, cristais, decoração,
+  //          trilha da temporada, presentes entre amigos e desafio da semana.
   // Os campos novos recebem os valores padrão abaixo.
 
   const base = createNewGame(num(raw.createdAt, Date.now()));
@@ -143,7 +145,36 @@ export function migrateSave(raw: unknown): GameSave | null {
     tipsSeen: arr<string>(raw.tipsSeen, []).filter((x) => typeof x === 'string'),
     // Quem já tinha uma partida não precisa ver a história de abertura.
     storySeen: raw.saveVersion < 8 ? true : bool(raw.storySeen, false),
-    tutorialStep: num(raw.tutorialStep, raw.saveVersion === 1 ? 99 : 0),
+    // O tutorial mudou de ordem na v9 (agora começa vendendo): quem estava no meio dele pula para o fim.
+    tutorialStep: raw.saveVersion < 9 && num(raw.tutorialStep, 99) < 7 ? 99 : num(raw.tutorialStep, raw.saveVersion === 1 ? 99 : 0),
+    shopName: typeof raw.shopName === 'string' && raw.shopName.trim() ? raw.shopName.slice(0, 28) : base.shopName,
+    awning: typeof raw.awning === 'string' ? raw.awning : base.awning,
+    // Partidas antigas já passaram do dia 1: a Condessa da estreia não volta.
+    debutDone: raw.saveVersion < 9 ? true : bool(raw.debutDone, false),
+    letter: isObj(raw.letter) && typeof raw.letter.from === 'string'
+      ? { from: raw.letter.from, text: String(raw.letter.text ?? ''), day: num(raw.letter.day, 0), done: bool(raw.letter.done, false) }
+      : null,
+    nextEvent: typeof raw.nextEvent === 'string' && raw.nextEvent in DAY_EVENTS ? (raw.nextEvent as GameSave['nextEvent']) : null,
+    away: null,
+    visits: isObj(raw.visits)
+      ? { lastDate: String(raw.visits.lastDate ?? ''), count: Math.max(0, Math.floor(num(raw.visits.count, 0))), ready: bool(raw.visits.ready, false) }
+      : { lastDate: '', count: 0, ready: false },
+    crystals: Math.max(0, Math.floor(num(raw.crystals, 0))),
+    owned: [...new Set([...base.owned, ...arr<string>(raw.owned, []).filter((x) => typeof x === 'string')])],
+    decor: isObj(raw.decor) ? { ...base.decor, ...(raw.decor as Record<string, string>) } : { ...base.decor },
+    track: isObj(raw.track)
+      ? { period: num(raw.track.period, base.track.period), points: Math.max(0, num(raw.track.points, 0)), tier: Math.max(0, Math.floor(num(raw.track.tier, 0))) }
+      : base.track,
+    festsDone: arr<number>(raw.festsDone, []).filter((x) => typeof x === 'number'),
+    giftsRedeemed: arr<string>(raw.giftsRedeemed, []).filter((x) => typeof x === 'string'),
+    giftSentDate: typeof raw.giftSentDate === 'string' ? raw.giftSentDate : '',
+    giftsSent: Math.max(0, Math.floor(num(raw.giftsSent, 0))),
+    challenge: isObj(raw.challenge) && typeof raw.challenge.week === 'number'
+      ? { week: raw.challenge.week, active: bool(raw.challenge.active, false), rng: num(raw.challenge.rng, 1) >>> 0, score: typeof raw.challenge.score === 'number' ? raw.challenge.score : null }
+      : null,
+    challengeBest: isObj(raw.challengeBest) && typeof raw.challengeBest.week === 'number'
+      ? { week: raw.challengeBest.week, score: num(raw.challengeBest.score, 0) }
+      : null,
     seq: num(raw.seq, 0),
     settings: {
       volume: num(settings.volume, base.settings.volume),
@@ -154,6 +185,7 @@ export function migrateSave(raw: unknown): GameSave | null {
       sfxVolume: Math.min(1, Math.max(0, num(settings.sfxVolume, base.settings.sfxVolume))),
       ambienceVolume: Math.min(1, Math.max(0, num(settings.ambienceVolume, base.settings.ambienceVolume))),
       vibration: bool(settings.vibration, base.settings.vibration),
+      reminders: bool(settings.reminders, false),
     },
   };
   // Receitas de níveis que o jogador já alcançou (as novas dos níveis 6 a 10 entram direto).

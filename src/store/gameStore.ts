@@ -14,9 +14,13 @@ import { applyCommand, type DomainCommand } from '../domain/rules/commands';
 import { createNewGame } from '../domain/rules/initialState';
 import { gameEvents } from '../game/events';
 import { saveRepository } from '../persistence/saveRepository';
+import { CATALOG_BY_ID } from '../domain/data/catalog';
+import { SEASON_FESTS } from '../domain/data/retention';
+import { seasonOf } from '../domain/rules/world';
+import { funnel } from '../analytics/funnel';
 
 export type PanelId =
-  | 'ingredients' | 'production' | 'recipes' | 'orders' | 'report' | 'shelves' | 'counter' | 'door' | 'upgrades' | 'grimoire' | 'album' | 'street' | 'goals';
+  | 'ingredients' | 'production' | 'recipes' | 'orders' | 'report' | 'shelves' | 'counter' | 'door' | 'upgrades' | 'grimoire' | 'album' | 'street' | 'goals' | 'season';
 
 export interface HoverInfo {
   id: string;
@@ -32,7 +36,7 @@ export interface Toast {
   tone: 'info' | 'ok' | 'warn' | 'gold';
 }
 
-export type ModalId = 'settings' | 'levelup' | null;
+export type ModalId = 'settings' | 'levelup' | 'share' | null;
 
 export type UiCommand =
   | { type: 'OPEN_PANEL'; panel: PanelId }
@@ -48,7 +52,8 @@ export type UiCommand =
   | { type: 'SKIP_TUTORIAL' }
   | { type: 'NEXT_TUTORIAL' }
   | { type: 'TOGGLE_SPEED' }
-  | { type: 'DISMISS_WELCOME' };
+  | { type: 'DISMISS_WELCOME' }
+  | { type: 'SHOW_WELCOME' };
 
 export type GameCommand = DomainCommand | UiCommand;
 
@@ -59,7 +64,7 @@ export interface UiState {
   paused: boolean;
   zoom: number;
   modal: ModalId;
-  levelUp: { level: number; recipes: string[] } | null;
+  levelUp: { level: number; recipes: string[]; gift?: { coins: number; crystals: number; items: { ingredientId: string; qty: number }[] } } | null;
   toasts: Toast[];
   lastHint: string | null;
   /** Multiplicador do relógio durante o expediente (1× ou 2×). */
@@ -92,7 +97,7 @@ const initialUi: UiState = {
 
 const UI_TYPES = new Set<GameCommand['type']>([
   'OPEN_PANEL', 'TOGGLE_PANEL', 'CLOSE_PANEL', 'SET_HOVER', 'SELECT_CUSTOMER', 'TOGGLE_PAUSE', 'SET_PAUSED',
-  'SET_ZOOM', 'OPEN_MODAL', 'DISMISS_TOAST', 'SKIP_TUTORIAL', 'NEXT_TUTORIAL', 'TOGGLE_SPEED', 'DISMISS_WELCOME',
+  'SET_ZOOM', 'OPEN_MODAL', 'DISMISS_TOAST', 'SKIP_TUTORIAL', 'NEXT_TUTORIAL', 'TOGGLE_SPEED', 'DISMISS_WELCOME', 'SHOW_WELCOME',
 ]);
 const isUi = (cmd: GameCommand): cmd is UiCommand => UI_TYPES.has(cmd.type);
 
@@ -132,11 +137,11 @@ export const useGameStore = create<StoreState>()(
         case 'ERROR': return toast(e.message, 'warn');
         case 'PURCHASE':
           toast(`Comprou ${e.qty}× ${INGREDIENTS_BY_ID[e.ingredientId].name} por ${e.cost} moedas.`);
-          return advanceTutorial(1);
+          return advanceTutorial(3);
         case 'BREW_STARTED':
           if (e.by === 'aprendiz') return toast(`O aprendiz pôs no fogo: ${RECIPES_BY_ID[e.recipeId].name} (${e.batches} lote${e.batches > 1 ? 's' : ''}).`);
           toast(`O caldeirão começou a ferver: ${RECIPES_BY_ID[e.recipeId].name}.`);
-          return advanceTutorial(2);
+          return advanceTutorial(4);
         case 'RAVEN_DELIVERY': {
           const units = e.items.reduce((n, i) => n + i.qty, 0);
           return toast(`O corvo trouxe ${units} ingredientes do fornecedor (−${e.cost} moedas).`);
@@ -146,7 +151,8 @@ export const useGameStore = create<StoreState>()(
         case 'BREW_DONE': return toast(`${e.qty}× ${RECIPES_BY_ID[e.recipeId].name} prontas nas prateleiras!`, 'ok');
         case 'SALE':
           selectNextAfter(e.customerId);
-          return advanceTutorial(4);
+          funnel.mark('first_sale');
+          return advanceTutorial(1);
         case 'CUSTOMER_LEFT':
           selectNextAfter(e.customerId);
           if (e.reason === 'paciencia') toast('Um cliente cansou de esperar e foi embora (−1 reputação).', 'warn');
@@ -161,7 +167,9 @@ export const useGameStore = create<StoreState>()(
           return;
         }
         case 'LEVEL_UP':
-          set((st) => ({ ui: { ...st.ui, modal: 'levelup', levelUp: { level: e.level, recipes: e.recipes }, paused: true } }));
+          if (e.level >= 3) funnel.mark('level_3');
+          if (e.level >= 5) funnel.mark('level_5');
+          set((st) => ({ ui: { ...st.ui, modal: 'levelup', levelUp: { level: e.level, recipes: e.recipes, gift: e.gift }, paused: true } }));
           return;
         case 'ORDER_NEW': return toast('Novo pedido especial no quadro de avisos!', 'gold');
         case 'ORDER_DONE': return toast(`Pedido entregue! +${e.coins} moedas.`, 'gold');
@@ -181,9 +189,14 @@ export const useGameStore = create<StoreState>()(
         case 'EXPERIMENT_FAILED':
           set((st) => ({ ui: { ...st.ui, lastHint: e.hint } }));
           return;
-        case 'DAY_CLOSED':
+        case 'DAY_CLOSED': {
           set((st) => ({ ui: { ...st.ui, activePanel: null, selectedCustomerId: null, paused: false } }));
-          return advanceTutorial(5);
+          if (e.report.day === 1) funnel.mark('day1_done');
+          // Se o dia acabou no meio do tutorial, ele pula direto para o passo do relatório.
+          const step = get().save?.tutorialStep ?? 99;
+          if (step >= 1 && step <= 5) get().dispatch({ type: 'SET_TUTORIAL', step: 6 });
+          return;
+        }
         case 'MASTERY_STAR':
           return toast(`Maestria! ${RECIPES_BY_ID[e.recipeId].name} agora tem ${'★'.repeat(e.stars)}: clientes pagam mais por ela.`, 'gold');
         case 'MASTER_RANK':
@@ -244,8 +257,33 @@ export const useGameStore = create<StoreState>()(
           return toast(`🎁 Baú da semana aberto: +${e.coins} moedas e ${units} ingredientes raros!`, 'gold');
         }
         case 'DAY_STARTED':
-          if (e.event) toast(`${DAY_EVENTS[e.event].name}: ${DAY_EVENTS[e.event].text}`, 'gold');
+          if (e.event === 'festa-estacao') {
+            const f = SEASON_FESTS[seasonOf(e.day).id];
+            toast(`🎉 ${f.name}! ${f.text}`, 'gold');
+          } else if (e.event) toast(`${DAY_EVENTS[e.event].name}: ${DAY_EVENTS[e.event].text}`, 'gold');
           return advanceTutorial(6);
+        case 'VIP_ARRIVED':
+          return toast(`✨ ${e.name} entrou na loja!`, 'gold');
+        case 'VIP_SERVED':
+          return toast(e.kind === 'estreia' ? `👑 ${e.name} pagou ${e.coins} moedas, dez vezes o preço! E deixou uma carta…` : `🎉 ${e.name} pagou ${e.coins} moedas pela poção da festa!`, 'gold');
+        case 'VISIT_GIFT':
+          return toast(`🎁 Presente de visita nº ${e.n} aberto!`, 'gold');
+        case 'CRYSTALS':
+          return e.reason === 'feitos' ? undefined : toast(`🌙 +${e.n} Cristais de luar`, 'ok');
+        case 'TRACK_TIER':
+          return toast(`🌙 Trilha da Temporada, recompensa ${e.tier}: ${e.reward}!`, 'gold');
+        case 'ITEM_GRANTED':
+          return toast(`🎀 Decoração nova: ${CATALOG_BY_ID[e.itemId]?.name ?? e.itemId}! Coloque na aba Temporada.`, 'gold');
+        case 'DECOR_BOUGHT':
+          return toast(`${CATALOG_BY_ID[e.itemId]?.name ?? 'Decoração'} já está na loja!`, 'ok');
+        case 'GIFT_SENT':
+          return toast(e.first ? '💌 Presente pronto! Você ganhou o quadro “Laço da amizade”.' : '💌 Presente pronto para mandar!', 'gold');
+        case 'GIFT_REDEEMED':
+          return toast(`💌 Presente de ${e.from} aberto: ingredientes raros e ${e.crystals} cristais!`, 'gold');
+        case 'CHALLENGE_STARTED':
+          return toast(`⚔️ Desafio da semana ${e.week}: abra a loja quando quiser. Os clientes de hoje são os mesmos para todo mundo!`, 'gold');
+        case 'CHALLENGE_DONE':
+          return toast(`⚔️ Desafio da semana: ${e.score} pontos${e.best ? ' (seu recorde)' : ''}! Compartilhe o placar.`, 'gold');
         default:
           return;
       }
@@ -266,6 +304,8 @@ export const useGameStore = create<StoreState>()(
           return { ...ui, selectedCustomerId: cmd.id };
         case 'TOGGLE_SPEED':
           return { ...ui, speed: ui.speed === 1 ? 2 : 1 };
+        case 'SHOW_WELCOME':
+          return { ...ui, welcome: true, paused: get().save?.phase === 'expediente' ? true : ui.paused };
         case 'DISMISS_WELCOME':
           return ui.welcome ? { ...ui, welcome: false, paused: false } : ui;
         case 'TOGGLE_PAUSE':
@@ -304,6 +344,8 @@ export const useGameStore = create<StoreState>()(
       },
 
       newGame() {
+        funnel.mark('new_game');
+        funnel.session();
         set({ status: 'playing', save: createNewGame(), ui: initialUi, hasStoredSave: true });
       },
 
@@ -311,6 +353,9 @@ export const useGameStore = create<StoreState>()(
         if (!loadedSave) return get().newGame();
         // No meio do expediente, o jogo volta pausado até o jogador fechar o "bem-vindo de volta".
         set({ status: 'playing', save: loadedSave, ui: { ...initialUi, welcome: true, paused: loadedSave.phase === 'expediente' } });
+        funnel.session();
+        // Livro do caixa (o que a loja fez enquanto você esteve fora), presente de visita e temporada.
+        get().dispatch({ type: 'SESSION_START' });
       },
 
       backToMenu() {
@@ -340,7 +385,7 @@ export const useGameStore = create<StoreState>()(
           const ui = reduceUi(get().ui, cmd);
           if (ui !== get().ui) set({ ui });
           if (cmd.type === 'OPEN_PANEL' || cmd.type === 'TOGGLE_PANEL') {
-            if (get().ui.activePanel === 'ingredients') advanceTutorial(0);
+            if (get().ui.activePanel === 'ingredients') advanceTutorial(2);
           }
           return;
         }
@@ -348,7 +393,7 @@ export const useGameStore = create<StoreState>()(
         if (!save) return;
         const { save: next, events } = applyCommand(save, cmd);
         if (next !== save) set({ save: next });
-        if (cmd.type === 'OPEN_SHOP' && next.phase === 'expediente' && save.phase !== 'expediente') advanceTutorial(3);
+        if (cmd.type === 'OPEN_SHOP' && next.phase === 'expediente' && save.phase !== 'expediente') advanceTutorial(0);
         events.forEach(react);
         gameEvents.emit(events);
       },

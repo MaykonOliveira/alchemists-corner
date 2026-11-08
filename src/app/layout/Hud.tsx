@@ -34,7 +34,10 @@ export function Hud() {
 
   return (
     <header className="hud">
-      <div className="hud-brand"><span className="brand-full">Alchemist's Corner</span><span className="brand-short">A.C.</span></div>
+      <div className="hud-brand" title="Alchemist's Corner">
+        <span className="brand-full">{save.shopName}</span><span className="brand-short">{save.shopName.split(' ').map((w) => w[0]).join('').slice(0, 3)}</span>
+        <button className="hud-crystals" onClick={() => dispatch({ type: 'TOGGLE_PANEL', panel: 'season' })} title="Cristais de luar: ganhe jogando e use na decoração (aba Temporada)">🌙 {save.crystals}</button>
+      </div>
       <div className="hud-stat" title={`Dia e fase · ${seasonOf(save.day).name}`}>
         <span className="hud-label">Dia {save.day} <span className="hud-season" aria-label={seasonOf(save.day).name}>{seasonOf(save.day).icon}</span></span>
         <span className="hud-value">{PHASE_LABEL[save.phase]}</span>

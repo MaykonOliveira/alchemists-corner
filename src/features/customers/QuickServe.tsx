@@ -1,7 +1,7 @@
 import { ARCHETYPES } from '../../domain/data/customers';
 import { regularOf, regularState } from '../../domain/rules/world';
 import { RECIPES_BY_ID } from '../../domain/data/recipes';
-import { bestOffer, priceVerdict } from '../../domain/rules/customers';
+import { bestOffer, priceVerdict, vipPrice } from '../../domain/rules/customers';
 import { getPrice } from '../../domain/rules/economy';
 import { useGameStore } from '../../store/gameStore';
 import { CoinIcon } from '../../ui/icons';
@@ -32,11 +32,11 @@ export function QuickServe({ placement }: { placement: 'stage' | 'side' }) {
   const next = save.customers.length > 1 ? save.customers[(idx + 1) % save.customers.length] : null;
 
   return (
-    <section className={`quick-serve qs-${placement}`} aria-label={`Atender ${a.label}`}>
+    <section className={`quick-serve qs-${placement} ${c.vip ? 'qs-is-vip' : ''}`} aria-label={`Atender ${a.label}`}>
       <div className="qs-head">
         <PotionIcon recipeId={wanted.id} size={24} />
         <div className="qs-who">
-          <span className="qs-name"><span className="qs-face" aria-label="Humor">{left > 0.5 ? '🙂' : left > 0.25 ? '😐' : '😠'}</span> {reg ? <span className="qs-regular">{reg.name.split(',')[0]} <span className="heart-on">{'♥'.repeat(hearts) || '♡'}</span></span> : a.label} <span className="muted">quer</span> {wanted.shortName}</span>
+          <span className="qs-name"><span className="qs-face" aria-label="Humor">{left > 0.5 ? '🙂' : left > 0.25 ? '😐' : '😠'}</span> {c.vip ? <span className="qs-regular qs-vip">✨ {c.vip.name}</span> : reg ? <span className="qs-regular">{reg.name.split(',')[0]} <span className="heart-on">{'♥'.repeat(hearts) || '♡'}</span></span> : a.label} <span className="muted">quer</span> {wanted.shortName}</span>
           <Meter ratio={left} tone={left > 0.5 ? 'ok' : left > 0.25 ? 'gold' : 'warn'} label="Paciência" />
         </div>
         {next && (
@@ -66,9 +66,9 @@ export function QuickServe({ placement }: { placement: 'stage' | 'side' }) {
             >
               <PotionIcon recipeId={offerId} size={18} />
               <span>Vender {RECIPES_BY_ID[offerId].shortName}</span>
-              <span className="qs-price"><CoinIcon size={14} /> {getPrice(save, offerId)}</span>
+              <span className="qs-price"><CoinIcon size={14} /> {c.vip ? vipPrice(c, offerId) : getPrice(save, offerId)}</span>
             </button>
-            <span className={`qs-verdict qs-v-${verdict}`}>{offerId !== c.wantedRecipeId ? 'parecida · ' : ''}{VERDICT_LABEL[verdict!]}</span>
+            <span className={`qs-verdict qs-v-${verdict}`}>{offerId !== c.wantedRecipeId ? 'parecida · ' : ''}{c.vip ? `paga ${c.vip.pays}× o preço` : VERDICT_LABEL[verdict!]}</span>
           </>
         ) : (
           <>

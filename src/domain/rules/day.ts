@@ -11,12 +11,17 @@ import { expireOrder, maybeCreateOrder } from './orders';
 import { CLOSE_MIN, GAME_MIN_PER_SECOND, OPEN_MIN } from './time';
 import { advanceBrew } from './alchemy';
 import { createVisitorOrder, returnExpedition, rivalOnClose, rollRareEvent } from './street';
+import { checkVisit, clockFactor, debutOrder, writeLetter } from './retention';
+import { charm } from './entitlements';
+import { finishChallenge } from './social';
+import { daysToNextSeason } from './world';
+import { gainReputation, gainXp, xpForLevel } from './progression';
 
 export function freshStats(s: GameSave): DayStats {
   return {
     revenue: 0, ingredientCost: 0, orderRewards: 0, salesByRecipe: {}, served: 0, lost: 0,
     repStart: s.reputation, xpStart: s.xp, levelStart: s.level, ordersDone: 0,
-    helperWork: emptyHelperWork(),
+    helperWork: emptyHelperWork(), regularsSeen: [],
   };
 }
 
@@ -31,8 +36,13 @@ export function closeDay(d: Draft): boolean {
   const s = d.s;
   if (s.phase !== 'expediente') return false;
   sendAllCustomersHome(d);
+  // Encanto da decoração: um pouco de reputação a cada dia.
+  const ch = charm(s);
+  if (ch > 0) gainReputation(d, ch);
   const maintenance = Math.min(s.coins, maintenanceCost(s));
   s.coins -= maintenance;
+  // Estreia generosa: o primeiro fechamento sempre leva a loja ao nível 2 (depois da manutenção do dia).
+  if (s.day === 1 && s.level < 2) gainXp(d, xpForLevel(2) - s.xp);
   const st = s.stats;
   const report: DayReport = {
     day: s.day,
@@ -53,6 +63,9 @@ export function closeDay(d: Draft): boolean {
   rivalOnClose(d, report);
   s.reports = [...s.reports, report].slice(-30);
   s.phase = 'fechamento';
+  finishChallenge(d);
+  writeLetter(d, st.regularsSeen ?? []);
+  s.nextEvent = rollNextEvent(d);
   d.events.push({ type: 'DAY_CLOSED', report });
   return true;
 }
@@ -70,9 +83,10 @@ export function startNextDay(d: Draft): boolean {
   s.helpers.golemInMs = 0;
   // Eventos simples a partir do dia 3 (cerca de 1 em cada 3 dias).
   // Eventos especiais raros (Eclipse, Lua Cheia, Visitante) têm sorteio próprio, cerca de 1 em cada 8 dias.
-  const events = (Object.keys(DAY_EVENTS) as DayEventId[]).filter((id) => !DAY_EVENTS[id].rare && s.level >= (DAY_EVENTS[id].minLevel ?? 1));
   expireOrder(d);
-  s.event = rollRareEvent(d) ?? (s.day >= 3 && d.ctx.random() < 0.35 ? pick<DayEventId>(events, d.ctx.random) : null);
+  // O evento de amanhã já foi sorteado no fechamento (a prévia do relatório mostra ele).
+  s.event = s.nextEvent;
+  s.nextEvent = null;
   if (s.festivalSponsored) s.event = 'festival';
   s.festivalSponsored = false;
   // O estoque do fornecedor depende da estação e do evento do dia.
@@ -80,12 +94,27 @@ export function startNextDay(d: Draft): boolean {
   harvestGreenhouse(d);
   returnExpedition(d);
   if (s.event === 'visitante' && !s.order) createVisitorOrder(d);
+  debutOrder(d);
   maybeCreateOrder(d);
+  checkVisit(d);
   updateContracts(d);
   if (seasonOf(s.day).id !== seasonOf(s.day - 1).id) d.events.push({ type: 'SEASON_STARTED', season: seasonOf(s.day).id });
   ensureGoals(s);
   d.events.push({ type: 'DAY_STARTED', day: s.day, event: s.event });
   return true;
+}
+
+/**
+ * Sorteio do evento do dia seguinte, feito no fechamento.
+ * Eventos simples a partir do dia 3 (cerca de 1 em cada 3 dias); eventos raros têm sorteio próprio
+ * (cerca de 1 em cada 8 dias) e o último dia de cada estação é a festa da estação.
+ */
+export function rollNextEvent(d: Draft): DayEventId | null {
+  const s = d.s;
+  const day = s.day + 1;
+  if (day >= 7 && daysToNextSeason(day) === 1) return 'festa-estacao';
+  const events = (Object.keys(DAY_EVENTS) as DayEventId[]).filter((id) => !DAY_EVENTS[id].rare && id !== 'festa-estacao' && s.level >= (DAY_EVENTS[id].minLevel ?? 1));
+  return rollRareEvent(d) ?? (day >= 3 && d.ctx.random() < 0.35 ? pick<DayEventId>(events, d.ctx.random) : null);
 }
 
 /** Preço para patrocinar o Festival das Lanternas no dia seguinte (cresce com o nível). */
@@ -114,7 +143,7 @@ export function advance(d: Draft, ms: number): boolean {
     const helped = advanceHelpers(d, ms);
     return helped || before[0] !== s.brew?.elapsedMs || before[1] !== s.brew2?.elapsedMs;
   }
-  s.clockMin = Math.min(CLOSE_MIN, s.clockMin + (ms / 1000) * GAME_MIN_PER_SECOND);
+  s.clockMin = Math.min(CLOSE_MIN, s.clockMin + (ms / 1000) * GAME_MIN_PER_SECOND * clockFactor(s));
   advanceCustomers(d, ms);
   advanceHelpers(d, ms);
   if (s.clockMin >= CLOSE_MIN) closeDay(d);

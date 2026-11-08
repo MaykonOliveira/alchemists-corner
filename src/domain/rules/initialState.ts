@@ -4,6 +4,8 @@ import { freshStats } from './day';
 import { supplierStock } from './economy';
 import { OPEN_MIN } from './time';
 import { ensureGoals } from './goals';
+import { dateKey, trackPeriod } from './retention';
+import { DEFAULT_DECOR, STARTING_ITEMS } from '../data/catalog';
 
 /** Estado de uma partida nova: a loja herdada do antigo proprietário. */
 export function createNewGame(now: number = Date.now()): GameSave {
@@ -67,6 +69,23 @@ export function createNewGame(now: number = Date.now()): GameSave {
     goals: { day: 0, list: [], week: 0, weekDone: 0, chestClaimed: false },
     tipsSeen: [],
     storySeen: false,
+    shopName: 'Loja da Esquina',
+    awning: 'toldo-vermelho',
+    debutDone: false,
+    letter: null,
+    nextEvent: null,
+    away: null,
+    visits: { lastDate: dateKey(now), count: 0, ready: false },
+    crystals: 0,
+    owned: [...STARTING_ITEMS, 'toldo-vermelho'],
+    decor: { ...DEFAULT_DECOR },
+    track: { period: trackPeriod(now), points: 0, tier: 0 },
+    festsDone: [],
+    giftsRedeemed: [],
+    giftSentDate: '',
+    giftsSent: 0,
+    challenge: null,
+    challengeBest: null,
     event: null,
     stats: null as unknown as GameSave['stats'],
     reports: [],
@@ -77,7 +96,7 @@ export function createNewGame(now: number = Date.now()): GameSave {
     festivalSponsored: false,
     tutorialStep: 0,
     seq: 0,
-    settings: { volume: 0.7, muted: false, music: true, reduceMotion: false, musicVolume: 0.6, sfxVolume: 0.8, ambienceVolume: 0.5, vibration: true },
+    settings: { volume: 0.7, muted: false, music: true, reduceMotion: false, musicVolume: 0.6, sfxVolume: 0.8, ambienceVolume: 0.5, vibration: true, reminders: false },
   };
   s.supplier = supplierStock(s);
   s.stats = freshStats(s);

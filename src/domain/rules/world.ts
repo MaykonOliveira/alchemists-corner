@@ -46,6 +46,7 @@ export function befriend(d: Draft, c: Customer, recipeId: string, price: number)
   const tip = st.hearts >= TIP_HEARTS ? Math.max(1, Math.round(price * TIP_RATE)) : 0;
   if (recipeId === info.favorite && st.hearts < MAX_HEARTS) st.hearts += 1;
   s.regulars = { ...s.regulars, [info.id]: st };
+  if (!(s.stats.regularsSeen ?? []).includes(info.id)) s.stats.regularsSeen = [...(s.stats.regularsSeen ?? []), info.id];
   if (tip) {
     s.coins += tip;
     s.stats.revenue += tip;

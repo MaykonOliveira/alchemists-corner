@@ -6,7 +6,8 @@ import { useGameStore } from '../../../store/gameStore';
 import { seasonOf } from '../../../domain/rules/world';
 import { gameEvents } from '../../events';
 import { outlinedText } from '../art/painter';
-import { EXPANSION, GARLAND_BULBS, LANTERNS, LATEGAME, SHELF_BOARDS } from '../art/sprites';
+import { DECOR_POS, EXPANSION, GARLAND_BULBS, LANTERNS, LATEGAME, SHELF_BOARDS } from '../art/sprites';
+import { decorAt } from '../../../domain/rules/entitlements';
 import { CatView } from '../entities/Cat';
 import { HelperViews } from '../entities/Helpers';
 import { Visitor, type Mood } from '../entities/Visitor';
@@ -64,6 +65,8 @@ export class ShopScene extends Phaser.Scene {
   private astroTimer: Phaser.Time.TimerEvent | null = null;
   private badge!: Phaser.GameObjects.Image;
   private upgradeLayer: Phaser.GameObjects.GameObject[] = [];
+  private decorLayer: Phaser.GameObjects.GameObject[] = [];
+  private decorGlows: Phaser.GameObjects.Image[] = [];
   private helpers!: HelperViews;
   private cat!: CatView;
   private advanceAcc = 0;
@@ -105,6 +108,7 @@ export class ShopScene extends Phaser.Scene {
     this.helpers = new HelperViews(this, this.reduceMotion);
     this.cat = new CatView(this, this.reduceMotion);
     this.renderUpgrades(save);
+    this.renderDecor(save);
     this.renderShelves(save);
     this.applyPhase(save);
     this.applyLight(save.clockMin);
@@ -121,6 +125,8 @@ export class ShopScene extends Phaser.Scene {
       sub((s) => s.save?.brew2, () => this.store.save && this.applyBrew(this.store.save)),
       sub((s) => s.save?.upgrades, () => this.store.save && this.renderUpgrades(this.store.save)),
       sub((s) => s.save?.order, (o) => this.badge.setVisible(!!o)),
+      sub((s) => s.save?.decor, () => this.store.save && this.renderDecor(this.store.save)),
+      sub((s) => s.save?.event, () => this.store.save && this.renderDecor(this.store.save)),
       sub(
         (s) => s.save?.customers,
         (c) => queueMicrotask(() => c && this.syncCustomers(this.store.save?.customers ?? [], false)),
@@ -154,20 +160,25 @@ export class ShopScene extends Phaser.Scene {
   private bindHotspot(view: HotspotView) {
     const { def, sprite } = view;
     this.hotspots.push(view);
+    let pressed = false;
     sprite.on('pointerover', () => {
       view.hovered = true;
       this.refreshOutlines();
       this.store.dispatch({ type: 'SET_HOVER', hover: { id: def.id, label: def.label, x: def.x + sprite.width / 2, y: def.y } });
     });
     sprite.on('pointerout', () => {
+      pressed = false;
       view.hovered = false;
       this.setPressed(view, false);
       this.refreshOutlines();
       if (this.store.ui.hover?.id === def.id) this.store.dispatch({ type: 'SET_HOVER', hover: null });
     });
-    sprite.on('pointerdown', () => this.setPressed(view, true));
+    sprite.on('pointerdown', () => { pressed = true; this.setPressed(view, true); });
     sprite.on('pointerup', () => {
       this.setPressed(view, false);
+      // Só conta o toque que começou no objeto (um clique numa janela por cima do canvas não abre o painel).
+      if (!pressed) return;
+      pressed = false;
       this.store.dispatch({ type: 'TOGGLE_PANEL', panel: def.panel });
     });
   }
@@ -455,6 +466,57 @@ export class ShopScene extends Phaser.Scene {
     }
   }
 
+  // -------------------------------------------------------------- decoração
+
+  /** Decoração escolhida pelo jogador (fase 3) e bandeirinhas na festa da estação. */
+  private renderDecor(save: GameSave) {
+    this.decorLayer.forEach((o) => o.destroy());
+    this.decorLayer = [];
+    this.decorGlows = [];
+    const rug = decorAt(save, 'tapete');
+    if (rug.look) this.decorLayer.push(this.add.image(DECOR_POS.rug.x, DECOR_POS.rug.y, rug.look).setOrigin(0).setDepth(2.5));
+    const frame = decorAt(save, 'quadro');
+    if (frame.look) this.decorLayer.push(this.add.image(DECOR_POS.frame.x, DECOR_POS.frame.y, frame.look).setOrigin(0).setDepth(2.6));
+    const awning = decorAt(save, 'toldo');
+    this.decorLayer.push(
+      this.add.image(DECOR_POS.awning.x, DECOR_POS.awning.y, 'awning').setOrigin(0).setDepth(2.7)
+        .setTint(Phaser.Display.Color.HexStringToColor(awning.look || '#c8443e').color),
+    );
+    const lamp = decorAt(save, 'luminaria');
+    if (lamp.look) {
+      const img = this.add.image(DECOR_POS.lamp.x, DECOR_POS.lamp.y, lamp.look).setOrigin(0).setDepth(114);
+      const glow = this.add.image(img.x + img.width / 2, img.y + img.height - 8, 'glow-warm').setDepth(1002)
+        .setBlendMode(Phaser.BlendModes.ADD).setScale(0.6).setTint(lamp.id === 'luminaria-cristal' ? 0xc8e8ff : lamp.id === 'luminaria-lua' ? 0xfff0b0 : 0xffb050);
+      this.decorGlows.push(glow);
+      this.decorLayer.push(img, glow);
+      if (!this.reduceMotion()) this.tweens.add({ targets: img, angle: { from: -2, to: 2 }, yoyo: true, repeat: -1, duration: 2000, ease: 'Sine.InOut' });
+    }
+    const plant = decorAt(save, 'planta');
+    if (plant.look) {
+      const img = this.add.image(DECOR_POS.plant.x, DECOR_POS.plant.y, plant.look).setOrigin(0);
+      img.setDepth(img.y + img.height);
+      this.decorLayer.push(img);
+    }
+    if (save.event === 'festa-estacao') this.decorLayer.push(this.bunting(seasonOf(save.day).id));
+    this.applyLight(save.clockMin);
+  }
+
+  private bunting(season: string) {
+    const colors: Record<string, number[]> = {
+      primavera: [0xf070a8, 0xffd8e8, 0x9cc75a], verao: [0xf6cf5e, 0xff9a28, 0x4f86d8],
+      outono: [0xd0842e, 0x9a2e2e, 0xe8a840], inverno: [0x86c0f0, 0xffffff, 0x5ad8c0],
+    };
+    const g = this.add.graphics().setDepth(21);
+    g.lineStyle(1, 0x3e2619, 1);
+    g.beginPath(); g.moveTo(120, 11); g.lineTo(270, 11); g.strokePath();
+    const pal = colors[season] ?? colors.primavera;
+    for (let i = 0, x = 122; x < 266; i++, x += 8) {
+      g.fillStyle(pal[i % pal.length], 1);
+      g.fillTriangle(x, 11, x + 6, 11, x + 3, 17);
+    }
+    return g;
+  }
+
   // ------------------------------------------------------- fases e relógio
 
   private applyPhase(save: GameSave) {
@@ -667,6 +729,7 @@ export class ShopScene extends Phaser.Scene {
     this.glows.forEach((g, i) => g.setAlpha(Phaser.Math.Clamp(base + flicker * (i + 1), 0, 1)));
     this.bulbGlows.forEach((g, i) => g.setAlpha(0.5 + this.nightness * 0.5 + (this.reduceMotion() ? 0 : Math.sin(time / 400 + i) * 0.15)));
     this.magicGlows.forEach((g, i) => g.setAlpha(0.35 + this.nightness * 0.65 + (this.reduceMotion() ? 0 : Math.sin(time / 600 + i * 1.7) * 0.2)));
+    this.decorGlows.forEach((g) => g.setAlpha(0.15 + this.nightness * 0.85));
 
     for (const v of this.visitors.values()) v.update(time);
     this.helpers.update(time);

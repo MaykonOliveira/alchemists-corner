@@ -49,6 +49,9 @@ export const DAY_EVENTS: Record<DayEventId, DayEventInfo> = {
     spawnFactor: 0.85, archetypeBoost: { viajante: 2 }, budgetBonus: 0.05, minLevel: 5, rare: true },
   visitante: { id: 'visitante', name: 'Visitante Misterioso', text: 'Um viajante encapuzado deixou um pedido no quadro. Paga com algo que não se vende em loja nenhuma.',
     spawnFactor: 1, archetypeBoost: {}, budgetBonus: 0, minLevel: 5, rare: true },
+  // Festa da estação (fase 3): último dia de cada estação, com um convidado especial (ver data/retention.ts).
+  'festa-estacao': { id: 'festa-estacao', name: 'Festa da estação', text: 'A rua está enfeitada e um convidado especial vem à loja.',
+    spawnFactor: 0.8, archetypeBoost: { morador: 1 }, budgetBonus: 0.08 },
 };
 
 /** Quem oferece contratos de vários dias (a partir do nível 6). */
