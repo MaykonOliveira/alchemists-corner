@@ -22,12 +22,18 @@ export function brewDurationMs(s: GameSave, recipeId: string, batches: number) {
   return Math.round(r.durationMin * MS_PER_BREW_MIN * (1 + 0.5 * (batches - 1)) * speed);
 }
 
+/** O que limita os lotes de uma receita: ingredientes, espaço nas prateleiras e o tamanho do caldeirão. */
+export function brewLimits(s: GameSave, recipeId: string) {
+  const r = RECIPES_BY_ID[recipeId];
+  const byIngredients = Math.max(0, Math.min(...r.ingredients.map((i) => Math.floor((s.ingredients[i.ingredientId] ?? 0) / i.qty))));
+  const bySpace = Math.max(0, Math.floor((potionCapacity(s) - countPotions(s)) / potionsPerBatch(s)));
+  return { byIngredients, bySpace, cap: maxBatchesCap(s) };
+}
+
 /** Quantos lotes dá para preparar com os ingredientes e o espaço disponíveis. */
 export function maxBatches(s: GameSave, recipeId: string) {
-  const r = RECIPES_BY_ID[recipeId];
-  const byIngredients = Math.min(...r.ingredients.map((i) => Math.floor((s.ingredients[i.ingredientId] ?? 0) / i.qty)));
-  const bySpace = Math.floor((potionCapacity(s) - countPotions(s)) / potionsPerBatch(s));
-  return Math.max(0, Math.min(maxBatchesCap(s), byIngredients, bySpace));
+  const { byIngredients, bySpace, cap } = brewLimits(s, recipeId);
+  return Math.min(cap, byIngredients, bySpace);
 }
 
 /** A loja tem o segundo caldeirão (expansão "Sala dos fundos")? */

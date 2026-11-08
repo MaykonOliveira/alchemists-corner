@@ -1309,3 +1309,12 @@ html, button, input { font-variant-ligatures: none; font-feature-settings: "liga
 /* Fechamento: oferta de lembrete dentro de "Amanhã na loja" */
 .reminder-offer { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 8px; padding-top: 8px; border-top: 1px dashed rgba(255,255,255,.25); font-size: 13px; }
 .reminder-offer .btn-row { margin: 0; }
+
+/* Produção: o que impede o preparo, com a compra ali mesmo */
+.dot-miss { color: #c0503a; font-size: 10px; }
+.recipe-chip.on .dot-miss { color: #ffc0a8; }
+.brew-block { margin: 10px 0 4px; padding: 10px 12px; border-radius: 10px; border: 1.5px dashed #c0703a; background: rgba(224, 140, 64, 0.12); display: grid; gap: 6px; }
+.brew-block .row-title { margin: 0; }
+.brew-block .card-text { margin: 0; }
+.brew-block-space { border-color: #8a7ac0; background: rgba(138, 122, 192, 0.12); }
+.brew-wait { margin: 8px 0 0; }

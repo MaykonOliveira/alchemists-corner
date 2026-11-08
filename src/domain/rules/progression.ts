@@ -4,6 +4,7 @@ import { fail, type Draft } from './context';
 import { learnTalent, masteredRecipes, sealsSpent } from './mastery';
 import { LEVEL_GIFTS } from '../data/retention';
 import { addIngredients } from './street';
+import { restockUnlocked } from './economy';
 
 export const MAX_LEVEL = 15;
 /** A partir deste nível cada nível novo rende 1 Selo de Mestre. */
@@ -83,6 +84,7 @@ export function gainXp(d: Draft, amount: number) {
   while (s.level < newLevel) {
     s.level += 1;
     const recipes = unlockRecipesUpTo(s, s.level);
+    restockUnlocked(s, s.level);
     const gift = LEVEL_GIFTS[s.level];
     if (gift) {
       s.coins += gift.coins;
