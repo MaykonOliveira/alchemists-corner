@@ -2,7 +2,7 @@ import { INGREDIENTS_BY_ID } from '../data/ingredients';
 import { RECIPES, RECIPES_BY_ID } from '../data/recipes';
 import type { GameSave } from '../models/types';
 import { fail, type Draft } from './context';
-import { addPotions, countPotions, has, potionCapacity } from './economy';
+import { addPotions, countPotions, has, potionCapacity, potionStock, shelfPerRecipe } from './economy';
 import { addMastery, talentBonus } from './mastery';
 import { gainXp } from './progression';
 import { grantCrystals } from './entitlements';
@@ -16,21 +16,24 @@ export const POTIONS_PER_BATCH = 2;
 export const potionsPerBatch = (s: GameSave) => POTIONS_PER_BATCH + (has(s, 'alambique-prata') ? 1 : 0);
 /** Lotes máximos por preparo (o talento "Caldeirão grande" aumenta). */
 export const maxBatchesCap = (s: GameSave) => MAX_BATCHES + talentBonus(s, 'caldeirao-grande');
-/** Milissegundos reais por minuto de preparo (60 min ≈ 9 s). */
-const MS_PER_BREW_MIN = 150;
+/** Milissegundos reais por minuto de preparo (60 min ≈ 14 s). Mais lento que antes: o caldeirão não dá conta de tudo. */
+const MS_PER_BREW_MIN = 360;
 
 export function brewDurationMs(s: GameSave, recipeId: string, batches: number) {
   const r = RECIPES_BY_ID[recipeId];
   const speed = (has(s, 'caldeirao-reforcado') ? 0.7 : 1) * (1 - talentBonus(s, 'maos-ageis'));
-  return Math.round(r.durationMin * MS_PER_BREW_MIN * (1 + 0.5 * (batches - 1)) * speed);
+  return Math.round(r.durationMin * MS_PER_BREW_MIN * (1 + 0.8 * (batches - 1)) * speed);
 }
 
 /** O que limita os lotes de uma receita: ingredientes, espaço nas prateleiras e o tamanho do caldeirão. */
 export function brewLimits(s: GameSave, recipeId: string) {
   const r = RECIPES_BY_ID[recipeId];
   const byIngredients = Math.max(0, Math.min(...r.ingredients.map((i) => Math.floor((s.ingredients[i.ingredientId] ?? 0) / i.qty))));
-  const bySpace = Math.max(0, Math.floor((potionCapacity(s) - countPotions(s)) / potionsPerBatch(s)));
-  return { byIngredients, bySpace, cap: maxBatchesCap(s) };
+  const room = Math.min(potionCapacity(s) - countPotions(s), shelfPerRecipe(s) - potionStock(s, recipeId));
+  const bySpace = Math.max(0, Math.floor(room / potionsPerBatch(s)));
+  // A prateleira desta receita está cheia, mas sobra espaço para outras?
+  const shelfFull = potionCapacity(s) - countPotions(s) >= potionsPerBatch(s) && bySpace < 1;
+  return { byIngredients, bySpace, cap: maxBatchesCap(s), shelfFull };
 }
 
 /** Quantos lotes dá para preparar com os ingredientes e o espaço disponíveis. */
@@ -57,8 +60,9 @@ export function startBrew(d: Draft, recipeId: string, batches: number): boolean 
   if (!slot) return fail(d, hasSecondCauldron(s) ? 'Os dois caldeirões estão ocupados.' : 'O caldeirão já está ocupado.');
   if (!Number.isInteger(batches) || batches < 1) return fail(d, 'Escolha ao menos um lote.');
   if (batches > maxBatches(s, recipeId)) {
-    const space = Math.floor((potionCapacity(s) - countPotions(s)) / potionsPerBatch(s));
-    return fail(d, space < batches ? 'Não há espaço nas prateleiras.' : 'Ingredientes insuficientes.');
+    const lim = brewLimits(s, recipeId);
+    if (lim.bySpace < batches) return fail(d, lim.shelfFull ? `Cabem só ${shelfPerRecipe(s)} poções de cada receita na prateleira.` : 'Não há espaço nas prateleiras.');
+    return fail(d, 'Ingredientes insuficientes.');
   }
   for (const i of r.ingredients) s.ingredients[i.ingredientId] -= i.qty * batches;
   const job = { recipeId, batches, elapsedMs: 0, totalMs: brewDurationMs(s, recipeId, batches) };

@@ -111,7 +111,8 @@ describe('talentos do Grimório', () => {
   });
 
   it('caldeirão grande permite mais lotes', () => {
-    const s = atLevel(12, { talents: { 'caldeirao-grande': 2 }, ingredients: { ...createNewGame(0).ingredients, 'folha-lunar': 40, 'po-de-pedra': 20 }, potions: [] });
+    // Com as duas prateleiras extras cabem 20 de cada receita (auditoria P0.4).
+    const s = atLevel(12, { upgrades: ['prateleira-extra', 'despensa-encantada'], talents: { 'caldeirao-grande': 2 }, ingredients: { ...createNewGame(0).ingredients, 'folha-lunar': 40, 'po-de-pedra': 20 }, potions: [] });
     const { save } = run(s, { type: 'START_BREW', recipeId: 'cura-simples', batches: 7 });
     expect(save.brew?.batches).toBe(7);
   });

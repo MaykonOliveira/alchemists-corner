@@ -31,6 +31,8 @@ export const potionCapacity = (s: GameSave) =>
   16 + (has(s, 'prateleira-extra') ? 12 : 0) + (has(s, 'despensa-encantada') ? 12 : 0);
 export const ingredientCapacity = (s: GameSave) =>
   40 + (has(s, 'armario-organizado') ? 30 : 0) + (has(s, 'despensa-encantada') ? 40 : 0);
+/** Espaço de cada receita na prateleira: não dá para encher a loja de uma poção só (auditoria P0.4). */
+export const shelfPerRecipe = (s: GameSave) => Math.max(6, Math.floor(potionCapacity(s) / 2));
 export const countPotions = (s: GameSave) => s.potions.reduce((n, p) => n + p.quantity, 0);
 export const countIngredients = (s: GameSave) => Object.values(s.ingredients).reduce((n, q) => n + q, 0);
 export const potionStock = (s: GameSave, recipeId: string) => s.potions.find((p) => p.recipeId === recipeId)?.quantity ?? 0;

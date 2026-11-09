@@ -110,7 +110,9 @@ export function spawnCustomer(d: Draft) {
   else if (known.length && (s.day <= 2 || ctx.random() < 0.8)) {
     // A estação puxa a procura para a categoria dela.
     const inSeason = known.filter((id) => RECIPES_BY_ID[id].category === seasonCategory(s));
-    wanted = pick(inSeason.length && ctx.random() < 0.4 ? inSeason : known, ctx.random);
+    // A procura do dia (anunciada no fechamento de ontem) puxa metade dos pedidos.
+    const hot = known.filter((id) => s.trend?.includes(id));
+    wanted = pick(hot.length && ctx.random() < 0.5 ? hot : inSeason.length && ctx.random() < 0.4 ? inSeason : known, ctx.random);
   }
   else wanted = pick(wants.length ? wants : info.wants, ctx.random);
 

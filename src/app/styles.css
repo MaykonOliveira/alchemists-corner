@@ -1677,3 +1677,6 @@ html, button, input { font-variant-ligatures: none; font-feature-settings: "liga
 .side { box-shadow: none; }
 .side .btn-glow:not(.home-open) { animation: none; }
 .tag { border: none; }
+
+/* Procura do dia (auditoria P0.4) */
+.trend-tag { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: #fff; background: var(--copper); border-radius: var(--r-sm); padding: 1px 5px; white-space: nowrap; }

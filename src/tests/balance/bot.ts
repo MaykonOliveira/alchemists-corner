@@ -44,7 +44,7 @@ export interface BotProfile {
    * caldeirão antes de abrir. Serve para medir o valor dos ajudantes.
    */
   distractedFrom?: number;
-  /** Lê o freguês no balcão: pede mais a quem tem dinheiro e faz um agrado a quem conta moedas. */
+  /** Lê o freguês no balcão (pede mais a quem tem dinheiro) e a procura do dia no relatório. */
   readsCustomers?: boolean;
   /** Pede mais de todo mundo, sem olhar quem está no balcão. */
   greedy?: boolean;
@@ -117,7 +117,9 @@ export function simulate(profile: BotProfile, days: number, seed: number): SimRe
   const distracted = () => profile.distractedFrom !== undefined && s.day >= profile.distractedFrom;
 
   const demandWeight = (recipeId: string) =>
-    Object.values(ARCHETYPES).reduce((n, a) => n + (a.wants.includes(recipeId) ? 1 / a.wants.length : 0), 0);
+    Object.values(ARCHETYPES).reduce((n, a) => n + (a.wants.includes(recipeId) ? 1 / a.wants.length : 0), 0) *
+    // Quem lê o relatório prepara mais da poção que a rua vai procurar.
+    (profile.readsCustomers && s.trend?.includes(recipeId) ? 3 : 1);
 
   const tryUpgrades = () => {
     // Quem contrata ajudantes dá prioridade a eles; os demais compram da mais barata para a mais cara.

@@ -3,7 +3,7 @@ import { INGREDIENTS_BY_ID } from '../../domain/data/ingredients';
 import { RECIPES_BY_ID } from '../../domain/data/recipes';
 import type { BrewJob, GameSave } from '../../domain/models/types';
 import { brewDurationMs, brewLimits, freeCauldron, hasSecondCauldron, maxBatches, potionsPerBatch } from '../../domain/rules/alchemy';
-import { missingPurchase, recipeCost } from '../../domain/rules/economy';
+import { missingPurchase, recipeCost, shelfPerRecipe } from '../../domain/rules/economy';
 import { useGameStore } from '../../store/gameStore';
 import { PotionIcon } from '../../ui/SpriteIcon';
 import { Coins, Meter, PotionName, Stepper } from '../../ui/widgets';
@@ -32,7 +32,7 @@ export function ProductionPanel({ save }: { save: GameSave }) {
   const canBrew = !!slot && !closing && !noSpace && !short;
   const busy = [save.brew, save.brew2].filter((j): j is BrewJob => !!j).sort((a, c) => (a.totalMs - a.elapsedMs) - (c.totalMs - c.elapsedMs))[0];
   const label = closing ? 'A loja está fechando'
-    : noSpace ? 'Prateleiras cheias'
+    : noSpace ? (lim.shelfFull ? 'Prateleira desta poção cheia' : 'Prateleiras cheias')
     : short ? 'Faltam ingredientes'
     : !slot ? (hasSecondCauldron(save) ? 'Caldeirões ocupados' : 'Caldeirão ocupado')
     : `Preparar ${b} lote${b > 1 ? 's' : ''}${b === max && max > 1 ? ' (máx.)' : ''}${hasSecondCauldron(save) ? ` no caldeirão ${slot}` : ''}`;
@@ -65,6 +65,7 @@ export function ProductionPanel({ save }: { save: GameSave }) {
             >
               <PotionIcon recipeId={id} />
               <span>{RECIPES_BY_ID[id].shortName}</span>
+              {save.trend?.includes(id) && <span className="trend-tag" title="Procurada hoje">em alta</span>}
               {can ? <span className="dot-ok" aria-label="pode preparar">●</span> : <span className="dot-miss" aria-label="falta ingrediente">✗</span>}
             </button>
           );
@@ -75,8 +76,17 @@ export function ProductionPanel({ save }: { save: GameSave }) {
         <div className="card-head"><PotionName id={selected} size={20} /></div>
         {noSpace && !closing && (
           <div className="brew-block brew-block-space" role="status">
-            <p className="row-title"><Icon e="🧪" /> Prateleiras cheias</p>
-            <p className="card-text small">Não cabe mais nenhuma poção. Venda no balcão ou entregue um pedido para liberar espaço.</p>
+            {lim.shelfFull ? (
+              <>
+                <p className="row-title"><Icon e="🧪" /> Prateleira de {r.shortName} cheia</p>
+                <p className="card-text small">Cabem {shelfPerRecipe(save)} poções de cada receita. Use o caldeirão para outra poção.</p>
+              </>
+            ) : (
+              <>
+                <p className="row-title"><Icon e="🧪" /> Prateleiras cheias</p>
+                <p className="card-text small">Não cabe mais nenhuma poção. Venda no balcão ou entregue um pedido para liberar espaço.</p>
+              </>
+            )}
           </div>
         )}
         {short && buy && (

@@ -6,7 +6,9 @@ export type Medal = 'ouro' | 'prata' | 'bronze' | null;
  * Lucro que vale ouro num dia do nível informado. A meta é fixa por nível (e não a sua média),
  * para que um dia ruim depois de outro ruim não ganhe prata por comparação.
  */
-export const medalTarget = (level: number) => 120 + 140 * (Math.max(1, level) - 1);
+// Calibrada com o robô casual depois da demanda apertada (auditoria P0.4): ele lucra de 165 a 240 moedas
+// por nível, então o ouro pede jogar melhor que a mediana, e a prata fica ao alcance de quem joga direito.
+export const medalTarget = (level: number) => 200 * Math.max(1, level);
 /** Fração da meta de ouro que vale prata. */
 export const SILVER_SHARE = 0.6;
 

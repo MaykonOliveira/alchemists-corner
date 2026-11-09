@@ -447,6 +447,10 @@ export interface GameSave {
   letter: Letter | null;
   /** Evento sorteado no fechamento para o dia seguinte (a prévia do relatório mostra). */
   nextEvent: DayEventId | null;
+  /** Poções mais procuradas hoje (a rua pede mais delas). */
+  trend?: string[];
+  /** Procura de amanhã, sorteada no fechamento e mostrada no relatório. */
+  nextTrend?: string[];
   /** Livro do caixa da última volta (null depois de lido). */
   away: AwayReport | null;
   visits: VisitsState;

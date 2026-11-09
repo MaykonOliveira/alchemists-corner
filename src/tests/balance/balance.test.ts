@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { UPGRADES } from '../../domain/data/upgrades';
+import { dayMedal } from '../../domain/rules/medals';
 import { CASUAL, DISTRAIDO, DISTRAIDO_COM_AJUDANTES, EFICIENTE, ESPERTO, GANANCIOSO, simulate, type BotProfile, type SimResult } from './bot';
 
 // Metas de balanceamento do PRD, medidas com o robô-jogador sobre as regras puras.
@@ -62,8 +63,10 @@ describe('ajudantes automáticos', () => {
   // Até o nível 8 só o corvo está disponível: ele alivia o estoque, mas não joga pelo jogador.
   // O teste garante que contratar cedo não atrapalha (salário e preço não podem afundar a loja).
   it('o corvo não afunda a receita do jogador distraído', () => {
-    const tail = (rs: typeof sem) => rs.reduce((n, r) => n + r.days.slice(-3).reduce((m, d) => m + d.revenue, 0), 0);
-    expect(tail(com)).toBeGreaterThan(tail(sem) * 0.85);
+    // Com o caldeirão mais lento (P0.4) quem só prepara antes de abrir vende pouco no fim de qualquer jogo,
+    // então a comparação usa a partida inteira, não só os últimos dias (que viram ruído).
+    const total = (rs: typeof sem) => rs.reduce((n, r) => n + r.days.reduce((m, d) => m + d.revenue, 0), 0);
+    expect(total(com)).toBeGreaterThan(total(sem) * 0.85);
   });
 
   it('aprendiz e golem só chegam depois do nível 8: o meio do jogo continua nas mãos do jogador', () => {
@@ -93,5 +96,27 @@ describe('preço que depende de quem compra', () => {
   it('pedir caro de todo mundo rende menos que ler o freguês e custa reputação', () => {
     expect(revenue(ganancioso)).toBeLessThan(revenue(esperto));
     expect(rep(ganancioso)).toBeLessThan(rep(esperto));
+  });
+});
+
+// Auditoria P0.4: o caldeirão não dá conta de tudo, então a preparação vira escolha.
+describe('demanda que pressiona a oferta', () => {
+  const seeds = [21, 22, 23, 24, 25, 26];
+  const casual = seeds.map((seed) => simulate(CASUAL, 10, seed));
+
+  it('no meio do jogo o casual deixa alguns pedidos sem poção, mas segue lucrando', () => {
+    const mid = casual.flatMap((r) => r.days.slice(5));
+    const lost = mid.reduce((n, d) => n + d.customersLost, 0);
+    const served = mid.reduce((n, d) => n + d.customersServed, 0);
+    expect(lost).toBeGreaterThan(0);
+    expect(lost / (lost + served)).toBeLessThan(0.15);
+    expect(mid.every((d) => d.profit > 0)).toBe(true);
+  });
+
+  it('o ouro pede jogar melhor que a mediana: o casual leva ouro em menos da metade dos dias', () => {
+    const medals = casual.flatMap((r) => r.days.slice(2).map((_, i) => dayMedal(r.days.slice(0, i + 3)).medal));
+    const gold = medals.filter((m) => m === 'ouro').length;
+    expect(gold / medals.length).toBeLessThan(0.5);
+    expect(medals.filter((m) => m !== 'bronze').length / medals.length).toBeGreaterThan(0.6);
   });
 });

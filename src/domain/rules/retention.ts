@@ -158,6 +158,10 @@ export function tomorrowPreview(s: GameSave): PreviewLine[] {
   } else if (event) {
     out.push({ icon: DAY_EVENTS[event].rare ? '🌘' : '📣', text: `${DAY_EVENTS[event].name}: ${DAY_EVENTS[event].text}`, tone: DAY_EVENTS[event].rare ? 'gold' : undefined });
   }
+  if (s.nextTrend?.length) {
+    const names = s.nextTrend.map((id) => RECIPES_BY_ID[id]?.shortName ?? id);
+    out.push({ icon: '📈', text: `Amanhã a rua vai procurar ${names.join(' e ')}. Prepare antes de abrir.`, tone: 'gold' });
+  }
   if (s.letter && !s.letter.done && s.letter.day === day) {
     const who = s.letter.from === 'condessa-estreia' ? 'Condessa Amélia' : REGULARS_BY_ID[s.letter.from]?.name ?? 'Um freguês';
     out.push({ icon: '✉️', text: `Carta de ${who}: “${s.letter.text}”`, tone: 'gold' });

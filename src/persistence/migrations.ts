@@ -3,6 +3,7 @@ import { ensureGoals } from '../domain/rules/goals';
 import { createNewGame } from '../domain/rules/initialState';
 import { MAX_LEVEL, unlockRecipesUpTo, xpForLevel } from '../domain/rules/progression';
 import { DAY_EVENTS } from '../domain/data/orders';
+import { RECIPES_BY_ID } from '../domain/data/recipes';
 import { ROYAL_CHAPTERS } from '../domain/data/royal';
 import { recordsFromReports } from '../domain/rules/records';
 import type { DayReport } from '../domain/models/types';
@@ -170,6 +171,9 @@ export function migrateSave(raw: unknown): GameSave | null {
     letter: isObj(raw.letter) && typeof raw.letter.from === 'string'
       ? { from: raw.letter.from, text: String(raw.letter.text ?? ''), day: num(raw.letter.day, 0), done: bool(raw.letter.done, false) }
       : null,
+    ...(bool(raw.debutServed, false) ? { debutServed: true } : {}),
+    trend: arr<string>(raw.trend, []).filter((id) => typeof id === 'string' && id in RECIPES_BY_ID),
+    nextTrend: arr<string>(raw.nextTrend, []).filter((id) => typeof id === 'string' && id in RECIPES_BY_ID),
     nextEvent: typeof raw.nextEvent === 'string' && raw.nextEvent in DAY_EVENTS ? (raw.nextEvent as GameSave['nextEvent']) : null,
     away: null,
     visits: isObj(raw.visits)
