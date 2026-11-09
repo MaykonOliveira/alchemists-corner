@@ -221,6 +221,7 @@ export function migrateSave(raw: unknown): GameSave | null {
   ensureGoals(save);
   // Auditoria P1.1: Selos e cristais viraram uma moeda só. Na primeira carga depois da troca,
   // os Selos que estavam guardados entram como cristais (os já gastos em talentos ficam onde estão).
+  if (typeof raw.fameOverflow === 'number') save.fameOverflow = Math.max(0, Math.floor(raw.fameOverflow));
   if (typeof raw.sealsPaid === 'number') save.sealsPaid = Math.max(0, Math.floor(raw.sealsPaid));
   else {
     save.crystals += sealsUnspentLegacy(save) * SEAL_CRYSTALS;

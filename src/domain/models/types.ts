@@ -417,6 +417,8 @@ export interface GameSave {
   sealsBought: number;
   /** Selos já pagos em cristais de luar (auditoria P1.1: uma moeda de prestígio só). */
   sealsPaid?: number;
+  /** Reputação ganha acima do teto, guardada até virar cristal (auditoria P2.2). */
+  fameOverflow?: number;
   /** O jogador patrocinou o Festival das Lanternas para o próximo dia. */
   festivalSponsored: boolean;
   /** Amizade com os fregueses fiéis, por id. */

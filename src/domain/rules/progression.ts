@@ -133,8 +133,18 @@ export function gainXp(d: Draft, amount: number) {
   if (rank > rankBefore) d.events.push({ type: 'MASTER_RANK', rank });
 }
 
+export const MAX_REPUTATION = 999;
+/** No teto, cada tanto de reputação a mais vira 1 Cristal de luar (auditoria P2.2: o topo tem uso). */
+export const FAME_PER_CRYSTAL = 25;
+
 export function gainReputation(d: Draft, amount: number) {
-  d.s.reputation = Math.max(0, Math.min(999, d.s.reputation + amount));
+  const raw = d.s.reputation + amount;
+  d.s.reputation = Math.max(0, Math.min(MAX_REPUTATION, raw));
+  if (raw <= MAX_REPUTATION) return;
+  const pool = (d.s.fameOverflow ?? 0) + (raw - MAX_REPUTATION);
+  const n = Math.floor(pool / FAME_PER_CRYSTAL);
+  d.s.fameOverflow = pool - n * FAME_PER_CRYSTAL;
+  if (n > 0) grantCrystals(d, n, 'fama');
 }
 
 /** Nome do título da loja de acordo com a reputação. */
