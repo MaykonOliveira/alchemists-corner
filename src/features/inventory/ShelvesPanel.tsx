@@ -5,7 +5,7 @@ import { potionsPerBatch } from '../../domain/rules/alchemy';
 import { masteryStars } from '../../domain/rules/mastery';
 import { Stars } from '../../ui/Stars';
 import { useGameStore } from '../../store/gameStore';
-import { Meter, PotionName } from '../../ui/widgets';
+import { Meter, PotionName, More } from '../../ui/widgets';
 import { stackQualities } from '../../domain/rules/quality';
 import { Icon } from '../../ui/Icon';
 
@@ -27,7 +27,7 @@ export function ShelvesPanel({ save }: { save: GameSave }) {
         <span>Prateleiras: {total}/{cap} poções</span>
         <Meter ratio={total / cap} tone={total / cap > 0.85 ? 'warn' : 'ok'} label="Ocupação das prateleiras" />
       </div>
-      <p className="panel-lead small">Ajuste o preço de cada poção. Mais caro rende mais, mas clientes com pouco dinheiro recusam.</p>
+      <More label="Como o preço funciona"><p className="card-text small">Mais caro rende mais, mas clientes com pouco dinheiro recusam.</p></More>
       <ul className="list">
         {save.knownRecipes.map((id) => {
           const stock = potionStock(save, id);

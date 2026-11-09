@@ -1,13 +1,13 @@
 import { useGameStore } from '../../store/gameStore';
-import { groupOf, panelForGroup, SHORTCUTS, useBadges, useVisibleGroups, type NavItem } from './nav';
+import { groupOf, panelForGroup, SHORTCUTS, tabsOf, useBadges, useVisibleGroups } from './nav';
 import { Icon } from '../../ui/Icon';
 
 export { SHORTCUTS };
 
 /**
- * Barra de navegação.
- * - Computador: as 13 telas em 4 grupos com nome (Oficina, Loja, Progresso, Mundo), com tecla de atalho.
- * - Celular: 5 botões grandes (Início + as 4 áreas). Cada área abre um painel com abas para as telas dela.
+ * Barra de navegação: Início + as 4 áreas, igual no computador e no celular.
+ * As telas de cada área viram abas dentro do painel. Os atalhos de teclado continuam valendo.
+ * Novidade numa área aparece como um ponto; o número fica na aba, dentro da área.
  */
 export function BottomBar() {
   const active = useGameStore((s) => s.ui.activePanel);
@@ -16,51 +16,13 @@ export function BottomBar() {
   const activeGroup = groupOf(active);
   const groups = useVisibleGroups();
 
-  const tab = (s: NavItem) => {
-    const badge = badgeFor(s.panel);
-    return (
-      <button
-        key={s.panel}
-        data-tut={`tab-${s.panel}`}
-        className={`tab ${active === s.panel ? 'tab-active' : ''}`}
-        aria-pressed={active === s.panel}
-        title={`${s.title} (tecla ${s.key.toUpperCase()})`}
-        onClick={() => dispatch({ type: 'TOGGLE_PANEL', panel: s.panel })}
-      >
-        <span className="tab-icon" aria-hidden><Icon e={s.icon} size={32} /></span>
-        <span className="tab-label">{s.label}</span>
-        <kbd className="tab-key">{s.key.toUpperCase()}</kbd>
-        {badge !== null && <span className="tab-badge">{badge}</span>}
-      </button>
-    );
-  };
-
   return (
     <nav className="bottombar" aria-label="Navegação">
-      {/* Computador: grupos com rótulo */}
-      <div className="nav-desk">
-        <button
-          className={`tab tab-home ${active === null ? 'tab-active' : ''}`}
-          aria-pressed={active === null}
-          title="Resumo do dia (Esc)"
-          onClick={() => dispatch({ type: 'CLOSE_PANEL' })}
-        >
-          <span className="tab-icon" aria-hidden><Icon e="🏠" size={32} /></span>
-          <span className="tab-label">Início</span>
-        </button>
-        {groups.map((g) => (
-          <div key={g.id} className={`nav-group nav-${g.id} ${activeGroup?.id === g.id ? 'nav-group-on' : ''}`} role="group" aria-label={g.label}>
-            <span className="nav-group-label" aria-hidden>{g.label}</span>
-            <div className="nav-group-tabs">{g.items.map(tab)}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Celular: Início + 4 áreas */}
-      <div className="nav-mobile">
+      <div className="nav-areas">
         <button
           className={`area ${active === null ? 'area-on' : ''}`}
           aria-pressed={active === null}
+          title="Início (Esc)"
           onClick={() => dispatch({ type: 'CLOSE_PANEL' })}
         >
           <span className="area-icon" aria-hidden><Icon e="🏠" size={32} /></span>
@@ -68,21 +30,21 @@ export function BottomBar() {
         </button>
         {groups.map((g) => {
           const on = activeGroup?.id === g.id;
-          const badges = g.items.map((i) => badgeFor(i.panel)).filter((b) => b !== null);
-          const nums = badges.filter((b): b is number => typeof b === 'number');
-          const badge = badges.length === 0 ? null : nums.length === badges.length ? nums.reduce((a, b) => a + b, 0) : badges.find((b) => typeof b === 'string') ?? '!';
+          const alert = g.items.some((i) => badgeFor(i.panel) !== null);
+          const keys = tabsOf(g).map((i) => `${i.label} (${i.key.toUpperCase()})`).join(' · ');
           return (
             <button
               key={g.id}
               data-tut={['group-' + g.id, ...g.items.map((i) => `tab-${i.panel}`)].join(' ')}
               className={`area area-${g.id} ${on ? 'area-on' : ''}`}
               aria-pressed={on}
-              aria-label={`${g.label}: ${g.hint}`}
+              aria-label={`${g.label}: ${g.hint}${alert ? ' (tem novidade)' : ''}`}
+              title={keys}
               onClick={() => (on ? dispatch({ type: 'CLOSE_PANEL' }) : dispatch({ type: 'OPEN_PANEL', panel: panelForGroup(g, badgeFor) }))}
             >
               <span className="area-icon" aria-hidden><Icon e={g.icon} size={32} /></span>
               <span className="area-label">{g.label}</span>
-              {badge !== null && <span className="tab-badge">{badge}</span>}
+              {alert && <span className="area-alert" aria-hidden />}
             </button>
           );
         })}

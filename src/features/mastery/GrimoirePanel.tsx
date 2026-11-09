@@ -9,7 +9,7 @@ import {
 } from '../../domain/rules/progression';
 import { DAY_EVENTS } from '../../domain/data/orders';
 import { festivalPrice } from '../../domain/rules/day';
-import { Coins } from '../../ui/widgets';
+import { Coins, More } from '../../ui/widgets';
 import { useGameStore } from '../../store/gameStore';
 import { PotionIcon } from '../../ui/SpriteIcon';
 import { Stars } from '../../ui/Stars';
@@ -38,11 +38,7 @@ export function GrimoirePanel({ save }: { save: GameSave }) {
       <div className={`grimoire-hero ${awake ? 'awake' : ''}`}>
         <div>
           <p className="grimoire-kicker">{save.level >= MAX_LEVEL ? `Mestre alquimista · grau ${rank}` : `Nível ${save.level} de ${MAX_LEVEL}`}</p>
-          <p className="card-text small">
-            {awake
-              ? 'Selos de Mestre compram talentos permanentes. Ganhe mais subindo de nível, alcançando graus de Mestre e dominando receitas.'
-              : `O Grimório desperta no nível ${SEAL_LEVEL}. Enquanto isso, domine receitas: cada uma com ${MAX_STARS} estrelas já rende 1 Selo.`}
-          </p>
+          {!awake && <p className="card-text small">O Grimório desperta no nível {SEAL_LEVEL}. Enquanto isso, domine receitas: cada uma com {MAX_STARS} estrelas já rende 1 Selo.</p>}
         </div>
         <SealBadge n={free} />
       </div>
@@ -91,7 +87,7 @@ export function GrimoirePanel({ save }: { save: GameSave }) {
       </ul>
 
       <h3 className="mini-title">Talentos sem fim</h3>
-      <p className="card-text small muted">Sem grau máximo: cada grau custa um Selo a mais que o anterior. {save.level < ENDLESS_TALENT_LEVEL ? `Abrem no nível ${ENDLESS_TALENT_LEVEL}.` : 'Seus Selos nunca ficam parados.'}</p>
+      <More label="Como funcionam"><p className="card-text small">Sem grau máximo: cada grau custa um Selo a mais que o anterior. {save.level < ENDLESS_TALENT_LEVEL ? `Abrem no nível ${ENDLESS_TALENT_LEVEL}.` : 'Seus Selos nunca ficam parados.'}</p></More>
       <ul className="list">
         {TALENTS.filter((t) => t.endless).map((t) => {
           const r = talentRank(save, t.id);
@@ -148,9 +144,9 @@ export function GrimoirePanel({ save }: { save: GameSave }) {
       </ul>
 
       <h3 className="mini-title">Maestria das receitas</h3>
-      <p className="card-text small muted">
+      <More label="Como funciona"><p className="card-text small">
         Cada poção que sai do caldeirão conta. Estrelas em {MASTERY_STEPS.join(', ')} preparos: cada uma faz o cliente aceitar pagar 4% a mais, sobe o teto de preço e dá XP extra por venda.
-      </p>
+      </p></More>
       <ul className="list mastery-list">
         {RECIPES.filter((r) => save.knownRecipes.includes(r.id)).map((r) => {
           const stars = masteryStars(save, r.id);

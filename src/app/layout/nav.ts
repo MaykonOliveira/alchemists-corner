@@ -20,6 +20,10 @@ export interface NavItem {
   title: string;
   icon: string;
   key: string;
+  /** Tela que mora dentro de outra (mesma aba): o Grimório fica em Melhorias, o Concurso em Metas. */
+  inside?: PanelId;
+  /** Tela sem aba própria: abre por atalho ou por um link (o Relatório abre pelo fim do dia). */
+  noTab?: boolean;
 }
 
 export interface NavGroup {
@@ -53,9 +57,9 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { panel: 'goals', label: 'Metas', title: 'Metas do dia', icon: '🎯', key: '7' },
       { panel: 'upgrades', label: 'Melhorias', title: 'Melhorias e ajudantes', icon: '🔨', key: '8' },
-      { panel: 'grimoire', label: 'Grimório', title: 'Grimório do Mestre', icon: '✨', key: '9' },
-      { panel: 'report', label: 'Relatório', title: 'Caixa e relatório', icon: '📊', key: '0' },
-      { panel: 'royal', label: 'Concurso', title: 'Concurso Real de Alquimia', icon: '👑', key: 'c' },
+      { panel: 'grimoire', label: 'Grimório', title: 'Grimório do Mestre', icon: '✨', key: '9', inside: 'upgrades' },
+      { panel: 'report', label: 'Relatório', title: 'Caixa e relatório', icon: '📊', key: '0', noTab: true },
+      { panel: 'royal', label: 'Concurso', title: 'Concurso Real de Alquimia', icon: '👑', key: 'c', inside: 'goals' },
     ],
   },
   {
@@ -81,11 +85,20 @@ export const groupOf = (panel: PanelId | null): NavGroup | null =>
 
 export const panelTitle = (panel: PanelId): string => (panel === 'door' ? 'Porta da loja' : ITEM_BY_PANEL.get(panel)?.title ?? '');
 
+/** A aba que mostra esta tela (ela mesma, ou a aba que a hospeda). */
+export const tabOf = (panel: PanelId): PanelId => ITEM_BY_PANEL.get(panel)?.inside ?? panel;
+
+/** Telas que aparecem juntas numa aba: a própria e as que moram nela, na ordem do mapa. */
+export const panelsInTab = (tab: PanelId): PanelId[] => [tab, ...SHORTCUTS.filter((i) => i.inside === tab).map((i) => i.panel)];
+
+/** As abas de uma área (sem as telas que moram em outra e sem as que não têm aba). */
+export const tabsOf = (g: NavGroup): NavItem[] => g.items.filter((i) => !i.inside && !i.noTab);
+
 /** Última tela aberta em cada área: tocar na área volta para ela. */
 const lastInGroup: Partial<Record<GroupId, PanelId>> = {};
 export const rememberPanel = (panel: PanelId | null) => {
   const g = groupOf(panel);
-  if (g && panel && ITEM_BY_PANEL.has(panel)) lastInGroup[g.id] = panel;
+  if (g && panel && ITEM_BY_PANEL.has(panel)) lastInGroup[g.id] = tabOf(panel);
 };
 
 /**

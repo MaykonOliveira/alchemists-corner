@@ -4,7 +4,7 @@ import type { GameSave, ShopUpgrade } from '../../domain/models/types';
 import { APPRENTICE, apprenticePlan, GOLEM, golemDelayMs, helperActive, RAVEN } from '../../domain/rules/helpers';
 import { useGameStore } from '../../store/gameStore';
 import { SpriteIcon } from '../../ui/SpriteIcon';
-import { Coins } from '../../ui/widgets';
+import { Coins, More } from '../../ui/widgets';
 import { Icon } from '../../ui/Icon';
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
@@ -48,9 +48,13 @@ function UpgradeCard({ save, u }: { save: GameSave; u: ShopUpgrade }) {
         <span className="row-title">{u.name}</span>
         <span className={`tag ${u.category === 'visual' || expansion ? 'tag-gold' : ''} ${helper ? 'tag-helper' : ''}`}>{expansion ? 'expansão' : u.category}</span>
       </div>
-      <p className="card-text small">{u.effect}</p>
-      {helper && <p className="card-text small muted">Salário: {u.upkeep} moedas por dia.</p>}
-      {owned && helper && <p className="helper-status small">{helperStatus(save, u.id)}</p>}
+      {owned && helper ? <p className="helper-status small">{helperStatus(save, u.id)}</p> : !locked && <p className="card-text small">{u.effect}</p>}
+      {(helper || (owned && !helper) || locked) && (
+        <More label={owned ? 'O que faz' : 'Detalhes'}>
+          <p className="card-text small">{u.effect}</p>
+          {helper && <p className="card-text small muted">Salário: {u.upkeep} moedas por dia, pago no fechamento.</p>}
+        </More>
+      )}
       <div className="card-foot">
         <Coins n={u.cost} />
         {owned && helper ? (
@@ -83,23 +87,19 @@ export function UpgradesPanel({ save }: { save: GameSave }) {
   const showTraining = save.level >= 13 || training.some((u) => save.upgrades.includes(u.id));
   return (
     <>
-      <p className="panel-lead">Reinvista o lucro. Cada melhoria aparece na loja.</p>
       <h3 className="mini-title">Ajudantes</h3>
-      <p className="card-text small muted">Automatizam parte do trabalho. Recebem salário no fechamento, e você pode mandá-los descansar quando quiser fazer tudo sozinho.</p>
       <ul className="list">
         {helpers.map((u) => <UpgradeCard key={u.id} save={save} u={u} />)}
       </ul>
       {showTraining && (
         <>
           <h3 className="mini-title"><Icon e="🎓" /> Treino da equipe</h3>
-          <p className="card-text small muted">Cada ajudante pode evoluir uma vez, no nível máximo da loja.</p>
           <ul className="list">
             {training.map((u) => <UpgradeCard key={u.id} save={save} u={u} />)}
           </ul>
         </>
       )}
       <h3 className="mini-title"><Icon e="🏰" /> Expansão da loja</h3>
-      <p className="card-text small muted">Obras grandes, em etapas: cada uma abre a próxima. A loja cresce de verdade na tela.</p>
       <ol className="list expansion-track">
         {expansions.map((u) => <UpgradeCard key={u.id} save={save} u={u} />)}
       </ol>

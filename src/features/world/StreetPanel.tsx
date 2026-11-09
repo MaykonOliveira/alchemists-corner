@@ -51,7 +51,7 @@ export function StreetPanel({ save }: { save: GameSave }) {
           </ul>
         </div>
       ) : (
-        <p className="card-text small muted">No nível 5 cada estação traz um ingrediente raro e uma poção que só se vende nela.</p>
+        <p className="card-text small muted">Abre no nível 5.</p>
       )}
 
       <h3 className="mini-title">A rival: {RIVAL.shop}</h3>
@@ -59,7 +59,7 @@ export function StreetPanel({ save }: { save: GameSave }) {
 
       <h3 className="mini-title">Expedições do corvo</h3>
       {!canExplore(save) ? (
-        <p className="card-text small muted">Contrate o corvo entregador (Melhorias, nível 3) para mandar ele buscar ingredientes raros longe da cidade.</p>
+        <p className="card-text small muted">Precisa do corvo entregador (Melhorias, nível 3).</p>
       ) : save.expedition ? (
         <div className="card expedition-away">
           <p className="row-title"><Icon e="🐦‍⬛" /> O corvo está em {EXPEDITIONS.find((e) => e.id === save.expedition!.dest)?.name}</p>

@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { PhaserGame } from '../../game/PhaserGame';
 import { TutorialCard } from '../../features/tutorial/TutorialCard';
 import { WelcomeBack } from '../../features/tutorial/WelcomeBack';
-import { TipCard } from '../../features/tutorial/TipCard';
 import { StoryIntro } from '../../features/tutorial/StoryIntro';
 import { UiSpotlight } from '../../features/tutorial/Spotlight';
 import { QuickServe } from '../../features/customers/QuickServe';
@@ -18,6 +17,7 @@ import { Toasts } from '../layout/Toasts';
 import { Milestone } from '../../features/celebrate/Milestone';
 import { ShareModal } from '../../features/share/ShareModal';
 import { RoyalScene } from '../../features/royal/RoyalScene';
+import { StageControls } from '../../features/stage/StageControls';
 
 export function GameScreen() {
   const dispatch = useGameStore((s) => s.dispatch);
@@ -57,8 +57,8 @@ export function GameScreen() {
       <main className="game-main">
         <div className="stage-wrap">
           <PhaserGame />
+          <StageControls />
           <TutorialCard />
-          <TipCard />
           <WelcomeBack />
           <QuickServe placement="stage" />
           <Toasts />
