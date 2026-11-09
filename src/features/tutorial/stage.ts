@@ -14,16 +14,20 @@ export const customerCardVisible = (st: GameState): boolean => {
 export const tutorialActive = (st: GameState): boolean =>
   !!st.save && st.save.storySeen !== false && st.save.tutorialStep < TUTORIAL_DONE;
 
-export function useStageCards() {
-  const tutorial = useGameStore(tutorialActive);
-  const welcome = useGameStore((st) => st.ui.welcome) && !tutorial;
-  const customer = useGameStore(customerCardVisible) && !welcome;
-  return {
-    customer,
-    tutorial,
-    /** O bem-vindo pausa o relógio, então vem antes de tudo (e nunca durante o tutorial). */
-    welcome,
-    /** A dica só aparece quando nada mais está na tela. */
-    tip: !tutorial && !customer && !welcome,
-  };
+export interface StageCards { customer: boolean; tutorial: boolean; welcome: boolean; tip: boolean }
+
+/** Quem pode aparecer agora (função pura, para o teste conferir que nunca há dois ao mesmo tempo além do tutorial). */
+export function stageCards(st: GameState): StageCards {
+  const tutorial = tutorialActive(st);
+  const welcome = st.ui.welcome && !tutorial;
+  const customer = customerCardVisible(st) && !welcome;
+  // A dica é a última da fila: só no Início (sem painel aberto) e nunca com um capítulo do Concurso esperando.
+  const royal = st.save?.royal;
+  const calm = st.ui.activePanel === null && !(royal && royal.seen < royal.chapter);
+  return { customer, tutorial, welcome, tip: !tutorial && !customer && !welcome && calm };
+}
+
+export function useStageCards(): StageCards {
+  const key = useGameStore((st) => { const c = stageCards(st); return `${+c.customer}${+c.tutorial}${+c.welcome}${+c.tip}`; });
+  return { customer: key[0] === '1', tutorial: key[1] === '1', welcome: key[2] === '1', tip: key[3] === '1' };
 }

@@ -6,7 +6,7 @@ import type { GameSave } from '../../domain/models/types';
 import { potionStock } from '../../domain/rules/economy';
 import { villageBlocker, villageProgress, villageStage } from '../../domain/rules/village';
 import { useGameStore } from '../../store/gameStore';
-import { Coins, Meter } from '../../ui/widgets';
+import { Coins, Meter, More } from '../../ui/widgets';
 import { Icon } from '../../ui/Icon';
 
 /** Uma obra no estado atual (terreno, fundação, paredes ou pronta), recortada de village.png. */
@@ -47,11 +47,7 @@ export function VillagePanel({ save }: { save: GameSave }) {
         </div>
         <Meter ratio={progress} tone="gold" label="Vila reconstruída" />
       </div>
-      <p className="panel-lead">
-        {locked
-          ? `A prefeitura aceita ajuda a partir do nível ${VILLAGE_LEVEL}. Guarde moedas: as obras são grandes.`
-          : 'A vila cresce com as suas moedas. Cada obra tem três etapas e, inaugurada, ajuda a loja para sempre.'}
-      </p>
+      {locked && <p className="panel-lead small">A prefeitura aceita ajuda a partir do nível {VILLAGE_LEVEL}.</p>}
       <ul className="list">
         {VILLAGE.map((p) => {
           const stage = villageStage(save, p.id);
@@ -70,8 +66,8 @@ export function VillagePanel({ save }: { save: GameSave }) {
                       {STAGE_NAMES.map((n, i) => <span key={n} className={i < stage ? 'pip on' : 'pip'} title={n} />)}
                     </span>
                   </div>
-                  <p className="card-text small">{p.text}</p>
                   <p className="card-text small"><b>{done ? 'Bônus ativo:' : 'Ao inaugurar:'}</b> {p.bonusText}</p>
+                  <More label="A história da obra"><p className="card-text small">{p.text}</p></More>
                 </div>
               </div>
               {!done && (

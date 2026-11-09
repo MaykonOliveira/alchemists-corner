@@ -63,3 +63,16 @@ export function Section({ title, children, aside }: { title: string; children: R
     </section>
   );
 }
+
+/**
+ * Detalhe sob demanda: a lista mostra nome e número, a explicação abre num toque.
+ * Usado nas telas internas para o texto longo não aparecer em todo item, todo dia.
+ */
+export function More({ children, label = 'Detalhes' }: { children: ReactNode; label?: string }) {
+  return (
+    <details className="more">
+      <summary>{label}</summary>
+      <div className="more-body">{children}</div>
+    </details>
+  );
+}

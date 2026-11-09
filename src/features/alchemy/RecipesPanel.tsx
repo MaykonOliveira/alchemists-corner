@@ -8,6 +8,7 @@ import { masteryStars } from '../../domain/rules/mastery';
 import { Stars } from '../../ui/Stars';
 import { LEGEND_LEVEL, LEGENDS, legendKnown, pagesFor } from '../../domain/rules/legends';
 import { Icon } from '../../ui/Icon';
+import { More } from '../../ui/widgets';
 
 /** Lendas do grimório (pacote U): seis receitas fora do livro, montadas com páginas rasgadas e experimentos. */
 function Legends({ save }: { save: GameSave }) {
@@ -45,7 +46,7 @@ export function RecipesPanel({ save }: { save: GameSave }) {
   const known = book.filter((r) => save.knownRecipes.includes(r.id)).length;
   return (
     <>
-      <p className="panel-lead">{known} de {book.length} receitas anotadas. Novas páginas se revelam com o nível da loja ou por experimentos.</p>
+      <p className="panel-lead small">{known} de {book.length} receitas anotadas.</p>
       <ul className="list">
         {book.map((r) => {
           const isKnown = save.knownRecipes.includes(r.id);
@@ -58,10 +59,10 @@ export function RecipesPanel({ save }: { save: GameSave }) {
               </div>
               {isKnown ? (
                 <>
-                  <p className="card-text">{r.need}. Procurada por {r.customerProfile.toLowerCase()}.</p>
                   <p className="card-text muted small">
                     {r.ingredients.map((i) => `${i.qty}× ${INGREDIENTS_BY_ID[i.ingredientId].name}`).join(' + ')} · preço-base {r.basePrice}
                   </p>
+                  <More label="Quem procura"><p className="card-text small">{r.need}. Procurada por {r.customerProfile.toLowerCase()}.</p></More>
                 </>
               ) : (
                 <p className="card-text muted small">Pista: “{r.hint}” · aprendida no nível {r.unlockLevel}</p>

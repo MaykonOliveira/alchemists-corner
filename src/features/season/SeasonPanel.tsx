@@ -12,6 +12,7 @@ import { useGameStore } from '../../store/gameStore';
 import { decodeGift, encodeGift, giftMessage } from '../share/giftCode';
 import { DecorThumb } from './DecorThumb';
 import { Icon } from '../../ui/Icon';
+import { More } from '../../ui/widgets';
 
 const SLOTS: DecorSlot[] = ['tapete', 'quadro', 'luminaria', 'planta', 'toldo'];
 
@@ -26,7 +27,7 @@ function Track({ save }: { save: GameSave }) {
         <h3 className="mini-title"><Icon e={trackTheme(t.period).icon} /> {trackName(t.period)}</h3>
         <span className="muted small">termina em {trackDaysLeft(Date.now())} dia(s)</span>
       </div>
-      <p className="card-text small">Metas do dia, pedidos, contratos, presentes de visita e cada fechamento dão pontos. São 30 recompensas grátis.</p>
+      <More label="Como ganhar pontos"><p className="card-text small">Metas do dia, pedidos, contratos, presentes de visita e cada fechamento dão pontos. São 30 recompensas grátis.</p></More>
       {!done ? (
         <>
           <div className="track-bar" aria-label={`${into} de ${TRACK_STEP} pontos para a recompensa ${next}`}>
@@ -114,7 +115,7 @@ function Challenge({ save }: { save: GameSave }) {
   return (
     <section className="card challenge">
       <h3 className="mini-title"><Icon e="⚔️" /> Desafio da semana {week}</h3>
-      <p className="card-text small">Um dia de loja em que os clientes são sorteados com a mesma semente para todos os jogadores. Uma tentativa por semana. Pontos: 10 por cliente atendido, 1 por moeda vendida, 50 por pedido entregue.</p>
+      <More label="Regras do desafio"><p className="card-text small">Um dia de loja em que os clientes são sorteados com a mesma semente para todos os jogadores. Uma tentativa por semana. Pontos: 10 por cliente atendido, 1 por moeda vendida, 50 por pedido entregue.</p></More>
       {save.challenge?.active ? <p className="card-text small"><b>Desafio em andamento.</b> Abra a loja e venda tudo o que puder!</p>
         : best !== null ? <p className="card-text small">Sua pontuação nesta semana: <b>{best}</b>. <button className="link-btn" onClick={() => dispatch({ type: 'OPEN_MODAL', modal: 'share' })}>Compartilhar</button></p>
         : save.level < 2 ? <p className="card-text small muted">Abre no nível 2.</p>
@@ -152,7 +153,7 @@ function Gifts({ save }: { save: GameSave }) {
   return (
     <section className="card gifts">
       <h3 className="mini-title"><Icon e="💌" /> Presentes entre amigos</h3>
-      <p className="card-text small">Mande um código para quem está começando: a pessoa ganha ingredientes raros e {contents.crystals} cristais. O seu primeiro presente dá o quadro “Laço da amizade”. Um por dia.</p>
+      <More label="Como funciona"><p className="card-text small">Mande um código para quem está começando: a pessoa ganha ingredientes raros e {contents.crystals} cristais. O seu primeiro presente dá o quadro “Laço da amizade”. Um por dia.</p></More>
       <button className="btn" disabled={!canSendGift(save, Date.now())} onClick={send}>{canSendGift(save, Date.now()) ? 'Mandar um presente' : 'Amanhã tem mais'}</button>
       {code && <textarea className="gift-code" readOnly value={giftMessage(code, save.shopName)} onFocus={(e) => e.currentTarget.select()} aria-label="Código do presente" />}
       <label className="name-label" htmlFor="gift-in">Recebeu um código?</label>

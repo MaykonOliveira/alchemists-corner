@@ -14,9 +14,16 @@ export function GoalsList({ save, compact = false }: { save: GameSave; compact?:
   const done = list.filter((g) => g.done).length;
   return (
     <div className={`goals ${compact ? 'goals-compact' : ''}`}>
-      {compact && <h3 className="mini-title"><Icon e="🎯" /> Metas do dia · {done}/{list.length}</h3>}
+      {compact && <h3 className="mini-title">Metas do dia · {done}/{list.length}</h3>}
       <ul className="goal-list">
-        {list.map((g) => (
+        {list.map((g) => compact ? (
+          // Início: uma linha fina por meta (nome e quanto falta). Prêmio e barra ficam no painel de Metas.
+          <li key={g.id} className={`goal goal-line ${g.done ? 'goal-done' : ''}`}>
+            <span className="goal-icon" aria-hidden><Icon e={g.done ? '✅' : GOAL_ICON[g.kind]} /></span>
+            <span className="goal-text">{goalText(g)}</span>
+            <span className="goal-count">{g.done ? 'feito' : `${g.progress}/${g.target}`}</span>
+          </li>
+        ) : (
           <li key={g.id} className={`goal ${g.done ? 'goal-done' : ''}`}>
             <span className="goal-icon" aria-hidden><Icon e={g.done ? '✅' : GOAL_ICON[g.kind]} /></span>
             <span className="goal-body">
@@ -45,7 +52,6 @@ export function GoalsPanel({ save }: { save: GameSave }) {
   const left = rivalDaysLeft(save.day);
   return (
     <>
-      <p className="panel-lead small">Três metas novas a cada manhã. Cada uma paga moedas e XP na hora.</p>
       <GoalsList save={save} />
       <h3 className="mini-title">Baú da semana</h3>
       <div className={`card chest ${ready ? 'chest-ready' : ''} ${claimed ? 'chest-open' : ''}`}>
@@ -71,6 +77,9 @@ export function GoalsPanel({ save }: { save: GameSave }) {
         </p>
         {ready && <button className="btn btn-primary btn-glow" onClick={() => dispatch({ type: 'CLAIM_CHEST' })}>Abrir o baú</button>}
       </div>
+      {save.reports.length > 0 && (
+        <button className="link-btn panel-link" onClick={() => dispatch({ type: 'OPEN_PANEL', panel: 'report' })}><Icon e="📊" /> Ver o caixa e o relatório dos dias</button>
+      )}
     </>
   );
 }

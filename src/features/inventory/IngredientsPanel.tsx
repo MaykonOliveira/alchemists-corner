@@ -4,38 +4,41 @@ import type { GameSave } from '../../domain/models/types';
 import { countIngredients, ingredientCapacity, ingredientPrice } from '../../domain/rules/economy';
 import { useGameStore } from '../../store/gameStore';
 import { IngredientIcon } from '../../ui/SpriteIcon';
-import { Coins, Meter, Stepper } from '../../ui/widgets';
+import { Coins, Meter, More, Stepper } from '../../ui/widgets';
 import { Icon } from '../../ui/Icon';
 
 const LOW_STOCK = 2;
 const SEASON_NAME = { primavera: 'na primavera', verao: 'no verão', outono: 'no outono', inverno: 'no inverno' } as const;
 
+/**
+ * Armário e fornecedor numa lista só: cada ingrediente mostra quanto você tem e o preço para comprar mais.
+ * Os que ainda não chegaram ficam juntos numa linha no fim, em vez de um cartão cada.
+ */
 export function IngredientsPanel({ save }: { save: GameSave }) {
-  const [tab, setTab] = useState<'fornecedor' | 'estoque'>('fornecedor');
   const used = countIngredients(save);
   const cap = ingredientCapacity(save);
+  const room = cap - used;
+  const open = INGREDIENTS.filter((i) => save.level >= i.supplierLevel);
+  const later = INGREDIENTS.filter((i) => save.level < i.supplierLevel);
   return (
     <>
-      <div className="tabs" role="tablist">
-        <button role="tab" aria-selected={tab === 'fornecedor'} className={`tabchip ${tab === 'fornecedor' ? 'on' : ''}`} onClick={() => setTab('fornecedor')}>Fornecedor</button>
-        <button role="tab" aria-selected={tab === 'estoque'} className={`tabchip ${tab === 'estoque' ? 'on' : ''}`} onClick={() => setTab('estoque')}>Meu estoque</button>
-      </div>
       <div className="capacity">
         <span>Armário: {used}/{cap}</span>
         <Meter ratio={used / cap} tone={used / cap > 0.85 ? 'warn' : 'ok'} label="Ocupação do armário" />
       </div>
-      {tab === 'fornecedor' ? <Supplier save={save} room={cap - used} /> : <Stock save={save} />}
+      <ul className="list">
+        {open.map((ing) => <SupplierRow key={ing.id} save={save} id={ing.id} room={room} />)}
+      </ul>
+      {later.length > 0 && (
+        <More label={`Chegam nos próximos níveis (${later.length})`}>
+          <ul className="list-plain">
+            {later.map((ing) => (
+              <li key={ing.id}><IngredientIcon ingredientId={ing.id} size={16} muted /> {ing.name}: nível {ing.supplierLevel}{ing.season ? `, só ${SEASON_NAME[ing.season]}` : ''}</li>
+            ))}
+          </ul>
+        </More>
+      )}
     </>
-  );
-}
-
-function Supplier({ save, room }: { save: GameSave; room: number }) {
-  return (
-    <ul className="list">
-      {INGREDIENTS.map((ing) => (
-        <SupplierRow key={ing.id} save={save} id={ing.id} room={room} />
-      ))}
-    </ul>
   );
 }
 
@@ -59,57 +62,27 @@ function SupplierRow({ save, id, room }: { save: GameSave; id: string; room: num
         <IngredientIcon ingredientId={ing.id} size={32} muted={locked} />
         <div className="row-main">
           <span className="row-title">{ing.name}</span>
-          <span className="row-sub">{FAMILY_LABEL[ing.family]} · você tem {have}</span>
+          <span className={`row-sub ${have <= LOW_STOCK ? 'qty-low' : ''}`}>Você tem {have}{have === 0 ? ' · acabou' : have <= LOW_STOCK ? ' · baixo' : ''}</span>
         </div>
         <Coins n={price} />
       </div>
       {locked ? (
         <p className="card-text muted">O fornecedor traz este item a partir do nível {ing.supplierLevel}{ing.season ? `, só ${SEASON_NAME[ing.season]}` : ''}.</p>
       ) : ing.season && !maxByStock ? (
-        <p className="card-text muted small"><Icon e="🌸" /> Ingrediente da estação: o fornecedor só traz {SEASON_NAME[ing.season]}{save.event === 'lua-cheia' ? '' : ' (ou no Mercado da Lua Cheia)'}. A floresta das expedições também tem.</p>
+        <p className="card-text muted small"><Icon e="🌸" /> Só {SEASON_NAME[ing.season]}{save.event === 'lua-cheia' ? '' : ' (ou no Mercado da Lua Cheia)'}.</p>
       ) : (
         <>
-          <p className="card-text muted small">
-            {ing.season && <span className="tag tag-gold">da estação</span>} {ing.description}{left !== null && left !== undefined ? ` Restam ${left} hoje.` : ''}
-          </p>
           <div className="card-foot">
             <Stepper value={q} min={1} max={max} onChange={setQty} label={`Quantidade de ${ing.name}`} />
             <button data-tut="buy" className="btn btn-small btn-primary" disabled={!canBuy} onClick={() => dispatch({ type: 'BUY_INGREDIENT', ingredientId: id, qty: q })}>
               Comprar · {cost}
             </button>
           </div>
+          <More label={left !== null && left !== undefined ? `Restam ${left} hoje · sobre` : 'Sobre'}>
+            <p className="card-text small">{ing.season && <span className="tag tag-gold">da estação</span>} {FAMILY_LABEL[ing.family]}. {ing.description}</p>
+          </More>
         </>
       )}
     </li>
-  );
-}
-
-function Stock({ save }: { save: GameSave }) {
-  const families = Object.keys(FAMILY_LABEL) as (keyof typeof FAMILY_LABEL)[];
-  return (
-    <>
-      {families.map((fam) => (
-        <section key={fam} className="group">
-          <h3>{FAMILY_LABEL[fam]}</h3>
-          <ul className="list">
-            {INGREDIENTS.filter((i) => i.family === fam).map((ing) => {
-              const qty = save.ingredients[ing.id] ?? 0;
-              return (
-                <li key={ing.id} className="row">
-                  <IngredientIcon ingredientId={ing.id} />
-                  <div className="row-main">
-                    <span className="row-title">{ing.name}</span>
-                  </div>
-                  <span className={`qty ${qty <= LOW_STOCK ? 'qty-low' : ''}`}>
-                    {qty}
-                    {qty === 0 ? <span className="tag tag-warn">sem estoque</span> : qty <= LOW_STOCK ? <span className="tag tag-warn">baixo</span> : null}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      ))}
-    </>
   );
 }

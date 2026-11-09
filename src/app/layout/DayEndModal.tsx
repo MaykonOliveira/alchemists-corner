@@ -122,8 +122,23 @@ export function DayEndModal() {
           <strong>{r.profit >= 0 ? '+' : '−'}<CountUp value={Math.abs(r.profit)} /></strong>
           {medal && <span className="small">{MEDAL_LABEL[medal]}</span>}
         </div>
-        <WeekChart reports={save.reports} />
         <p className="card-text">{mood}</p>
+        <div className="report-grid report-grid-3">
+          <div><span className="muted small">Clientes atendidos</span><strong>{r.customersServed}</strong></div>
+          <div><span className="muted small">Experiência</span><strong>+{r.xpGained}</strong></div>
+          <div><span className="muted small">Reputação</span><strong>{r.reputationDelta >= 0 ? '+' : ''}{r.reputationDelta}</strong></div>
+        </div>
+        {r.customersLost > 0 && (
+          <p className="tip lost-line">
+            {leftOnTable > 0 && <><b>Ficou na mesa: cerca de {leftOnTable} moedas</b> de quem foi embora. </>}
+            {missed
+              ? <>O que mais faltou: <b>{RECIPES_BY_ID[missed.recipeId].shortName}</b> ({missed.n} pedido{missed.n > 1 ? 's' : ''}). Deixe algumas prontas antes de abrir amanhã.</>
+              : <>Clientes vão embora quando falta a poção certa ou o preço está alto.</>}
+          </p>
+        )}
+        <details className="day-more">
+          <summary>Ver o caixa do dia</summary>
+        <WeekChart reports={save.reports} />
         <table className="ledger">
           <tbody>
             <tr><td>Vendas no balcão</td><td className="pos-text">+{r.revenue}</td></tr>
@@ -132,12 +147,6 @@ export function DayEndModal() {
             <tr><td>Manutenção (aluguel, lenha, velas{r.wages ? ', salários' : ''})</td><td className="neg-text">−{r.maintenance}</td></tr>
           </tbody>
         </table>
-        <div className="report-grid">
-          <div><span className="muted small">Clientes atendidos</span><strong>{r.customersServed}</strong></div>
-          <div><span className="muted small">Foram embora</span><strong>{r.customersLost}</strong></div>
-          <div><span className="muted small">Reputação</span><strong>{r.reputationDelta >= 0 ? '+' : ''}{r.reputationDelta}</strong></div>
-          <div><span className="muted small">Experiência</span><strong>+{r.xpGained}</strong></div>
-        </div>
         {r.rival && (
           <p className={`card-text small rival-line ${r.rival.result ? `rival-${r.rival.result}` : ''}`}>
             <SpriteIcon name="rival-vesper" size={16} />
@@ -160,24 +169,17 @@ export function DayEndModal() {
             Mais vendidas: {sales.slice(0, 3).map(([id, n]) => `${RECIPES_BY_ID[id].shortName} (${n})`).join(', ')}
           </p>
         )}
-        {r.customersLost > 0 && (
-          <p className="tip lost-line">
-            {leftOnTable > 0 && <><b>Ficou na mesa: cerca de {leftOnTable} moedas</b> de quem foi embora. </>}
-            {missed
-              ? <>O que mais faltou: <b>{RECIPES_BY_ID[missed.recipeId].shortName}</b> ({missed.n} pedido{missed.n > 1 ? 's' : ''}). Deixe algumas prontas antes de abrir amanhã.</>
-              : <>Clientes vão embora quando falta a poção certa ou o preço está alto.</>}
-          </p>
-        )}
         {save.challenge && !save.challenge.active && save.challenge.score !== null && save.reports.at(-1)?.day === r.day && (
           <p className="challenge-line"><Icon e="⚔️" /> Desafio da semana {save.challenge.week}: <b>{save.challenge.score} pontos</b>{save.challengeBest?.score === save.challenge.score ? ' · seu recorde' : ''}</p>
         )}
         {charm(save) > 0 && <p className="card-text small"><Icon e="🎀" /> A decoração encantou a freguesia: +{charm(save)} de reputação.</p>}
         <p className="card-text">Caixa agora: <Coins n={save.coins} /></p>
         <button className="btn btn-share" onClick={() => dispatch({ type: 'OPEN_MODAL', modal: 'share' })}><Icon e="📸" /> Mostrar a loja</button>
+        </details>
         <section className="tomorrow" aria-label="Amanhã na loja">
           <p className="tomorrow-title">Amanhã na loja</p>
           <ul>
-            {tomorrowPreview(save).map((l) => (
+            {tomorrowPreview(save).slice(0, 2).map((l) => (
               <li key={l.text} className={l.tone ? `tone-${l.tone}` : ''}><span aria-hidden><Icon e={l.icon} /></span> {l.text}</li>
             ))}
           </ul>

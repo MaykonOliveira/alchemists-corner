@@ -118,16 +118,16 @@ export const autoFast = (save: GameSave | null, ui: Pick<UiState, 'speed' | 'pau
   !!save && save.phase === 'expediente' && ui.speed === 1 && !ui.paused && save.customers.length === 0 && save.tutorialStep >= TUTORIAL_DONE;
 
 let toastSeq = 0;
-export const MAX_TOASTS = 2;
+export const MAX_TOASTS = 1;
 let loadedSave: GameSave | null = null;
 
 export const useGameStore = create<StoreState>()(
   subscribeWithSelector((set, get) => {
-    /** Avisos curtos: no máximo 2 na tela e sem repetir o mesmo texto. */
+    /** Avisos curtos: um por vez na tela (o mais novo) e sem repetir o mesmo texto. */
     const toast = (text: string, tone: Toast['tone'] = 'info') => {
       const t = { id: ++toastSeq, text, tone };
       set((st) => ({
-        ui: { ...st.ui, toasts: [...st.ui.toasts.filter((x) => x.text !== text).slice(-(MAX_TOASTS - 1)), t] },
+        ui: { ...st.ui, toasts: [...st.ui.toasts.filter((x) => x.text !== text), t].slice(-MAX_TOASTS) },
       }));
       setTimeout(() => get().dispatch({ type: 'DISMISS_TOAST', id: t.id }), tone === 'warn' ? 2600 : 3400);
     };
@@ -169,7 +169,8 @@ export const useGameStore = create<StoreState>()(
         case 'PAGE_FOUND':
           return toast(`📜 Uma página rasgada veio com ${e.source}: uma lenda perdida leva ${INGREDIENTS_BY_ID[e.ingredientId].name}. Veja em Receitas.`, 'gold');
         case 'MYSTERY_ARRIVED':
-          return toast('❓ Um viajante encapuzado entrou. Ele não diz o que quer: decifre a charada!', 'gold');
+          // O cartão do cliente já mostra o viajante e a charada: um aviso no topo só repetiria.
+          return;
         case 'MYSTERY_SOLVED':
           return toast(`❓ Charada resolvida! Era ${RECIPES_BY_ID[e.recipeId].name}: +${e.coins} moedas e +${e.crystals} cristais.`, 'gold');
         case 'MYSTERY_WRONG':
