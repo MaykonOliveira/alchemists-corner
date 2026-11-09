@@ -226,8 +226,8 @@ export function simulate(profile: BotProfile, days: number, seed: number): SimRe
       let price: number | undefined;
       if (profile.readsCustomers && !c.vip && recipeId === c.wantedRecipeId) {
         const ask = askOptions(s, recipeId);
-        // Só o morador não aguenta preço salgado (é o que a dica do balcão diz).
-        if (c.archetype !== 'morador' || profile.greedy) price = ask.high;
+        // Só o morador não aguenta preço salgado (é o que a dica do balcão diz), e amigo não se explora.
+        if ((c.archetype !== 'morador' && !c.regularId) || profile.greedy) price = ask.high;
       }
       cmd({ type: 'SERVE_CUSTOMER', customerId: c.id, recipeId, ...(price !== undefined ? { price } : {}) });
       const still = s.customers.find((x) => x.id === c.id);

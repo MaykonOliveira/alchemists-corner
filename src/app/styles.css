@@ -839,7 +839,7 @@ button, .stage-canvas { touch-action: manipulation; -webkit-tap-highlight-color:
 .qs-regular .heart-on { font-size: var(--fs-sm); }
 
 .regulars { display: grid; gap: 8px; }
-.regular { display: flex; gap: 10px; align-items: center; }
+.regular { display: flex; gap: 10px; align-items: flex-start; }
 .regular-face {
   width: 44px; height: 44px; flex: none; display: grid; place-items: center; font-size: var(--fs-xl);
   background: var(--parchment-2); border: 2px solid var(--parchment-edge); border-radius: 50%;
@@ -1695,3 +1695,8 @@ html, button, input { font-variant-ligatures: none; font-feature-settings: "liga
 @keyframes face-shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-2px); } 75% { transform: translateX(2px); } }
 @media (prefers-reduced-motion: reduce) { .customer-face.face-bravo { animation: none; } }
 .qs-compact .customer-face { padding: 0; border-width: 1px; }
+
+/* Histórias dos fregueses (auditoria P1.6) */
+.regular-story { font-size: var(--fs-sm); margin-top: 4px; }
+.regular-story summary { cursor: pointer; color: var(--copper); font-weight: 600; }
+.regular-story ol { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; }

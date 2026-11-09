@@ -1,6 +1,7 @@
 import { ARCHETYPES, NOBLE_LEVEL } from '../data/customers';
 import { DAY_EVENTS } from '../data/orders';
 import { SYMPTOMS, symptomClarify } from '../data/symptoms';
+import { chapterFor } from '../data/stories';
 import { RECIPES_BY_ID } from '../data/recipes';
 import type { Customer, CustomerArchetype, GameSave } from '../models/types';
 import { fail, nextId, pick, weightedPick, type Draft } from './context';
@@ -104,6 +105,15 @@ export function spawnCustomer(d: Draft) {
       remark: promised ? 'Como prometi na carta! Hoje pago bem pelo de sempre.' : r.greeting,
       regularId: r.id,
     };
+    // História do freguês (auditoria P1.6): enquanto não é amigo, cada visita é um capítulo, contado por sintoma.
+    const st = s.regulars[r.id];
+    const ch = !promised ? chapterFor(r.id, st?.hearts ?? 0) : null;
+    if (ch && s.knownRecipes.includes(ch.wants)) {
+      regular.wantedRecipeId = ch.wants;
+      regular.remark = ch.opening;
+      regular.symptom = true;
+      regular.chapter = st?.hearts ?? 0;
+    }
     s.customers.push(regular);
     d.events.push({ type: 'CUSTOMER_ARRIVED', customerId: regular.id });
     return;
@@ -326,10 +336,20 @@ export function serveCustomer(d: Draft, customerId: string, recipeId: string, op
     price = Math.round(Math.min(top, Math.max(min, opts.price)));
   }
   const max = maxPriceFor(s, c, recipeId);
-  // Pedir acima da etiqueta a quem não pode pagar ofende: o morador vai embora, os outros pechincham bravos.
-  const greedy = price > tag && price > max;
-  const margin = greedy && c.archetype === 'morador' ? 1 : NEGOTIATION_MARGIN;
-  if (price <= max || opts.basePrice) {
+  // Freguês fiel não paga acima da etiqueta, mesmo podendo: contrapropõe o preço de sempre e fica chateado.
+  if (c.regularId && price > tag && !opts.basePrice) {
+    c.offer = { recipeId, price: tag };
+    gainReputation(d, -1);
+    c.remark = `Logo comigo? Pago o de sempre: ${tag} moedas.`;
+    d.events.push({ type: 'COUNTER_OFFER', customerId, price: tag });
+    return true;
+  }
+  // Pedir acima da etiqueta ofende quem não pode pagar, e o morador nunca paga acima dela (é o que a dica do balcão diz):
+  // o morador vai embora, os outros pechincham bravos.
+  const salty = c.archetype === 'morador' && price > tag && !opts.basePrice;
+  const greedy = price > tag && (price > max || salty);
+  const margin = greedy && c.archetype === 'morador' ? 0 : NEGOTIATION_MARGIN;
+  if ((price <= max && !salty) || opts.basePrice) {
     completeSale(d, c, recipeId, price, price < tag);
   } else if (price <= max * margin) {
     c.offer = { recipeId, price: max };

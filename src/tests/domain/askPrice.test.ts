@@ -50,4 +50,19 @@ describe('preço que depende de quem compra (auditoria P0.3)', () => {
     const sale = r.events.find((e) => e.type === 'SALE') as { price: number };
     expect(sale.price).toBeLessThanOrEqual(askOptions(createNewGame(0), 'cura-simples').high + 20);
   });
+
+  it('o morador nunca paga acima da etiqueta, mesmo com dinheiro no bolso', () => {
+    const { high } = askOptions(createNewGame(0), 'cura-simples');
+    const rico = serve({ ...open(customer({ budgetFactor: 2 })), reputation: 10 }, high);
+    expect(rico.events.find((e) => e.type === 'SALE')).toBeUndefined();
+    expect(rico.save.customers).toHaveLength(0);
+    expect(rico.save.reputation).toBe(8);
+  });
+
+  it('o freguês fiel contrapropõe o preço de sempre e a loja perde reputação', () => {
+    const { high, tag } = askOptions(createNewGame(0), 'cura-simples');
+    const r = serve({ ...open(customer({ archetype: 'viajante', regularId: 'tobias', budgetFactor: 2 })), reputation: 10 }, high);
+    expect(r.save.customers[0].offer).toEqual({ recipeId: 'cura-simples', price: tag });
+    expect(r.save.reputation).toBe(9);
+  });
 });

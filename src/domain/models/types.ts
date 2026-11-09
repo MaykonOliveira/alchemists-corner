@@ -91,6 +91,8 @@ export interface Customer {
   symptom?: boolean;
   /** Cliente que ensina uma decisão (auditoria P1.4): a nobre do dia 3 e a pechincha do dia 4. */
   lesson?: 'nobre' | 'pechincha';
+  /** Capítulo da história do freguês fiel que esta visita conta (0 a 4). */
+  chapter?: number;
 }
 
 /** Amizade com um freguês fiel. */
@@ -520,7 +522,7 @@ export type GameEvent =
   | { type: 'SEAL_BOUGHT'; cost: number }
   | { type: 'FESTIVAL_SPONSORED'; cost: number }
   | { type: 'GREENHOUSE_HARVEST'; items: { ingredientId: string; qty: number }[] }
-  | { type: 'REGULAR_HEART'; regularId: string; hearts: number; tip: number }
+  | { type: 'REGULAR_HEART'; regularId: string; hearts: number; tip: number; chapter?: number }
   | { type: 'REGULAR_GIFT'; regularId: string }
   | { type: 'ACHIEVEMENT'; id: string }
   | { type: 'CAT_PETTED'; lucky: boolean }

@@ -1,3 +1,4 @@
+import { chapterFor } from '../domain/data/stories';
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { INGREDIENTS_BY_ID } from '../domain/data/ingredients';
@@ -248,6 +249,9 @@ export const useGameStore = create<StoreState>()(
         }
         case 'REGULAR_HEART': {
           const r = REGULARS_BY_ID[e.regularId];
+          // Capítulo fechado: a frase final da história é a recompensa que se lê.
+          const ch = e.chapter !== undefined ? chapterFor(e.regularId, e.chapter) : null;
+          if (ch) return toast(`📖 ${r.name.split(',')[0]} · ${ch.title}: “${ch.closing}”${e.hearts === TIP_HEARTS ? ' Agora deixa gorjeta!' : ''}`, 'gold');
           if (e.hearts === TIP_HEARTS && !e.tip) return toast(`${r.name} ganhou ${TIP_HEARTS} corações: agora deixa gorjeta!`, 'ok');
           return;
         }

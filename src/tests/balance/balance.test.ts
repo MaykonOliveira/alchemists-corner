@@ -88,8 +88,10 @@ describe('preço que depende de quem compra', () => {
   const revenue = (rs: SimResult[]) => rs.reduce((n, r) => n + r.days.reduce((m, d) => m + d.revenue, 0), 0);
   const rep = (rs: SimResult[]) => rs.reduce((n, r) => n + r.days.at(-1)!.reputation, 0);
 
+  // Desde a P1.6 os fregueses fiéis pagam só a etiqueta (amigo não se explora), então a vantagem
+  // de ler o freguês vem dos outros clientes: 4% ou mais.
   it('quem lê o freguês fatura mais que quem só vende pela etiqueta, sem perder reputação', () => {
-    expect(revenue(esperto)).toBeGreaterThan(revenue(casual) * 1.05);
+    expect(revenue(esperto)).toBeGreaterThan(revenue(casual) * 1.04);
     expect(rep(esperto)).toBeGreaterThanOrEqual(rep(casual) * 0.95);
   });
 

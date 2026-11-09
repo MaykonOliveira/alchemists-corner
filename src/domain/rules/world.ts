@@ -45,14 +45,16 @@ export function befriend(d: Draft, c: Customer, recipeId: string, price: number)
   st.visits += 1;
   // Gorjeta só para quem já é chegado (antes de ganhar o coração desta visita).
   const tip = st.hearts >= TIP_HEARTS ? Math.max(1, Math.round(price * TIP_RATE)) : 0;
-  if (recipeId === info.favorite && st.hearts < MAX_HEARTS) st.hearts += 1;
+  // O coração vem de acertar o que ele pediu: o capítulo da história ou, depois de amigo, o de sempre.
+  const heart = recipeId === c.wantedRecipeId && st.hearts < MAX_HEARTS;
+  if (heart) st.hearts += 1;
   s.regulars = { ...s.regulars, [info.id]: st };
   if (!(s.stats.regularsSeen ?? []).includes(info.id)) s.stats.regularsSeen = [...(s.stats.regularsSeen ?? []), info.id];
   if (tip) {
     s.coins += tip;
     s.stats.revenue += tip;
   }
-  d.events.push({ type: 'REGULAR_HEART', regularId: info.id, hearts: st.hearts, tip });
+  d.events.push({ type: 'REGULAR_HEART', regularId: info.id, hearts: st.hearts, tip, ...(heart && c.chapter !== undefined ? { chapter: c.chapter } : {}) });
   if (st.hearts >= MAX_HEARTS && !st.gift) {
     st.gift = true;
     const room = Math.max(0, ingredientCapacity(s) - countIngredients(s));

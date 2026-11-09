@@ -11,6 +11,7 @@ import { PotionIcon } from '../../ui/SpriteIcon';
 import { Meter } from '../../ui/widgets';
 import { Icon } from '../../ui/Icon';
 import { CustomerFace } from './CustomerFace';
+import { chapterFor } from '../../domain/data/stories';
 
 /** Atendimento rápido sobre a loja: o cliente selecionado e um botão para vender com um toque. */
 export function QuickServe({ placement }: { placement: 'stage' | 'side' }) {
@@ -90,7 +91,10 @@ export function QuickServe({ placement }: { placement: 'stage' | 'side' }) {
         <div className="qs-head">
           <CustomerFace c={c} />
           <div className="qs-who">
-            <span className="qs-name">{a.label} <span className="muted">conta o problema</span></span>
+            <span className="qs-name">
+              {reg ? <span className="qs-regular">{reg.name.split(',')[0]} <span className="heart-on">{'♥\uFE0E'.repeat(hearts) || '♡'}</span></span> : a.label}{' '}
+              <span className="muted">{c.chapter !== undefined && reg ? `· cap. ${c.chapter + 1}: ${chapterFor(reg.id, c.chapter)?.title}` : 'conta o problema'}</span>
+            </span>
             <Meter ratio={left} tone={left > 0.5 ? 'ok' : left > 0.25 ? 'gold' : 'warn'} label="Paciência" />
           </div>
           {next && <button className="qs-icon" onClick={() => dispatch({ type: 'SELECT_CUSTOMER', id: next.id })} aria-label="Próximo cliente">{idx + 1}/{save.customers.length} ›</button>}
