@@ -1,6 +1,7 @@
 // Toque de mestre (fase 4, pacote V): a qualidade das poções depende da sua mão no caldeirão.
 // Os ajudantes só fazem poções Comuns; mexer no tempo certo rende Finas e Primorosas, que valem mais.
-import type { GameSave, PotionStack } from '../models/types';
+import { RECIPES_BY_ID } from '../data/recipes';
+import type { GameSave, PotionStack, RecipeCategory } from '../models/types';
 import { fail, type Draft } from './context';
 
 export type Quality = 1 | 2 | 3;
@@ -12,6 +13,49 @@ export const STIR_LEVEL = 5;
 export const STIR_TAPS = 3;
 
 export const qualityFromHits = (hits: number | undefined): Quality => (hits === undefined ? 1 : hits >= 3 ? 3 : hits === 2 ? 2 : 1);
+
+/**
+ * Caldeirão com verbo próprio (auditoria P2.3): o toque de mestre são três gestos de alquimista,
+ * cada um vale um acerto.
+ * 1. Ordem: pôr os ingredientes na ordem do livro de receitas.
+ * 2. Fogo: segurar a chama na faixa da receita (cada família tem o seu fogo).
+ * 3. Ponto: tirar do fogo quando o líquido chega na cor da poção.
+ * Saber a receita (ordem e fogo) vale tanto quanto ter a mão rápida.
+ */
+export const HEAT: Record<RecipeCategory, { band: [number, number]; name: string }> = {
+  cura: { band: [14, 36], name: 'brando' },
+  mente: { band: [34, 56], name: 'médio' },
+  utilidade: { band: [50, 72], name: 'firme' },
+  vigor: { band: [66, 88], name: 'forte' },
+};
+/** Faixa do ponto certo na barra do ponto (0 = cru, 100 = passou). */
+export const POINT_BAND: [number, number] = [68, 84];
+
+export interface BrewSteps {
+  /** Ingredientes na ordem certa (a do livro). */
+  order: string[];
+  heat: { band: [number, number]; name: string };
+  color: string;
+}
+
+export function brewSteps(recipeId: string): BrewSteps {
+  const r = RECIPES_BY_ID[recipeId];
+  const order = [...new Set(r.ingredients.map((i) => i.ingredientId))];
+  return { order, heat: HEAT[r.category], color: r.color };
+}
+
+/** Embaralha a ordem para mostrar os ingredientes no gesto 1 (sempre diferente da certa quando dá). */
+export function shuffledOrder(order: string[], seed: number): string[] {
+  const out = [...order];
+  let x = (seed >>> 0) || 1;
+  for (let i = out.length - 1; i > 0; i--) {
+    x = (x * 1103515245 + 12345) >>> 0;
+    const j = x % (i + 1);
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  if (out.length > 1 && out.every((id, i) => id === order[i])) out.push(out.shift()!);
+  return out;
+}
 
 /** Quantas poções de cada qualidade há numa pilha. */
 export function stackQualities(p: PotionStack | undefined) {
