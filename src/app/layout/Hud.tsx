@@ -67,7 +67,7 @@ export function Hud() {
       )}
       <div className="hud-brand" title="Alchemist's Corner">
         <span className="brand-full">{save.royal && save.royal.chapter >= 5 && <span className="brand-crown" title="Grão-Alquimista do Reino" aria-label="Grão-Alquimista do Reino"><Icon e="👑" /> </span>}{save.shopName}</span>
-        <button className="hud-crystals" onClick={() => dispatch({ type: 'TOGGLE_PANEL', panel: 'season' })} title="Cristais de luar: ganhe jogando e use na decoração (aba Temporada)"><Icon e="🌙" /> {save.crystals}</button>
+        <button className="hud-crystals" onClick={() => dispatch({ type: 'TOGGLE_PANEL', panel: 'season' })} title="Cristais de luar: ganhe jogando e use na decoração ou nos talentos do Grimório"><Icon e="🌙" /> {save.crystals}</button>
       </div>
       <div className="hud-stat" title={`Dia e fase · ${seasonOf(save.day).name}`}>
         <span className="hud-label">Dia {save.day} <span className="hud-season" aria-label={seasonOf(save.day).name}><Icon e={seasonOf(save.day).icon} /></span></span>

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { RECIPES } from '../../domain/data/recipes';
-import { TRACK_REWARDS, TRACK_STEP, VISIT_GIFTS } from '../../domain/data/retention';
+import { DEBUT, TRACK_REWARDS, TRACK_STEP, VISIT_GIFTS } from '../../domain/data/retention';
 import type { GameEvent, GameSave } from '../../domain/models/types';
 import { applyCommand, type DomainCommand } from '../../domain/rules/commands';
 import { charm, owns } from '../../domain/rules/entitlements';
@@ -54,8 +54,10 @@ describe('pacote I: primeiros minutos', () => {
     expect(again.save.customers.some((c) => c.vip)).toBe(false);
   });
 
-  it('o primeiro fechamento leva ao nível 2 com presente e deixa a carta da Condessa', () => {
-    const s = run(createNewGame(T0), [{ type: 'OPEN_SHOP' }, { type: 'CLOSE_SHOP' }]);
+  it('o primeiro fechamento leva ao nível 2 com presente quando a loja atendeu clientes', () => {
+    const open = run(createNewGame(T0), [{ type: 'OPEN_SHOP' }]).save;
+    open.stats.served = 3;
+    const s = run(open, [{ type: 'CLOSE_SHOP' }]);
     expect(s.save.level).toBe(2);
     const up = s.events.find((e) => e.type === 'LEVEL_UP');
     expect(up && up.type === 'LEVEL_UP' && up.gift?.coins).toBe(40);
@@ -64,6 +66,16 @@ describe('pacote I: primeiros minutos', () => {
     const d2 = run(s.save, [{ type: 'START_NEXT_DAY' }]).save;
     expect(d2.order?.client).toBe('Condessa Amélia');
     expect(d2.letter?.done).toBe(true);
+  });
+
+  it('dia 1 parado não ganha o nível 2 de presente, e a Condessa não finge que foi atendida', () => {
+    const s = run(createNewGame(T0), [{ type: 'OPEN_SHOP' }, { type: 'CLOSE_SHOP' }]);
+    expect(s.save.level).toBe(1);
+    expect(s.events.some((e) => e.type === 'LEVEL_UP')).toBe(false);
+    expect(s.save.letter?.text).toBe(DEBUT.letterMissed);
+    const served = run(createNewGame(T0), [{ type: 'OPEN_SHOP' }]).save;
+    served.debutServed = true;
+    expect(run(served, [{ type: 'CLOSE_SHOP' }]).save.letter?.text).toBe(DEBUT.letter);
   });
 
   it('os níveis 2 a 5 ficaram mais curtos e os seguintes não mudaram', () => {

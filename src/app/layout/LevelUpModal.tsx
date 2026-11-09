@@ -27,12 +27,12 @@ export function LevelUpModal() {
   if (level === NOBLE_LEVEL) extras.push('A nobreza descobriu a loja: clientes nobres pagam caro pelas melhores poções.');
   for (const e of events) extras.push(`Novo evento na cidade: ${e.name}.`);
   if (level === 10) extras.push('Clientes ilustres (a Corte, o Observatório) começam a fazer encomendas mais generosas.');
-  if (level >= SEAL_LEVEL) extras.push('Você ganhou 1 Selo de Mestre! Gaste no Grimório (Progresso › Grimório).');
-  if (level === MAX_LEVEL) extras.push('Nível máximo! Daqui em diante cada 3000 XP é um grau de Mestre e mais 1 Selo.');
+  if (level >= SEAL_LEVEL) extras.push('Você ganhou 10 Cristais de luar! Gaste em talentos no Grimório ou em decoração.');
+  if (level === MAX_LEVEL) extras.push('Nível máximo! Daqui em diante cada 3000 XP é um grau de Mestre e mais 10 Cristais de luar.');
   // Duas novidades em destaque; o resto fica guardado num "e mais", para não virar uma lista de sete itens.
   const areas = AREA_UNLOCKS.filter((a) => a.level === level);
   const all: { key: string; node: React.ReactNode }[] = [
-    ...recipes.map((id) => ({ key: id, node: <>Nova receita: <PotionName id={id} /></> })),
+    ...recipes.map((id) => ({ key: id, node: <>Nova pista: <PotionName id={id} /> <span className="muted small">(descubra a mistura na bancada)</span></> })),
     ...areas.map((a) => ({ key: a.label, node: <>Nova área: <strong>{a.label}</strong> ({a.where})</> })),
     ...extras.map((t) => ({ key: t, node: <>{t}</> })),
     ...ups.map((u) => ({ key: u.id, node: <>Melhoria disponível: <strong>{u.name}</strong></> })),

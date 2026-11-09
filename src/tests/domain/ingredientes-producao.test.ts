@@ -24,9 +24,9 @@ describe('subir de nível no meio do dia', () => {
     s = run(s, [{ type: 'ADVANCE', ms: 15_000 }]);
     expect(s.level).toBe(3);
     expect(supplierLeft(s, 'escama-salamandra')).toBeGreaterThan(0);
-    // A receita nova do nível 3 dá para fazer com o que o fornecedor tem.
+    // A pista nova do nível 3 dá para testar com o que o fornecedor tem.
     const nova = RECIPES.find((r) => r.unlockLevel === 3)!;
-    expect(s.knownRecipes).toContain(nova.id);
+    expect(s.recipeHints).toContain(nova.id);
     expect(missingPurchase({ ...s, coins: 9999 }, nova.id, 1).error).toBeNull();
   });
 });

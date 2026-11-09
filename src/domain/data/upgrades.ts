@@ -32,10 +32,10 @@ export const UPGRADES: ShopUpgrade[] = [
   // Ajudantes: automatizam uma parte do trabalho e recebem salário diário (somado à manutenção).
   { id: 'corvo-entregador', name: 'Corvo entregador', cost: 600, category: 'ajudante', requiredLevel: 3, upkeep: 8,
     effect: 'Confere o armário a cada hora e busca no fornecedor o que está acabando (taxa de 3 moedas por viagem).' },
-  { id: 'aprendiz', name: 'Aprendiz de alquimia', cost: 1000, category: 'ajudante', requiredLevel: 4, upkeep: 12,
-    effect: 'Quando o caldeirão fica livre, prepara a poção que está mais em falta. Dá prioridade ao pedido especial.' },
-  { id: 'golem-balconista', name: 'Golem balconista', cost: 1400, category: 'ajudante', requiredLevel: 5, upkeep: 15,
-    effect: 'Atende quem espera há alguns segundos e aceita contrapropostas. Sem a poção certa, dispensa com educação.' },
+  { id: 'aprendiz', name: 'Aprendiz de alquimia', cost: 2200, category: 'ajudante', requiredLevel: 8, upkeep: 20,
+    effect: 'Quando o caldeirão fica livre, prepara a poção que está mais em falta (sempre Comum). Dá prioridade ao pedido especial.' },
+  { id: 'golem-balconista', name: 'Golem balconista', cost: 3000, category: 'ajudante', requiredLevel: 9, upkeep: 25,
+    effect: 'Atende quem pede uma poção pelo nome e cobra o preço-base. Não negocia, não troca de poção, não decifra sintomas e deixa os fregueses fiéis e as visitas para você.' },
   // Treino da equipe (pacote X): cada ajudante pode evoluir uma vez no fim de jogo.
   { id: 'corvo-veloz', name: 'Corvo veloz', cost: 9000, category: 'treino', requiredLevel: 15, requires: 'corvo-entregador',
     effect: 'O corvo confere o armário duas vezes por hora e não cobra mais a taxa da viagem.' },

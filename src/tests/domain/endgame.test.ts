@@ -124,7 +124,7 @@ describe('Metas sem teto (pacote X)', () => {
   it('talentos sem fim só abrem no nível máximo e não têm teto', () => {
     const low = run({ ...endgame(), level: 14, talents: {} }, { type: 'LEARN_TALENT', talentId: 'toque-de-ouro' });
     expect(low.save.talents['toque-de-ouro']).toBeUndefined();
-    const s = run({ ...endgame(), sealsBought: 100 }, { type: 'LEARN_TALENT', talentId: 'toque-de-ouro' }, { type: 'LEARN_TALENT', talentId: 'toque-de-ouro' });
+    const s = run({ ...endgame(), crystals: 1000 }, { type: 'LEARN_TALENT', talentId: 'toque-de-ouro' }, { type: 'LEARN_TALENT', talentId: 'toque-de-ouro' });
     expect(s.save.talents['toque-de-ouro']).toBe(2);
   });
 
@@ -156,21 +156,26 @@ describe('Metas sem teto (pacote X)', () => {
 });
 
 describe('Reconstruir a vila (pacote W)', () => {
-  it('cada etapa cobra moedas; a inauguração pede as poções doadas e liga o bônus', async () => {
+  // Auditoria P2.2: cada etapa é uma encomenda que pede poções (e menos moedas).
+  it('cada etapa é uma encomenda de poções e moedas; a inauguração liga o bônus', async () => {
     const { ingredientPrice } = await import('../../domain/rules/economy');
+    const pot = (recipeId: string, quantity: number) => ({ recipeId, quantity, quality: 1 as const, forSale: true });
     let s = endgame({ coins: 30000, potions: [] });
     const before = ingredientPrice(s, 'folha-lunar');
+    // Sem as 8 Poções de Cura, nem a fundação começa.
+    expect(run(s, { type: 'BUILD_VILLAGE', projectId: 'fonte' }).save.village.fonte).toBeUndefined();
+    s = { ...s, potions: [pot('cura-simples', 8), pot('balsamo-calmante', 8)] };
     s = run(s, { type: 'BUILD_VILLAGE', projectId: 'fonte' }, { type: 'BUILD_VILLAGE', projectId: 'fonte' }).save;
     expect(s.village.fonte).toBe(2);
-    expect(s.coins).toBe(30000 - 7000);
-    // Sem as 10 Poções de Cura, a fonte não inaugura.
+    expect(s.coins).toBe(30000 - 4200);
+    expect(s.potions.reduce((n, p) => n + p.quantity, 0)).toBe(0);
     expect(run(s, { type: 'BUILD_VILLAGE', projectId: 'fonte' }).save.village.fonte).toBe(2);
-    s = { ...s, potions: [{ recipeId: 'cura-simples', quantity: 12, quality: 1, forSale: true }] };
+    s = { ...s, potions: [pot('cura-simples', 14)] };
     const r = run(s, { type: 'BUILD_VILLAGE', projectId: 'fonte' });
     expect(r.save.village.fonte).toBe(3);
     expect(r.save.potions[0].quantity).toBe(2);
     // O mercado pronto barateia o fornecedor.
-    let m = endgame({ coins: 30000 });
+    let m = endgame({ coins: 30000, potions: [pot('visao-noturna', 8), pot('pocao-sorte', 16)] });
     for (let i = 0; i < 3; i++) m = run(m, { type: 'BUILD_VILLAGE', projectId: 'mercado' }).save;
     expect(m.village.mercado).toBe(3);
     expect(ingredientPrice(m, 'pena-fenix')).toBeLessThan(ingredientPrice(endgame(), 'pena-fenix'));

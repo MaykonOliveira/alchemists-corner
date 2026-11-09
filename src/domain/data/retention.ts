@@ -90,6 +90,8 @@ export const DEBUT = {
   name: 'Condessa Amélia',
   remark: 'Então esta é a loja nova! Dizem que suas poções são as melhores da rua.',
   letter: 'Fiquei encantada com a loja. Volte amanhã: tenho uma encomenda maior para você.',
+  /** Carta quando ninguém atendeu a Condessa no dia 1. */
+  letterMissed: 'Passei pela loja ontem à tarde e esperei, mas ninguém me atendeu. Vou dar mais uma chance: preciso de poções para o baile.',
   pays: 10,
   order: { client: 'Condessa Amélia', text: 'Como prometido: o baile da corte precisa de poções de cura para os dançarinos mais animados.', recipeId: 'cura-simples', qty: 4, rewardCoins: 160, rewardRep: 6, rewardXp: 60 },
 };

@@ -1,6 +1,7 @@
 import { DAY_EVENTS } from '../../domain/data/orders';
 import { chestReady } from '../../domain/rules/goals';
-import { sealsAvailable } from '../../domain/rules/progression';
+import { grimoireAwake } from '../../domain/rules/progression';
+import { talentAffordable } from '../../domain/rules/mastery';
 import { royalChapter, royalDeliverable, royalStarsMissing } from '../../domain/rules/royal';
 import type { GameSave } from '../../domain/models/types';
 import { useGameStore, type PanelId } from '../../store/gameStore';
@@ -20,7 +21,7 @@ export interface NavItem {
   title: string;
   icon: string;
   key: string;
-  /** Tela que mora dentro de outra (mesma aba): o Grimório fica em Melhorias, o Concurso em Metas. */
+  /** Tela que mora dentro de outra (mesma aba): o Grimório fica em Melhorias, o Concurso na Vila (é o capítulo final da reconstrução). */
   inside?: PanelId;
   /** Tela sem aba própria: abre por atalho ou por um link (o Relatório abre pelo fim do dia). */
   noTab?: boolean;
@@ -53,21 +54,21 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    id: 'progresso', label: 'Progresso', icon: '🎯', hint: 'Metas, melhorias, talentos e relatório',
+    id: 'progresso', label: 'Progresso', icon: '🎯', hint: 'Diário, melhorias, talentos e relatório',
     items: [
-      { panel: 'goals', label: 'Metas', title: 'Metas do dia', icon: '🎯', key: '7' },
+      { panel: 'goals', label: 'Diário', title: 'Diário da loja', icon: '🎯', key: '7' },
       { panel: 'upgrades', label: 'Melhorias', title: 'Melhorias e ajudantes', icon: '🔨', key: '8' },
       { panel: 'grimoire', label: 'Grimório', title: 'Grimório do Mestre', icon: '✨', key: '9', inside: 'upgrades' },
       { panel: 'report', label: 'Relatório', title: 'Caixa e relatório', icon: '📊', key: '0', noTab: true },
-      { panel: 'royal', label: 'Concurso', title: 'Concurso Real de Alquimia', icon: '👑', key: 'c', inside: 'goals' },
+      { panel: 'royal', label: 'Concurso', title: 'Concurso Real de Alquimia', icon: '👑', key: 'c', inside: 'village' },
     ],
   },
   {
-    id: 'mundo', label: 'Mundo', icon: '🗺️', hint: 'A rua, a vila, a temporada e o álbum',
+    id: 'mundo', label: 'Mundo', icon: '🗺️', hint: 'A rua, a vila, a decoração e o álbum',
     items: [
       { panel: 'street', label: 'Rua', title: 'A rua da loja', icon: '🏘️', key: 'r' },
       { panel: 'village', label: 'Vila', title: 'Reconstruir a vila', icon: '🏗️', key: 'v' },
-      { panel: 'season', label: 'Temporada', title: 'Temporada e decoração', icon: '🌙', key: 't' },
+      { panel: 'season', label: 'Decoração', title: 'Decoração e festas', icon: '🌙', key: 't' },
       { panel: 'album', label: 'Álbum', title: 'Álbum da loja', icon: '🏆', key: 'a' },
     ],
   },
@@ -111,7 +112,7 @@ const UNLOCK: Partial<Record<PanelId, { open: (s: GameSave) => boolean; fresh: (
   report: { open: (s) => s.day >= 2, fresh: (s) => s.day <= 3 },
   season: { open: (s) => s.day >= 3, fresh: (s) => s.day <= 4 },
   street: { open: (s) => s.level >= 3, fresh: (s) => s.level <= 4 },
-  grimoire: { open: (s) => s.level >= 8 || sealsAvailable(s) > 0, fresh: (s) => s.level <= 9 },
+  grimoire: { open: (s) => s.level >= 8 || grimoireAwake(s), fresh: (s) => s.level <= 9 },
   village: { open: (s) => s.level >= 10, fresh: (s) => s.level <= 12 && Object.keys(s.village ?? {}).length === 0 },
   royal: { open: (s) => !!s.royal, fresh: (s) => (s.royal?.chapter ?? 0) === 0 },
 };
@@ -147,7 +148,7 @@ function royalBadge(s: GameSave): string | null {
 export function useBadges() {
   const customers = useGameStore((s) => s.save?.customers.length ?? 0);
   const order = useGameStore((s) => !!s.save?.order || (!!s.save?.contract && !s.save.contract.accepted));
-  const seals = useGameStore((s) => (s.save ? sealsAvailable(s.save) : 0));
+  const seals = useGameStore((s) => (s.save ? grimoireAwake(s.save) && talentAffordable(s.save) : false));
   const rareEvent = useGameStore((s) => !!(s.save?.event && DAY_EVENTS[s.save.event].rare));
   const chest = useGameStore((s) => (s.save ? chestReady(s.save) : false));
   const fest = useGameStore((s) => s.save?.event === 'festa-estacao');
@@ -161,7 +162,7 @@ export function useBadges() {
       case 'counter': return customers > 0 ? customers : null;
       case 'production': return idlePot ? '!' : null;
       case 'orders': return order ? '!' : null;
-      case 'grimoire': return seals > 0 ? seals : null;
+      case 'grimoire': return seals ? '!' : null;
       case 'street': return rareEvent ? '!' : null;
       case 'goals': return chest ? '🎁' : null;
       case 'season': return fest ? '🎉' : null;

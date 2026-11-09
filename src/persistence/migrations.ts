@@ -1,8 +1,9 @@
 import { SAVE_VERSION, type GameSave } from '../domain/models/types';
 import { ensureGoals } from '../domain/rules/goals';
 import { createNewGame } from '../domain/rules/initialState';
-import { MAX_LEVEL, unlockRecipesUpTo, xpForLevel } from '../domain/rules/progression';
+import { MAX_LEVEL, SEAL_CRYSTALS, sealsEarned, sealsUnspentLegacy, unlockRecipesUpTo, xpForLevel } from '../domain/rules/progression';
 import { DAY_EVENTS } from '../domain/data/orders';
+import { RECIPES_BY_ID } from '../domain/data/recipes';
 import { ROYAL_CHAPTERS } from '../domain/data/royal';
 import { recordsFromReports } from '../domain/rules/records';
 import type { DayReport } from '../domain/models/types';
@@ -124,6 +125,7 @@ export function migrateSave(raw: unknown): GameSave | null {
       : base.stats,
     reports: arr(raw.reports, base.reports),
     researchPoints: num(raw.researchPoints, 0),
+    recipeHints: arr<string>(raw.recipeHints, []).filter((id) => typeof id === 'string' && id in RECIPES_BY_ID),
     mastery,
     talents,
     sealsBought: Math.max(0, Math.floor(num(raw.sealsBought, 0))),
@@ -170,6 +172,9 @@ export function migrateSave(raw: unknown): GameSave | null {
     letter: isObj(raw.letter) && typeof raw.letter.from === 'string'
       ? { from: raw.letter.from, text: String(raw.letter.text ?? ''), day: num(raw.letter.day, 0), done: bool(raw.letter.done, false) }
       : null,
+    ...(bool(raw.debutServed, false) ? { debutServed: true } : {}),
+    trend: arr<string>(raw.trend, []).filter((id) => typeof id === 'string' && id in RECIPES_BY_ID),
+    nextTrend: arr<string>(raw.nextTrend, []).filter((id) => typeof id === 'string' && id in RECIPES_BY_ID),
     nextEvent: typeof raw.nextEvent === 'string' && raw.nextEvent in DAY_EVENTS ? (raw.nextEvent as GameSave['nextEvent']) : null,
     away: null,
     visits: isObj(raw.visits)
@@ -214,5 +219,13 @@ export function migrateSave(raw: unknown): GameSave | null {
   // Receitas de níveis que o jogador já alcançou (as novas dos níveis 6 a 10 entram direto).
   unlockRecipesUpTo(save, save.level);
   ensureGoals(save);
+  // Auditoria P1.1: Selos e cristais viraram uma moeda só. Na primeira carga depois da troca,
+  // os Selos que estavam guardados entram como cristais (os já gastos em talentos ficam onde estão).
+  if (typeof raw.fameOverflow === 'number') save.fameOverflow = Math.max(0, Math.floor(raw.fameOverflow));
+  if (typeof raw.sealsPaid === 'number') save.sealsPaid = Math.max(0, Math.floor(raw.sealsPaid));
+  else {
+    save.crystals += sealsUnspentLegacy(save) * SEAL_CRYSTALS;
+    save.sealsPaid = sealsEarned(save);
+  }
   return save;
 }

@@ -26,10 +26,14 @@ export const TUTORIAL_STEPS: Step[] = [
 export function TutorialCard() {
   const step = useGameStore((s) => (s.save?.storySeen === false ? 99 : s.save?.tutorialStep ?? 99));
   const panel = useGameStore((s) => s.ui.activePanel);
+  const closing = useGameStore((s) => s.save?.phase === 'fechamento');
+  const modal = useGameStore((s) => s.ui.modal);
   const dispatch = useGameStore((s) => s.dispatch);
   const { customer } = useStageCards();
   const [open, setOpen] = useState(false);
   if (step >= TUTORIAL_DONE) return null;
+  // No fechamento o passo do relatório aparece dentro do próprio relatório, e não por trás dele.
+  if (closing || modal) return null;
   const s = TUTORIAL_STEPS[step];
   // O passo "primeiro cliente" já é explicado pelo próprio cartão do cliente e pelo anel no botão Vender.
   if (step === 1 && customer) return null;

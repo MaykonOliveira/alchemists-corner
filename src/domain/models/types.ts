@@ -87,6 +87,12 @@ export interface Customer {
   mystery?: boolean;
   /** Visita especial (Condessa no dia 1, convidado da festa da estação): nome próprio e preço fixo. */
   vip?: { name: string; pays: number; kind: 'estreia' | 'festa' | 'carta' };
+  /** Descreve o problema em vez de dizer o nome da poção (pedido por sintoma). */
+  symptom?: boolean;
+  /** Cliente que ensina uma decisão (auditoria P1.4): a nobre do dia 3 e a pechincha do dia 4. */
+  lesson?: 'nobre' | 'pechincha';
+  /** Capítulo da história do freguês fiel que esta visita conta (0 a 4). */
+  chapter?: number;
 }
 
 /** Amizade com um freguês fiel. */
@@ -219,6 +225,8 @@ export interface DayReport {
   helperWork?: HelperWork;
   /** Placar da semana contra a rival, depois deste dia. */
   rival?: { me: number; her: number; result: 'win' | 'loss' | null };
+  /** Nível da loja no começo do dia (a medalha usa a meta do nível). */
+  level?: number;
   /** O que os clientes que foram embora queriam (receita → quantos). */
   lostByRecipe?: Record<string, number>;
   /** Recordes pessoais batidos neste dia. */
@@ -399,12 +407,18 @@ export interface GameSave {
   stats: DayStats;
   reports: DayReport[];
   researchPoints: number;
+  /** Receitas liberadas pelo nível que ainda precisam ser descobertas na bancada (auditoria P1.2). */
+  recipeHints?: string[];
   /** Maestria: quantas poções de cada receita já saíram do caldeirão. */
   mastery: Record<string, number>;
   /** Talentos do Grimório do Mestre (grau por id), comprados com Selos. */
   talents: Record<string, number>;
   /** Selos comprados com moedas (doações à Guilda dos Alquimistas). */
   sealsBought: number;
+  /** Selos já pagos em cristais de luar (auditoria P1.1: uma moeda de prestígio só). */
+  sealsPaid?: number;
+  /** Reputação ganha acima do teto, guardada até virar cristal (auditoria P2.2). */
+  fameOverflow?: number;
   /** O jogador patrocinou o Festival das Lanternas para o próximo dia. */
   festivalSponsored: boolean;
   /** Amizade com os fregueses fiéis, por id. */
@@ -437,10 +451,16 @@ export interface GameSave {
   awning: string;
   /** A Condessa já fez a visita de estreia (dia 1). */
   debutDone: boolean;
+  /** A Condessa da estreia foi atendida no dia 1 (a carta dela depende disso). */
+  debutServed?: boolean;
   /** Carta para amanhã (freguês fiel ou Condessa). */
   letter: Letter | null;
   /** Evento sorteado no fechamento para o dia seguinte (a prévia do relatório mostra). */
   nextEvent: DayEventId | null;
+  /** Poções mais procuradas hoje (a rua pede mais delas). */
+  trend?: string[];
+  /** Procura de amanhã, sorteada no fechamento e mostrada no relatório. */
+  nextTrend?: string[];
   /** Livro do caixa da última volta (null depois de lido). */
   away: AwayReport | null;
   visits: VisitsState;
@@ -479,7 +499,7 @@ export type GameEvent =
   | { type: 'BREW_STARTED'; recipeId: string; batches: number; by?: 'aprendiz'; slot?: 2 }
   | { type: 'BREW_DONE'; recipeId: string; qty: number; slot?: 2; quality?: 2 | 3 }
   | { type: 'CUSTOMER_ARRIVED'; customerId: string }
-  | { type: 'SALE'; customerId: string; recipeId: string; price: number; substitute: boolean; by?: 'golem'; quality?: 2 | 3 }
+  | { type: 'SALE'; customerId: string; recipeId: string; price: number; substitute: boolean; by?: 'golem'; quality?: 2 | 3; diagnosed?: boolean }
   | { type: 'RAVEN_DELIVERY'; items: { ingredientId: string; qty: number }[]; cost: number; fee: number }
   | { type: 'GOLEM_DISMISSED'; customerId: string }
   | { type: 'HELPER_TOGGLED'; upgradeId: string; on: boolean }
@@ -506,7 +526,7 @@ export type GameEvent =
   | { type: 'SEAL_BOUGHT'; cost: number }
   | { type: 'FESTIVAL_SPONSORED'; cost: number }
   | { type: 'GREENHOUSE_HARVEST'; items: { ingredientId: string; qty: number }[] }
-  | { type: 'REGULAR_HEART'; regularId: string; hearts: number; tip: number }
+  | { type: 'REGULAR_HEART'; regularId: string; hearts: number; tip: number; chapter?: number }
   | { type: 'REGULAR_GIFT'; regularId: string }
   | { type: 'ACHIEVEMENT'; id: string }
   | { type: 'CAT_PETTED'; lucky: boolean }
@@ -542,5 +562,6 @@ export type GameEvent =
   | { type: 'MYSTERY_ARRIVED'; customerId: string }
   | { type: 'MYSTERY_SOLVED'; recipeId: string; coins: number; crystals: number }
   | { type: 'MYSTERY_WRONG'; customerId: string }
+  | { type: 'SYMPTOM_WRONG'; customerId: string }
   | { type: 'PAGE_FOUND'; recipeId: string; ingredientId: string; source: string }
   | { type: 'ERROR'; message: string };

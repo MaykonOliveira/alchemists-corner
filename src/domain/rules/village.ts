@@ -22,8 +22,9 @@ export function villageBlocker(s: GameSave, id: string): string | null {
   if (stage >= 3) return 'Obra já inaugurada.';
   const cost = p.stages[stage];
   if (s.coins < cost) return `Faltam ${cost - s.coins} moedas.`;
-  if (stage === 2 && p.donation && potionStock(s, p.donation.recipeId) < p.donation.qty) {
-    return `A inauguração pede ${p.donation.qty}× ${RECIPES_BY_ID[p.donation.recipeId].name} (você tem ${potionStock(s, p.donation.recipeId)}).`;
+  const need = p.needs[stage];
+  if (potionStock(s, need.recipeId) < need.qty) {
+    return `A encomenda pede ${need.qty}× ${RECIPES_BY_ID[need.recipeId].name} (você tem ${potionStock(s, need.recipeId)}).`;
   }
   return null;
 }
@@ -35,7 +36,7 @@ export function buildVillage(d: Draft, id: string): boolean {
   const p = VILLAGE_BY_ID[id];
   const stage = villageStage(s, id);
   s.coins -= p.stages[stage];
-  if (stage === 2 && p.donation) takePotions(s, p.donation.recipeId, p.donation.qty);
+  takePotions(s, p.needs[stage].recipeId, p.needs[stage].qty);
   s.village = { ...s.village, [id]: stage + 1 };
   gainXp(d, 150 + 100 * stage);
   if (stage === 2) gainReputation(d, 10);

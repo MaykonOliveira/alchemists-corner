@@ -54,7 +54,7 @@ function Ceremony({ onClose }: { onClose: () => void }) {
           <>
             <p className="story-kicker">{save.shopName}</p>
             <h2 className="royal-headline"><Icon e="👑" /> {ROYAL_TITLE}</h2>
-            <p className="story-text">A loja ganhou uma coroa na fachada, a nobreza agora pede a Poção da Coroa e os talentos sem fim esperam seus Selos. A história continua: a loja é sua.</p>
+            <p className="story-text">A loja ganhou uma coroa na fachada, a nobreza agora pede a Poção da Coroa e os talentos sem fim esperam seus cristais. A história continua: a loja é sua.</p>
             <div className={`credits ${reduce ? 'still' : ''}`}>
               <div className="credits-roll">
                 {CREDITS.map(([role, who]) => <p key={role}><span>{role}</span><b>{who}</b></p>)}

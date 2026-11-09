@@ -55,7 +55,7 @@ export const TIPS: Tip[] = [
     text: 'A partir de agora cada estação traz um ingrediente raro e uma poção que só se vende nela. Veja na aba Rua.',
     when: (s) => s.level >= 5 },
   { id: 'bau', icon: '🎁', title: 'Baú da semana', panel: 'goals',
-    text: 'Você cumpriu metas suficientes. Abra o baú na aba Metas antes que a semana vire.',
+    text: 'Você cumpriu metas suficientes. Abra o baú no Diário da loja antes que a semana vire.',
     when: (s) => !!s.goals && !s.goals.chestClaimed && s.goals.weekDone >= 10 },
 ];
 

@@ -657,15 +657,18 @@ button, .stage-canvas { touch-action: manipulation; -webkit-tap-highlight-color:
 .qs-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .qs-main { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-lg); padding: 8px 12px; flex: 1 1 auto; justify-content: center; min-height: 42px; }
 .qs-price { display: inline-flex; align-items: center; gap: 3px; background: rgba(0, 0, 0, .22); border-radius: var(--r-sm); padding: 0 6px; }
-.qs-main.qs-sim { background: var(--ok); }
-.qs-main.qs-negocia { background: var(--copper); }
-.qs-main.qs-nao { background: var(--wood-soft); }
-.qs-verdict { font-size: var(--fs-sm); font-weight: 700; width: 100%; order: 3; }
+.qs-main { background: var(--ok); }
+.qs-verdict { font-size: var(--fs-sm); font-weight: 600; font-style: italic; color: var(--ink-soft); width: 100%; order: 3; }
+.qs-ask { display: inline-flex; gap: 4px; order: 2; }
+.qs-ask .btn { display: inline-flex; align-items: center; gap: 4px; min-height: 42px; padding: 2px 10px; background: var(--parchment-2); color: var(--ink); border: 2px solid var(--parchment-edge); box-shadow: none; font-size: var(--fs-md); }
+.qs-actions .qs-more { order: 2; }
+.qs-ask-tag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.qs-ask .qs-ask-low { border-color: var(--ok); }
+.qs-ask-low .qs-ask-tag { color: var(--ok); }
+.qs-ask .qs-ask-high { border-color: var(--copper); }
+.qs-ask-high .qs-ask-tag { color: #8a6210; }
 .quick-serve.qs-compact { display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
 .quick-serve.qs-compact .qs-none { flex: 1 1 160px; min-width: 0; font-size: var(--fs-sm); }
-.qs-v-sim { color: var(--ok); }
-.qs-v-negocia { color: #8a6210; }
-.qs-v-nao { color: var(--warn); }
 .qs-none { flex: 1; font-size: var(--fs-sm); color: var(--warn); font-weight: 600; }
 .qs-more { color: var(--ink); border-color: var(--parchment-edge); min-height: 42px; }
 
@@ -684,8 +687,11 @@ button, .stage-canvas { touch-action: manipulation; -webkit-tap-highlight-color:
   .hud-xp { display: none; }
 }
 
-/* Atendimento rápido: no palco (desktop e celular deitado) ou no topo do painel (celular em pé) */
-.quick-serve.qs-side { display: none; }
+/* Atendimento rápido: sempre no topo do painel (a cena fica livre). */
+.quick-serve.qs-side {
+  display: grid; position: sticky; top: -14px; left: auto; right: auto; bottom: auto; width: auto; z-index: 4;
+  margin: -4px -4px 12px; box-shadow: 0 0 0 2px var(--copper), 0 6px 14px rgba(0, 0, 0, .2);
+}
 @media (max-width: 860px) and (orientation: portrait) {
   .quick-serve.qs-stage { display: none; }
   .quick-serve.qs-side {
@@ -833,7 +839,7 @@ button, .stage-canvas { touch-action: manipulation; -webkit-tap-highlight-color:
 .qs-regular .heart-on { font-size: var(--fs-sm); }
 
 .regulars { display: grid; gap: 8px; }
-.regular { display: flex; gap: 10px; align-items: center; }
+.regular { display: flex; gap: 10px; align-items: flex-start; }
 .regular-face {
   width: 44px; height: 44px; flex: none; display: grid; place-items: center; font-size: var(--fs-xl);
   background: var(--parchment-2); border: 2px solid var(--parchment-edge); border-radius: 50%;
@@ -1247,7 +1253,7 @@ html, button, input { font-variant-ligatures: none; font-feature-settings: "liga
   border: 4px solid var(--wood); box-shadow: inset 0 0 0 2px var(--wood-soft); background: var(--bg);
 }
 .sf-window img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 70%; image-rendering: pixelated; display: block; filter: saturate(1.1) brightness(1.05); }
-.sf-window::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent calc(50% - 2px), var(--wood) calc(50% - 2px) calc(50% + 2px), transparent calc(50% + 2px)); }
+.sf-window::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(115deg, transparent 18%, rgba(255, 255, 255, .10) 18% 24%, transparent 24% 30%, rgba(255, 255, 255, .06) 30% 33%, transparent 33%); }
 .sf-glow { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 80%, rgba(255, 200, 110, .35), transparent 70%); animation: sf-flicker 3.2s ease-in-out infinite; }
 .sf-door { height: 100px; border-radius: var(--r-pill) var(--r-pill) 0 0; background: linear-gradient(var(--wood-hi), var(--wood)); border: 4px solid var(--wood-dark); border-bottom: 0; display: grid; place-items: start center; padding-top: 22px; }
 .sf-door-sign { font-family: var(--font-pixel); font-size: var(--fs-xs); background: #2e5a2a; color: var(--ok-bg); padding: 1px 4px; border-radius: var(--r-sm); }
@@ -1671,3 +1677,52 @@ html, button, input { font-variant-ligatures: none; font-feature-settings: "liga
 .side { box-shadow: none; }
 .side .btn-glow:not(.home-open) { animation: none; }
 .tag { border: none; }
+
+/* Procura do dia (auditoria P0.4) */
+.trend-tag { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: #fff; background: var(--copper); border-radius: var(--r-sm); padding: 1px 5px; white-space: nowrap; }
+
+/* Pedido por sintoma (auditoria P0.2) */
+.quick-serve.qs-symptom .qs-riddle { display: block; white-space: normal; overflow: visible; font-size: var(--fs-md); color: var(--ink) !important; background: var(--parchment-2); border-left: 3px solid var(--copper); }
+.qs-symptom-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.qs-link { background: none; border: 0; padding: 0; margin-right: 6px; color: var(--copper); font: inherit; font-style: normal; text-decoration: underline; cursor: pointer; }
+.card.card-hint { border-color: var(--copper); box-shadow: inset 4px 0 0 var(--copper); padding-left: 14px; }
+.qs-coach { margin: 0; font-size: var(--fs-sm); font-weight: 600; color: var(--ink); background: #fff4c8; border: 2px dashed var(--gold); border-radius: var(--r-md); padding: 6px 8px; }
+
+/* Clientes com rosto (auditoria P1.5) */
+.customer-face { flex: none; line-height: 0; background: var(--parchment-2); border: 2px solid var(--parchment-edge); border-radius: var(--r-md); padding: 1px; transition: border-color .2s; }
+.customer-face.face-neutro { border-color: var(--gold); }
+.customer-face.face-bravo { border-color: var(--warn); animation: face-shake .5s ease-in-out 2; }
+@keyframes face-shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-2px); } 75% { transform: translateX(2px); } }
+@media (prefers-reduced-motion: reduce) { .customer-face.face-bravo { animation: none; } }
+.qs-compact .customer-face { padding: 0; border-width: 1px; }
+
+/* Histórias dos fregueses (auditoria P1.6) */
+.regular-story { font-size: var(--fs-sm); margin-top: 4px; }
+.regular-story summary { cursor: pointer; color: var(--copper); font-weight: 600; }
+.regular-story ol { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; }
+
+/* =====================================================================
+   Auditoria P2.1: a interface na linguagem do mundo.
+   Cantos retos de pixel, bordas duras com "sombra" de 2px sem desfoque
+   (como os móveis da cena) e números grandes em Pixelify.
+   ===================================================================== */
+:root { --r-sm: 2px; --r-md: 3px; }
+.card, .quick-serve, .home-next, .goal, .chest, .track, .village-card, .talent, .regular, .order-card {
+  border-radius: 2px;
+  border: 2px solid var(--parchment-edge);
+  box-shadow: 0 2px 0 var(--parchment-edge);
+}
+.card + .card { margin-top: 2px; }
+.subtab { border-radius: 2px; border-width: 2px; box-shadow: 0 2px 0 var(--parchment-edge); }
+.subtab-on { box-shadow: 0 2px 0 var(--ink-0); }
+.btn { border-radius: 2px; box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.3), inset 0 2px 0 rgba(255, 255, 255, 0.12), 0 2px 0 var(--ink-0); }
+.btn:active:not(:disabled) { transform: translateY(2px); box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.3); }
+.side-head, .side > header { border-bottom: 3px solid var(--parchment-edge); }
+/* Painel lateral com moldura de madeira, como as bordas da cena. */
+@media (min-width: 1101px) {
+  .side { border-left: 4px solid var(--wood); box-shadow: inset 2px 0 0 var(--wood-hi), inset 4px 0 0 var(--ink-0); }
+}
+/* Números que importam em pixel: moedas, contadores e preços. */
+.goal-count, .goal-reward, .chest-top .row-title, .grimoire-kicker, .seal-badge, .crystal-n, .qs-price, .price, .stat-n { font-family: var(--font-pixel); }
+.goal-bar, .chest-bar, .meter, .track-bar { border-radius: 0; }
+.goal-bar > span, .meter > span, .track-bar > span { border-radius: 0; }

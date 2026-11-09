@@ -54,7 +54,7 @@ export function VillagePanel({ save }: { save: GameSave }) {
           const done = stage >= 3;
           const blocker = villageBlocker(save, p.id);
           const cost = done ? 0 : p.stages[stage];
-          const needsDonation = stage === 2 && p.donation;
+          const need = done ? null : p.needs[stage];
           return (
             <li key={p.id} className={`card village-card ${done ? 'card-owned' : ''} ${locked ? 'card-locked' : ''}`}>
               <div className="village-row">
@@ -74,7 +74,7 @@ export function VillagePanel({ save }: { save: GameSave }) {
                 <div className="card-foot">
                   <span className="small">
                     {STAGE_NAMES[stage]}: <Coins n={cost} />
-                    {needsDonation && <> + {p.donation!.qty}× {RECIPES_BY_ID[p.donation!.recipeId].shortName} <span className="muted">({potionStock(save, p.donation!.recipeId)})</span></>}
+                    {need && <> + {need.qty}× {RECIPES_BY_ID[need.recipeId].shortName} <span className="muted">({potionStock(save, need.recipeId)})</span></>}
                   </span>
                   {locked ? <span className="tag">nível {VILLAGE_LEVEL}</span> : (
                     <button className="btn btn-small btn-primary" disabled={!!blocker} title={blocker ?? undefined} onClick={() => dispatch({ type: 'BUILD_VILLAGE', projectId: p.id })}>

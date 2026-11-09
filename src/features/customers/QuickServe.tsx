@@ -1,16 +1,17 @@
+import { useState } from 'react';
 import { ARCHETYPES } from '../../domain/data/customers';
 import { regularOf, regularState } from '../../domain/rules/world';
 import { RECIPES_BY_ID } from '../../domain/data/recipes';
-import { bestOffer, priceVerdict, reservedForOrder, vipPrice } from '../../domain/rules/customers';
-import { getPrice, potionStock } from '../../domain/rules/economy';
+import { askOptions, bestOffer, LESSON_TIP, reservedForOrder, vipPrice } from '../../domain/rules/customers';
+import { potionStock } from '../../domain/rules/economy';
 import { useGameStore } from '../../store/gameStore';
 import { useStageCards } from '../tutorial/stage';
 import { CoinIcon } from '../../ui/icons';
 import { PotionIcon } from '../../ui/SpriteIcon';
 import { Meter } from '../../ui/widgets';
 import { Icon } from '../../ui/Icon';
-
-const VERDICT_LABEL = { sim: 'O preço agrada', negocia: 'Vai pedir desconto', nao: 'Vai achar caro' } as const;
+import { CustomerFace } from './CustomerFace';
+import { chapterFor } from '../../domain/data/stories';
 
 /** Atendimento rápido sobre a loja: o cliente selecionado e um botão para vender com um toque. */
 export function QuickServe({ placement }: { placement: 'stage' | 'side' }) {
@@ -20,6 +21,8 @@ export function QuickServe({ placement }: { placement: 'stage' | 'side' }) {
   const modal = useGameStore((s) => s.ui.modal);
   const dispatch = useGameStore((s) => s.dispatch);
   const { welcome } = useStageCards();
+  // Diagnóstico: a poção escolhida na prateleira vale só para este cliente e esta fala (errou, ele explica de novo).
+  const [guess, setGuess] = useState<{ key: string; recipeId: string } | null>(null);
 
   if (!save || save.phase !== 'expediente' || panel === 'counter' || modal || welcome) return null;
   const idx = save.customers.findIndex((c) => c.id === selectedId);
@@ -30,8 +33,26 @@ export function QuickServe({ placement }: { placement: 'stage' | 'side' }) {
   const hearts = reg ? regularState(save, reg.id).hearts : 0;
   const wanted = RECIPES_BY_ID[c.wantedRecipeId];
   const left = 1 - c.waitedMs / c.patienceMs;
-  const offerId = c.offer ? null : bestOffer(save, c);
-  const verdict = offerId ? priceVerdict(save, c, offerId) : null;
+  const guessKey = `${c.id}|${c.remark}`;
+  const picked = c.symptom && guess?.key === guessKey && potionStock(save, guess.recipeId) > 0 ? guess.recipeId : null;
+  const offerId = c.offer ? null : c.symptom ? picked : bestOffer(save, c);
+  const ask = offerId && !c.vip ? askOptions(save, offerId) : null;
+  // Tutorial das decisões (P1.4): a primeira vez de cada conceito ganha uma linha de orientação no próprio cartão.
+  const coachId = c.symptom ? LESSON_TIP.sintoma : c.lesson ? LESSON_TIP[c.lesson] : null;
+  const coachOn = !!coachId && !save.tipsSeen.includes(coachId);
+  const coachText = !coachOn ? null
+    : c.symptom ? (c.offer ? null : picked ? 'Boa escolha? Venda e veja: acerto em cheio rende gorjeta e "CERTO!".' : 'Primeiro diagnóstico: o cliente não diz o nome da poção. Leia o problema e toque na poção que resolve.')
+    : c.lesson === 'nobre' ? 'Nobre na loja: ela mal olha a etiqueta. Toque em ARRISCAR para pedir mais pela mesma poção.'
+    : c.offer ? `Pechincha: ele oferece ${c.offer.price}. Aceite para vender mais barato, ou recuse e ele vai embora.`
+    : 'Bolso curto: pela etiqueta ele vai pechinchar. Venda e veja o que ele propõe.';
+  const learned = () => coachOn && coachId && dispatch({ type: 'SEE_TIP', tipId: coachId });
+  const sell = (price?: number) => {
+    if (!offerId) return;
+    // Na pechincha a lição termina quando o jogador responde à contraproposta, não na primeira venda.
+    if (c.lesson !== 'pechincha') learned();
+    dispatch({ type: 'SERVE_CUSTOMER', customerId: c.id, recipeId: offerId, ...(price !== undefined ? { price } : {}) });
+  };
+  const coach = coachText ? <p className="qs-coach" role="status"><Icon e="🎓" /> {coachText}</p> : null;
   const next = save.customers.length > 1 ? save.customers[(idx + 1) % save.customers.length] : null;
   const reserved = !c.offer && !offerId && reservedForOrder(save, wanted.id) > 0 && potionStock(save, wanted.id) > 0;
 
@@ -62,13 +83,48 @@ export function QuickServe({ placement }: { placement: 'stage' | 'side' }) {
     );
   }
 
+  // Cliente que conta o sintoma: o jogador escolhe a poção na prateleira (o diagnóstico é o verbo).
+  if (c.symptom && !c.offer && !picked) {
+    const stock = save.potions.filter((p) => p.forSale && p.quantity > 0);
+    return (
+      <section className={`quick-serve qs-${placement} qs-symptom`} aria-label={`Atender ${a.label}`}>
+        <div className="qs-head">
+          <CustomerFace c={c} />
+          <div className="qs-who">
+            <span className="qs-name">
+              {reg ? <span className="qs-regular">{reg.name.split(',')[0]} <span className="heart-on">{'♥\uFE0E'.repeat(hearts) || '♡'}</span></span> : a.label}{' '}
+              <span className="muted">{c.chapter !== undefined && reg ? `· cap. ${c.chapter + 1}: ${chapterFor(reg.id, c.chapter)?.title}` : 'conta o problema'}</span>
+            </span>
+            <Meter ratio={left} tone={left > 0.5 ? 'ok' : left > 0.25 ? 'gold' : 'warn'} label="Paciência" />
+          </div>
+          {next && <button className="qs-icon" onClick={() => dispatch({ type: 'SELECT_CUSTOMER', id: next.id })} aria-label="Próximo cliente">{idx + 1}/{save.customers.length} ›</button>}
+          <button className="qs-icon" onClick={() => dispatch({ type: 'SELECT_CUSTOMER', id: null })} aria-label="Fechar atendimento">×</button>
+        </div>
+        <p className="qs-remark qs-riddle">“{c.remark}”</p>
+        {coach}
+        <div className="qs-guess" role="group" aria-label="Escolha a poção">
+          {stock.length === 0 ? <span className="qs-none">Nada nas prateleiras para oferecer.</span> : stock.slice(0, 8).map((p) => (
+            <button key={p.recipeId} className="qs-guess-btn" title={RECIPES_BY_ID[p.recipeId].name} onClick={() => setGuess({ key: guessKey, recipeId: p.recipeId })}>
+              <PotionIcon recipeId={p.recipeId} size={22} />
+              <span>{RECIPES_BY_ID[p.recipeId].shortName}</span>
+            </button>
+          ))}
+        </div>
+        <div className="qs-symptom-foot">
+          <span className="small muted">Acertar em cheio rende gorjeta. Errar gasta paciência.</span>
+          <button className="btn btn-small" onClick={() => dispatch({ type: 'DISMISS_CUSTOMER', customerId: c.id })}>Dispensar</button>
+        </div>
+      </section>
+    );
+  }
+
   // Sem nada para oferecer: uma linha só, para não ocupar a tela inteira enquanto o cliente espera.
   if (!c.offer && !offerId) {
     return (
       <section className={`quick-serve qs-${placement} qs-compact`} aria-label={`Atender ${a.label}`}>
         <PotionIcon recipeId={wanted.id} size={20} />
         <span className="qs-none">
-          <span className="qs-face" aria-label="Humor"><Icon e={left > 0.5 ? '🙂' : left > 0.25 ? '😐' : '😠'} /></span> {c.vip ? c.vip.name : reg ? reg.name.split(',')[0] : a.label} quer {wanted.shortName}
+          <CustomerFace c={c} size={32} /> {c.vip ? c.vip.name : reg ? reg.name.split(',')[0] : a.label} quer {wanted.shortName}
           <span className="muted small"> · {reserved ? 'as que você tem estão guardadas para o pedido' : 'acabou na prateleira'}</span>
         </span>
         {next && <button className="qs-icon" onClick={() => dispatch({ type: 'SELECT_CUSTOMER', id: next.id })} aria-label="Próximo cliente">{idx + 1}/{save.customers.length} ›</button>}
@@ -81,9 +137,9 @@ export function QuickServe({ placement }: { placement: 'stage' | 'side' }) {
   return (
     <section className={`quick-serve qs-${placement} ${c.vip ? 'qs-is-vip' : ''}`} aria-label={`Atender ${a.label}`}>
       <div className="qs-head">
-        <PotionIcon recipeId={wanted.id} size={24} />
+        <CustomerFace c={c} />
         <div className="qs-who">
-          <span className="qs-name"><span className="qs-face" aria-label="Humor"><Icon e={left > 0.5 ? '🙂' : left > 0.25 ? '😐' : '😠'} /></span> {c.vip ? <span className="qs-regular qs-vip"><Icon e="✨" /> {c.vip.name}</span> : reg ? <span className="qs-regular">{reg.name.split(',')[0]} <span className="heart-on">{'♥\uFE0E'.repeat(hearts) || '♡'}</span></span> : a.label} <span className="muted">quer</span> {wanted.shortName}</span>
+          <span className="qs-name">{c.symptom ? <>{a.label} <span className="muted">· você escolheu</span> {RECIPES_BY_ID[offerId ?? c.offer?.recipeId ?? c.wantedRecipeId].shortName}</> : <>{c.vip ? <span className="qs-regular qs-vip"><Icon e="✨" /> {c.vip.name}</span> : reg ? <span className="qs-regular">{reg.name.split(',')[0]} <span className="heart-on">{'♥\uFE0E'.repeat(hearts) || '♡'}</span></span> : a.label}{' '}<span className="muted">quer</span> <PotionIcon recipeId={wanted.id} size={16} /> {wanted.shortName}</>}</span>
           <Meter ratio={left} tone={left > 0.5 ? 'ok' : left > 0.25 ? 'gold' : 'warn'} label="Paciência" />
         </div>
         {next && (
@@ -95,27 +151,42 @@ export function QuickServe({ placement }: { placement: 'stage' | 'side' }) {
       </div>
 
       {c.remark && <p className="qs-remark">“{c.remark}”</p>}
+      {coach}
 
       <div className="qs-actions">
         {c.offer ? (
           <>
-            <button className="btn btn-primary qs-main" onClick={() => dispatch({ type: 'ACCEPT_OFFER', customerId: c.id })}>
+            <button className="btn btn-primary qs-main" onClick={() => { learned(); dispatch({ type: 'ACCEPT_OFFER', customerId: c.id }); }}>
               Aceitar <CoinIcon size={14} /> {c.offer.price}
             </button>
-            <button className="btn" onClick={() => dispatch({ type: 'DECLINE_OFFER', customerId: c.id })}>Recusar</button>
+            <button className="btn" onClick={() => { learned(); dispatch({ type: 'DECLINE_OFFER', customerId: c.id }); }}>Recusar</button>
           </>
         ) : offerId ? (
           <>
             <button
               data-tut="quick-sell"
-              className={`btn btn-primary qs-main qs-${verdict}`}
-              onClick={() => dispatch({ type: 'SERVE_CUSTOMER', customerId: c.id, recipeId: offerId })}
+              className="btn btn-primary qs-main"
+              onClick={() => sell()}
             >
               <PotionIcon recipeId={offerId} size={18} />
               <span>Vender {RECIPES_BY_ID[offerId].shortName}</span>
-              <span className="qs-price"><CoinIcon size={14} /> {c.vip ? vipPrice(c, offerId) : getPrice(save, offerId)}</span>
+              <span className="qs-price"><CoinIcon size={14} /> {c.vip ? vipPrice(c, offerId) : ask!.tag}</span>
             </button>
-            <span className={`qs-verdict qs-v-${verdict}`}>{offerId !== c.wantedRecipeId ? 'parecida · ' : ''}{c.vip ? `paga ${c.vip.pays}× o preço` : VERDICT_LABEL[verdict!]}</span>
+            {ask && (
+              <span className="qs-ask" role="group" aria-label="Pedir outro preço">
+                {ask.discount < ask.tag && (
+                  <button className="btn btn-small qs-ask-low" onClick={() => sell(ask.discount)} title="Um agrado no preço: +1 de reputação">
+                    <CoinIcon size={12} /> {ask.discount} <span className="qs-ask-tag">+rep</span>
+                  </button>
+                )}
+                {ask.high > ask.tag && (
+                  <button className="btn btn-small qs-ask-high" onClick={() => sell(ask.high)} title="Pedir mais: quem tem dinheiro paga, os outros pechincham ou vão embora">
+                    <CoinIcon size={12} /> {ask.high} <span className="qs-ask-tag">arriscar</span>
+                  </button>
+                )}
+              </span>
+            )}
+            <span className="qs-verdict">{c.symptom ? <button className="qs-link" onClick={() => setGuess(null)}>trocar a poção</button> : null}{!c.symptom && offerId !== c.wantedRecipeId ? 'parecida · ' : ''}{c.vip ? `paga ${c.vip.pays}× o preço` : a.payHint}</span>
           </>
         ) : (
           <>

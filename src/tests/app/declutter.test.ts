@@ -48,10 +48,12 @@ describe('navegação em dois níveis', () => {
     expect(tabsOf(NAV_GROUPS.find((g) => g.id === 'progresso')!).map((i) => i.panel)).toEqual(['goals', 'upgrades']);
   });
 
-  it('o Grimório mora em Melhorias e o Concurso em Metas', () => {
+  // Auditoria P1.1: o Concurso Real é o capítulo final da reconstrução da vila.
+  it('o Grimório mora em Melhorias e o Concurso na Vila', () => {
     expect(tabOf('grimoire')).toBe('upgrades');
-    expect(tabOf('royal')).toBe('goals');
-    expect(panelsInTab('goals')).toEqual(['goals', 'royal']);
+    expect(tabOf('royal')).toBe('village');
+    expect(panelsInTab('village')).toEqual(['village', 'royal']);
+    expect(panelsInTab('goals')).toEqual(['goals']);
     expect(tabOf('shelves')).toBe('shelves');
   });
 });

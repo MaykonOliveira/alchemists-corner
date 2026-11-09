@@ -23,7 +23,7 @@ export function stageCards(st: GameState): StageCards {
   const customer = customerCardVisible(st) && !welcome;
   // A dica é a última da fila: só no Início (sem painel aberto) e nunca com um capítulo do Concurso esperando.
   const royal = st.save?.royal;
-  const calm = st.ui.activePanel === null && !(royal && royal.seen < royal.chapter);
+  const calm = st.ui.activePanel === null && !st.ui.modal && st.save?.phase !== 'fechamento' && !(royal && royal.seen < royal.chapter);
   return { customer, tutorial, welcome, tip: !tutorial && !customer && !welcome && calm };
 }
 

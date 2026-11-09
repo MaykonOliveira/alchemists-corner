@@ -1,9 +1,11 @@
 import { ARCHETYPES, NOBLE_LEVEL } from '../data/customers';
 import { DAY_EVENTS } from '../data/orders';
+import { SYMPTOMS, symptomClarify } from '../data/symptoms';
+import { chapterFor } from '../data/stories';
 import { RECIPES_BY_ID } from '../data/recipes';
 import type { Customer, CustomerArchetype, GameSave } from '../models/types';
 import { fail, nextId, pick, weightedPick, type Draft } from './context';
-import { getPrice, has, potionStock, takePotions } from './economy';
+import { getPrice, has, potionStock, priceRange, takePotions } from './economy';
 import { masteryStars, STAR_BONUS, talentBonus } from './mastery';
 import { gainReputation, gainXp } from './progression';
 import { CLOSE_MIN } from './time';
@@ -32,6 +34,14 @@ export function nextSpawnDelay(s: GameSave, random: () => number) {
   return Math.round((16000 * event * sign) / fame * (0.7 + random() * 0.6));
 }
 
+/** A partir deste dia, a maioria dos clientes conta o problema em vez de dizer o nome da poção (auditoria P0.2). */
+export const SYMPTOM_DAY = 2;
+export const SYMPTOM_SHARE = 0.7;
+/** Acertar o diagnóstico rende uma gorjeta sobre o preço. */
+export const DIAGNOSIS_TIP = 0.2;
+/** Errar o diagnóstico gasta esta fração da paciência do cliente. */
+export const WRONG_GUESS_PATIENCE = 0.15;
+
 /** Nível em que o Cliente misterioso começa a aparecer (no máximo um por dia). */
 export const MYSTERY_LEVEL = 7;
 /** O Cliente misterioso paga este tanto do preço-base e deixa cristais. */
@@ -59,14 +69,28 @@ function maybeSpawnMystery(d: Draft): boolean {
   return true;
 }
 
+/**
+ * Tutorial das decisões (auditoria P1.4): um conceito por dia, sempre jogando.
+ * Dia 2 o primeiro cliente conta o sintoma; dia 3 entra uma nobre que paga mais; dia 4, alguém que pechincha.
+ */
+export const LESSON_TIP = { sintoma: 'coach:sintoma', nobre: 'coach:nobre', pechincha: 'coach:pechincha' } as const;
+function lessonToday(s: GameSave): 'sintoma' | 'nobre' | 'pechincha' | null {
+  if (s.customers.length || s.stats.served + s.stats.lost > 0) return null;
+  if (s.day === 2 && !s.tipsSeen.includes(LESSON_TIP.sintoma)) return 'sintoma';
+  if (s.day === 3 && !s.tipsSeen.includes(LESSON_TIP.nobre)) return 'nobre';
+  if (s.day === 4 && !s.tipsSeen.includes(LESSON_TIP.pechincha)) return 'pechincha';
+  return null;
+}
+
 export function spawnCustomer(d: Draft) {
   const { s, ctx } = d;
-  if (maybeSpawnMystery(d)) return;
+  const lesson = lessonToday(s);
+  if (!lesson && maybeSpawnMystery(d)) return;
   // De vez em quando quem entra é um freguês fiel, que já chega pedindo o de sempre.
   const regulars = s.day >= 2 ? availableRegulars(s) : [];
   // Quem mandou carta ontem entra primeiro, como prometeu.
   const promised = letterVisitor(s);
-  if (promised || (regulars.length && ctx.random() < REGULAR_CHANCE)) {
+  if (!lesson && (promised || (regulars.length && ctx.random() < REGULAR_CHANCE))) {
     const r = promised ? REGULARS_BY_ID[promised] : pick(regulars, ctx.random);
     if (promised && s.letter) s.letter = { ...s.letter, done: true };
     const info = ARCHETYPES[r.archetype];
@@ -81,6 +105,15 @@ export function spawnCustomer(d: Draft) {
       remark: promised ? 'Como prometi na carta! Hoje pago bem pelo de sempre.' : r.greeting,
       regularId: r.id,
     };
+    // História do freguês (auditoria P1.6): enquanto não é amigo, cada visita é um capítulo, contado por sintoma.
+    const st = s.regulars[r.id];
+    const ch = !promised ? chapterFor(r.id, st?.hearts ?? 0) : null;
+    if (ch && s.knownRecipes.includes(ch.wants)) {
+      regular.wantedRecipeId = ch.wants;
+      regular.remark = ch.opening;
+      regular.symptom = true;
+      regular.chapter = st?.hearts ?? 0;
+    }
     s.customers.push(regular);
     d.events.push({ type: 'CUSTOMER_ARRIVED', customerId: regular.id });
     return;
@@ -91,7 +124,7 @@ export function spawnCustomer(d: Draft) {
   // No baile da nobreza (Concurso Real) a rua se enche de nobres.
   if (royalChapter(s)?.goal.kind === 'nobres') weights.nobre += BALL_NOBLE_BOOST;
   if (s.level < NOBLE_LEVEL) weights.nobre = 0;
-  const archetype = weightedPick(weights, ctx.random);
+  const archetype = lesson === 'nobre' ? 'nobre' : lesson === 'pechincha' ? 'morador' : weightedPick(weights, ctx.random);
   const info = ARCHETYPES[archetype];
   // Ninguém pede o que só aparece muitos níveis depois.
   // Poções da estação só são pedidas na estação delas.
@@ -110,7 +143,9 @@ export function spawnCustomer(d: Draft) {
   else if (known.length && (s.day <= 2 || ctx.random() < 0.8)) {
     // A estação puxa a procura para a categoria dela.
     const inSeason = known.filter((id) => RECIPES_BY_ID[id].category === seasonCategory(s));
-    wanted = pick(inSeason.length && ctx.random() < 0.4 ? inSeason : known, ctx.random);
+    // A procura do dia (anunciada no fechamento de ontem) puxa metade dos pedidos.
+    const hot = known.filter((id) => s.trend?.includes(id));
+    wanted = pick(hot.length && ctx.random() < 0.5 ? hot : inSeason.length && ctx.random() < 0.4 ? inSeason : known, ctx.random);
   }
   else wanted = pick(wants.length ? wants : info.wants, ctx.random);
 
@@ -125,6 +160,22 @@ export function spawnCustomer(d: Draft) {
     offer: null,
     remark: RECIPES_BY_ID[wanted].request,
   };
+  if (lesson === 'nobre' || lesson === 'pechincha') {
+    customer.lesson = lesson;
+    // A lição precisa de uma poção que a loja tem: a nobre quer a mais cara da prateleira, o morador a mais barata.
+    const onShelf = s.potions.filter((p) => p.forSale && p.quantity > 0 && s.knownRecipes.includes(p.recipeId)).map((p) => p.recipeId)
+      .sort((a, b) => RECIPES_BY_ID[a].basePrice - RECIPES_BY_ID[b].basePrice);
+    const pool = onShelf.length ? onShelf : s.knownRecipes.filter((id) => !RECIPES_BY_ID[id].season);
+    if (pool.length) customer.wantedRecipeId = lesson === 'nobre' ? pool[pool.length - 1] : pool[0];
+    // A pechincha: um morador de bolso curto, que não alcança a etiqueta.
+    if (lesson === 'pechincha') customer.budgetFactor = 0.85;
+    customer.remark = lesson === 'nobre' ? 'Ouvi falar desta loja na corte. Quero o melhor que você tiver.' : 'Preciso de uma, mas o dinheiro está curto este mês…';
+  }
+  // Quem conta o sintoma não diz o nome da poção: o diagnóstico fica com o jogador.
+  else if (s.day >= SYMPTOM_DAY && !firstEver && SYMPTOMS[wanted] && (lesson === 'sintoma' || ctx.random() < SYMPTOM_SHARE)) {
+    customer.symptom = true;
+    customer.remark = pick(SYMPTOMS[wanted], ctx.random);
+  }
   s.customers.push(customer);
   d.events.push({ type: 'CUSTOMER_ARRIVED', customerId: customer.id });
 }
@@ -178,7 +229,7 @@ export function reservedForOrder(save: GameSave, recipeId: string): number {
 export function bestOffer(save: GameSave, c: Customer): string | null {
   // Poções guardadas para o pedido especial não saem no atendimento rápido.
   // A charada é para o jogador resolver: o atendimento rápido não entrega a resposta.
-  if (c.mystery) return null;
+  if (c.mystery || c.symptom) return null;
   const forSale = save.potions.filter((p) => p.forSale && p.quantity - reservedForOrder(save, p.recipeId) > 0).map((p) => p.recipeId);
   if (forSale.includes(c.wantedRecipeId)) return c.wantedRecipeId;
   if (c.vip) return forSale.filter((id) => suits(c, id)).sort((a, b) => RECIPES_BY_ID[b].basePrice - RECIPES_BY_ID[a].basePrice)[0] ?? null;
@@ -199,9 +250,15 @@ function removeCustomer(d: Draft, c: Customer, reason: 'paciencia' | 'preco' | '
   }
 }
 
-function completeSale(d: Draft, c: Customer, recipeId: string, price: number) {
+/** Fração da paciência até a qual o atendimento conta como rápido (reputação a mais). */
+export const FAST_SERVICE = 0.4;
+
+function completeSale(d: Draft, c: Customer, recipeId: string, price: number, discount = false) {
   const s = d.s;
   const r = RECIPES_BY_ID[recipeId];
+  // Diagnóstico certeiro: o cliente agradece com uma gorjeta.
+  const diagnosed = !!c.symptom && recipeId === c.wantedRecipeId;
+  if (diagnosed) price += Math.max(1, Math.round(price * DIAGNOSIS_TIP));
   // Poções Finas e Primorosas saem primeiro e valem mais (toque de mestre).
   const quality = takeBestQuality(s, recipeId);
   price = Math.round(price * (1 + QUALITY_BONUS[quality]));
@@ -210,11 +267,13 @@ function completeSale(d: Draft, c: Customer, recipeId: string, price: number) {
   s.stats.revenue += price;
   s.stats.salesByRecipe[recipeId] = (s.stats.salesByRecipe[recipeId] ?? 0) + 1;
   s.stats.served += 1;
-  const fair = price <= r.basePrice ? 1 : 0;
+  // Reputação vem de atender bem (a poção certa, sem demora, um agrado no preço), e não de cobrar pouco.
+  const exact = recipeId === c.wantedRecipeId ? 1 : 0;
+  const fast = c.waitedMs <= c.patienceMs * FAST_SERVICE ? 1 : 0;
   const cozy = (has(s, 'iluminacao-aconchegante') ? 1 : 0) + (has(s, 'vitral-arcano') && c.archetype === 'nobre' ? 1 : 0);
-  gainReputation(d, fair + cozy);
+  gainReputation(d, exact + fast + (discount ? 1 : 0) + (diagnosed ? 1 : 0) + cozy);
   s.lifetime = { sold: s.lifetime.sold + 1, earned: s.lifetime.earned + price };
-  d.events.push({ type: 'SALE', customerId: c.id, recipeId, price, substitute: recipeId !== c.wantedRecipeId, ...(quality > 1 ? { quality: quality as 2 | 3 } : {}) });
+  d.events.push({ type: 'SALE', customerId: c.id, recipeId, price, substitute: recipeId !== c.wantedRecipeId, ...(quality > 1 ? { quality: quality as 2 | 3 } : {}), ...(diagnosed ? { diagnosed } : {}) });
   noteSale(d, price);
   royalOnSale(d, c, recipeId);
   const tip = befriend(d, c, recipeId, price);
@@ -223,7 +282,14 @@ function completeSale(d: Draft, c: Customer, recipeId: string, price: number) {
   gainXp(d, 6 + Math.round(r.basePrice / 5) + masteryStars(s, recipeId));
 }
 
-export function serveCustomer(d: Draft, customerId: string, recipeId: string): boolean {
+/** Preços que o jogador pode pedir no balcão, a partir da etiqueta: com desconto, a etiqueta e um pedido mais alto. */
+export function askOptions(s: GameSave, recipeId: string) {
+  const { min, max } = priceRange(s, recipeId);
+  const tag = getPrice(s, recipeId);
+  return { discount: Math.max(min, Math.round(tag * 0.9)), tag, high: Math.min(max, Math.max(tag + 1, Math.round(tag * 1.15))) };
+}
+
+export function serveCustomer(d: Draft, customerId: string, recipeId: string, opts: { basePrice?: boolean; price?: number } = {}): boolean {
   const s = d.s;
   const c = s.customers.find((x) => x.id === customerId);
   if (!c) return fail(d, 'Esse cliente já foi embora.');
@@ -243,6 +309,13 @@ export function serveCustomer(d: Draft, customerId: string, recipeId: string): b
     d.events.push({ type: 'MYSTERY_SOLVED', recipeId, coins: price, crystals: MYSTERY_CRYSTALS });
     return true;
   }
+  if (c.symptom && !suits(c, recipeId)) {
+    // Diagnóstico errado: o cliente explica melhor, mas perde um pouco da paciência.
+    c.remark = symptomClarify(RECIPES_BY_ID[c.wantedRecipeId].need);
+    c.waitedMs += c.patienceMs * WRONG_GUESS_PATIENCE;
+    d.events.push({ type: 'SYMPTOM_WRONG', customerId });
+    return true;
+  }
   if (!suits(c, recipeId)) {
     c.remark = 'Hmm… não é bem disso que eu preciso.';
     d.events.push({ type: 'CUSTOMER_REFUSED', customerId, reason: 'produto' });
@@ -254,16 +327,39 @@ export function serveCustomer(d: Draft, customerId: string, recipeId: string): b
     onVipServed(d, c, price);
     return true;
   }
-  const price = getPrice(s, recipeId);
+  // O golem não negocia: cobra o preço-base, que é sempre aceito por quem pediu a poção pelo nome.
+  const tag = getPrice(s, recipeId);
+  let price = opts.basePrice ? RECIPES_BY_ID[recipeId].basePrice : tag;
+  // Pedido feito na hora, no balcão: só vale dentro da faixa da receita.
+  if (opts.price !== undefined) {
+    const { min, max: top } = priceRange(s, recipeId);
+    price = Math.round(Math.min(top, Math.max(min, opts.price)));
+  }
   const max = maxPriceFor(s, c, recipeId);
-  if (price <= max) {
-    completeSale(d, c, recipeId, price);
-  } else if (price <= max * NEGOTIATION_MARGIN) {
+  // Freguês fiel não paga acima da etiqueta, mesmo podendo: contrapropõe o preço de sempre e fica chateado.
+  if (c.regularId && price > tag && !opts.basePrice) {
+    c.offer = { recipeId, price: tag };
+    gainReputation(d, -1);
+    c.remark = `Logo comigo? Pago o de sempre: ${tag} moedas.`;
+    d.events.push({ type: 'COUNTER_OFFER', customerId, price: tag });
+    return true;
+  }
+  // Pedir acima da etiqueta ofende quem não pode pagar, e o morador nunca paga acima dela (é o que a dica do balcão diz):
+  // o morador vai embora, os outros pechincham bravos.
+  const salty = c.archetype === 'morador' && price > tag && !opts.basePrice;
+  const greedy = price > tag && (price > max || salty);
+  const margin = greedy && c.archetype === 'morador' ? 0 : NEGOTIATION_MARGIN;
+  if ((price <= max && !salty) || opts.basePrice) {
+    completeSale(d, c, recipeId, price, price < tag);
+  } else if (price <= max * margin) {
     c.offer = { recipeId, price: max };
-    c.remark = `Está um pouco caro… Faz por ${max} moedas?`;
+    if (greedy) gainReputation(d, -1);
+    c.remark = greedy ? `Acima da etiqueta?! Pago ${max}, e olhe lá.` : `Está um pouco caro… Faz por ${max} moedas?`;
     d.events.push({ type: 'COUNTER_OFFER', customerId, price: max });
   } else {
-    c.remark = 'Caro demais para mim. Fica para outro dia.';
+    c.remark = greedy ? 'Acima da etiqueta? Isso é abuso. Passar bem.' : 'Caro demais para mim. Fica para outro dia.';
+    // Quem sai ofendido conta para a vizinhança.
+    if (greedy) gainReputation(d, -2);
     d.events.push({ type: 'CUSTOMER_REFUSED', customerId, reason: 'preco' });
     removeCustomer(d, c, 'preco');
   }

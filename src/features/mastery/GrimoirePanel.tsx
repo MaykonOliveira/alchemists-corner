@@ -1,11 +1,11 @@
 import { RECIPES, RECIPES_BY_ID } from '../../domain/data/recipes';
-import { ENDLESS_TALENT_LEVEL, TALENTS, talentCost } from '../../domain/data/talents';
+import { ENDLESS_TALENT_LEVEL, TALENTS } from '../../domain/data/talents';
 import type { GameSave } from '../../domain/models/types';
 import {
-  MASTERY_STEPS, MAX_STARS, masteredRecipes, masteryCount, masteryProgress, masteryStars, talentRank,
+  MASTERY_STEPS, MAX_STARS, masteredRecipes, masteryCount, masteryProgress, masteryStars, talentCrystals, talentRank,
 } from '../../domain/rules/mastery';
 import {
-  levelProgress, MASTER_STEP_XP, masterRank, MAX_LEVEL, SEAL_LEVEL, sealPrice, sealsAvailable, sealsEarned,
+  grimoireAwake, levelProgress, MASTER_STEP_XP, masterRank, MAX_LEVEL, SEAL_CRYSTALS, SEAL_LEVEL, sealPrice,
 } from '../../domain/rules/progression';
 import { DAY_EVENTS } from '../../domain/data/orders';
 import { festivalPrice } from '../../domain/rules/day';
@@ -16,10 +16,11 @@ import { Stars } from '../../ui/Stars';
 import { Meter } from '../../ui/widgets';
 import { Icon } from '../../ui/Icon';
 
-function SealBadge({ n }: { n: number }) {
+/** Uma moeda de prestígio só (auditoria P1.1): o Grimório mostra os mesmos cristais do topo da tela. */
+function CrystalBadge({ n }: { n: number }) {
   return (
-    <span className="seal-badge" aria-label={`${n} Selos de Mestre`}>
-      <span className="seal-icon" aria-hidden>✦</span>
+    <span className="seal-badge" aria-label={`${n} Cristais de luar`}>
+      <Icon e="🌙" />
       {n}
     </span>
   );
@@ -27,9 +28,9 @@ function SealBadge({ n }: { n: number }) {
 
 export function GrimoirePanel({ save }: { save: GameSave }) {
   const dispatch = useGameStore((s) => s.dispatch);
-  const free = sealsAvailable(save);
+  const free = save.crystals;
   const rank = masterRank(save.xp);
-  const awake = save.level >= SEAL_LEVEL || sealsEarned(save) > 0;
+  const awake = grimoireAwake(save);
   const fromLevels = Math.max(0, save.level - SEAL_LEVEL + 1);
   const mastered = masteredRecipes(save);
 
@@ -38,10 +39,12 @@ export function GrimoirePanel({ save }: { save: GameSave }) {
       <div className={`grimoire-hero ${awake ? 'awake' : ''}`}>
         <div>
           <p className="grimoire-kicker">{save.level >= MAX_LEVEL ? `Mestre alquimista · grau ${rank}` : `Nível ${save.level} de ${MAX_LEVEL}`}</p>
-          {!awake && <p className="card-text small">O Grimório desperta no nível {SEAL_LEVEL}. Enquanto isso, domine receitas: cada uma com {MAX_STARS} estrelas já rende 1 Selo.</p>}
+          {!awake && <p className="card-text small">O Grimório desperta no nível {SEAL_LEVEL}, ou antes, quando você dominar uma receita ({MAX_STARS} estrelas).</p>}
+          <p className="card-text small">Talentos custam Cristais de luar, os mesmos da decoração: deixar a loja mais forte ou mais bonita é escolha sua.</p>
         </div>
-        <SealBadge n={free} />
+        <CrystalBadge n={free} />
       </div>
+      <p className="muted small">Cada uma destas conquistas rende {SEAL_CRYSTALS} cristais:</p>
       <ul className="seal-sources small">
         <li>Níveis {SEAL_LEVEL}+: <strong>{fromLevels}</strong></li>
         <li>Graus de Mestre: <strong>{rank}</strong></li>
@@ -60,7 +63,7 @@ export function GrimoirePanel({ save }: { save: GameSave }) {
         {TALENTS.filter((t) => !t.endless).map((t) => {
           const r = talentRank(save, t.id);
           const maxed = r >= t.max;
-          const cost = talentCost(r);
+          const cost = talentCrystals(r);
           return (
             <li key={t.id} className={`card talent ${maxed ? 'card-owned' : ''}`}>
               <div className="card-head">
@@ -72,11 +75,11 @@ export function GrimoirePanel({ save }: { save: GameSave }) {
               </div>
               <p className="card-text small">{t.perRank} <span className="muted">(por grau)</span></p>
               <div className="card-foot">
-                <span className="muted small">{maxed ? 'Grau máximo' : `Próximo grau: ${cost} selo${cost > 1 ? 's' : ''}`}</span>
+                <span className="muted small">{maxed ? 'Grau máximo' : `Próximo grau: ${cost} cristais`}</span>
                 {maxed ? (
                   <span className="tag tag-ok">completo ✓</span>
                 ) : (
-                  <button className="btn btn-small btn-primary" disabled={free < cost} onClick={() => dispatch({ type: 'LEARN_TALENT', talentId: t.id })}>
+                  <button className="btn btn-small btn-primary" disabled={!awake || free < cost} onClick={() => dispatch({ type: 'LEARN_TALENT', talentId: t.id })}>
                     {free >= cost ? 'Aprender' : `Faltam ${cost - free}`}
                   </button>
                 )}
@@ -87,11 +90,11 @@ export function GrimoirePanel({ save }: { save: GameSave }) {
       </ul>
 
       <h3 className="mini-title">Talentos sem fim</h3>
-      <More label="Como funcionam"><p className="card-text small">Sem grau máximo: cada grau custa um Selo a mais que o anterior. {save.level < ENDLESS_TALENT_LEVEL ? `Abrem no nível ${ENDLESS_TALENT_LEVEL}.` : 'Seus Selos nunca ficam parados.'}</p></More>
+      <More label="Como funcionam"><p className="card-text small">Sem grau máximo: cada grau custa 10 cristais a mais que o anterior. {save.level < ENDLESS_TALENT_LEVEL ? `Abrem no nível ${ENDLESS_TALENT_LEVEL}.` : 'Seus cristais nunca ficam parados.'}</p></More>
       <ul className="list">
         {TALENTS.filter((t) => t.endless).map((t) => {
           const r = talentRank(save, t.id);
-          const cost = talentCost(r);
+          const cost = talentCrystals(r);
           const locked = save.level < ENDLESS_TALENT_LEVEL;
           return (
             <li key={t.id} className={`card talent talent-endless ${locked ? 'card-locked' : ''}`}>
@@ -102,9 +105,9 @@ export function GrimoirePanel({ save }: { save: GameSave }) {
               </div>
               <p className="card-text small">{t.perRank} <span className="muted">(por grau; agora {Math.round(r * t.value * 100)}%)</span></p>
               <div className="card-foot">
-                <span className="muted small">Próximo grau: {cost} selo{cost > 1 ? 's' : ''}</span>
+                <span className="muted small">Próximo grau: {cost} cristais</span>
                 {locked ? <span className="tag">nível {ENDLESS_TALENT_LEVEL}</span> : (
-                  <button className="btn btn-small btn-primary" disabled={free < cost} onClick={() => dispatch({ type: 'LEARN_TALENT', talentId: t.id })}>
+                  <button className="btn btn-small btn-primary" disabled={!awake || free < cost} onClick={() => dispatch({ type: 'LEARN_TALENT', talentId: t.id })}>
                     {free >= cost ? 'Aprender' : `Faltam ${cost - free}`}
                   </button>
                 )}
@@ -118,7 +121,7 @@ export function GrimoirePanel({ save }: { save: GameSave }) {
       <ul className="list">
         <li className={`card ${save.level < SEAL_LEVEL ? 'card-locked' : ''}`}>
           <div className="card-head"><span className="talent-icon" aria-hidden><Icon e="🏛️" /></span><span className="row-title">Doação à Guilda dos Alquimistas</span></div>
-          <p className="card-text small">A Guilda retribui cada doação com 1 Selo de Mestre. O valor sobe a cada doação.</p>
+          <p className="card-text small">A Guilda retribui cada doação com {SEAL_CRYSTALS} Cristais de luar. O valor sobe a cada doação.</p>
           <div className="card-foot">
             <Coins n={sealPrice(save)} />
             {save.level < SEAL_LEVEL ? <span className="tag">nível {SEAL_LEVEL}</span> : (

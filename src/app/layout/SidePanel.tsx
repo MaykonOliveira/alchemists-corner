@@ -73,7 +73,7 @@ export function SidePanel() {
       <div className="side-head">
         <h2 className="side-title">
           {group && <span className="side-area"><Icon e={group.icon} /> {group.label}</span>}
-          {shown.length > 1 ? shown.map((p) => panelTitle(p).split(' ')[0]).join(' e ') : panelTitle(panel)}
+          {shown.length > 1 ? (shown.includes('royal') ? 'Vila e Concurso Real' : shown.map((p) => panelTitle(p).split(' ')[0]).join(' e ')) : panelTitle(panel)}
         </h2>
         <button className="icon-btn" onClick={() => dispatch({ type: 'CLOSE_PANEL' })} aria-label="Voltar ao início" title="Voltar ao início (Esc)">×</button>
       </div>

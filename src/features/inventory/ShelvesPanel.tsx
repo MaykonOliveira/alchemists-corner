@@ -1,6 +1,6 @@
 import { RECIPES_BY_ID } from '../../domain/data/recipes';
 import type { GameSave } from '../../domain/models/types';
-import { countPotions, getPrice, potionCapacity, potionStock, priceRange, recipeCost } from '../../domain/rules/economy';
+import { countPotions, getPrice, potionCapacity, potionStock, priceRange, recipeCost, shelfPerRecipe } from '../../domain/rules/economy';
 import { potionsPerBatch } from '../../domain/rules/alchemy';
 import { masteryStars } from '../../domain/rules/mastery';
 import { Stars } from '../../ui/Stars';
@@ -24,7 +24,7 @@ export function ShelvesPanel({ save }: { save: GameSave }) {
   return (
     <>
       <div className="capacity">
-        <span>Prateleiras: {total}/{cap} poções</span>
+        <span>Prateleiras: {total}/{cap} poções · até {shelfPerRecipe(save)} de cada</span>
         <Meter ratio={total / cap} tone={total / cap > 0.85 ? 'warn' : 'ok'} label="Ocupação das prateleiras" />
       </div>
       <More label="Como o preço funciona"><p className="card-text small">Mais caro rende mais, mas clientes com pouco dinheiro recusam.</p></More>
@@ -40,6 +40,7 @@ export function ShelvesPanel({ save }: { save: GameSave }) {
             <li key={id} className={`card ${stock === 0 ? 'card-empty' : ''}`}>
               <div className="card-head">
                 <PotionName id={id} size={18} />
+                {save.trend?.includes(id) && <span className="trend-tag" title="Procurada hoje">em alta</span>}
                 <Stars n={masteryStars(save, id)} />
                 <span className={`qty ${stock === 0 ? 'qty-low' : ''}`}>{stock}</span>
               </div>

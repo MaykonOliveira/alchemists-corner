@@ -2,6 +2,7 @@ import { RECIPES } from '../data/recipes';
 import type { GameSave } from '../models/types';
 import { fail, type Draft } from './context';
 import { learnTalent, masteredRecipes, sealsSpent, talentBonus } from './mastery';
+import { grantCrystals } from './entitlements';
 import { LEVEL_GIFTS } from '../data/retention';
 import { addIngredients } from './street';
 import { restockUnlocked } from './economy';
@@ -64,9 +65,32 @@ export function buySeal(d: Draft): boolean {
   return true;
 }
 
-export const sealsAvailable = (s: GameSave) => Math.max(0, sealsEarned(s) - sealsSpent(s));
+/**
+ * Uma moeda de prestígio só (auditoria P1.1): os Selos de Mestre viraram Cristais de luar.
+ * As fontes de Selo continuam as mesmas (níveis 11+, graus de Mestre, receitas dominadas, contratos,
+ * doações), mas cada Selo ganho entra no bolso como SEAL_CRYSTALS cristais. Talentos e decoração
+ * disputam o mesmo cristal: é uma escolha entre deixar a loja mais forte ou mais bonita.
+ */
+export const SEAL_CRYSTALS = 10;
 
-export const learnTalentCmd = (d: Draft, talentId: string) => learnTalent(d, talentId, sealsAvailable(d.s));
+/** Selos que ainda não foram trocados por cristais (o que sobrou de saves antigos, antes da troca). */
+export const sealsUnspentLegacy = (s: GameSave) => Math.max(0, sealsEarned(s) - sealsSpent(s));
+
+/** Paga em cristais os Selos ganhos desde a última vez. Roda depois de cada comando. */
+export function paySeals(d: Draft) {
+  const due = sealsEarned(d.s) - (d.s.sealsPaid ?? 0);
+  if (due <= 0) return;
+  d.s.sealsPaid = (d.s.sealsPaid ?? 0) + due;
+  grantCrystals(d, due * SEAL_CRYSTALS, 'selo');
+}
+
+/** O Grimório desperta no nível 11 ou com a primeira receita dominada, como antes da troca. */
+export const grimoireAwake = (s: GameSave) => s.level >= SEAL_LEVEL || sealsEarned(s) > 0;
+
+export function learnTalentCmd(d: Draft, talentId: string): boolean {
+  if (!grimoireAwake(d.s)) return fail(d, `O Grimório desperta no nível ${SEAL_LEVEL}.`);
+  return learnTalent(d, talentId);
+}
 
 /** Libera as receitas do nível (usado ao subir de nível e ao migrar saves antigos). */
 export function unlockRecipesUpTo(s: GameSave, level: number): string[] {
@@ -74,6 +98,17 @@ export function unlockRecipesUpTo(s: GameSave, level: number): string[] {
   s.knownRecipes.push(...recipes);
   for (const id of recipes) if (s.prices[id] === undefined) s.prices[id] = RECIPES.find((r) => r.id === id)!.basePrice;
   return recipes;
+}
+
+/**
+ * O nível não ensina mais a receita pronta (auditoria P1.2): ele libera os ingredientes e deixa uma pista.
+ * A receita entra no livro quando o jogador acerta a mistura na bancada.
+ */
+export function hintRecipesUpTo(s: GameSave, level: number): string[] {
+  const hints = s.recipeHints ?? [];
+  const fresh = RECIPES.filter((r) => r.unlockLevel <= level && !r.secret && !r.legend && !s.knownRecipes.includes(r.id) && !hints.includes(r.id)).map((r) => r.id);
+  s.recipeHints = [...hints, ...fresh];
+  return fresh;
 }
 
 /** Concede experiência e aplica subidas de nível (com receitas liberadas) e graus de Mestre. */
@@ -84,7 +119,7 @@ export function gainXp(d: Draft, amount: number) {
   const newLevel = levelFromXp(s.xp);
   while (s.level < newLevel) {
     s.level += 1;
-    const recipes = unlockRecipesUpTo(s, s.level);
+    const recipes = hintRecipesUpTo(s, s.level);
     restockUnlocked(s, s.level);
     const gift = LEVEL_GIFTS[s.level];
     if (gift) {
@@ -98,8 +133,18 @@ export function gainXp(d: Draft, amount: number) {
   if (rank > rankBefore) d.events.push({ type: 'MASTER_RANK', rank });
 }
 
+export const MAX_REPUTATION = 999;
+/** No teto, cada tanto de reputação a mais vira 1 Cristal de luar (auditoria P2.2: o topo tem uso). */
+export const FAME_PER_CRYSTAL = 25;
+
 export function gainReputation(d: Draft, amount: number) {
-  d.s.reputation = Math.max(0, Math.min(999, d.s.reputation + amount));
+  const raw = d.s.reputation + amount;
+  d.s.reputation = Math.max(0, Math.min(MAX_REPUTATION, raw));
+  if (raw <= MAX_REPUTATION) return;
+  const pool = (d.s.fameOverflow ?? 0) + (raw - MAX_REPUTATION);
+  const n = Math.floor(pool / FAME_PER_CRYSTAL);
+  d.s.fameOverflow = pool - n * FAME_PER_CRYSTAL;
+  if (n > 0) grantCrystals(d, n, 'fama');
 }
 
 /** Nome do título da loja de acordo com a reputação. */

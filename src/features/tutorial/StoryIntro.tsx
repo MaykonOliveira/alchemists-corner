@@ -42,7 +42,7 @@ function NameShop({ onDone }: { onDone: () => void }) {
         </div>
         <div className="story-foot">
           <span className="muted small">Dá para mudar depois nas Configurações.</span>
-          <button type="submit" className="btn btn-primary btn-glow">Abrir a loja</button>
+          <button type="submit" className="btn btn-primary btn-glow">Pronto, é minha!</button>
         </div>
       </form>
     </div>
@@ -59,10 +59,13 @@ const FRAMES = [
 export function StoryIntro() {
   const show = useGameStore((s) => !!s.save && !s.save.storySeen);
   const dispatch = useGameStore((s) => s.dispatch);
-  const [i, setI] = useState(0);
+  // Quem já passou pelos quadros e saiu na tela do nome volta direto para ela.
+  const framesSeen = useGameStore((s) => !!s.save?.tipsSeen.includes('story:frames'));
+  const [i, setI] = useState(framesSeen ? FRAMES.length : 0);
   if (!show) return null;
+  const toName = () => { dispatch({ type: 'SEE_TIP', tipId: 'story:frames' }); setI(FRAMES.length); };
   const done = () => { funnel.mark('story_done'); dispatch({ type: 'SEE_STORY' }); };
-  if (i >= FRAMES.length) {
+  if (i >= FRAMES.length || framesSeen) {
     return (
       <div className="story" role="dialog" aria-modal="true" aria-label="Nome da loja">
         <NameShop onDone={done} />
@@ -84,8 +87,8 @@ export function StoryIntro() {
           <span className="story-dots" aria-label={`Quadro ${i + 1} de ${FRAMES.length}`}>
             {FRAMES.map((_, n) => <span key={n} className={n === i ? 'on' : ''} />)}
           </span>
-          <button className="link-btn" onClick={() => setI(FRAMES.length)}>Pular</button>
-          <button className="btn btn-primary btn-glow" autoFocus onClick={() => setI(i + 1)}>
+          <button className="link-btn" onClick={toName}>Pular</button>
+          <button className="btn btn-primary btn-glow" autoFocus onClick={() => (last ? toName() : setI(i + 1))}>
             {last ? 'Dar nome à loja' : 'Continuar'}
           </button>
         </div>

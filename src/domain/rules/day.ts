@@ -4,6 +4,7 @@ import { fail, pick, type Draft } from './context';
 import { advanceCustomers, sendAllCustomersHome } from './customers';
 import { harvestGreenhouse, helperWages, maintenanceCost, supplierStock } from './economy';
 import { DAY_EVENTS } from '../data/orders';
+import { RECIPES_BY_ID } from '../data/recipes';
 import { advanceHelpers, emptyHelperWork } from './helpers';
 import { updateContracts } from './contracts';
 import { seasonOf } from './world';
@@ -34,6 +35,9 @@ export function openShop(d: Draft): boolean {
   return true;
 }
 
+/** Clientes atendidos no dia 1 para a estreia garantir o nível 2. */
+export const DEBUT_LEVEL_SERVED = 3;
+
 export function closeDay(d: Draft): boolean {
   const s = d.s;
   if (s.phase !== 'expediente') return false;
@@ -43,8 +47,9 @@ export function closeDay(d: Draft): boolean {
   if (ch > 0) gainReputation(d, ch);
   const maintenance = Math.min(s.coins, maintenanceCost(s));
   s.coins -= maintenance;
-  // Estreia generosa: o primeiro fechamento sempre leva a loja ao nível 2 (depois da manutenção do dia).
-  if (s.day === 1 && s.level < 2) gainXp(d, xpForLevel(2) - s.xp);
+  // Estreia generosa: quem atendeu ao menos alguns clientes no dia 1 fecha no nível 2.
+  // Um dia parado não é premiado: o nível vem pelo caminho normal.
+  if (s.day === 1 && s.level < 2 && s.stats.served >= DEBUT_LEVEL_SERVED) gainXp(d, xpForLevel(2) - s.xp);
   const st = s.stats;
   const report: DayReport = {
     day: s.day,
@@ -62,6 +67,7 @@ export function closeDay(d: Draft): boolean {
     wages: Math.min(maintenance, helperWages(s)),
     helperWork: { ...st.helperWork },
     lostByRecipe: { ...(st.lostByRecipe ?? {}) },
+    level: st.levelStart,
   };
   const records = noteDay(d, report);
   if (records.length) report.records = records;
@@ -71,6 +77,7 @@ export function closeDay(d: Draft): boolean {
   finishChallenge(d);
   writeLetter(d, st.regularsSeen ?? []);
   s.nextEvent = rollNextEvent(d);
+  s.nextTrend = rollTrend(d);
   d.events.push({ type: 'DAY_CLOSED', report });
   return true;
 }
@@ -92,6 +99,8 @@ export function startNextDay(d: Draft): boolean {
   // O evento de amanhã já foi sorteado no fechamento (a prévia do relatório mostra ele).
   s.event = s.nextEvent;
   s.nextEvent = null;
+  s.trend = s.nextTrend ?? [];
+  s.nextTrend = [];
   if (s.festivalSponsored) s.event = 'festival';
   s.festivalSponsored = false;
   // O estoque do fornecedor depende da estação e do evento do dia.
@@ -121,6 +130,19 @@ export function rollNextEvent(d: Draft): DayEventId | null {
   if (day >= 7 && daysToNextSeason(day) === 1) return 'festa-estacao';
   const events = (Object.keys(DAY_EVENTS) as DayEventId[]).filter((id) => !DAY_EVENTS[id].rare && id !== 'festa-estacao' && s.level >= (DAY_EVENTS[id].minLevel ?? 1));
   return rollRareEvent(d) ?? (day >= 3 && d.ctx.random() < 0.35 ? pick<DayEventId>(events, d.ctx.random) : null);
+}
+
+/**
+ * Procura de amanhã (auditoria P0.4): duas poções conhecidas que a rua vai pedir bem mais.
+ * Sai no relatório do fechamento, para a preparação virar planejamento.
+ */
+export function rollTrend(d: Draft): string[] {
+  const s = d.s;
+  const pool = s.knownRecipes.filter((id) => !RECIPES_BY_ID[id].legend && !RECIPES_BY_ID[id].season && !RECIPES_BY_ID[id].secret);
+  if (pool.length < 3) return [];
+  const first = pick(pool, d.ctx.random);
+  const rest = pool.filter((id) => id !== first);
+  return pool.length >= 5 ? [first, pick(rest, d.ctx.random)] : [first];
 }
 
 /** Preço para patrocinar o Festival das Lanternas no dia seguinte (cresce com o nível). */

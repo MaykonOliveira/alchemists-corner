@@ -9,10 +9,11 @@ import { maxBatches, POTIONS_PER_BATCH } from '../../domain/rules/alchemy';
 import { applyCommand, type DomainCommand } from '../../domain/rules/commands';
 import type { RuleContext } from '../../domain/rules/context';
 import { countIngredients, ingredientCapacity, potionStock, priceRange } from '../../domain/rules/economy';
-import { suits } from '../../domain/rules/customers';
+import { askOptions, suits } from '../../domain/rules/customers';
 import { createNewGame } from '../../domain/rules/initialState';
-import { sealsAvailable } from '../../domain/rules/progression';
-import { TALENTS, talentCost } from '../../domain/data/talents';
+import { grimoireAwake } from '../../domain/rules/progression';
+import { talentCrystals } from '../../domain/rules/mastery';
+import { TALENTS } from '../../domain/data/talents';
 
 export function mulberry32(seed: number) {
   let a = seed >>> 0;
@@ -44,6 +45,12 @@ export interface BotProfile {
    * caldeirão antes de abrir. Serve para medir o valor dos ajudantes.
    */
   distractedFrom?: number;
+  /** Lê o freguês no balcão (pede mais a quem tem dinheiro) e a procura do dia no relatório. */
+  readsCustomers?: boolean;
+  /** Pede mais de todo mundo, sem olhar quem está no balcão. */
+  greedy?: boolean;
+  /** Chance de acertar o diagnóstico de quem conta o sintoma (padrão 0,8). */
+  diagnosis?: number;
 }
 
 export const CASUAL: BotProfile = {
@@ -62,7 +69,14 @@ export const EFICIENTE: BotProfile = {
   prepS: (day) => (day === 1 ? 60 : 25),
   targetStock: 6,
   reserve: 40,
+  diagnosis: 0.92,
 };
+
+/** O casual que presta atenção em quem está no balcão (auditoria P0.3). */
+export const ESPERTO: BotProfile = { ...CASUAL, name: 'esperto', readsCustomers: true };
+
+/** Pede o preço alto de todos: serve para mostrar que ler o freguês importa. */
+export const GANANCIOSO: BotProfile = { ...ESPERTO, name: 'ganancioso', greedy: true };
 
 /** Joga como o casual até o dia 5 e depois fica distraído. */
 export const DISTRAIDO: BotProfile = { ...CASUAL, name: 'distraído', distractedFrom: 6 };
@@ -97,6 +111,7 @@ export function simulate(profile: BotProfile, days: number, seed: number): SimRe
   let firstAffordableDay: number | null = null;
   let elapsedS = 0;
   const reactAt = new Map<string, number>();
+  const guessed = new Set<string>();
 
   const cmd = (c: DomainCommand): GameEvent[] => {
     const r = applyCommand(s, c, ctx);
@@ -107,7 +122,9 @@ export function simulate(profile: BotProfile, days: number, seed: number): SimRe
   const distracted = () => profile.distractedFrom !== undefined && s.day >= profile.distractedFrom;
 
   const demandWeight = (recipeId: string) =>
-    Object.values(ARCHETYPES).reduce((n, a) => n + (a.wants.includes(recipeId) ? 1 / a.wants.length : 0), 0);
+    Object.values(ARCHETYPES).reduce((n, a) => n + (a.wants.includes(recipeId) ? 1 / a.wants.length : 0), 0) *
+    // Quem lê o relatório prepara mais da poção que a rua vai procurar.
+    (profile.readsCustomers && s.trend?.includes(recipeId) ? 3 : 1);
 
   const tryUpgrades = () => {
     // Quem contrata ajudantes dá prioridade a eles; os demais compram da mais barata para a mais cara.
@@ -125,14 +142,27 @@ export function simulate(profile: BotProfile, days: number, seed: number): SimRe
     }
   };
 
-  /** Gasta os Selos de Mestre no talento mais barato disponível. */
+  /** Gasta os cristais de luar no talento mais barato disponível (a moeda de prestígio, P1.1). */
   const tryTalents = () => {
     for (let guard = 0; guard < 20; guard++) {
-      const free = sealsAvailable(s);
+      if (!grimoireAwake(s)) return;
+      const free = s.crystals;
       const next = TALENTS.filter((t) => (s.talents[t.id] ?? 0) < t.max)
         .sort((a, b) => (s.talents[a.id] ?? 0) - (s.talents[b.id] ?? 0))[0];
-      if (!next || talentCost(s.talents[next.id] ?? 0) > free) return;
+      if (!next || talentCrystals(s.talents[next.id] ?? 0) > free) return;
       cmd({ type: 'LEARN_TALENT', talentId: next.id });
+    }
+  };
+
+  /** Lê a pista do nível e acerta a mistura na bancada (P1.2), comprando 1 de cada ingrediente. */
+  const tryDiscover = () => {
+    for (const id of [...(s.recipeHints ?? [])]) {
+      const r = RECIPES_BY_ID[id];
+      const missing = r.ingredients.filter((i) => (s.ingredients[i.ingredientId] ?? 0) < 1);
+      const cost = missing.reduce((n, i) => n + INGREDIENTS_BY_ID[i.ingredientId].price, 0);
+      if (cost > s.coins) continue;
+      for (const i of missing) cmd({ type: 'BUY_INGREDIENT', ingredientId: i.ingredientId, qty: 1 });
+      cmd({ type: 'EXPERIMENT', ingredientIds: r.ingredients.map((i) => i.ingredientId) });
     }
   };
 
@@ -179,13 +209,29 @@ export function simulate(profile: BotProfile, days: number, seed: number): SimRe
       const options = s.potions
         .filter((p) => p.forSale && p.quantity > 0 && suits(c, p.recipeId))
         .sort((a, b) => (a.recipeId === c.wantedRecipeId ? -1 : 0) - (b.recipeId === c.wantedRecipeId ? -1 : 0));
+      // Quem conta o sintoma: às vezes o jogador erra o diagnóstico e o cliente explica melhor.
+      if (c.symptom && !c.offer && !guessed.has(`${c.id}|${c.remark}`)) {
+        guessed.add(`${c.id}|${c.remark}`);
+        const wrong = s.potions.find((p) => p.forSale && p.quantity > 0 && !suits(c, p.recipeId));
+        if (wrong && random() > (profile.diagnosis ?? 0.8)) {
+          cmd({ type: 'SERVE_CUSTOMER', customerId: c.id, recipeId: wrong.recipeId });
+          continue;
+        }
+      }
       if (!options.length) {
         // Espera um pouco se o caldeirão estiver fazendo a poção certa; senão dispensa.
         if (s.brew && suits(c, s.brew.recipeId) && c.waitedMs < c.patienceMs * 0.7) continue;
         cmd({ type: 'DISMISS_CUSTOMER', customerId: c.id });
         continue;
       }
-      cmd({ type: 'SERVE_CUSTOMER', customerId: c.id, recipeId: options[0].recipeId });
+      const recipeId = options[0].recipeId;
+      let price: number | undefined;
+      if (profile.readsCustomers && !c.vip && recipeId === c.wantedRecipeId) {
+        const ask = askOptions(s, recipeId);
+        // Só o morador não aguenta preço salgado (é o que a dica do balcão diz), e amigo não se explora.
+        if ((c.archetype !== 'morador' && !c.regularId) || profile.greedy) price = ask.high;
+      }
+      cmd({ type: 'SERVE_CUSTOMER', customerId: c.id, recipeId, ...(price !== undefined ? { price } : {}) });
       const still = s.customers.find((x) => x.id === c.id);
       if (still?.offer) cmd({ type: 'ACCEPT_OFFER', customerId: c.id });
     }
@@ -204,6 +250,7 @@ export function simulate(profile: BotProfile, days: number, seed: number): SimRe
     if (s.order && potionStock(s, s.order.recipeId) >= s.order.qty) cmd({ type: 'DELIVER_ORDER' });
     tryUpgrades();
     tryTalents();
+    tryDiscover();
     const prepMs = profile.prepS(day) * 1000;
     for (let t = 0; t < prepMs; t += STEP_MS) {
       tryBrew();

@@ -88,6 +88,7 @@ export function onVipServed(d: Draft, c: Customer, price: number) {
   const s = d.s;
   if (!c.vip) return;
   d.events.push({ type: 'VIP_SERVED', name: c.vip.name, coins: price, kind: c.vip.kind });
+  if (c.vip.kind === 'estreia') s.debutServed = true;
   if (c.vip.kind === 'festa') {
     const fest = SEASON_FESTS[seasonOf(s.day).id];
     if (!grantItem(d, fest.reward, 'festa')) grantCrystals(d, 10, fest.name);
@@ -120,7 +121,7 @@ export function seeded(seed: number) {
 export function writeLetter(d: Draft, visitedToday: string[]) {
   const s = d.s;
   if (s.day === 1) {
-    s.letter = { from: 'condessa-estreia', text: DEBUT.letter, day: 2, done: false };
+    s.letter = { from: 'condessa-estreia', text: s.debutServed ? DEBUT.letter : DEBUT.letterMissed, day: 2, done: false };
     d.events.push({ type: 'LETTER', from: 'condessa-estreia' });
     return;
   }
@@ -156,6 +157,10 @@ export function tomorrowPreview(s: GameSave): PreviewLine[] {
     out.push({ icon: '🎉', text: `${f.name}: ${f.guest} vem à loja e paga o triplo. Lembrança exclusiva para quem atender.`, tone: 'gold' });
   } else if (event) {
     out.push({ icon: DAY_EVENTS[event].rare ? '🌘' : '📣', text: `${DAY_EVENTS[event].name}: ${DAY_EVENTS[event].text}`, tone: DAY_EVENTS[event].rare ? 'gold' : undefined });
+  }
+  if (s.nextTrend?.length) {
+    const names = s.nextTrend.map((id) => RECIPES_BY_ID[id]?.shortName ?? id);
+    out.push({ icon: '📈', text: `Amanhã a rua vai procurar ${names.join(' e ')}. Prepare antes de abrir.`, tone: 'gold' });
   }
   if (s.letter && !s.letter.done && s.letter.day === day) {
     const who = s.letter.from === 'condessa-estreia' ? 'Condessa Amélia' : REGULARS_BY_ID[s.letter.from]?.name ?? 'Um freguês';
