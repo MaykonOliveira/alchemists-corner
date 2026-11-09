@@ -34,6 +34,21 @@ Um robô-jogador (`src/tests/balance/bot.ts`) joga vários dias usando só as re
 - **Sem game over:** a manutenção nunca deixa o saldo negativo e há sempre ingredientes básicos baratos.
 - **Save automático** em IndexedDB com `saveVersion` 4, validação e migração.
 
+## Melhorias da auditoria de Game Director
+
+O jogo passou por uma auditoria de design (nota 5,4/10). As mudanças que vieram dela:
+
+- **Primeiro dia guiado** e **ritmo do expediente** sem esperas mortas.
+- **Preço por freguês:** no balcão você pode dar desconto, cobrar a etiqueta ou pedir mais. A nobre paga, o viajante pechincha,
+  o morador e o freguês fiel nunca pagam acima da etiqueta.
+- **Demanda que pressiona a oferta:** o caldeirão não dá conta de tudo, cada receita tem limite na prateleira e a **procura do dia** muda.
+- **Pedidos por sintoma** a partir do dia 2: o cliente conta o problema e você deduz a poção (acertar dá gorjeta).
+- **Descoberta na bancada:** o nível deixa uma pista; a receita entra no livro quando você acerta a mistura.
+- **Tutorial de decisões** nos dias 2 a 4 (sintoma, nobre, pechincha) e **rostos** com expressão para todos os clientes.
+- **Fregueses fiéis com história:** 5 capítulos por freguês, um por coração.
+- **Menos medidores:** Selos viraram Cristais de luar, metas/baú/trilha viraram o Diário e o Concurso Real mora na Vila.
+- **Fim de jogo:** cada etapa da vila é uma encomenda de poções.
+
 ## Late game (níveis 6 a 15 e além)
 
 - **Nível máximo 15**, com algo novo em cada nível do 6 ao 15.
@@ -42,7 +57,7 @@ Um robô-jogador (`src/tests/balance/bot.ts`) joga vários dias usando só as re
 - **Cliente Nobre** (a partir do nível 8), que paga bem pelas poções caras, e o evento **Festival das Lanternas**. A partir do nível 10, a Corte e o Observatório fazem encomendas mais generosas.
 - **5 melhorias novas**, todas visíveis na loja: estufa no quintal (ervas grátis toda manhã), alambique de prata (3 poções por lote), despensa encantada (+40 ingredientes, +12 poções), vitral arcano e sino encantado.
 - **Maestria das receitas:** estrelas aos 10, 30, 70, 140 e 250 preparos. Cada estrela faz o cliente aceitar pagar 4% a mais, sobe o teto de preço e dá XP extra por venda.
-- **Grimório do Mestre (área Progresso, tecla 9):** Selos de Mestre vêm dos níveis 11+, dos graus de Mestre (a cada 3000 XP depois do nível 15, sem fim), das receitas com 5 estrelas e das doações à Guilda. Os Selos compram 7 talentos permanentes. Moedas sobrando também patrocinam o festival.
+- **Grimório do Mestre (área Progresso, tecla 9):** desperta no nível 11 (ou com a primeira receita dominada). Níveis 11+, graus de Mestre (a cada 3000 XP depois do nível 15, sem fim), receitas com 5 estrelas, contratos e doações à Guilda rendem **10 Cristais de luar** cada. Talentos custam cristais (10, 20, 30…), os mesmos da decoração. Moedas sobrando também patrocinam o festival.
 - Saves antigos migram para a `saveVersion` 4: as receitas dos níveis já alcançados entram direto, a maestria é estimada pelas vendas dos relatórios e a XP acumulada no nível 10 fica guardada na porta do 11.
 
 ## Loja que reage
@@ -59,7 +74,7 @@ Um robô-jogador (`src/tests/balance/bot.ts`) joga vários dias usando só as re
   - **Balcão duplo** (nível 11): uma ala extra do balcão com balança. Até 4 clientes esperando e 10% mais movimento.
   - **Torre do alquimista** (nível 13): um astrolábio dourado gira sobre a loja. Preços +8% e contratos pagam 25% a mais.
 - **Contratos de vários dias** (quadro de avisos, a partir do nível 6): 2 ou 3 receitas em quantidade. Aceite e entregue aos poucos em até 3 dias.
-  Ao completar: moedas, reputação, XP, um baú de ingredientes raros e, a partir do nível 12, 1 Selo de Mestre.
+  Ao completar: moedas, reputação, XP, um baú de ingredientes raros e, a partir do nível 12, 10 Cristais de luar.
   Se vencer, o cliente paga metade do proporcional ao que recebeu e a loja perde reputação.
 - Prints em `prints-expansoes/`.
 
@@ -82,7 +97,7 @@ Um robô-jogador (`src/tests/balance/bot.ts`) joga vários dias usando só as re
 - **Madame Vesper**, a rival (nível 4, a partir do dia 8): toda semana o placar soma vendas e pedidos das duas lojas.
   A rival fatura um pouco acima da sua média recente. Vencer dá moedas, reputação e ingredientes raros; perder não tira nada.
 - **Eventos raros** (nível 5, cerca de 1 em cada 8 dias): Eclipse (elixires de mente valem 1,8×), Mercado da Lua Cheia
-  (ingredientes das quatro estações e itens raros a mais) e Visitante Misterioso (pedido do dia que paga 1 Selo de Mestre e um achado lendário).
+  (ingredientes das quatro estações e itens raros a mais) e Visitante Misterioso (pedido do dia que paga 10 Cristais de luar e um achado lendário).
   Eclipse e lua aparecem na janela da loja.
 - **Expedições do corvo**: Floresta (1 dia), Cavernas (2 dias, nível 6) e Pico dos Grifos (3 dias, nível 9). Enquanto viaja ele não faz entregas.
   Volta com ingredientes raros e, às vezes, um dos 9 achados do gabinete.
@@ -95,7 +110,7 @@ Um robô-jogador (`src/tests/balance/bot.ts`) joga vários dias usando só as re
   o caldeirão aceso) contam como a loja chegou até você. Dá para pular. Saves antigos não veem a história.
 - **Tutorial na cena:** cada passo do tutorial acende o objeto certo da loja (contorno pulsando e seta) e o botão que
   precisa ser tocado na interface (anel dourado). No celular, com um painel aberto, a dica sobe para cima da cena.
-- **Metas do dia** (área Progresso, tecla 7, e no Início): três metas por dia sorteadas com a semente do dia
+- **Diário da loja** (área Progresso, tecla 7; as metas também aparecem no Início): metas do dia, baú da semana e trilha da temporada juntos. As **metas do dia** são três metas por dia sorteadas com a semente do dia
   (vender, faturar, vender de uma categoria, preparar uma receita, atender sem trocar a poção, entregar o pedido, carinho no gato).
   Cada uma paga moedas e XP na hora. O primeiro dia acompanha o tutorial.
 - **Baú da semana:** 10 metas cumpridas na semana abrem o baú (moedas e ingredientes raros que a loja já pode comprar).
@@ -152,9 +167,9 @@ npm run build && npx cap add android && npx cap sync
 - **Voltar amanhã:** ao reabrir depois de 10 minutos (até 8 horas contam), o **livro do caixa** mostra o que o golem vendeu e o
   que o aprendiz preparou. Há um **presente de visita** por dia real (calendário de 7), **cartas** dos fregueses que visitaram a
   loja e uma prévia de **amanhã na loja** no fechamento. Nada se perde se o jogador faltar um dia.
-- **Temporada e decoração** (área Mundo, tecla T): **cristais de luar** vêm das metas, do baú, das conquistas e dos presentes.
-  Servem só para decorar: tapete, quadro, luminária, planta e toldo aparecem na cena, e alguns dão **encanto** (+1 de reputação
-  por dia, até 3). A **trilha** de 28 dias reais tem 30 recompensas grátis. No último dia de cada estação há uma **festa** com um
+- **Decoração** (área Mundo, tecla T): **cristais de luar** são a única moeda de prestígio. Vêm das metas, do baú, das conquistas, dos presentes,
+  dos níveis altos, das receitas dominadas e, no teto de reputação, de cada 25 pontos a mais. Só se ganham jogando (nunca são vendidos). Compram talentos no Grimório e decoração: tapete, quadro, luminária, planta e toldo aparecem na cena, e alguns dão **encanto** (+1 de reputação
+  por dia, até 3). A **trilha** de 28 dias reais (no Diário da loja) tem 30 recompensas grátis. No último dia de cada estação há uma **festa** com um
   convidado especial e uma lembrança.
 - **Mostrar a loja:** cartão 1080×1080 com a foto da loja para compartilhar ou baixar; **presentes entre amigos** por código
   (`AC1g.…`, um por dia); **desafio da semana** com a mesma semente para todos os jogadores. Prévia de link (`og-image.png`).
@@ -185,8 +200,8 @@ As 13 telas ficam em 4 áreas com nome fixo, iguais no computador e no celular (
 | --- | --- |
 | ⚗️ Oficina | Armário (1), Caldeirão (2), Receitas (3) |
 | 🛎️ Loja | Prateleiras (4), Balcão (5), Pedidos (6) |
-| 🎯 Progresso | Metas (7), Melhorias (8), Grimório (9), Relatório (0) |
-| 🗺️ Mundo | Rua (R), Temporada (T), Álbum (A) |
+| 🎯 Progresso | Diário (7), Melhorias (8), Grimório (9), Relatório (0) |
+| 🗺️ Mundo | Rua (R), Vila e Concurso Real (V, C), Decoração (T), Álbum (A) |
 
 - **Computador:** a barra de baixo mostra as áreas como grupos coloridos, com todas as telas e as teclas. Esc volta ao Início.
 - **Celular:** 5 botões grandes (Início, Oficina, Loja, Progresso, Mundo). Tocar numa área abre a tela que tem novidade, senão a última que você abriu ali.
