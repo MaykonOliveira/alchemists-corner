@@ -5,6 +5,7 @@ import { APPRENTICE, apprenticePlan, GOLEM, golemDelayMs, helperActive, RAVEN } 
 import { useGameStore } from '../../store/gameStore';
 import { SpriteIcon } from '../../ui/SpriteIcon';
 import { Coins } from '../../ui/widgets';
+import { Icon } from '../../ui/Icon';
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
@@ -90,14 +91,14 @@ export function UpgradesPanel({ save }: { save: GameSave }) {
       </ul>
       {showTraining && (
         <>
-          <h3 className="mini-title">🎓 Treino da equipe</h3>
+          <h3 className="mini-title"><Icon e="🎓" /> Treino da equipe</h3>
           <p className="card-text small muted">Cada ajudante pode evoluir uma vez, no nível máximo da loja.</p>
           <ul className="list">
             {training.map((u) => <UpgradeCard key={u.id} save={save} u={u} />)}
           </ul>
         </>
       )}
-      <h3 className="mini-title">🏰 Expansão da loja</h3>
+      <h3 className="mini-title"><Icon e="🏰" /> Expansão da loja</h3>
       <p className="card-text small muted">Obras grandes, em etapas: cada uma abre a próxima. A loja cresce de verdade na tela.</p>
       <ol className="list expansion-track">
         {expansions.map((u) => <UpgradeCard key={u.id} save={save} u={u} />)}

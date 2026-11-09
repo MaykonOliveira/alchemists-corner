@@ -10,6 +10,7 @@ import { currentSeason } from '../../domain/rules/world';
 import { useGameStore } from '../../store/gameStore';
 import { SpriteIcon } from '../../ui/SpriteIcon';
 import { Coins, PotionName } from '../../ui/widgets';
+import { Icon } from '../../ui/Icon';
 
 /** A rua da loja: evento especial, poção da estação, a rival e as expedições do corvo. */
 export function StreetPanel({ save }: { save: GameSave }) {
@@ -24,13 +25,13 @@ export function StreetPanel({ save }: { save: GameSave }) {
       {ev?.rare && (
         <div className={`card rare-event rare-${ev.id}`}>
           <p className="rare-kicker">Evento raro de hoje</p>
-          <p className="row-title">{ev.id === 'eclipse' ? '🌑' : ev.id === 'lua-cheia' ? '🌕' : '🧥'} {ev.name}</p>
+          <p className="row-title"><Icon e={ev.id === 'eclipse' ? '🌑' : ev.id === 'lua-cheia' ? '🌕' : '🧥'} /> {ev.name}</p>
           <p className="card-text small">{ev.text}</p>
           {ev.id === 'visitante' && <p className="card-text small"><b>Veja o pedido no quadro de avisos.</b> Ele some quando a loja fechar.</p>}
         </div>
       )}
 
-      <h3 className="mini-title">Poção da estação · {season.icon} {season.name}</h3>
+      <h3 className="mini-title">Poção da estação · <Icon e={season.icon} /> {season.name}</h3>
       {special && save.level >= special.unlockLevel ? (
         <div className={`card season-special season-${season.id}`}>
           <div className="card-head">
@@ -61,7 +62,7 @@ export function StreetPanel({ save }: { save: GameSave }) {
         <p className="card-text small muted">Contrate o corvo entregador (Melhorias, nível 3) para mandar ele buscar ingredientes raros longe da cidade.</p>
       ) : save.expedition ? (
         <div className="card expedition-away">
-          <p className="row-title">🐦‍⬛ O corvo está em {EXPEDITIONS.find((e) => e.id === save.expedition!.dest)?.name}</p>
+          <p className="row-title"><Icon e="🐦‍⬛" /> O corvo está em {EXPEDITIONS.find((e) => e.id === save.expedition!.dest)?.name}</p>
           <p className="card-text small">
             Volta {save.expedition.returnDay - save.day <= 1 ? 'amanhã cedo' : `em ${save.expedition.returnDay - save.day} dias`}.
             Enquanto isso ele não faz as entregas do fornecedor.
@@ -75,7 +76,7 @@ export function StreetPanel({ save }: { save: GameSave }) {
           return (
             <li key={x.id} className={`card expedition ${locked ? 'card-locked' : ''}`}>
               <div className="card-head">
-                <span className="expedition-icon" aria-hidden>{x.icon}</span>
+                <span className="expedition-icon" aria-hidden><Icon e={x.icon} size={32} /></span>
                 <span className="row-title">{x.name}</span>
                 <span className="tag">{x.days} dia{x.days > 1 ? 's' : ''}</span>
               </div>
@@ -109,7 +110,7 @@ export function StreetPanel({ save }: { save: GameSave }) {
           const got = save.finds.includes(f.id);
           return (
             <li key={f.id} className={`find ${got ? 'find-on' : ''}`} title={got ? f.text : 'Ainda não encontrado'}>
-              <span className="find-icon" aria-hidden>{got ? f.icon : '❔'}</span>
+              <span className="find-icon" aria-hidden><Icon e={got ? f.icon : '❔'} size={32} /></span>
               <span className="find-name">{got ? f.name : '???'}</span>
             </li>
           );

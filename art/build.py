@@ -16,6 +16,7 @@ import seasonal as SE  # registra poções e ingredientes da estação em items.
 import story as ST
 import decor as DE
 import royal as RO  # registra a Poção da Coroa em items.py
+import ui_icons as UI
 import legends as LG  # registra as receitas lendárias em items.py
 import village as VI
 from room import draw_room
@@ -43,6 +44,35 @@ def pack(frames, width, pad=1):
         meta[name] = {'frame': {'x': px_, 'y': py_, 'w': cv.w, 'h': cv.h}, 'rotated': False, 'trimmed': False,
                       'spriteSourceSize': {'x': 0, 'y': 0, 'w': cv.w, 'h': cv.h}, 'sourceSize': {'w': cv.w, 'h': cv.h}}
     return sheet, meta
+
+
+def storefront(shop):
+    """Loja aberta e cheia vista pela vitrine da tela de título (revisão visual V4)."""
+    from customers import draw_frame
+    cv = draw_room()
+    cv.blit(shop['garland'], 0, 0)
+    for k, x, y in (('obj-cabinet', 2, 38), ('obj-shelf', 108, 22), ('obj-shelf', 170, 22), ('obj-board', 238, 32),
+                    ('obj-door', 300, 28)):
+        cv.blit(shop[k], x, y)
+    sign = shop['sign-open']
+    cv.blit(sign, 321 - sign.w // 2, 58)
+    # Frascos nas três tábuas das duas prateleiras, de cores variadas.
+    rids = list(I.LIQ)
+    n = 0
+    for sx in (108, 170):
+        for board in O.SHELF_BOARDS:
+            for i in range(6):
+                pot = shop[f'potion-{rids[(n * 7) % len(rids)]}']
+                cv.blit(pot, sx + 6 + i * 8, 22 + board - pot.h)
+                n += 1
+    cust = draw_frame(LOOKS['nobre'], 0)
+    cv.blit(cust, 224 - cust.w // 2, 133 - cust.h)
+    cv.blit(shop['obj-cauldron'], 46, 128)
+    cv.blit(shop['fire-0'], 61 - shop['fire-0'].w // 2, 176 - shop['fire-0'].h)
+    cv.blit(shop['obj-counter'], 150, 128)
+    cv.blit(shop['obj-register'], 243, 117)
+    cv.blit(shop['cat-sit-0'], 120, 196 - shop['cat-sit-0'].h)
+    return cv
 
 
 def save(cv, name):
@@ -107,6 +137,7 @@ def main():
         shop[f'potion-{rid}'] = I.potion_small(rid)
     sheet, meta = pack(shop, 512)
     save(sheet, 'shop.png')
+    save(storefront(shop), 'storefront.png')
     with open(os.path.join(OUT, 'shop.json'), 'w') as fh:
         json.dump({'frames': meta, 'meta': {'image': 'shop.png', 'size': {'w': sheet.w, 'h': sheet.h}, 'scale': '1'}}, fh, indent=1)
 
@@ -119,6 +150,8 @@ def main():
     icons.update({f'helper-{h}': H.portrait(h) for h in ('corvo-entregador', 'aprendiz', 'golem-balconista')})
     icons['rival-vesper'] = SE.rival_portrait()
     icons.update({f'trophy-{i}': RO.trophy_icon(i) for i in range(5)})
+    # Ícones da interface no lugar dos emojis (pacote V2).
+    icons.update(UI.frames())
     cols = 8
     grid = Canvas(16 * cols, 16 * ((len(icons) + cols - 1) // cols))
     index = {}
@@ -139,16 +172,16 @@ def main():
               'royal': {k: {'x': x, 'y': y} for k, (x, y) in RO.POS.items()}}
     with open(os.path.join(OUT, 'layout.json'), 'w') as fh:
         json.dump(layout, fh, indent=1)
-    # Obras da vila (fase 4, pacote W): grade de 4 estados por obra.
+    # Obras da vila (fase 4, pacote W): grade de 4 estados por obra, mais a planta (V5) na 5ª coluna.
     vf = VI.frames()
     names = list(VI.BUILDINGS)
-    vsheet = Canvas(VI.W * 4, VI.H * len(names))
+    vsheet = Canvas(VI.W * 5, VI.H * len(names))
     for row, name in enumerate(names):
-        for st in range(4):
+        for st in range(5):
             vsheet.blit(vf[f'{name}-{st}'], st * VI.W, row * VI.H)
     save(vsheet, 'village.png')
     with open(os.path.join(OUT, 'village.json'), 'w') as fh:
-        json.dump({'w': VI.W, 'h': VI.H, 'rows': names}, fh, indent=1)
+        json.dump({'w': VI.W, 'h': VI.H, 'cols': 5, 'rows': names}, fh, indent=1)
     # Quadros da história de abertura (pacote G).
     for name, cv in ST.frames().items():
         save(cv, f'{name}.png')

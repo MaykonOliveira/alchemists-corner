@@ -7,6 +7,7 @@ import { IngredientIcon, PotionIcon } from '../../ui/SpriteIcon';
 import { masteryStars } from '../../domain/rules/mastery';
 import { Stars } from '../../ui/Stars';
 import { LEGEND_LEVEL, LEGENDS, legendKnown, pagesFor } from '../../domain/rules/legends';
+import { Icon } from '../../ui/Icon';
 
 /** Lendas do grimório (pacote U): seis receitas fora do livro, montadas com páginas rasgadas e experimentos. */
 function Legends({ save }: { save: GameSave }) {
@@ -14,7 +15,7 @@ function Legends({ save }: { save: GameSave }) {
   if (save.level < LEGEND_LEVEL && !anyPage) return null;
   return (
     <section className="group legends">
-      <h3>📜 Lendas perdidas <span className="muted small">{legendKnown(save)} de {LEGENDS.length}</span></h3>
+      <h3><Icon e="📜" /> Lendas perdidas <span className="muted small">{legendKnown(save)} de {LEGENDS.length}</span></h3>
       <p className="card-text small">Seis receitas que nenhum livro guarda. Páginas rasgadas aparecem no baú da semana, nos contratos, na vitória sobre a Vesper e no Concurso Real. Cada página revela um ingrediente: junte os três na bancada.</p>
       <ul className="legend-grid">
         {LEGENDS.map((r) => {

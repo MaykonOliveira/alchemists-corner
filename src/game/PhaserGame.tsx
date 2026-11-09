@@ -10,7 +10,9 @@ import { setCurrentGame } from './gameRef';
 /** Maior escala inteira que cabe no espaço disponível (PRD 6.3). */
 function fitZoom(el: HTMLElement) {
   const { width, height } = el.getBoundingClientRect();
-  const exact = Math.min((width - 12) / WORLD_W, (height - 12) / WORLD_H);
+  // Desconta o espaço da moldura (o padding do .stage-host muda entre celular e computador).
+  const pad = 2 * (parseFloat(getComputedStyle(el).paddingLeft) || 6) + 2;
+  const exact = Math.min((width - pad) / WORLD_W, (height - pad) / WORLD_H);
   // Escala inteira sempre que possível (pixels perfeitos); em telas pequenas (celular) usa a escala exata.
   const whole = Math.floor(exact);
   if (whole >= 2 && whole / exact >= 0.88) return whole;

@@ -14,6 +14,7 @@ import { useGameStore } from '../../store/gameStore';
 import { PotionIcon } from '../../ui/SpriteIcon';
 import { Stars } from '../../ui/Stars';
 import { Meter } from '../../ui/widgets';
+import { Icon } from '../../ui/Icon';
 
 function SealBadge({ n }: { n: number }) {
   return (
@@ -67,7 +68,7 @@ export function GrimoirePanel({ save }: { save: GameSave }) {
           return (
             <li key={t.id} className={`card talent ${maxed ? 'card-owned' : ''}`}>
               <div className="card-head">
-                <span className="talent-icon" aria-hidden>{t.icon}</span>
+                <span className="talent-icon" aria-hidden><Icon e={t.icon} /></span>
                 <span className="row-title">{t.name}</span>
                 <span className="pips" aria-label={`Grau ${r} de ${t.max}`}>
                   {Array.from({ length: t.max }, (_, i) => <span key={i} className={i < r ? 'pip on' : 'pip'} />)}
@@ -99,7 +100,7 @@ export function GrimoirePanel({ save }: { save: GameSave }) {
           return (
             <li key={t.id} className={`card talent talent-endless ${locked ? 'card-locked' : ''}`}>
               <div className="card-head">
-                <span className="talent-icon" aria-hidden>{t.icon}</span>
+                <span className="talent-icon" aria-hidden><Icon e={t.icon} /></span>
                 <span className="row-title">{t.name}</span>
                 <span className="tag tag-gold">grau {r}</span>
               </div>
@@ -120,7 +121,7 @@ export function GrimoirePanel({ save }: { save: GameSave }) {
       <h3 className="mini-title">Investimentos de mestre</h3>
       <ul className="list">
         <li className={`card ${save.level < SEAL_LEVEL ? 'card-locked' : ''}`}>
-          <div className="card-head"><span className="talent-icon" aria-hidden>🏛️</span><span className="row-title">Doação à Guilda dos Alquimistas</span></div>
+          <div className="card-head"><span className="talent-icon" aria-hidden><Icon e="🏛️" /></span><span className="row-title">Doação à Guilda dos Alquimistas</span></div>
           <p className="card-text small">A Guilda retribui cada doação com 1 Selo de Mestre. O valor sobe a cada doação.</p>
           <div className="card-foot">
             <Coins n={sealPrice(save)} />
@@ -132,7 +133,7 @@ export function GrimoirePanel({ save }: { save: GameSave }) {
           </div>
         </li>
         <li className={`card ${save.level < (DAY_EVENTS.festival.minLevel ?? 1) ? 'card-locked' : ''}`}>
-          <div className="card-head"><span className="talent-icon" aria-hidden>🏮</span><span className="row-title">Patrocinar o Festival das Lanternas</span></div>
+          <div className="card-head"><span className="talent-icon" aria-hidden><Icon e="🏮" /></span><span className="row-title">Patrocinar o Festival das Lanternas</span></div>
           <p className="card-text small">Garante o festival no próximo dia: muito mais movimento, nobres na rua e clientes pagando melhor.</p>
           <div className="card-foot">
             <Coins n={festivalPrice(save)} />

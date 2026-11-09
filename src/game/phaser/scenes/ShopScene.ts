@@ -30,13 +30,17 @@ const CAULDRON2 = { x: EXPANSION['cauldron-2'].x, y: EXPANSION['cauldron-2'].y, 
 
 /** Cor da luz ambiente ao longo do dia (multiplicada sobre o cenário). */
 const LIGHT_KEYS: [number, number][] = [
-  [OPEN_MIN, 0xfff1dc],
+  [OPEN_MIN, 0xffeed4],
   [11 * 60, 0xffffff],
-  [15 * 60, 0xfff0d8],
-  [17 * 60, 0xffd6a8],
-  [18.5 * 60, 0xc8a0a8],
-  [CLOSE_MIN, 0x7c76b4],
+  [15 * 60, 0xffe8c4],
+  [17 * 60, 0xffc88c],
+  [18.5 * 60, 0xb894b4],
+  [CLOSE_MIN, 0x6a68b0],
 ];
+
+/** Sobe de 0 a 1 entre a e b, fica em 1 até c e desce até d (horas em minutos). */
+const ramp = (m: number, a: number, b: number, c: number, d: number) =>
+  m <= a || m >= d ? 0 : m < b ? (m - a) / (b - a) : m <= c ? 1 : (d - m) / (d - c);
 
 interface HotspotView {
   def: HotspotDef;
@@ -77,6 +81,11 @@ export class ShopScene extends Phaser.Scene {
   private rareSky: Phaser.GameObjects.Graphics | null = null;
   private rareSkyEvent: string | null = null;
   private nightness = 0;
+  /** Revisão visual V4: raio de sol da janela, sombra nos cantos à noite e brilho dos caldeirões. */
+  private sunbeam!: Phaser.GameObjects.Image;
+  private vignette!: Phaser.GameObjects.Image;
+  private brewGlows: (Phaser.GameObjects.Image | null)[] = [null, null];
+  private primeSparkles: Phaser.GameObjects.Image[] = [];
   private unsubscribers: (() => void)[] = [];
 
   constructor() {
@@ -107,6 +116,7 @@ export class ShopScene extends Phaser.Scene {
     for (const l of LANTERNS) {
       this.glows.push(this.add.image(l.x, l.y, 'glow-warm').setDepth(1001).setBlendMode(Phaser.BlendModes.ADD));
     }
+    this.createLightFx();
 
     this.helpers = new HelperViews(this, this.reduceMotion);
     this.cat = new CatView(this, this.reduceMotion);
@@ -346,7 +356,26 @@ export class ShopScene extends Phaser.Scene {
     this.liquid2?.setVisible(!!brew2);
     if (brew2) this.liquid2?.setTint(tint(brew2));
     this.fire2?.setScale(brew2 ? 1.25 : 1, brew2 ? 1.35 : 1);
+    this.syncBrewGlow(0, brew ? tint(brew) : null, CAULDRON.cx, CAULDRON.y + 8);
+    this.syncBrewGlow(1, brew2 && this.fire2 ? tint(brew2) : null, CAULDRON2.cx, CAULDRON2.y + 10);
     this.drawBrewBar(save);
+  }
+
+  /** Brilho da cor da poção saindo da boca do caldeirão enquanto ela ferve. */
+  private syncBrewGlow(i: number, color: number | null, cx: number, y: number) {
+    const cur = this.brewGlows[i];
+    if (color === null) {
+      if (cur) this.tweens.killTweensOf(cur);
+      cur?.destroy();
+      this.brewGlows[i] = null;
+      return;
+    }
+    const g = cur ?? this.add.image(cx, y, 'glow-violet').setDepth(1002).setBlendMode(Phaser.BlendModes.ADD).setScale(1.6, 1.1);
+    g.setTint(color);
+    if (!cur) {
+      this.brewGlows[i] = g;
+      if (!this.reduceMotion()) this.tweens.add({ targets: g, alpha: { from: 0.55, to: 1 }, scaleX: 1.9, yoyo: true, repeat: -1, duration: 900, ease: 'Sine.InOut' });
+    }
   }
 
   private drawBrewBar(save: GameSave) {
@@ -369,6 +398,7 @@ export class ShopScene extends Phaser.Scene {
 
   /** Frascos nas prateleiras (e no expositor, se comprado) de acordo com o estoque à venda. */
   private renderShelves(save: GameSave) {
+    this.tweens.killTweensOf(this.primeSparkles);
     this.shelfItems.forEach((i) => i.destroy());
     this.shelfItems = [];
     const slots: { x: number; y: number; depth: number }[] = [];
@@ -380,15 +410,28 @@ export class ShopScene extends Phaser.Scene {
     if (save.upgrades.includes('prateleira-extra')) {
       for (let i = 0; i < 5; i++) slots.splice(i * 2, 0, { x: STAND.x + 4 + i * 8, y: STAND.y + 8, depth: STAND.y + 31 });
     }
-    const bottles: string[] = [];
+    this.primeSparkles = [];
+    const bottles: { tex: string; prime: boolean }[] = [];
     for (const stack of save.potions) {
       if (!stack.forSale) continue;
-      for (let i = 0; i < stack.quantity; i++) bottles.push(`potion-${stack.recipeId}`);
+      // As Primorosas vêm primeiro na pilha, para aparecerem na prateleira com o brilho dourado.
+      for (let i = 0; i < stack.quantity; i++) bottles.push({ tex: `potion-${stack.recipeId}`, prime: i < (stack.prime ?? 0) });
     }
     slots.forEach((slot, idx) => {
-      const tex = bottles[idx] ?? (idx % 5 === 3 && slot.depth === 90 ? 'jar' : null);
+      const b = bottles[idx];
+      const tex = b?.tex ?? (idx % 5 === 3 && slot.depth === 90 ? 'jar' : null);
       if (!tex) return;
-      this.shelfItems.push(this.add.image(slot.x, slot.y, tex).setOrigin(0, 1).setDepth(slot.depth));
+      const img = this.add.image(slot.x, slot.y, tex).setOrigin(0, 1).setDepth(slot.depth);
+      this.shelfItems.push(img);
+      if (!b?.prime) return;
+      const halo = this.add.image(slot.x + img.width / 2, slot.y - img.height / 2, 'glow-small').setDepth(1002)
+        .setBlendMode(Phaser.BlendModes.ADD).setTint(0xffd860).setAlpha(0.8);
+      const spark = this.add.image(slot.x + img.width - 1, slot.y - img.height + 1, 'sparkle').setDepth(1003).setScale(0.5).setTint(0xfff0a0);
+      this.shelfItems.push(halo, spark);
+      this.primeSparkles.push(spark);
+      if (!this.reduceMotion()) {
+        this.tweens.add({ targets: spark, alpha: { from: 0, to: 1 }, scale: 0.8, yoyo: true, repeat: -1, duration: 700, delay: (idx * 233) % 1400, repeatDelay: 1200 + ((idx * 97) % 900) });
+      }
     });
   }
 
@@ -599,6 +642,45 @@ export class ShopScene extends Phaser.Scene {
       Phaser.Display.Color.ValueToColor(c0), Phaser.Display.Color.ValueToColor(c1), 100, Math.round(t * 100));
     this.overlay.setFillStyle(Phaser.Display.Color.GetColor(c.r, c.g, c.b));
     this.nightness = Phaser.Math.Clamp((clockMin - 16 * 60) / (CLOSE_MIN - 16 * 60), 0, 1);
+    // Manhã: raio claro pela janela. Fim de tarde: o mesmo raio, dourado e mais comprido. Noite: cantos azulados.
+    const morning = ramp(clockMin, 6 * 60, 7.5 * 60, 10 * 60, 13 * 60);
+    const golden = ramp(clockMin, 14.5 * 60, 16.5 * 60, 17.5 * 60, 18.75 * 60);
+    this.sunbeam.setAlpha(0.32 * morning + 0.42 * golden).setTint(golden > morning ? 0xffb860 : 0xfff2c8);
+    this.vignette.setAlpha(Phaser.Math.Clamp((clockMin - 17.5 * 60) / (CLOSE_MIN - 17.5 * 60), 0, 1) * 0.75);
+  }
+
+  /** Texturas da luz desenhadas na hora (raio de sol em faixas e sombra dos cantos). */
+  private createLightFx() {
+    const W = this.scale.width;
+    const H = this.scale.height;
+    if (!this.textures.exists('fx-sunbeam')) {
+      const t = this.textures.createCanvas('fx-sunbeam', W, H)!;
+      const ctx = t.getContext();
+      // Faixas inclinadas saindo da janela (50,22 a ~100,62) até o piso, mais fracas longe dela.
+      const stripes: [number, number, number][] = [[54, 66, 0.9], [70, 80, 0.7], [84, 98, 0.55]];
+      for (const [x0, x1, a] of stripes) {
+        const g = ctx.createLinearGradient(0, 40, 0, H);
+        g.addColorStop(0, `rgba(255,255,255,${a})`);
+        g.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.moveTo(x0, 44); ctx.lineTo(x1, 44);
+        ctx.lineTo(x1 + 120, H); ctx.lineTo(x0 + 120, H);
+        ctx.closePath(); ctx.fill();
+      }
+      t.refresh();
+    }
+    if (!this.textures.exists('fx-vignette')) {
+      const t = this.textures.createCanvas('fx-vignette', W, H)!;
+      const ctx = t.getContext();
+      const g = ctx.createRadialGradient(W / 2, H * 0.55, H * 0.35, W / 2, H * 0.55, W * 0.62);
+      g.addColorStop(0, 'rgba(14,12,40,0)');
+      g.addColorStop(1, 'rgba(14,12,40,0.85)');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+      t.refresh();
+    }
+    this.sunbeam = this.add.image(0, 0, 'fx-sunbeam').setOrigin(0).setDepth(1.5).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0);
+    this.vignette = this.add.image(0, 0, 'fx-vignette').setOrigin(0).setDepth(1000.5).setAlpha(0);
   }
 
   // --------------------------------------------------------------- clientes

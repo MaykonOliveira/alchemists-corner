@@ -3,6 +3,7 @@ import type { BrewJob, GameSave } from '../../domain/models/types';
 import { QUALITY_BONUS, QUALITY_NAME, qualityFromHits, STIR_LEVEL, STIR_TAPS } from '../../domain/rules/quality';
 import { sfx } from '../../audio/sound';
 import { useGameStore } from '../../store/gameStore';
+import { Icon } from '../../ui/Icon';
 
 /** Faixa dourada (em %) onde mexer conta como acerto. Fica um pouco menor a cada toque. */
 const ZONES = [[38, 62], [41, 59], [43, 57]] as const;
@@ -38,7 +39,7 @@ export function StirGame({ save, job, slot, label }: { save: GameSave; job: Brew
     const q = qualityFromHits(job.hits);
     return (
       <p className={`stir-result q-${q}`}>
-        {label ? `${label}: ` : ''}{q === 3 ? '✨' : q === 2 ? '★' : '·'} Qualidade <b>{QUALITY_NAME[q]}</b>
+        {label ? `${label}: ` : ''}<Icon e={q === 3 ? '✨' : q === 2 ? '★' : '·'} /> Qualidade <b>{QUALITY_NAME[q]}</b>
         {q > 1 ? ` · clientes pagam ${Math.round(QUALITY_BONUS[q] * 100)}% a mais` : ' · mexa no tempo certo no próximo preparo'}
       </p>
     );
@@ -54,7 +55,7 @@ export function StirGame({ save, job, slot, label }: { save: GameSave; job: Brew
   return (
     <div className="stir" aria-label="Toque de mestre">
       <div className="stir-head">
-        <span className="row-title">✋ Toque de mestre{label ? <span className="stir-label"> · {label}</span> : null}</span>
+        <span className="row-title"><Icon e="✋" /> Toque de mestre{label ? <span className="stir-label"> · {label}</span> : null}</span>
         <span className="stir-dots" aria-label={`${hits.filter(Boolean).length} acertos`}>
           {Array.from({ length: STIR_TAPS }, (_, i) => <span key={i} className={i < hits.length ? (hits[i] ? 'hit' : 'miss') : ''} />)}
         </span>

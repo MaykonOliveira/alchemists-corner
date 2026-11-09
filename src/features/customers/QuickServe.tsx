@@ -8,6 +8,7 @@ import { useStageCards } from '../tutorial/stage';
 import { CoinIcon } from '../../ui/icons';
 import { PotionIcon } from '../../ui/SpriteIcon';
 import { Meter } from '../../ui/widgets';
+import { Icon } from '../../ui/Icon';
 
 const VERDICT_LABEL = { sim: 'O preço agrada', negocia: 'Vai pedir desconto', nao: 'Vai achar caro' } as const;
 
@@ -40,7 +41,7 @@ export function QuickServe({ placement }: { placement: 'stage' | 'side' }) {
     return (
       <section className={`quick-serve qs-${placement} qs-mystery`} aria-label="Atender o cliente misterioso">
         <div className="qs-head">
-          <span className="qs-mystery-icon" aria-hidden>❓</span>
+          <span className="qs-mystery-icon" aria-hidden><Icon e="❓" size={32} /></span>
           <div className="qs-who">
             <span className="qs-name">Viajante encapuzado <span className="muted">· paga 3× e deixa cristais</span></span>
             <Meter ratio={left} tone={left > 0.5 ? 'ok' : left > 0.25 ? 'gold' : 'warn'} label="Paciência" />
@@ -67,7 +68,7 @@ export function QuickServe({ placement }: { placement: 'stage' | 'side' }) {
       <section className={`quick-serve qs-${placement} qs-compact`} aria-label={`Atender ${a.label}`}>
         <PotionIcon recipeId={wanted.id} size={20} />
         <span className="qs-none">
-          <span className="qs-face" aria-label="Humor">{left > 0.5 ? '🙂' : left > 0.25 ? '😐' : '😠'}</span> {c.vip ? c.vip.name : reg ? reg.name.split(',')[0] : a.label} quer {wanted.shortName}
+          <span className="qs-face" aria-label="Humor"><Icon e={left > 0.5 ? '🙂' : left > 0.25 ? '😐' : '😠'} /></span> {c.vip ? c.vip.name : reg ? reg.name.split(',')[0] : a.label} quer {wanted.shortName}
           <span className="muted small"> · {reserved ? 'as que você tem estão guardadas para o pedido' : 'acabou na prateleira'}</span>
         </span>
         {next && <button className="qs-icon" onClick={() => dispatch({ type: 'SELECT_CUSTOMER', id: next.id })} aria-label="Próximo cliente">{idx + 1}/{save.customers.length} ›</button>}
@@ -82,7 +83,7 @@ export function QuickServe({ placement }: { placement: 'stage' | 'side' }) {
       <div className="qs-head">
         <PotionIcon recipeId={wanted.id} size={24} />
         <div className="qs-who">
-          <span className="qs-name"><span className="qs-face" aria-label="Humor">{left > 0.5 ? '🙂' : left > 0.25 ? '😐' : '😠'}</span> {c.vip ? <span className="qs-regular qs-vip">✨ {c.vip.name}</span> : reg ? <span className="qs-regular">{reg.name.split(',')[0]} <span className="heart-on">{'♥'.repeat(hearts) || '♡'}</span></span> : a.label} <span className="muted">quer</span> {wanted.shortName}</span>
+          <span className="qs-name"><span className="qs-face" aria-label="Humor"><Icon e={left > 0.5 ? '🙂' : left > 0.25 ? '😐' : '😠'} /></span> {c.vip ? <span className="qs-regular qs-vip"><Icon e="✨" /> {c.vip.name}</span> : reg ? <span className="qs-regular">{reg.name.split(',')[0]} <span className="heart-on">{'♥\uFE0E'.repeat(hearts) || '♡'}</span></span> : a.label} <span className="muted">quer</span> {wanted.shortName}</span>
           <Meter ratio={left} tone={left > 0.5 ? 'ok' : left > 0.25 ? 'gold' : 'warn'} label="Paciência" />
         </div>
         {next && (

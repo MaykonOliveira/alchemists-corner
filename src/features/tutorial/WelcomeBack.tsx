@@ -7,6 +7,7 @@ import { VISIT_GIFTS } from '../../domain/data/retention';
 import { REGULARS_BY_ID } from '../../domain/data/world';
 import { useStageCards } from './stage';
 import type { AwayReport } from '../../domain/models/types';
+import { Icon } from '../../ui/Icon';
 
 const hoursLabel = (ms: number) => {
   const m = Math.round(ms / 60000);
@@ -18,7 +19,7 @@ function AwayBook({ away }: { away: AwayReport }) {
   const brewed = Object.entries(away.brewed);
   return (
     <div className="away-book">
-      <p className="away-title">📖 Livro do caixa · {hoursLabel(away.awayMs)} fora</p>
+      <p className="away-title"><Icon e="📖" /> Livro do caixa · {hoursLabel(away.awayMs)} fora</p>
       {away.sold > 0 && <p className="away-line">O golem vendeu <b>{away.sold}</b> poç{away.sold > 1 ? 'ões' : 'ão'} pela janela: <b className="pos-text">+{away.coins}</b> <CoinIcon size={12} /> e +{away.xp} XP.</p>}
       {brewed.length > 0 && <p className="away-line">Saíram do caldeirão: {brewed.map(([id, n]) => `${n}× ${RECIPES_BY_ID[id].shortName}`).join(', ')}.</p>}
       {away.sold === 0 && brewed.length === 0 && <p className="away-line">A loja ficou quietinha esperando você.</p>}
@@ -65,11 +66,11 @@ export function WelcomeBack() {
             {VISIT_GIFTS.map((_, n) => <span key={n} className={n < giftN - 1 ? 'got' : n === giftN - 1 ? 'now' : ''}>{n + 1}</span>)}
           </div>
           <p className="away-line"><b>Presente de visita nº {giftN}:</b> {gift.label}</p>
-          <button className="btn btn-small btn-primary btn-glow" onClick={() => dispatch({ type: 'CLAIM_VISIT_GIFT' })}>🎁 Abrir presente</button>
+          <button className="btn btn-small btn-primary btn-glow" onClick={() => dispatch({ type: 'CLAIM_VISIT_GIFT' })}><Icon e="🎁" /> Abrir presente</button>
           <p className="muted small">Um presente por dia em que você abre a loja. Faltou um dia? Ele só espera.</p>
         </div>
       )}
-      {letter && <p className="away-line letter-line">✉️ {letter.from === 'condessa-estreia' ? 'A Condessa' : REGULARS_BY_ID[letter.from]?.name.split(',')[0]} vem hoje: “{letter.text}”</p>}
+      {letter && <p className="away-line letter-line"><Icon e="✉️" /> {letter.from === 'condessa-estreia' ? 'A Condessa' : REGULARS_BY_ID[letter.from]?.name.split(',')[0]} vem hoje: “{letter.text}”</p>}
       <ul className="welcome-facts">
         <li><CoinIcon size={14} /> {save.coins} moedas</li>
         <li>{potions} poções à venda</li>

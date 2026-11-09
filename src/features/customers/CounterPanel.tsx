@@ -9,6 +9,7 @@ import { useGameStore } from '../../store/gameStore';
 import { CoinIcon } from '../../ui/icons';
 import { PotionIcon } from '../../ui/SpriteIcon';
 import { Meter } from '../../ui/widgets';
+import { Icon } from '../../ui/Icon';
 
 /** Quão "cheio" parece o bolso do cliente (dica, não o valor exato). */
 function wallet(c: Customer) {
@@ -41,8 +42,8 @@ export function CounterPanel({ save }: { save: GameSave }) {
               className={`queue-item ${selected?.id === c.id ? 'on' : ''}`}
               onClick={() => dispatch({ type: 'SELECT_CUSTOMER', id: c.id })}
             >
-              <span className="row-title">{c.mystery ? 'Viajante encapuzado' : regularOf(c)?.name.split(',')[0] ?? ARCHETYPES[c.archetype].label}{regularOf(c) ? ' ♥' : ''}</span>
-              <span className="queue-want">{c.mystery ? <>❓ charada</> : <><PotionIcon recipeId={r.id} /> {r.shortName}{c.offer ? ' · negociando' : ''}</>}</span>
+              <span className="row-title">{c.mystery ? 'Viajante encapuzado' : regularOf(c)?.name.split(',')[0] ?? ARCHETYPES[c.archetype].label}{regularOf(c) ? ' ♥\uFE0E' : ''}</span>
+              <span className="queue-want">{c.mystery ? <><Icon e="❓" /> charada</> : <><PotionIcon recipeId={r.id} /> {r.shortName}{c.offer ? ' · negociando' : ''}</>}</span>
               <Meter ratio={left} tone={left > 0.5 ? 'ok' : left > 0.25 ? 'gold' : 'warn'} label="Paciência" />
             </button>
           );
@@ -66,7 +67,7 @@ function Serve({ save, c }: { save: GameSave; c: Customer }) {
       <div className="card-head">
         <span className="row-title">
           {reg ? reg.name : a.label}
-          {reg && <span className="serve-hearts"> {'♥'.repeat(regularState(save, reg.id).hearts)}{'♡'.repeat(MAX_HEARTS - regularState(save, reg.id).hearts)}</span>}
+          {reg && <span className="serve-hearts"> {'♥\uFE0E'.repeat(regularState(save, reg.id).hearts)}{'♡'.repeat(MAX_HEARTS - regularState(save, reg.id).hearts)}</span>}
         </span>
         <span className="wallet" title="Disposição para pagar" aria-label={`Bolso: ${wallet(c)} de 3`}>
           {Array.from({ length: 3 }, (_, i) => (

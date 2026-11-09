@@ -6,6 +6,7 @@ import { AWNINGS } from '../../domain/data/catalog';
 import { askReminderPermission, remindersSupported } from '../reminders';
 import { FunnelStats } from './FunnelStats';
 import { PrivacyDialog } from './PrivacyDialog';
+import { Icon } from '../../ui/Icon';
 
 function Slider({ label, icon, value, onChange, disabled, toggle }: {
   label: string; icon: string; value: number; onChange: (v: number) => void; disabled?: boolean;
@@ -14,9 +15,9 @@ function Slider({ label, icon, value, onChange, disabled, toggle }: {
   return (
     <div className={`mixer-row ${disabled ? 'mixer-off' : ''}`}>
       {toggle ? (
-        <label className="mixer-name"><input type="checkbox" checked={toggle.on} onChange={(e) => toggle.set(e.target.checked)} /> {icon} {label}</label>
+        <label className="mixer-name"><input type="checkbox" checked={toggle.on} onChange={(e) => toggle.set(e.target.checked)} /> <Icon e={icon} /> {label}</label>
       ) : (
-        <span className="mixer-name">{icon} {label}</span>
+        <span className="mixer-name"><Icon e={icon} /> {label}</span>
       )}
       <input type="range" min={0} max={1} step={0.05} value={value} disabled={disabled} aria-label={`Volume: ${label}`}
         onChange={(e) => onChange(Number(e.target.value))} />
@@ -92,7 +93,7 @@ export function SettingsModal() {
         </div>
         {exporting && <SaveTransferDialog mode="export" onClose={() => setExporting(false)} />}
         <div className="btn-row">
-          <button className="btn" onClick={() => dispatch({ type: 'OPEN_MODAL', modal: 'share' })}>📸 Mostrar a loja</button>
+          <button className="btn" onClick={() => dispatch({ type: 'OPEN_MODAL', modal: 'share' })}><Icon e="📸" /> Mostrar a loja</button>
         </div>
         <div className="settings-links">
           <FunnelStats />

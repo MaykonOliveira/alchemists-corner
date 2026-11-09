@@ -5,6 +5,7 @@ import { gameEvents } from '../../game/events';
 import { sfx } from '../../audio/sound';
 import { useGameStore } from '../../store/gameStore';
 import { SpriteIcon } from '../../ui/SpriteIcon';
+import { Icon } from '../../ui/Icon';
 
 /** Conquistas que viram um momento na tela (as outras continuam como aviso pequeno). */
 export const BIG_ACHIEVEMENTS: Record<string, { icon: string; title: string; text: string }> = {
@@ -56,7 +57,7 @@ export function Milestone() {
           {Array.from({ length: 14 }, (_, i) => <i key={i} style={{ left: `${(i * 37) % 100}%`, animationDelay: `${(i % 7) * 0.12}s` }} />)}
         </span>
       )}
-      <span className="milestone-icon" aria-hidden>{m.trophy !== undefined ? <SpriteIcon name={`trophy-${m.trophy}`} size={64} /> : m.icon}</span>
+      <span className="milestone-icon" aria-hidden>{m.trophy !== undefined ? <SpriteIcon name={`trophy-${m.trophy}`} size={64} /> : <Icon e={m.icon} size={64} />}</span>
       <span className="milestone-title">{m.title}</span>
       <span className="milestone-text">{m.text}</span>
     </button>

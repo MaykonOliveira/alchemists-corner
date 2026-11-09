@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import roomUrl from '../../assets/sprites/room.png';
+import roomUrl from '../../assets/sprites/storefront.png';
+import walkerUrl from '../../assets/sprites/customer-viajante.png';
 import { AWNINGS } from '../../domain/data/catalog';
 import { useGameStore } from '../../store/gameStore';
 import { PotionIcon } from '../../ui/SpriteIcon';
 import { SaveTransferDialog } from '../layout/SaveTransferDialog';
 import { useInstallPrompt } from '../pwa';
 import { PrivacyDialog } from '../layout/PrivacyDialog';
+import { Icon } from '../../ui/Icon';
 
 const TITLE_POTIONS = ['cura-simples', 'tonico-energia', 'elixir-concentracao', 'pocao-sorte', 'elixir-estelar', 'elixir-fenix'];
 
@@ -19,7 +21,7 @@ function Storefront({ name, awning }: { name: string; awning: string }) {
         <span className="awning-band sf-awning" />
         <span className="sf-sign">{name}</span>
         <div className="sf-front">
-          <div className="sf-window"><img src={roomUrl} alt="" /><span className="sf-glow" /></div>
+          <div className="sf-window"><img src={roomUrl} alt="" /><span className="sf-glow" /><span className="sf-walker" style={{ backgroundImage: `url(${walkerUrl})` }} /></div>
           <div className="sf-door"><span className="sf-door-sign">Aberto</span></div>
         </div>
       </div>
@@ -79,7 +81,7 @@ export function MenuScreen() {
             <button className="link-btn" onClick={() => setDialog('import')}>Importar save</button>
             {hasStoredSave && <button className="link-btn" onClick={() => setDialog('export')}>Exportar save</button>}
             {install && <button className="link-btn" onClick={install}>Instalar como app</button>}
-            <button className="link-btn" onClick={() => setSound(true)} aria-pressed={sound}>{sound ? '🔊 Som ligado' : '🔈 Ligar o som'}</button>
+            <button className="link-btn" onClick={() => setSound(true)} aria-pressed={sound}>{sound ? <><Icon e="🔊" /> Som ligado</> : <><Icon e="🔈" /> Ligar o som</>}</button>
             <button className="link-btn" onClick={() => setCredits((c) => !c)}>Créditos</button>
             <button className="link-btn" onClick={() => setPrivacy(true)}>Privacidade</button>
           </div>

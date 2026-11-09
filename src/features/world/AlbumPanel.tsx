@@ -2,13 +2,14 @@ import { MAX_HEARTS, REGULARS, TIP_HEARTS } from '../../domain/data/world';
 import type { CustomerArchetype, GameSave } from '../../domain/models/types';
 import { ACHIEVEMENTS, currentSeason, daysToNextSeason, giftLabel, regularState, SEASON_START_DAY } from '../../domain/rules/world';
 import { PotionName } from '../../ui/widgets';
+import { Icon } from '../../ui/Icon';
 
 const FACE: Record<CustomerArchetype, string> = { morador: '🧺', aventureiro: '⚔️', estudioso: '📚', viajante: '🎒', nobre: '👑' };
 
 function Hearts({ n }: { n: number }) {
   return (
     <span className="hearts" aria-label={`${n} de ${MAX_HEARTS} corações`}>
-      {Array.from({ length: MAX_HEARTS }, (_, i) => <span key={i} className={i < n ? 'heart-on' : 'heart-off'}>{i < n ? '♥' : '♡'}</span>)}
+      {Array.from({ length: MAX_HEARTS }, (_, i) => <span key={i} className={i < n ? 'heart-on' : 'heart-off'}>{i < n ? '♥\uFE0E' : '♡'}</span>)}
     </span>
   );
 }
@@ -21,7 +22,7 @@ export function AlbumPanel({ save }: { save: GameSave }) {
   return (
     <>
       <div className={`card season-card season-${season.id}`}>
-        <div className="season-icon" aria-hidden>{season.icon}</div>
+        <div className="season-icon" aria-hidden><Icon e={season.icon} size={32} /></div>
         <div>
           <p className="row-title">{season.name}</p>
           <p className="card-text small">
@@ -42,7 +43,7 @@ export function AlbumPanel({ save }: { save: GameSave }) {
           const locked = save.level < r.minLevel;
           return (
             <li key={r.id} className={`card regular ${locked ? 'card-locked' : ''} ${st.hearts >= MAX_HEARTS ? 'regular-friend' : ''}`}>
-              <div className="regular-face" aria-hidden>{locked ? '❔' : FACE[r.archetype]}</div>
+              <div className="regular-face" aria-hidden><Icon e={locked ? '❔' : FACE[r.archetype]} size={32} /></div>
               <div className="regular-body">
                 <p className="row-title">{locked ? '???' : r.name}</p>
                 {locked ? (
@@ -51,7 +52,7 @@ export function AlbumPanel({ save }: { save: GameSave }) {
                   <>
                     <p className="card-text small">Sempre pede: <PotionName id={r.favorite} /></p>
                     <p className="card-text small"><Hearts n={st.hearts} /> <span className="muted">· {st.visits} visita{st.visits === 1 ? '' : 's'}</span></p>
-                    {st.gift && <p className="card-text small regular-gift">🎁 Presenteou: {giftLabel(r)}</p>}
+                    {st.gift && <p className="card-text small regular-gift"><Icon e="🎁" /> Presenteou: {giftLabel(r)}</p>}
                   </>
                 )}
               </div>
@@ -64,14 +65,14 @@ export function AlbumPanel({ save }: { save: GameSave }) {
       <ul className="achievements">
         {ACHIEVEMENTS.map((a) => (
           <li key={a.id} className={`achievement ${got.has(a.id) ? 'achievement-on' : ''}`} title={a.text}>
-            <span className="achievement-icon" aria-hidden>{got.has(a.id) ? a.icon : '🔒'}</span>
+            <span className="achievement-icon" aria-hidden><Icon e={got.has(a.id) ? a.icon : '🔒'} size={32} /></span>
             <span className="achievement-name">{a.name}</span>
             <span className="achievement-text">{a.text}</span>
           </li>
         ))}
       </ul>
 
-      <p className="card-text small muted album-cat">🐈 Carinhos no gato da loja: {save.petCount}. Ele dá sorte uma vez por dia.</p>
+      <p className="card-text small muted album-cat"><Icon e="🐈" /> Carinhos no gato da loja: {save.petCount}. Ele dá sorte uma vez por dia.</p>
     </>
   );
 }

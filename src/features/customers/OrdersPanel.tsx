@@ -7,6 +7,7 @@ import { INGREDIENTS_BY_ID } from '../../domain/data/ingredients';
 import { FINDS_BY_ID } from '../../domain/data/street';
 import { useGameStore } from '../../store/gameStore';
 import { Coins, Meter, PotionName } from '../../ui/widgets';
+import { Icon } from '../../ui/Icon';
 
 export function OrdersPanel({ save }: { save: GameSave }) {
   const dispatch = useGameStore((s) => s.dispatch);
@@ -16,14 +17,14 @@ export function OrdersPanel({ save }: { save: GameSave }) {
     <>
       {ev && (
         <div className="card note note-gold">
-          <p className="row-title">📜 {ev.name}</p>
+          <p className="row-title"><Icon e="📜" /> {ev.name}</p>
           <p className="card-text">{ev.text}</p>
         </div>
       )}
       <ContractCard save={save} />
       {o ? (
         <div className={`card note ${o.visitor ? 'visitor-order' : ''}`}>
-          <p className="muted small">{o.visitor ? '🧥 Pedido do dia' : 'Pedido especial'} · {o.client}</p>
+          <p className="muted small">{o.visitor ? <><Icon e="🧥" /> Pedido do dia</> : 'Pedido especial'} · {o.client}</p>
           <p className="card-text">{o.text}</p>
           <div className="card-head order-line">
             <span className="row-title">{o.qty}×</span>
@@ -33,12 +34,12 @@ export function OrdersPanel({ save }: { save: GameSave }) {
           <p className="card-text small">
             Você tem {potionStock(save, o.recipeId)} de {o.qty}. Prazo: até o fim do dia {o.dueDay}
             {o.dueDay === save.day ? ' (hoje!)' : ''}.
-            {' '}🔒 Ficam guardadas: o botão Vender do balcão não usa estas poções.
+            {' '}<Icon e="🔒" /> Ficam guardadas: o botão Vender do balcão não usa estas poções.
           </p>
           <p className="card-text">
             Recompensa: <Coins n={o.rewardCoins} /> · +{o.rewardRep} reputação · +{o.rewardXp} XP
             {o.rewardSeal && ' · 1 Selo de Mestre'}
-            {o.rewardFind && FINDS_BY_ID[o.rewardFind] && <> · achado lendário: <b>{FINDS_BY_ID[o.rewardFind].icon} {FINDS_BY_ID[o.rewardFind].name}</b></>}
+            {o.rewardFind && FINDS_BY_ID[o.rewardFind] && <> · achado lendário: <b><Icon e={FINDS_BY_ID[o.rewardFind].icon} /> {FINDS_BY_ID[o.rewardFind].name}</b></>}
           </p>
           <button
             className="btn btn-primary"
@@ -69,7 +70,7 @@ function ContractCard({ save }: { save: GameSave }) {
     if (save.level < CONTRACT_LEVEL) return null;
     return (
       <div className="card note contract contract-empty">
-        <p className="row-title">📜 Contratos</p>
+        <p className="row-title"><Icon e="📜" /> Contratos</p>
         <p className="card-text small">Nenhum contrato agora. Um novo chega em {Math.max(1, save.nextContractDay - save.day)} dia(s).</p>
       </div>
     );
@@ -97,10 +98,10 @@ function ContractCard({ save }: { save: GameSave }) {
         <span><Coins n={c.rewardCoins} /></span>
         <span>+{c.rewardRep} rep</span>
         <span>+{c.rewardXp} XP</span>
-        {c.rewardSeal && <span className="contract-seal">✨ 1 Selo</span>}
+        {c.rewardSeal && <span className="contract-seal"><Icon e="✨" /> 1 Selo</span>}
       </div>
       <p className="card-text small">
-        🎁 Baú: {c.rewardIngredients.map((r) => `${r.qty}× ${INGREDIENTS_BY_ID[r.ingredientId].name}`).join(', ')}
+        <Icon e="🎁" /> Baú: {c.rewardIngredients.map((r) => `${r.qty}× ${INGREDIENTS_BY_ID[r.ingredientId].name}`).join(', ')}
       </p>
       {c.accepted ? (
         <>
