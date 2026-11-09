@@ -154,10 +154,28 @@ def walls(build):
     return c
 
 
+def blueprint(build):
+    """Planta da obra (revisão visual V5): o contorno da casa pronta em traço azul, por cima do terreno vazio."""
+    done = build()
+    c = Canvas(W, H)
+    solid = lambda x, y: done.get(x, y)[3] > 0
+    for y in range(H - 6):
+        for x in range(W):
+            if not solid(x, y):
+                continue
+            edge = not (solid(x - 1, y) and solid(x + 1, y) and solid(x, y - 1) and solid(x, y + 1))
+            if edge and (x + y) % 3 != 2:
+                c.px(x, y, 'b5')
+            elif not edge and x % 4 == 0 and y % 4 == 0:
+                c.px(x, y, 'b4')
+    return c
+
+
 def frames():
     out = {}
     for name, fn in BUILDINGS.items():
         out[f'{name}-0'] = lot()
+        out[f'{name}-4'] = blueprint(fn)
         out[f'{name}-1'] = foundation(fn)
         out[f'{name}-2'] = walls(fn)
         out[f'{name}-3'] = fn()

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { PhaserGame } from '../../game/PhaserGame';
 import { TutorialCard } from '../../features/tutorial/TutorialCard';
 import { WelcomeBack } from '../../features/tutorial/WelcomeBack';
@@ -23,6 +23,10 @@ export function GameScreen() {
   const dispatch = useGameStore((s) => s.dispatch);
   const phase = useGameStore((s) => s.save?.phase);
   const panelOpen = useGameStore((s) => s.ui.activePanel !== null);
+  // Celular em pé (V5): o painel é uma gaveta. Puxar a alça para cima esconde a cena e dá a tela toda ao painel.
+  const [drawerUp, setDrawerUp] = useState(false);
+  const dragY = useRef<number | null>(null);
+  useEffect(() => { if (!panelOpen) setDrawerUp(false); }, [panelOpen]);
 
   // Atalhos de teclado (PRD 7.4)
   useEffect(() => {
@@ -48,7 +52,7 @@ export function GameScreen() {
   }, [dispatch, phase]);
 
   return (
-    <div className={`game ${panelOpen ? 'panel-open' : ''}`}>
+    <div className={`game ${panelOpen ? 'panel-open' : ''} ${drawerUp ? 'drawer-up' : ''}`}>
       <Hud />
       <main className="game-main">
         <div className="stage-wrap">
@@ -60,6 +64,19 @@ export function GameScreen() {
           <Toasts />
           <Milestone />
         </div>
+        <button
+          className="drawer-handle"
+          aria-label={drawerUp ? 'Mostrar a loja de novo' : 'Abrir o painel na tela toda'}
+          aria-expanded={drawerUp}
+          onPointerDown={(e) => { dragY.current = e.clientY; }}
+          onPointerUp={(e) => {
+            const dy = dragY.current === null ? 0 : e.clientY - dragY.current;
+            dragY.current = null;
+            setDrawerUp((up) => (dy < -24 ? true : dy > 24 ? false : !up));
+          }}
+        >
+          <span className="drawer-grip" />
+        </button>
         <SidePanel />
       </main>
       <BottomBar />

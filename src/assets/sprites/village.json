@@ -1,6 +1,7 @@
 {
  "w": 48,
  "h": 40,
+ "cols": 5,
  "rows": [
   "fonte",
   "ponte",

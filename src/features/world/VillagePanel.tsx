@@ -12,15 +12,19 @@ import { Icon } from '../../ui/Icon';
 /** Uma obra no estado atual (terreno, fundação, paredes ou pronta), recortada de village.png. */
 export function Building({ id, stage, scale = 2 }: { id: string; stage: number; scale?: number }) {
   const row = sheet.rows.indexOf(id);
+  const size = `${sheet.w * sheet.cols * scale}px ${sheet.h * sheet.rows.length * scale}px`;
+  const at = (col: number) => `-${col * sheet.w * scale}px -${row * sheet.h * scale}px`;
+  // Terreno vazio ou só a fundação: a planta da casa pronta aparece desenhada por cima (revisão visual V5).
+  const plan = stage <= 1;
   return (
     <span
-      className={`building ${stage >= 3 ? 'done' : ''}`}
+      className={`building ${stage >= 3 ? 'done' : ''} ${plan ? 'building-plan' : ''}`}
       aria-hidden
       style={{
         width: sheet.w * scale, height: sheet.h * scale,
-        backgroundImage: `url(${villageUrl})`,
-        backgroundSize: `${sheet.w * 4 * scale}px ${sheet.h * sheet.rows.length * scale}px`,
-        backgroundPosition: `-${stage * sheet.w * scale}px -${row * sheet.h * scale}px`,
+        backgroundImage: plan ? `url(${villageUrl}), url(${villageUrl})` : `url(${villageUrl})`,
+        backgroundSize: plan ? `${size}, ${size}` : size,
+        backgroundPosition: plan ? `${at(4)}, ${at(stage)}` : at(stage),
       }}
     />
   );

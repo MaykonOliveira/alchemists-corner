@@ -172,16 +172,16 @@ def main():
               'royal': {k: {'x': x, 'y': y} for k, (x, y) in RO.POS.items()}}
     with open(os.path.join(OUT, 'layout.json'), 'w') as fh:
         json.dump(layout, fh, indent=1)
-    # Obras da vila (fase 4, pacote W): grade de 4 estados por obra.
+    # Obras da vila (fase 4, pacote W): grade de 4 estados por obra, mais a planta (V5) na 5ª coluna.
     vf = VI.frames()
     names = list(VI.BUILDINGS)
-    vsheet = Canvas(VI.W * 4, VI.H * len(names))
+    vsheet = Canvas(VI.W * 5, VI.H * len(names))
     for row, name in enumerate(names):
-        for st in range(4):
+        for st in range(5):
             vsheet.blit(vf[f'{name}-{st}'], st * VI.W, row * VI.H)
     save(vsheet, 'village.png')
     with open(os.path.join(OUT, 'village.json'), 'w') as fh:
-        json.dump({'w': VI.W, 'h': VI.H, 'rows': names}, fh, indent=1)
+        json.dump({'w': VI.W, 'h': VI.H, 'cols': 5, 'rows': names}, fh, indent=1)
     # Quadros da história de abertura (pacote G).
     for name, cv in ST.frames().items():
         save(cv, f'{name}.png')

@@ -14,6 +14,8 @@ export function Hud() {
   const paused = useGameStore((s) => s.ui.paused);
   const dispatch = useGameStore((s) => s.dispatch);
   const [confirmClose, setConfirmClose] = useState(false);
+  // Celular em pé (V5): uma linha só; nível, XP e reputação abrem num toque.
+  const [details, setDetails] = useState(false);
   const speed = useGameStore((s) => s.ui.speed);
   const fast = useGameStore((s) => autoFast(s.save, s.ui));
   // Com o Início à vista, o botão grande "Abrir a loja" já está lá: o do topo só aparece com outra tela aberta.
@@ -36,8 +38,33 @@ export function Hud() {
   const xpSpan = isMaster ? MASTER_STEP_XP : xpForLevel(save.level + 1) - xpStart;
   const xpIn = save.xp - xpStart;
 
+  const season = seasonOf(save.day);
+  const xpPct = levelProgress(save.xp) * 100;
+  const levelShort = isMaster ? `M${masterRank(save.xp)}` : `Nv ${save.level}`;
+
   return (
     <header className="hud">
+      <button className="hud-compact" onClick={() => setDetails((d) => !d)} aria-expanded={details} aria-label="Ver nível, experiência e reputação">
+        <span className="hc-day"><Icon e={season.icon} /> {save.day}</span>
+        <span className="hc-clock">{formatClock(save.clockMin)}{paused && save.phase === 'expediente' ? ' ⏸\uFE0E' : fast ? <Icon e="⏩" /> : ''}</span>
+        <span key={delta?.key ?? 0} className={`hc-coins ${delta ? (delta.n > 0 ? 'coin-gain' : 'coin-loss') : ''}`}><CoinIcon size={16} /> {coins}</span>
+        <span className="hc-rep"><StarIcon size={16} /> {save.reputation}</span>
+        <span className="hc-level" style={{ ['--xp' as string]: `${xpPct}%` }}>{levelShort}</span>
+      </button>
+      {details && (
+        <div className="hud-pop" role="dialog" aria-label="Sua loja">
+          <div className="hp-head">
+            <strong>{save.shopName}</strong>
+            <button className="hud-crystals" onClick={() => { setDetails(false); dispatch({ type: 'TOGGLE_PANEL', panel: 'season' }); }}><Icon e="🌙" /> {save.crystals}</button>
+          </div>
+          <p className="hp-line">Dia {save.day} · {season.name} · {PHASE_LABEL[save.phase]} · {TIME_OF_DAY_LABEL[timeOfDay(save.clockMin)]}</p>
+          <span className="bar hp-day" aria-hidden><span style={{ width: `${dayProgress(save.clockMin) * 100}%` }} /></span>
+          <p className="hp-line"><strong>{isMaster ? `Mestre ${masterRank(save.xp)}` : `Nível ${save.level}`}</strong> · {xpIn}/{xpSpan} XP</p>
+          <span className="bar bar-xp hp-xp" aria-hidden><span style={{ width: `${xpPct}%` }} /></span>
+          <p className="hp-line"><StarIcon size={16} /> Reputação {save.reputation}: <strong>{reputationTitle(save.reputation)}</strong></p>
+          <button className="btn btn-ghost hp-close" onClick={() => setDetails(false)}>Fechar</button>
+        </div>
+      )}
       <div className="hud-brand" title="Alchemist's Corner">
         <span className="brand-full">{save.royal && save.royal.chapter >= 5 && <span className="brand-crown" title="Grão-Alquimista do Reino" aria-label="Grão-Alquimista do Reino"><Icon e="👑" /> </span>}{save.shopName}</span>
         <button className="hud-crystals" onClick={() => dispatch({ type: 'TOGGLE_PANEL', panel: 'season' })} title="Cristais de luar: ganhe jogando e use na decoração (aba Temporada)"><Icon e="🌙" /> {save.crystals}</button>
@@ -70,6 +97,7 @@ export function Hud() {
         <span className="hud-xp">{xpIn}/{xpSpan} XP</span>
       </div>
       <div className="hud-actions">
+        <div className="hud-run">
         {save.phase === 'preparacao' && !homeVisible && (
           <button data-tut="open-shop" className="btn btn-primary btn-glow" onClick={() => dispatch({ type: 'OPEN_SHOP' })}>Abrir loja</button>
         )}
@@ -96,6 +124,7 @@ export function Hud() {
             )}
           </>
         )}
+        </div>
         <button className="btn btn-ghost" onClick={() => dispatch({ type: 'OPEN_MODAL', modal: 'settings' })} aria-label="Configurações" title="Configurações"><Icon e="⚙" /></button>
       </div>
     </header>
