@@ -6,7 +6,7 @@ import { applyCommand, type DomainCommand } from '../../domain/rules/commands';
 import { CONTRACT_DAYS, CONTRACT_FAIL_REP, contractReady } from '../../domain/rules/contracts';
 import { maxCustomers } from '../../domain/rules/customers';
 import { createNewGame } from '../../domain/rules/initialState';
-import { sealsAvailable, xpForLevel } from '../../domain/rules/progression';
+import { sealsEarned, xpForLevel } from '../../domain/rules/progression';
 import { migrateSave } from '../../persistence/migrations';
 
 const ctx = { now: 0, random: () => 0.5 };
@@ -86,8 +86,9 @@ describe('contratos de vários dias', () => {
   });
 
   it('aceitar dá 3 dias; entrega aos poucos e paga tudo ao completar', () => {
-    const s = atLevel(12, { day: 4, contract: contract({ rewardSeal: true }), potions: stock([['cura-simples', 3]]) });
-    const seals = sealsAvailable(s);
+    const s0 = atLevel(12, { day: 4, contract: contract({ rewardSeal: true }), potions: stock([['cura-simples', 3]]) });
+    const s = { ...s0, sealsPaid: sealsEarned(s0) };
+    const seals = s.sealsPaid;
     const a = run(s, { type: 'ACCEPT_CONTRACT' }, { type: 'DELIVER_CONTRACT' });
     expect(a.save.contract!.dueDay).toBe(4 + CONTRACT_DAYS);
     expect(a.save.contract!.items[0].delivered).toBe(3);
@@ -100,7 +101,7 @@ describe('contratos de vários dias', () => {
     expect(b.save.coins).toBe(s.coins + 1000 + 50);
     expect(b.save.contractsDone).toBe(1);
     expect(b.save.ingredients['folha-lunar']).toBeGreaterThan(s.ingredients['folha-lunar'] ?? 0);
-    expect(sealsAvailable(b.save)).toBe(seals + 1);
+    expect(b.save.sealsPaid).toBe(seals + 1);
     // Sobrou 1 cura no estoque (entregou só o que faltava).
     expect(b.save.potions.find((p) => p.recipeId === 'cura-simples')?.quantity).toBe(4);
   });

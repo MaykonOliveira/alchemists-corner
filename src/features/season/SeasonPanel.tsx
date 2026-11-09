@@ -16,7 +16,8 @@ import { More } from '../../ui/widgets';
 
 const SLOTS: DecorSlot[] = ['tapete', 'quadro', 'luminaria', 'planta', 'toldo'];
 
-function Track({ save }: { save: GameSave }) {
+/** Trilha da temporada: mora no Diário da loja, junto das metas e do baú (auditoria P1.1). */
+export function Track({ save }: { save: GameSave }) {
   const t = save.track;
   const next = Math.min(TRACK_REWARDS.length, t.tier + 1);
   const into = t.points - t.tier * TRACK_STEP;
@@ -167,16 +168,15 @@ function Gifts({ save }: { save: GameSave }) {
   );
 }
 
-/** Aba Temporada (tecla T): cristais, trilha, decoração, festa, desafio e presentes. */
+/** Aba Decoração (tecla T): cristais, decoração, festa, desafio e presentes. A trilha foi para o Diário. */
 export function SeasonPanel({ save }: { save: GameSave }) {
   const dispatch = useGameStore((s) => s.dispatch);
   return (
     <div className="season-panel">
       <div className="crystal-banner">
         <span className="crystal-n"><Icon e="🌙" /> {save.crystals}</span>
-        <span className="small">Cristais de luar: vêm das metas do dia, do baú, das conquistas e dos presentes. Servem só para decorar: ninguém compra vantagem.</span>
+        <span className="small">Cristais de luar: vêm das metas, do baú, das conquistas, dos níveis altos e das receitas dominadas. Compram decoração aqui e talentos no Grimório. Só se ganham jogando.</span>
       </div>
-      <Track save={save} />
       <Decor save={save} />
       <Fest save={save} />
       <Challenge save={save} />

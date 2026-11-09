@@ -124,7 +124,7 @@ describe('Metas sem teto (pacote X)', () => {
   it('talentos sem fim só abrem no nível máximo e não têm teto', () => {
     const low = run({ ...endgame(), level: 14, talents: {} }, { type: 'LEARN_TALENT', talentId: 'toque-de-ouro' });
     expect(low.save.talents['toque-de-ouro']).toBeUndefined();
-    const s = run({ ...endgame(), sealsBought: 100 }, { type: 'LEARN_TALENT', talentId: 'toque-de-ouro' }, { type: 'LEARN_TALENT', talentId: 'toque-de-ouro' });
+    const s = run({ ...endgame(), crystals: 1000 }, { type: 'LEARN_TALENT', talentId: 'toque-de-ouro' }, { type: 'LEARN_TALENT', talentId: 'toque-de-ouro' });
     expect(s.save.talents['toque-de-ouro']).toBe(2);
   });
 

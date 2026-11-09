@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { RECIPES, RECIPES_BY_ID } from '../../domain/data/recipes';
 import { UPGRADES } from '../../domain/data/upgrades';
-import type { Customer, GameSave } from '../../domain/models/types';
+import type { Customer, GameEvent, GameSave } from '../../domain/models/types';
 import { applyCommand, type DomainCommand } from '../../domain/rules/commands';
 import { maxPriceFor, spawnCustomer } from '../../domain/rules/customers';
 import { ingredientPrice, potionCapacity, priceRange, recipeCost } from '../../domain/rules/economy';
 import { createNewGame } from '../../domain/rules/initialState';
 import { MASTERY_STEPS, masteryStars } from '../../domain/rules/mastery';
 import {
-  levelFromXp, MASTER_STEP_XP, masterRank, MAX_LEVEL, sealsAvailable, xpForLevel,
+  levelFromXp, MASTER_STEP_XP, masterRank, MAX_LEVEL, SEAL_CRYSTALS, sealsEarned, xpForLevel,
 } from '../../domain/rules/progression';
 import type { Draft } from '../../domain/rules/context';
 import { migrateSave } from '../../persistence/migrations';
@@ -34,6 +34,9 @@ const atLevel = (level: number, over: Partial<GameSave> = {}): GameSave => {
   s.knownRecipes = RECIPES.filter((r) => r.unlockLevel <= level).map((r) => r.id);
   return { ...s, ...over };
 };
+
+/** Save com os Selos já pagos em cristais, para o teste olhar só o que o comando muda. */
+const settled = (s: GameSave): GameSave => ({ ...s, sealsPaid: sealsEarned(s) });
 
 describe('conteúdo do late game', () => {
   it('há algo novo em cada nível do 6 ao 15', () => {
@@ -71,34 +74,42 @@ describe('conteúdo do late game', () => {
     expect(save.level).toBe(12);
     expect(save.recipeHints).toContain('elixir-estelar');
     expect(events.some((e) => e.type === 'LEVEL_UP' && e.level === 12)).toBe(true);
-    expect(sealsAvailable(save)).toBe(2);
+    // Os Selos viram cristais de luar (P1.1): 2 Selos, 20 cristais.
+    expect(save.sealsPaid).toBe(2);
+    expect(events).toContainEqual({ type: 'CRYSTALS', n: 2 * SEAL_CRYSTALS, reason: 'selo' });
   });
 
   it('graus de Mestre avisam e dão Selo', () => {
     const s = atLevel(15, { xp: xpForLevel(15) + MASTER_STEP_XP - 5 });
     const { save, events } = run(s, { type: 'BUY_UPGRADE', upgradeId: 'estufa' });
     expect(events.some((e) => e.type === 'MASTER_RANK' && e.rank === 1)).toBe(true);
-    expect(sealsAvailable(save)).toBe(5 + 1);
+    expect(save.sealsPaid).toBe(5 + 1);
   });
 });
 
 describe('talentos do Grimório', () => {
-  it('custam 1, 2, 3 selos e respeitam o grau máximo', () => {
-    let s = atLevel(13); // 3 selos
-    s = run(s, { type: 'LEARN_TALENT', talentId: 'labia' }).save;
-    expect(s.talents.labia).toBe(1);
-    expect(sealsAvailable(s)).toBe(2);
-    s = run(s, { type: 'LEARN_TALENT', talentId: 'labia' }).save;
-    expect(s.talents.labia).toBe(2);
-    expect(sealsAvailable(s)).toBe(0);
-    const r = run(s, { type: 'LEARN_TALENT', talentId: 'labia' });
+  it('custam 10, 20, 30 cristais e respeitam o grau máximo', () => {
+    // Quanto o comando cobrou (descontando cristais que a conquista do primeiro talento dá).
+    const spent = (before: GameSave, r: { save: GameSave; events: GameEvent[] }) =>
+      before.crystals - r.save.crystals + r.events.reduce((n, e) => n + (e.type === 'CRYSTALS' ? e.n : 0), 0);
+    let s = settled(atLevel(13, { crystals: 30 }));
+    let r = run(s, { type: 'LEARN_TALENT', talentId: 'labia' });
+    expect(r.save.talents.labia).toBe(1);
+    expect(spent(s, r)).toBe(10);
+    s = r.save;
+    r = run(s, { type: 'LEARN_TALENT', talentId: 'labia' });
+    expect(r.save.talents.labia).toBe(2);
+    expect(spent(s, r)).toBe(20);
+    s = r.save;
+    r = run(s, { type: 'LEARN_TALENT', talentId: 'labia' });
     expect(r.save.talents.labia).toBe(2);
     expect(r.events.some((e) => e.type === 'ERROR')).toBe(true);
   });
 
-  it('sem selos não aprende nada', () => {
-    const r = run(atLevel(10), { type: 'LEARN_TALENT', talentId: 'fama' });
+  it('antes do Grimório despertar não aprende nada, nem com cristais no bolso', () => {
+    const r = run(atLevel(10, { crystals: 500 }), { type: 'LEARN_TALENT', talentId: 'fama' });
     expect(r.save.talents.fama).toBeUndefined();
+    expect(r.save.crystals).toBe(500);
   });
 
   it('lábia aumenta o que o cliente aceita pagar e o amigo do fornecedor barateia', () => {
@@ -138,7 +149,7 @@ describe('maestria das receitas', () => {
 
   it('receita dominada (5 estrelas) rende 1 Selo', () => {
     const s = atLevel(5, { mastery: { 'cura-simples': MASTERY_STEPS[4] } });
-    expect(sealsAvailable(s)).toBe(1);
+    expect(sealsEarned(s)).toBe(1);
   });
 });
 
@@ -213,11 +224,11 @@ describe('save antigo (v3, nível 10 zerado)', () => {
 
 describe('gastos de fim de jogo', () => {
   it('doação à Guilda troca moedas por Selos, cada vez mais caros', () => {
-    let s = atLevel(11, { coins: 10000 });
-    const free = sealsAvailable(s);
+    let s = settled(atLevel(11, { coins: 10000 }));
+    const paid = s.sealsPaid!;
     s = run(s, { type: 'BUY_SEAL' }).save;
     expect(s.coins).toBe(7000);
-    expect(sealsAvailable(s)).toBe(free + 1);
+    expect(s.sealsPaid).toBe(paid + 1);
     s = run(s, { type: 'BUY_SEAL' }).save;
     expect(s.coins).toBe(1000);
     expect(run(s, { type: 'BUY_SEAL' }).save.sealsBought).toBe(2);

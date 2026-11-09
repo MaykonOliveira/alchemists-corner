@@ -30,4 +30,4 @@ export function decodeGift(text: string): GiftPayload | null {
 export const GAME_URL = 'https://maykonoliveira.github.io/alchemists-corner/';
 
 export const giftMessage = (code: string, shopName: string) =>
-  `🎁 A loja "${shopName}" mandou um presente para você no Alchemist's Corner! Jogue em ${GAME_URL} e cole este código na aba Temporada: ${code}`;
+  `🎁 A loja "${shopName}" mandou um presente para você no Alchemist's Corner! Jogue em ${GAME_URL} e cole este código na aba Decoração (área Mundo): ${code}`;

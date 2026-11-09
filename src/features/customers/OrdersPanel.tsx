@@ -38,7 +38,7 @@ export function OrdersPanel({ save }: { save: GameSave }) {
           </p>
           <p className="card-text">
             Recompensa: <Coins n={o.rewardCoins} /> · +{o.rewardRep} reputação · +{o.rewardXp} XP
-            {o.rewardSeal && ' · 1 Selo de Mestre'}
+            {o.rewardSeal && ' · 10 Cristais de luar'}
             {o.rewardFind && FINDS_BY_ID[o.rewardFind] && <> · achado lendário: <b><Icon e={FINDS_BY_ID[o.rewardFind].icon} /> {FINDS_BY_ID[o.rewardFind].name}</b></>}
           </p>
           <button
@@ -98,7 +98,7 @@ function ContractCard({ save }: { save: GameSave }) {
         <span><Coins n={c.rewardCoins} /></span>
         <span>+{c.rewardRep} rep</span>
         <span>+{c.rewardXp} XP</span>
-        {c.rewardSeal && <span className="contract-seal"><Icon e="✨" /> 1 Selo</span>}
+        {c.rewardSeal && <span className="contract-seal"><Icon e="🌙" /> 10 cristais</span>}
       </div>
       <p className="card-text small">
         <Icon e="🎁" /> Baú: {c.rewardIngredients.map((r) => `${r.qty}× ${INGREDIENTS_BY_ID[r.ingredientId].name}`).join(', ')}

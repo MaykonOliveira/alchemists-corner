@@ -6,6 +6,7 @@ import { useGameStore } from '../../store/gameStore';
 import { SpriteIcon } from '../../ui/SpriteIcon';
 import { Coins } from '../../ui/widgets';
 import { Icon } from '../../ui/Icon';
+import { Track } from '../season/SeasonPanel';
 
 /** As três metas do dia, com barra de progresso e prêmio. */
 export function GoalsList({ save, compact = false }: { save: GameSave; compact?: boolean }) {
@@ -42,7 +43,10 @@ export function GoalsList({ save, compact = false }: { save: GameSave; compact?:
   );
 }
 
-/** Painel de metas: as do dia e o baú da semana. */
+/**
+ * Diário da loja (auditoria P1.1): metas do dia, baú da semana e trilha da temporada num lugar só.
+ * São três prazos (dia, semana, temporada) do mesmo hábito: cumprir as metas.
+ */
 export function GoalsPanel({ save }: { save: GameSave }) {
   const dispatch = useGameStore((s) => s.dispatch);
   const weekDone = save.goals?.weekDone ?? 0;
@@ -52,8 +56,9 @@ export function GoalsPanel({ save }: { save: GameSave }) {
   const left = rivalDaysLeft(save.day);
   return (
     <>
+      <h3 className="mini-title">Hoje</h3>
       <GoalsList save={save} />
-      <h3 className="mini-title">Baú da semana</h3>
+      <h3 className="mini-title">Esta semana</h3>
       <div className={`card chest ${ready ? 'chest-ready' : ''} ${claimed ? 'chest-open' : ''}`}>
         <div className="chest-top">
           <span className="chest-icon" aria-hidden><Icon e={claimed ? '📭' : '🎁'} size={32} /></span>
@@ -77,6 +82,7 @@ export function GoalsPanel({ save }: { save: GameSave }) {
         </p>
         {ready && <button className="btn btn-primary btn-glow" onClick={() => dispatch({ type: 'CLAIM_CHEST' })}>Abrir o baú</button>}
       </div>
+      {save.day >= 3 && <><h3 className="mini-title">Esta temporada</h3><Track save={save} /></>}
       {save.reports.length > 0 && (
         <button className="link-btn panel-link" onClick={() => dispatch({ type: 'OPEN_PANEL', panel: 'report' })}><Icon e="📊" /> Ver o caixa e o relatório dos dias</button>
       )}

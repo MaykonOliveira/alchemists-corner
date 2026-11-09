@@ -211,7 +211,7 @@ export const useGameStore = create<StoreState>()(
         case 'CONTRACT_OFFERED': return toast('📜 Um contrato grande chegou ao quadro de avisos!', 'gold');
         case 'CONTRACT_ACCEPTED': return toast('Contrato aceito! Você tem 3 dias para entregar.', 'ok');
         case 'CONTRACT_PROGRESS': return toast(`${e.delivered} poções entregues para o contrato.`, 'ok');
-        case 'CONTRACT_DONE': return toast(`Contrato cumprido! +${e.coins} moedas${e.seal ? ' e 1 Selo de Mestre' : ''} e um baú de ingredientes raros.`, 'gold');
+        case 'CONTRACT_DONE': return toast(`Contrato cumprido! +${e.coins} moedas${e.seal ? ', 10 Cristais de luar' : ''} e um baú de ingredientes raros.`, 'gold');
         case 'CONTRACT_FAILED': return toast(`O contrato venceu. O cliente pagou ${e.coins} pelo que recebeu e a reputação caiu.`, 'warn');
         case 'ORDER_EXPIRED': return toast('Um pedido especial expirou. Sem problemas, outros virão.');
         case 'UPGRADE_BOUGHT': {
@@ -234,13 +234,13 @@ export const useGameStore = create<StoreState>()(
           return;
         }
         case 'MASTERY_STAR':
-          return toast(`Maestria! ${RECIPES_BY_ID[e.recipeId].name} agora tem ${'★'.repeat(e.stars)}: clientes pagam mais por ela.`, 'gold');
+          return toast(`Maestria! ${RECIPES_BY_ID[e.recipeId].name} agora tem ${'★'.repeat(e.stars)}: clientes pagam mais por ela.${e.stars >= 5 ? ' Receita dominada: +10 Cristais de luar.' : ''}`, 'gold');
         case 'MASTER_RANK':
-          return toast(`Grau de Mestre ${e.rank}! Você ganhou 1 Selo de Mestre para o Grimório.`, 'gold');
+          return toast(`Grau de Mestre ${e.rank}! Mais 10 Cristais de luar.`, 'gold');
         case 'TALENT_LEARNED':
           return toast(`Talento aprendido: ${TALENTS_BY_ID[e.talentId].name} (grau ${e.rank}).`, 'gold');
         case 'SEAL_BOUGHT':
-          return toast(`A Guilda dos Alquimistas agradece a doação de ${e.cost} moedas: +1 Selo de Mestre!`, 'gold');
+          return toast(`A Guilda dos Alquimistas agradece a doação de ${e.cost} moedas: +10 Cristais de luar!`, 'gold');
         case 'FESTIVAL_SPONSORED':
           return toast(`Festival patrocinado (−${e.cost} moedas)! Amanhã a cidade estará em festa.`, 'gold');
         case 'GREENHOUSE_HARVEST': {
@@ -309,11 +309,11 @@ export const useGameStore = create<StoreState>()(
         case 'VISIT_GIFT':
           return toast(`🎁 Presente de visita nº ${e.n} aberto!`, 'gold');
         case 'CRYSTALS':
-          return e.reason === 'feitos' ? undefined : toast(`🌙 +${e.n} Cristais de luar`, 'ok');
+          return e.reason === 'feitos' || e.reason === 'selo' ? undefined : toast(`🌙 +${e.n} Cristais de luar`, 'ok');
         case 'TRACK_TIER':
           return toast(`🌙 Trilha da Temporada, recompensa ${e.tier}: ${e.reward}!`, 'gold');
         case 'ITEM_GRANTED':
-          return toast(`🎀 Decoração nova: ${CATALOG_BY_ID[e.itemId]?.name ?? e.itemId}! Coloque na aba Temporada.`, 'gold');
+          return toast(`🎀 Decoração nova: ${CATALOG_BY_ID[e.itemId]?.name ?? e.itemId}! Coloque na aba Decoração.`, 'gold');
         case 'DECOR_BOUGHT':
           return toast(`${CATALOG_BY_ID[e.itemId]?.name ?? 'Decoração'} já está na loja!`, 'ok');
         case 'GIFT_SENT':

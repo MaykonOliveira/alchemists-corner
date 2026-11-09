@@ -415,6 +415,8 @@ export interface GameSave {
   talents: Record<string, number>;
   /** Selos comprados com moedas (doações à Guilda dos Alquimistas). */
   sealsBought: number;
+  /** Selos já pagos em cristais de luar (auditoria P1.1: uma moeda de prestígio só). */
+  sealsPaid?: number;
   /** O jogador patrocinou o Festival das Lanternas para o próximo dia. */
   festivalSponsored: boolean;
   /** Amizade com os fregueses fiéis, por id. */

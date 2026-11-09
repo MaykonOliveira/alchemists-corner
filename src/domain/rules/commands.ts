@@ -8,7 +8,7 @@ import { acceptContract, declineContract, deliverContract } from './contracts';
 import { setHelper } from './helpers';
 import { checkAchievements, petCat } from './world';
 import { deliverOrder } from './orders';
-import { buySeal, learnTalentCmd } from './progression';
+import { buySeal, learnTalentCmd, paySeals } from './progression';
 import { sponsorFestival } from './day';
 import { sendExpedition } from './street';
 import { claimChest, trackGoals } from './goals';
@@ -88,6 +88,7 @@ export function applyCommand(save: GameSave, cmd: DomainCommand, ctx: RuleContex
   checkRoyalInvite(d);
   checkAchievements(d);
   rewardFromEvents(d, [...d.events]);
+  paySeals(d);
   d.s.updatedAt = ctx.now;
   return { save: d.s, events: d.events };
 }

@@ -1,7 +1,7 @@
 import { SAVE_VERSION, type GameSave } from '../domain/models/types';
 import { ensureGoals } from '../domain/rules/goals';
 import { createNewGame } from '../domain/rules/initialState';
-import { MAX_LEVEL, unlockRecipesUpTo, xpForLevel } from '../domain/rules/progression';
+import { MAX_LEVEL, SEAL_CRYSTALS, sealsEarned, sealsUnspentLegacy, unlockRecipesUpTo, xpForLevel } from '../domain/rules/progression';
 import { DAY_EVENTS } from '../domain/data/orders';
 import { RECIPES_BY_ID } from '../domain/data/recipes';
 import { ROYAL_CHAPTERS } from '../domain/data/royal';
@@ -219,5 +219,12 @@ export function migrateSave(raw: unknown): GameSave | null {
   // Receitas de níveis que o jogador já alcançou (as novas dos níveis 6 a 10 entram direto).
   unlockRecipesUpTo(save, save.level);
   ensureGoals(save);
+  // Auditoria P1.1: Selos e cristais viraram uma moeda só. Na primeira carga depois da troca,
+  // os Selos que estavam guardados entram como cristais (os já gastos em talentos ficam onde estão).
+  if (typeof raw.sealsPaid === 'number') save.sealsPaid = Math.max(0, Math.floor(raw.sealsPaid));
+  else {
+    save.crystals += sealsUnspentLegacy(save) * SEAL_CRYSTALS;
+    save.sealsPaid = sealsEarned(save);
+  }
   return save;
 }

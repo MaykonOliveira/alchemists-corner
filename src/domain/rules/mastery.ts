@@ -52,14 +52,22 @@ export const talentBonus = (s: GameSave, id: string) => talentRank(s, id) * (TAL
 export const sealsSpent = (s: GameSave) =>
   Object.entries(s.talents).reduce((n, [, rank]) => n + (rank * (rank + 1)) / 2, 0);
 
-export function learnTalent(d: Draft, talentId: string, sealsAvailable: number): boolean {
+/** Custo em cristais de luar do próximo grau (cada Selo de antes vale 10 cristais). */
+export const talentCrystals = (rank: number) => talentCost(rank) * 10;
+
+/** Algum talento cabe nos cristais de agora? (a aba do Grimório avisa) */
+export const talentAffordable = (s: GameSave) =>
+  Object.values(TALENTS_BY_ID).some((t) => talentRank(s, t.id) < t.max && (!t.endless || s.level >= ENDLESS_TALENT_LEVEL) && s.crystals >= talentCrystals(talentRank(s, t.id)));
+
+export function learnTalent(d: Draft, talentId: string): boolean {
   const t = TALENTS_BY_ID[talentId];
   if (!t) return false;
   const rank = talentRank(d.s, talentId);
   if (rank >= t.max) return fail(d, 'Este talento já está no grau máximo.');
   if (t.endless && d.s.level < ENDLESS_TALENT_LEVEL) return fail(d, `Talentos sem fim abrem no nível ${ENDLESS_TALENT_LEVEL}.`);
-  const cost = talentCost(rank);
-  if (sealsAvailable < cost) return fail(d, `Faltam Selos de Mestre (precisa de ${cost}).`);
+  const cost = talentCrystals(rank);
+  if (d.s.crystals < cost) return fail(d, `Faltam ${cost - d.s.crystals} Cristais de luar.`);
+  d.s.crystals -= cost;
   d.s.talents[talentId] = rank + 1;
   d.events.push({ type: 'TALENT_LEARNED', talentId, rank: rank + 1 });
   return true;

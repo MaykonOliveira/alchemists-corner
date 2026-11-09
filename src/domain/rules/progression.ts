@@ -2,6 +2,7 @@ import { RECIPES } from '../data/recipes';
 import type { GameSave } from '../models/types';
 import { fail, type Draft } from './context';
 import { learnTalent, masteredRecipes, sealsSpent, talentBonus } from './mastery';
+import { grantCrystals } from './entitlements';
 import { LEVEL_GIFTS } from '../data/retention';
 import { addIngredients } from './street';
 import { restockUnlocked } from './economy';
@@ -64,9 +65,32 @@ export function buySeal(d: Draft): boolean {
   return true;
 }
 
-export const sealsAvailable = (s: GameSave) => Math.max(0, sealsEarned(s) - sealsSpent(s));
+/**
+ * Uma moeda de prestígio só (auditoria P1.1): os Selos de Mestre viraram Cristais de luar.
+ * As fontes de Selo continuam as mesmas (níveis 11+, graus de Mestre, receitas dominadas, contratos,
+ * doações), mas cada Selo ganho entra no bolso como SEAL_CRYSTALS cristais. Talentos e decoração
+ * disputam o mesmo cristal: é uma escolha entre deixar a loja mais forte ou mais bonita.
+ */
+export const SEAL_CRYSTALS = 10;
 
-export const learnTalentCmd = (d: Draft, talentId: string) => learnTalent(d, talentId, sealsAvailable(d.s));
+/** Selos que ainda não foram trocados por cristais (o que sobrou de saves antigos, antes da troca). */
+export const sealsUnspentLegacy = (s: GameSave) => Math.max(0, sealsEarned(s) - sealsSpent(s));
+
+/** Paga em cristais os Selos ganhos desde a última vez. Roda depois de cada comando. */
+export function paySeals(d: Draft) {
+  const due = sealsEarned(d.s) - (d.s.sealsPaid ?? 0);
+  if (due <= 0) return;
+  d.s.sealsPaid = (d.s.sealsPaid ?? 0) + due;
+  grantCrystals(d, due * SEAL_CRYSTALS, 'selo');
+}
+
+/** O Grimório desperta no nível 11 ou com a primeira receita dominada, como antes da troca. */
+export const grimoireAwake = (s: GameSave) => s.level >= SEAL_LEVEL || sealsEarned(s) > 0;
+
+export function learnTalentCmd(d: Draft, talentId: string): boolean {
+  if (!grimoireAwake(d.s)) return fail(d, `O Grimório desperta no nível ${SEAL_LEVEL}.`);
+  return learnTalent(d, talentId);
+}
 
 /** Libera as receitas do nível (usado ao subir de nível e ao migrar saves antigos). */
 export function unlockRecipesUpTo(s: GameSave, level: number): string[] {
