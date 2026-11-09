@@ -87,6 +87,8 @@ export interface Customer {
   mystery?: boolean;
   /** Visita especial (Condessa no dia 1, convidado da festa da estação): nome próprio e preço fixo. */
   vip?: { name: string; pays: number; kind: 'estreia' | 'festa' | 'carta' };
+  /** Descreve o problema em vez de dizer o nome da poção (pedido por sintoma). */
+  symptom?: boolean;
 }
 
 /** Amizade com um freguês fiel. */

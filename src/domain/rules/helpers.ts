@@ -4,7 +4,7 @@ import { RECIPES_BY_ID } from '../data/recipes';
 import type { Customer, GameSave, HelperWork } from '../models/types';
 import { freeCauldron, maxBatches, potionsPerBatch, startBrew } from './alchemy';
 import { fail, type Draft } from './context';
-import { acceptOffer, dismissCustomer, priceVerdict, serveCustomer, suits } from './customers';
+import { dismissCustomer, serveCustomer } from './customers';
 import { applyPurchase, countIngredients, has, ingredientCapacity, ingredientPrice, potionStock, supplierLeft } from './economy';
 
 // ---------------------------------------------------------------------------
@@ -150,14 +150,17 @@ function runApprentice(d: Draft) {
 
 // -------------------------------------------------------------------- golem
 
-/** Melhor poção que o golem pode oferecer a um cliente (a pedida primeiro), ou null. */
+/**
+ * Clientes que o golem atende: só quem pede uma poção pelo nome.
+ * Charadas, sintomas, fregueses fiéis e visitas especiais ficam para o jogador.
+ */
+export const golemServes = (c: Customer) => !c.mystery && !c.symptom && !c.regularId && !c.vip;
+
+/** A poção que o golem entrega: exatamente a pedida (ele não sugere trocas), ou null. */
 export function golemChoice(s: GameSave, c: Customer): string | null {
-  const options = s.potions
-    .filter((p) => p.forSale && p.quantity > 0 && suits(c, p.recipeId) && priceVerdict(s, c, p.recipeId) !== 'nao')
-    .sort((a, b) =>
-      Number(b.recipeId === c.wantedRecipeId) - Number(a.recipeId === c.wantedRecipeId) ||
-      Number(priceVerdict(s, c, b.recipeId) === 'sim') - Number(priceVerdict(s, c, a.recipeId) === 'sim'));
-  return options[0]?.recipeId ?? null;
+  if (!golemServes(c)) return null;
+  const stack = s.potions.find((p) => p.recipeId === c.wantedRecipeId && p.forSale && p.quantity > 0);
+  return stack ? stack.recipeId : null;
 }
 
 function runGolem(d: Draft, ms: number) {
@@ -165,12 +168,10 @@ function runGolem(d: Draft, ms: number) {
   s.helpers.golemInMs = Math.max(0, s.helpers.golemInMs - ms);
   if (s.helpers.golemInMs > 0 || s.phase !== 'expediente') return;
   for (const c of s.customers) {
-    // A charada do Cliente misterioso é só para o jogador.
-    if (c.mystery || c.waitedMs < golemDelayMs(s)) continue;
+    // Quem não é do golem (charada, sintoma, freguês, visita) ou já está negociando com você, fica com você.
+    if (!golemServes(c) || c.offer || c.waitedMs < golemDelayMs(s)) continue;
     const from = d.events.length;
-    if (c.offer) {
-      acceptOffer(d, c.id);
-    } else {
+    {
       const recipeId = golemChoice(s, c);
       if (!recipeId) {
         if (c.waitedMs < c.patienceMs * GOLEM_DISMISS_AT) continue;
@@ -179,8 +180,7 @@ function runGolem(d: Draft, ms: number) {
         s.helpers.golemInMs = golemCooldownMs(s);
         return;
       }
-      serveCustomer(d, c.id, recipeId);
-      if (s.customers.find((x) => x.id === c.id)?.offer) acceptOffer(d, c.id);
+      serveCustomer(d, c.id, recipeId, { basePrice: true });
     }
     const sold = d.events.slice(from).filter((e) => e.type === 'SALE');
     for (const e of sold) if (e.type === 'SALE') e.by = 'golem';

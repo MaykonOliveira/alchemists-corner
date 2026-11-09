@@ -59,8 +59,19 @@ describe('ajudantes automáticos', () => {
     }
   });
 
-  it('o jogador distraído lucra mais com os ajudantes nos últimos dias', () => {
+  // Até o nível 8 só o corvo está disponível: ele alivia o estoque, mas não joga pelo jogador.
+  // O teste garante que contratar cedo não atrapalha (salário e preço não podem afundar a loja).
+  it('o corvo não afunda a receita do jogador distraído', () => {
     const tail = (rs: typeof sem) => rs.reduce((n, r) => n + r.days.slice(-3).reduce((m, d) => m + d.revenue, 0), 0);
-    expect(tail(com)).toBeGreaterThan(tail(sem) * 1.2);
+    expect(tail(com)).toBeGreaterThan(tail(sem) * 0.85);
+  });
+
+  it('aprendiz e golem só chegam depois do nível 8: o meio do jogo continua nas mãos do jogador', () => {
+    for (const r of com) {
+      for (const d of r.days) {
+        if (d.upgrades.includes('aprendiz')) expect(d.level).toBeGreaterThanOrEqual(8);
+        if (d.upgrades.includes('golem-balconista')) expect(d.level).toBeGreaterThanOrEqual(9);
+      }
+    }
   });
 });

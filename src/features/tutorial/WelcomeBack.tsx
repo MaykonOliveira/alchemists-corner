@@ -23,7 +23,7 @@ function AwayBook({ away }: { away: AwayReport }) {
       {away.sold > 0 && <p className="away-line">O golem vendeu <b>{away.sold}</b> poç{away.sold > 1 ? 'ões' : 'ão'} pela janela: <b className="pos-text">+{away.coins}</b> <CoinIcon size={12} /> e +{away.xp} XP.</p>}
       {brewed.length > 0 && <p className="away-line">Saíram do caldeirão: {brewed.map(([id, n]) => `${n}× ${RECIPES_BY_ID[id].shortName}`).join(', ')}.</p>}
       {away.sold === 0 && brewed.length === 0 && <p className="away-line">A loja ficou quietinha esperando você.</p>}
-      {!away.helpers && <p className="away-line muted small">Com o aprendiz (nível 4) e o golem (nível 5), a loja prepara e vende sozinha por até 8 horas.</p>}
+      {!away.helpers && <p className="away-line muted small">Com o aprendiz (nível 8) e o golem (nível 9), a loja prepara e vende o básico sozinha por até 8 horas.</p>}
     </div>
   );
 }

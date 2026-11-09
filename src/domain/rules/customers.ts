@@ -223,7 +223,7 @@ function completeSale(d: Draft, c: Customer, recipeId: string, price: number) {
   gainXp(d, 6 + Math.round(r.basePrice / 5) + masteryStars(s, recipeId));
 }
 
-export function serveCustomer(d: Draft, customerId: string, recipeId: string): boolean {
+export function serveCustomer(d: Draft, customerId: string, recipeId: string, opts: { basePrice?: boolean } = {}): boolean {
   const s = d.s;
   const c = s.customers.find((x) => x.id === customerId);
   if (!c) return fail(d, 'Esse cliente já foi embora.');
@@ -254,9 +254,10 @@ export function serveCustomer(d: Draft, customerId: string, recipeId: string): b
     onVipServed(d, c, price);
     return true;
   }
-  const price = getPrice(s, recipeId);
+  // O golem não negocia: cobra o preço-base, que é sempre aceito por quem pediu a poção pelo nome.
+  const price = opts.basePrice ? RECIPES_BY_ID[recipeId].basePrice : getPrice(s, recipeId);
   const max = maxPriceFor(s, c, recipeId);
-  if (price <= max) {
+  if (price <= max || opts.basePrice) {
     completeSale(d, c, recipeId, price);
   } else if (price <= max * NEGOTIATION_MARGIN) {
     c.offer = { recipeId, price: max };

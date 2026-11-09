@@ -34,12 +34,14 @@ describe('contratação', () => {
   it('ajudantes exigem nível e moedas, e entram na folha de pagamento', () => {
     const s = createNewGame(0);
     expect(run(s, { type: 'BUY_UPGRADE', upgradeId: GOLEM }).save.upgrades).toEqual([]);
-    const rich = { ...s, level: 5, coins: 5000 };
+    // O golem só chega no nível 9 (auditoria P0.5): antes disso o balcão é do jogador.
+    expect(run({ ...s, level: 8, coins: 5000 }, { type: 'BUY_UPGRADE', upgradeId: GOLEM }).save.upgrades).toEqual([]);
+    const rich = { ...s, level: 9, coins: 5000 };
     const { save } = run(rich, { type: 'BUY_UPGRADE', upgradeId: GOLEM });
     expect(save.upgrades).toContain(GOLEM);
-    expect(save.coins).toBe(5000 - 1400);
-    // 3 pela melhoria + 15 de salário
-    expect(maintenanceCost(save) - maintenanceCost(rich)).toBe(18);
+    expect(save.coins).toBe(5000 - 3000);
+    // 3 pela melhoria + 25 de salário
+    expect(maintenanceCost(save) - maintenanceCost(rich)).toBe(28);
   });
 
   it('dá para mandar descansar e chamar de volta', () => {
@@ -120,11 +122,24 @@ describe('golem balconista', () => {
     expect(save.stats.helperWork.served).toBe(1);
   });
 
-  it('aceita contraproposta', () => {
-    const s = open({ customers: [customer({ waitedMs: GOLEM_DELAY_MS, budgetFactor: 0.9 })] });
+  it('cobra o preço-base, mesmo com a prateleira mais cara', () => {
+    const s = open({ customers: [customer({ waitedMs: GOLEM_DELAY_MS, budgetFactor: 0.9 })], prices: { 'cura-simples': 23 } });
     const { save, events } = run(s, { type: 'ADVANCE', ms: 200 });
     expect(save.customers).toHaveLength(0);
-    expect(events.find((e) => e.type === 'SALE')).toBeDefined();
+    expect(events.find((e) => e.type === 'SALE')).toMatchObject({ price: 18 });
+  });
+
+  it('deixa para o jogador quem negocia, fregueses fiéis, visitas e sintomas', () => {
+    const offer = customer({ waitedMs: GOLEM_DELAY_MS, offer: { recipeId: 'cura-simples', price: 15 } });
+    const regular = customer({ id: 'c-r', waitedMs: GOLEM_DELAY_MS, regularId: 'celia' });
+    const symptom = customer({ id: 'c-s', waitedMs: GOLEM_DELAY_MS, symptom: true });
+    const s = open({ customers: [offer, regular, symptom] });
+    expect(run(s, { type: 'ADVANCE', ms: 200 }).save.customers).toHaveLength(3);
+  });
+
+  it('não oferece outra poção no lugar da pedida', () => {
+    const s = open({ customers: [customer({ wantedRecipeId: 'balsamo-calmante', waitedMs: GOLEM_DELAY_MS })] });
+    expect(run(s, { type: 'ADVANCE', ms: 200 }).events.find((e) => e.type === 'SALE')).toBeUndefined();
   });
 
   it('sem a poção certa, dispensa com educação (sem perder reputação)', () => {
@@ -146,7 +161,7 @@ describe('relatório e save', () => {
   it('o fechamento mostra salários e trabalho dos ajudantes', () => {
     const s = withHelper(GOLEM, { phase: 'expediente', coins: 500 });
     const { save } = run(s, { type: 'CLOSE_SHOP' });
-    expect(save.reports.at(-1)!.wages).toBe(15);
+    expect(save.reports.at(-1)!.wages).toBe(25);
     expect(save.reports.at(-1)!.helperWork).toEqual({ brews: 0, served: 0, deliveries: 0, delivered: 0 });
   });
 
