@@ -1680,3 +1680,8 @@ html, button, input { font-variant-ligatures: none; font-feature-settings: "liga
 
 /* Procura do dia (auditoria P0.4) */
 .trend-tag { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: #fff; background: var(--copper); border-radius: var(--r-sm); padding: 1px 5px; white-space: nowrap; }
+
+/* Pedido por sintoma (auditoria P0.2) */
+.quick-serve.qs-symptom .qs-riddle { display: block; white-space: normal; overflow: visible; font-size: var(--fs-md); color: var(--ink) !important; background: var(--parchment-2); border-left: 3px solid var(--copper); }
+.qs-symptom-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.qs-link { background: none; border: 0; padding: 0; margin-right: 6px; color: var(--copper); font: inherit; font-style: normal; text-decoration: underline; cursor: pointer; }

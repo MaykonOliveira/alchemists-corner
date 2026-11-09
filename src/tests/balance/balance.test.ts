@@ -93,9 +93,11 @@ describe('preço que depende de quem compra', () => {
     expect(rep(esperto)).toBeGreaterThanOrEqual(rep(casual) * 0.95);
   });
 
-  it('pedir caro de todo mundo rende menos que ler o freguês e custa reputação', () => {
+  // Com a demanda apertada (P0.4), perder o morador às vezes libera a poção para alguém que paga mais;
+  // por isso quem sai ofendido também tira reputação.
+  it('pedir caro de todo mundo não rende mais que ler o freguês e custa reputação', () => {
     expect(revenue(ganancioso)).toBeLessThan(revenue(esperto));
-    expect(rep(ganancioso)).toBeLessThan(rep(esperto));
+    expect(rep(ganancioso)).toBeLessThan(rep(esperto) * 0.97);
   });
 });
 

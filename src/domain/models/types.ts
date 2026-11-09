@@ -489,7 +489,7 @@ export type GameEvent =
   | { type: 'BREW_STARTED'; recipeId: string; batches: number; by?: 'aprendiz'; slot?: 2 }
   | { type: 'BREW_DONE'; recipeId: string; qty: number; slot?: 2; quality?: 2 | 3 }
   | { type: 'CUSTOMER_ARRIVED'; customerId: string }
-  | { type: 'SALE'; customerId: string; recipeId: string; price: number; substitute: boolean; by?: 'golem'; quality?: 2 | 3 }
+  | { type: 'SALE'; customerId: string; recipeId: string; price: number; substitute: boolean; by?: 'golem'; quality?: 2 | 3; diagnosed?: boolean }
   | { type: 'RAVEN_DELIVERY'; items: { ingredientId: string; qty: number }[]; cost: number; fee: number }
   | { type: 'GOLEM_DISMISSED'; customerId: string }
   | { type: 'HELPER_TOGGLED'; upgradeId: string; on: boolean }
@@ -552,5 +552,6 @@ export type GameEvent =
   | { type: 'MYSTERY_ARRIVED'; customerId: string }
   | { type: 'MYSTERY_SOLVED'; recipeId: string; coins: number; crystals: number }
   | { type: 'MYSTERY_WRONG'; customerId: string }
+  | { type: 'SYMPTOM_WRONG'; customerId: string }
   | { type: 'PAGE_FOUND'; recipeId: string; ingredientId: string; source: string }
   | { type: 'ERROR'; message: string };

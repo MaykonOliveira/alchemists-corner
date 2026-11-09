@@ -43,7 +43,7 @@ export function CounterPanel({ save }: { save: GameSave }) {
               onClick={() => dispatch({ type: 'SELECT_CUSTOMER', id: c.id })}
             >
               <span className="row-title">{c.mystery ? 'Viajante encapuzado' : regularOf(c)?.name.split(',')[0] ?? ARCHETYPES[c.archetype].label}{regularOf(c) ? ' ♥\uFE0E' : ''}</span>
-              <span className="queue-want">{c.mystery ? <><Icon e="❓" /> charada</> : <><PotionIcon recipeId={r.id} /> {r.shortName}{c.offer ? ' · negociando' : ''}</>}</span>
+              <span className="queue-want">{c.mystery ? <><Icon e="❓" /> charada</> : c.symptom && !c.offer ? <><Icon e="🤒" /> conta o problema</> : <><PotionIcon recipeId={r.id} /> {r.shortName}{c.offer ? ' · negociando' : ''}</>}</span>
               <Meter ratio={left} tone={left > 0.5 ? 'ok' : left > 0.25 ? 'gold' : 'warn'} label="Paciência" />
             </button>
           );
@@ -60,7 +60,9 @@ function Serve({ save, c }: { save: GameSave; c: Customer }) {
   const reg = regularOf(c);
   const wanted = RECIPES_BY_ID[c.wantedRecipeId];
   const options = save.potions.filter((p) => p.forSale && p.quantity > 0);
-  const sorted = c.mystery ? options : [...options].sort((x, y) => Number(y.recipeId === c.wantedRecipeId) - Number(x.recipeId === c.wantedRecipeId));
+  // Charada e sintoma: a lista não entrega a resposta.
+  const hidden = c.mystery || c.symptom;
+  const sorted = hidden ? options : [...options].sort((x, y) => Number(y.recipeId === c.wantedRecipeId) - Number(x.recipeId === c.wantedRecipeId));
 
   return (
     <div className="card serve">
@@ -77,7 +79,7 @@ function Serve({ save, c }: { save: GameSave; c: Customer }) {
       </div>
       <p className="speech">“{c.remark ?? wanted.request}”</p>
       <p className="card-text small">
-        {c.mystery ? <>Cliente misterioso: decifre a charada. Acertar paga <strong>3× o preço</strong> e deixa cristais.</> : <>Quer: <strong>{wanted.name}</strong> · {a.description}</>}
+        {c.mystery ? <>Cliente misterioso: decifre a charada. Acertar paga <strong>3× o preço</strong> e deixa cristais.</> : c.symptom ? <>Conta o problema: escolha a poção certa. Acertar em cheio rende <strong>gorjeta</strong>; uma parecida paga menos.</> : <>Quer: <strong>{wanted.name}</strong> · {a.description}</>}
       </p>
 
       {c.offer ? (
@@ -99,17 +101,17 @@ function Serve({ save, c }: { save: GameSave; c: Customer }) {
             <ul className="offer-list">
               {sorted.map((p) => {
                 const r = RECIPES_BY_ID[p.recipeId];
-                const exact = !c.mystery && p.recipeId === c.wantedRecipeId;
-                const ok = !c.mystery && suits(c, p.recipeId);
+                const exact = !hidden && p.recipeId === c.wantedRecipeId;
+                const ok = !hidden && suits(c, p.recipeId);
                 return (
                   <li key={p.recipeId}>
                     <button
-                      className={`offer-btn ${c.mystery ? 'similar' : exact ? 'exact' : ok ? 'similar' : 'nope'}`}
+                      className={`offer-btn ${hidden ? 'similar' : exact ? 'exact' : ok ? 'similar' : 'nope'}`}
                       onClick={() => dispatch({ type: 'SERVE_CUSTOMER', customerId: c.id, recipeId: p.recipeId })}
                     >
                       <PotionIcon recipeId={r.id} />
                       <span className="offer-name">{r.name} <span className="muted">×{p.quantity}</span></span>
-                      <span className="offer-tag">{c.mystery ? 'arriscar' : exact ? 'o pedido' : ok ? 'parecida' : 'não serve'}</span>
+                      <span className="offer-tag">{hidden ? 'arriscar' : exact ? 'o pedido' : ok ? 'parecida' : 'não serve'}</span>
                       <span className="offer-price"><CoinIcon size={12} /> {getPrice(save, p.recipeId)}</span>
                     </button>
                   </li>

@@ -710,7 +710,8 @@ export class ShopScene extends Phaser.Scene {
       const slotX = COUNTER_SLOTS[idx] ?? COUNTER_SLOTS[COUNTER_SLOTS.length - 1];
       let v = this.visitors.get(c.id);
       if (!v) {
-        v = new Visitor(this, c.id, c.archetype, c.mystery ? 'misterio' : c.wantedRecipeId, slotX, {
+        // Quem conta o sintoma não diz o nome da poção: o balão mostra só a interrogação.
+        v = new Visitor(this, c.id, c.archetype, c.mystery || c.symptom ? 'misterio' : c.wantedRecipeId, slotX, {
           instant,
           regular: !!c.regularId,
           reduceMotion: this.reduceMotion,
@@ -750,6 +751,7 @@ export class ShopScene extends Phaser.Scene {
         const bonus = e.price > RECIPES_BY_ID[e.recipeId].basePrice;
         this.coinPopup(x, y, e.price, bonus);
         this.coinRain(x, y + 10, Math.min(6, 2 + Math.floor(e.price / 25)));
+        if (e.diagnosed) this.textPopup(x, y - 14, 'CERTO!', '#ffd76a');
         return;
       }
       case 'ORDER_DONE':
@@ -865,8 +867,13 @@ export class ShopScene extends Phaser.Scene {
 
   /** "−1 ★" vermelho subindo de quem foi embora sem ser atendido. */
   private lossPopup(x: number, y: number) {
-    const key = 'txt-loss-rep';
-    if (!this.textures.exists(key)) this.textures.addCanvas(key, outlinedText('-1 REP', '#ff8a7a'));
+    this.textPopup(x, y, '-1 REP', '#ff8a7a');
+  }
+
+  /** Texto em pixel que sobe e some (só usa as letras do painter). */
+  private textPopup(x: number, y: number, text: string, color: string) {
+    const key = `txt-${text}-${color}`;
+    if (!this.textures.exists(key)) this.textures.addCanvas(key, outlinedText(text, color));
     const txt = this.add.image(x, y, key).setOrigin(0.5).setDepth(970);
     const rise = this.reduceMotion() ? 0 : 12;
     this.tweens.add({ targets: txt, y: y - rise, duration: 1100, ease: 'Cubic.Out' });

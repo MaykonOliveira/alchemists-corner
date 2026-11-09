@@ -48,6 +48,8 @@ export interface BotProfile {
   readsCustomers?: boolean;
   /** Pede mais de todo mundo, sem olhar quem está no balcão. */
   greedy?: boolean;
+  /** Chance de acertar o diagnóstico de quem conta o sintoma (padrão 0,8). */
+  diagnosis?: number;
 }
 
 export const CASUAL: BotProfile = {
@@ -66,6 +68,7 @@ export const EFICIENTE: BotProfile = {
   prepS: (day) => (day === 1 ? 60 : 25),
   targetStock: 6,
   reserve: 40,
+  diagnosis: 0.92,
 };
 
 /** O casual que presta atenção em quem está no balcão (auditoria P0.3). */
@@ -107,6 +110,7 @@ export function simulate(profile: BotProfile, days: number, seed: number): SimRe
   let firstAffordableDay: number | null = null;
   let elapsedS = 0;
   const reactAt = new Map<string, number>();
+  const guessed = new Set<string>();
 
   const cmd = (c: DomainCommand): GameEvent[] => {
     const r = applyCommand(s, c, ctx);
@@ -191,6 +195,15 @@ export function simulate(profile: BotProfile, days: number, seed: number): SimRe
       const options = s.potions
         .filter((p) => p.forSale && p.quantity > 0 && suits(c, p.recipeId))
         .sort((a, b) => (a.recipeId === c.wantedRecipeId ? -1 : 0) - (b.recipeId === c.wantedRecipeId ? -1 : 0));
+      // Quem conta o sintoma: às vezes o jogador erra o diagnóstico e o cliente explica melhor.
+      if (c.symptom && !c.offer && !guessed.has(`${c.id}|${c.remark}`)) {
+        guessed.add(`${c.id}|${c.remark}`);
+        const wrong = s.potions.find((p) => p.forSale && p.quantity > 0 && !suits(c, p.recipeId));
+        if (wrong && random() > (profile.diagnosis ?? 0.8)) {
+          cmd({ type: 'SERVE_CUSTOMER', customerId: c.id, recipeId: wrong.recipeId });
+          continue;
+        }
+      }
       if (!options.length) {
         // Espera um pouco se o caldeirão estiver fazendo a poção certa; senão dispensa.
         if (s.brew && suits(c, s.brew.recipeId) && c.waitedMs < c.patienceMs * 0.7) continue;

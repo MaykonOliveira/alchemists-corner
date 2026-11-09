@@ -1,5 +1,6 @@
 import { ARCHETYPES, NOBLE_LEVEL } from '../data/customers';
 import { DAY_EVENTS } from '../data/orders';
+import { SYMPTOMS, symptomClarify } from '../data/symptoms';
 import { RECIPES_BY_ID } from '../data/recipes';
 import type { Customer, CustomerArchetype, GameSave } from '../models/types';
 import { fail, nextId, pick, weightedPick, type Draft } from './context';
@@ -31,6 +32,14 @@ export function nextSpawnDelay(s: GameSave, random: () => number) {
   const fame = (1 + Math.min(s.reputation, 400) / 800) * (1 + talentBonus(s, 'fama')) * (1 + talentBonus(s, 'renome')) * (1 + villageBonus(s, 'movimento'));
   return Math.round((16000 * event * sign) / fame * (0.7 + random() * 0.6));
 }
+
+/** A partir deste dia, a maioria dos clientes conta o problema em vez de dizer o nome da poção (auditoria P0.2). */
+export const SYMPTOM_DAY = 2;
+export const SYMPTOM_SHARE = 0.7;
+/** Acertar o diagnóstico rende uma gorjeta sobre o preço. */
+export const DIAGNOSIS_TIP = 0.2;
+/** Errar o diagnóstico gasta esta fração da paciência do cliente. */
+export const WRONG_GUESS_PATIENCE = 0.15;
 
 /** Nível em que o Cliente misterioso começa a aparecer (no máximo um por dia). */
 export const MYSTERY_LEVEL = 7;
@@ -127,6 +136,11 @@ export function spawnCustomer(d: Draft) {
     offer: null,
     remark: RECIPES_BY_ID[wanted].request,
   };
+  // Quem conta o sintoma não diz o nome da poção: o diagnóstico fica com o jogador.
+  if (s.day >= SYMPTOM_DAY && !firstEver && SYMPTOMS[wanted] && ctx.random() < SYMPTOM_SHARE) {
+    customer.symptom = true;
+    customer.remark = pick(SYMPTOMS[wanted], ctx.random);
+  }
   s.customers.push(customer);
   d.events.push({ type: 'CUSTOMER_ARRIVED', customerId: customer.id });
 }
@@ -180,7 +194,7 @@ export function reservedForOrder(save: GameSave, recipeId: string): number {
 export function bestOffer(save: GameSave, c: Customer): string | null {
   // Poções guardadas para o pedido especial não saem no atendimento rápido.
   // A charada é para o jogador resolver: o atendimento rápido não entrega a resposta.
-  if (c.mystery) return null;
+  if (c.mystery || c.symptom) return null;
   const forSale = save.potions.filter((p) => p.forSale && p.quantity - reservedForOrder(save, p.recipeId) > 0).map((p) => p.recipeId);
   if (forSale.includes(c.wantedRecipeId)) return c.wantedRecipeId;
   if (c.vip) return forSale.filter((id) => suits(c, id)).sort((a, b) => RECIPES_BY_ID[b].basePrice - RECIPES_BY_ID[a].basePrice)[0] ?? null;
@@ -207,6 +221,9 @@ export const FAST_SERVICE = 0.4;
 function completeSale(d: Draft, c: Customer, recipeId: string, price: number, discount = false) {
   const s = d.s;
   const r = RECIPES_BY_ID[recipeId];
+  // Diagnóstico certeiro: o cliente agradece com uma gorjeta.
+  const diagnosed = !!c.symptom && recipeId === c.wantedRecipeId;
+  if (diagnosed) price += Math.max(1, Math.round(price * DIAGNOSIS_TIP));
   // Poções Finas e Primorosas saem primeiro e valem mais (toque de mestre).
   const quality = takeBestQuality(s, recipeId);
   price = Math.round(price * (1 + QUALITY_BONUS[quality]));
@@ -219,9 +236,9 @@ function completeSale(d: Draft, c: Customer, recipeId: string, price: number, di
   const exact = recipeId === c.wantedRecipeId ? 1 : 0;
   const fast = c.waitedMs <= c.patienceMs * FAST_SERVICE ? 1 : 0;
   const cozy = (has(s, 'iluminacao-aconchegante') ? 1 : 0) + (has(s, 'vitral-arcano') && c.archetype === 'nobre' ? 1 : 0);
-  gainReputation(d, exact + fast + (discount ? 1 : 0) + cozy);
+  gainReputation(d, exact + fast + (discount ? 1 : 0) + (diagnosed ? 1 : 0) + cozy);
   s.lifetime = { sold: s.lifetime.sold + 1, earned: s.lifetime.earned + price };
-  d.events.push({ type: 'SALE', customerId: c.id, recipeId, price, substitute: recipeId !== c.wantedRecipeId, ...(quality > 1 ? { quality: quality as 2 | 3 } : {}) });
+  d.events.push({ type: 'SALE', customerId: c.id, recipeId, price, substitute: recipeId !== c.wantedRecipeId, ...(quality > 1 ? { quality: quality as 2 | 3 } : {}), ...(diagnosed ? { diagnosed } : {}) });
   noteSale(d, price);
   royalOnSale(d, c, recipeId);
   const tip = befriend(d, c, recipeId, price);
@@ -257,6 +274,13 @@ export function serveCustomer(d: Draft, customerId: string, recipeId: string, op
     d.events.push({ type: 'MYSTERY_SOLVED', recipeId, coins: price, crystals: MYSTERY_CRYSTALS });
     return true;
   }
+  if (c.symptom && !suits(c, recipeId)) {
+    // Diagnóstico errado: o cliente explica melhor, mas perde um pouco da paciência.
+    c.remark = symptomClarify(RECIPES_BY_ID[c.wantedRecipeId].need);
+    c.waitedMs += c.patienceMs * WRONG_GUESS_PATIENCE;
+    d.events.push({ type: 'SYMPTOM_WRONG', customerId });
+    return true;
+  }
   if (!suits(c, recipeId)) {
     c.remark = 'Hmm… não é bem disso que eu preciso.';
     d.events.push({ type: 'CUSTOMER_REFUSED', customerId, reason: 'produto' });
@@ -289,6 +313,8 @@ export function serveCustomer(d: Draft, customerId: string, recipeId: string, op
     d.events.push({ type: 'COUNTER_OFFER', customerId, price: max });
   } else {
     c.remark = greedy ? 'Acima da etiqueta? Isso é abuso. Passar bem.' : 'Caro demais para mim. Fica para outro dia.';
+    // Quem sai ofendido conta para a vizinhança.
+    if (greedy) gainReputation(d, -2);
     d.events.push({ type: 'CUSTOMER_REFUSED', customerId, reason: 'preco' });
     removeCustomer(d, c, 'preco');
   }
