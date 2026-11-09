@@ -32,7 +32,7 @@ export function LevelUpModal() {
   // Duas novidades em destaque; o resto fica guardado num "e mais", para não virar uma lista de sete itens.
   const areas = AREA_UNLOCKS.filter((a) => a.level === level);
   const all: { key: string; node: React.ReactNode }[] = [
-    ...recipes.map((id) => ({ key: id, node: <>Nova receita: <PotionName id={id} /></> })),
+    ...recipes.map((id) => ({ key: id, node: <>Nova pista: <PotionName id={id} /> <span className="muted small">(descubra a mistura na bancada)</span></> })),
     ...areas.map((a) => ({ key: a.label, node: <>Nova área: <strong>{a.label}</strong> ({a.where})</> })),
     ...extras.map((t) => ({ key: t, node: <>{t}</> })),
     ...ups.map((u) => ({ key: u.id, node: <>Melhoria disponível: <strong>{u.name}</strong></> })),

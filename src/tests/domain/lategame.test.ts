@@ -69,7 +69,7 @@ describe('conteúdo do late game', () => {
     s.knownRecipes = s.knownRecipes.filter((id) => id !== 'elixir-estelar');
     const { save, events } = run(s, { type: 'BUY_UPGRADE', upgradeId: 'estufa' });
     expect(save.level).toBe(12);
-    expect(save.knownRecipes).toContain('elixir-estelar');
+    expect(save.recipeHints).toContain('elixir-estelar');
     expect(events.some((e) => e.type === 'LEVEL_UP' && e.level === 12)).toBe(true);
     expect(sealsAvailable(save)).toBe(2);
   });

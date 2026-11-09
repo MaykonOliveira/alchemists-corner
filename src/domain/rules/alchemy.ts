@@ -123,6 +123,7 @@ export function experiment(d: Draft, ingredientIds: string[]): boolean {
   if (match && !s.knownRecipes.includes(match.id)) {
     for (const id of ids) s.ingredients[id] -= 1;
     s.knownRecipes.push(match.id);
+    s.recipeHints = (s.recipeHints ?? []).filter((id) => id !== match.id);
     s.prices[match.id] ??= match.basePrice;
     if (match.legend) {
       d.events.push({ type: 'DISCOVERY', recipeId: match.id, legend: true });
@@ -138,7 +139,9 @@ export function experiment(d: Draft, ingredientIds: string[]): boolean {
   // Erro: consome apenas o primeiro ingrediente e revela uma pista concreta.
   s.ingredients[ids[0]] -= 1;
   s.researchPoints += 1;
-  const unknown = RECIPES.filter((r) => !r.secret && !r.legend && !s.knownRecipes.includes(r.id));
+  // As pistas do nível vêm primeiro: a anotação ajuda a receita que o jogador está procurando.
+  const hinted = RECIPES.filter((r) => s.recipeHints?.includes(r.id));
+  const unknown = hinted.length ? hinted : RECIPES.filter((r) => !r.secret && !r.legend && !s.knownRecipes.includes(r.id));
   let hint: string;
   if (match) hint = `Você já conhece essa mistura: ${match.name}.`;
   else if (unknown.length === 0) hint = 'Você já descobriu todas as receitas do livro!';

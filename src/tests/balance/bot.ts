@@ -152,6 +152,18 @@ export function simulate(profile: BotProfile, days: number, seed: number): SimRe
     }
   };
 
+  /** Lê a pista do nível e acerta a mistura na bancada (P1.2), comprando 1 de cada ingrediente. */
+  const tryDiscover = () => {
+    for (const id of [...(s.recipeHints ?? [])]) {
+      const r = RECIPES_BY_ID[id];
+      const missing = r.ingredients.filter((i) => (s.ingredients[i.ingredientId] ?? 0) < 1);
+      const cost = missing.reduce((n, i) => n + INGREDIENTS_BY_ID[i.ingredientId].price, 0);
+      if (cost > s.coins) continue;
+      for (const i of missing) cmd({ type: 'BUY_INGREDIENT', ingredientId: i.ingredientId, qty: 1 });
+      cmd({ type: 'EXPERIMENT', ingredientIds: r.ingredients.map((i) => i.ingredientId) });
+    }
+  };
+
   const tryBrew = () => {
     if (s.brew) return;
     const candidates = s.knownRecipes
@@ -236,6 +248,7 @@ export function simulate(profile: BotProfile, days: number, seed: number): SimRe
     if (s.order && potionStock(s, s.order.recipeId) >= s.order.qty) cmd({ type: 'DELIVER_ORDER' });
     tryUpgrades();
     tryTalents();
+    tryDiscover();
     const prepMs = profile.prepS(day) * 1000;
     for (let t = 0; t < prepMs; t += STEP_MS) {
       tryBrew();

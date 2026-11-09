@@ -42,19 +42,28 @@ function Legends({ save }: { save: GameSave }) {
 
 export function RecipesPanel({ save }: { save: GameSave }) {
   // A Poção da Coroa só aparece no livro depois que o Concurso Real a ensina.
-  const book = RECIPES.filter((r) => !r.legend && (!r.secret || save.knownRecipes.includes(r.id)));
+  // Pistas em aberto vêm primeiro: é o que o jogador veio fazer aqui.
+  const rank = (id: string) => (save.recipeHints?.includes(id) ? 0 : save.knownRecipes.includes(id) ? 1 : 2);
+  const book = RECIPES.filter((r) => !r.legend && (!r.secret || save.knownRecipes.includes(r.id))).sort((a, b) => rank(a.id) - rank(b.id));
   const known = book.filter((r) => save.knownRecipes.includes(r.id)).length;
   return (
     <>
       <p className="panel-lead small">{known} de {book.length} receitas anotadas.</p>
+      {(save.recipeHints?.length ?? 0) > 0 && (
+        <p className="tip report-tutorial">
+          <Icon e="📜" /> {save.recipeHints!.length === 1 ? 'Uma receita nova espera' : `${save.recipeHints!.length} receitas novas esperam`} por você. Leia a pista e acerte a mistura na bancada, lá embaixo.
+        </p>
+      )}
       <ul className="list">
         {book.map((r) => {
           const isKnown = save.knownRecipes.includes(r.id);
+          const hinted = !isKnown && !!save.recipeHints?.includes(r.id);
           return (
-            <li key={r.id} className={`card ${isKnown ? '' : 'card-locked'}`}>
+            <li key={r.id} className={`card ${isKnown ? '' : hinted ? 'card-hint' : 'card-locked'}`}>
               <div className="card-head">
                 <PotionIcon recipeId={r.id} size={32} muted={!isKnown} />
-                <span className="row-title">{isKnown ? r.name : '??? — página em branco'}</span>
+                <span className="row-title">{isKnown || hinted ? r.name : '??? — página em branco'}</span>
+                {hinted && <span className="trend-tag">pista nova</span>}
                 {isKnown && <Stars n={masteryStars(save, r.id)} />}
               </div>
               {isKnown ? (
@@ -65,7 +74,11 @@ export function RecipesPanel({ save }: { save: GameSave }) {
                   <More label="Quem procura"><p className="card-text small">{r.need}. Procurada por {r.customerProfile.toLowerCase()}.</p></More>
                 </>
               ) : (
-                <p className="card-text muted small">Pista: “{r.hint}” · aprendida no nível {r.unlockLevel}</p>
+                hinted ? (
+                  <p className="card-text small">Pista: “{r.hint}” · leva {r.ingredients.length} ingredientes diferentes. Misture na bancada.</p>
+                ) : (
+                  <p className="card-text muted small">Pista: “{r.hint}” · a pista chega no nível {r.unlockLevel}</p>
+                )
               )}
             </li>
           );

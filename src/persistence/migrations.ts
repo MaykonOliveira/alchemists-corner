@@ -125,6 +125,7 @@ export function migrateSave(raw: unknown): GameSave | null {
       : base.stats,
     reports: arr(raw.reports, base.reports),
     researchPoints: num(raw.researchPoints, 0),
+    recipeHints: arr<string>(raw.recipeHints, []).filter((id) => typeof id === 'string' && id in RECIPES_BY_ID),
     mastery,
     talents,
     sealsBought: Math.max(0, Math.floor(num(raw.sealsBought, 0))),

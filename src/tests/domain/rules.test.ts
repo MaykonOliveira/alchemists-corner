@@ -172,7 +172,7 @@ describe('progressão', () => {
     const s = { ...run(createNewGame(0), { type: 'OPEN_SHOP' }).save, xp: xpForLevel(2) - 1, customers: [customer()] };
     const r = run(s, { type: 'SERVE_CUSTOMER', customerId: 'c-x', recipeId: 'cura-simples' });
     expect(r.save.level).toBe(2);
-    expect(r.save.knownRecipes).toContain('visao-noturna');
+    expect(r.save.recipeHints).toContain('visao-noturna'); // o nível deixa a pista; a receita vem na bancada (P1.2)
     expect(r.events.some((e) => e.type === 'LEVEL_UP')).toBe(true);
   });
 

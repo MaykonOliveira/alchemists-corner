@@ -76,6 +76,17 @@ export function unlockRecipesUpTo(s: GameSave, level: number): string[] {
   return recipes;
 }
 
+/**
+ * O nível não ensina mais a receita pronta (auditoria P1.2): ele libera os ingredientes e deixa uma pista.
+ * A receita entra no livro quando o jogador acerta a mistura na bancada.
+ */
+export function hintRecipesUpTo(s: GameSave, level: number): string[] {
+  const hints = s.recipeHints ?? [];
+  const fresh = RECIPES.filter((r) => r.unlockLevel <= level && !r.secret && !r.legend && !s.knownRecipes.includes(r.id) && !hints.includes(r.id)).map((r) => r.id);
+  s.recipeHints = [...hints, ...fresh];
+  return fresh;
+}
+
 /** Concede experiência e aplica subidas de nível (com receitas liberadas) e graus de Mestre. */
 export function gainXp(d: Draft, amount: number) {
   const s = d.s;
@@ -84,7 +95,7 @@ export function gainXp(d: Draft, amount: number) {
   const newLevel = levelFromXp(s.xp);
   while (s.level < newLevel) {
     s.level += 1;
-    const recipes = unlockRecipesUpTo(s, s.level);
+    const recipes = hintRecipesUpTo(s, s.level);
     restockUnlocked(s, s.level);
     const gift = LEVEL_GIFTS[s.level];
     if (gift) {

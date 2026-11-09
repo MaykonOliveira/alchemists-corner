@@ -403,6 +403,8 @@ export interface GameSave {
   stats: DayStats;
   reports: DayReport[];
   researchPoints: number;
+  /** Receitas liberadas pelo nível que ainda precisam ser descobertas na bancada (auditoria P1.2). */
+  recipeHints?: string[];
   /** Maestria: quantas poções de cada receita já saíram do caldeirão. */
   mastery: Record<string, number>;
   /** Talentos do Grimório do Mestre (grau por id), comprados com Selos. */
