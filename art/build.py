@@ -19,6 +19,7 @@ import royal as RO  # registra a Poção da Coroa em items.py
 import ui_icons as UI
 import legends as LG  # registra as receitas lendárias em items.py
 import village as VI
+import portraits as PO
 from room import draw_room, window_front_sprite, WINDOW_FRONT_POS, WINDOW_GLASS
 from customers import customer_sheet, LOOKS, FW, FH, FRAMES
 
@@ -151,6 +152,7 @@ def main():
     icons.update({f'ingredient-{i}': I.ingredient_icon(i) for i in I.INGREDIENTS})
     icons.update({f'helper-{h}': H.portrait(h) for h in ('corvo-entregador', 'aprendiz', 'golem-balconista')})
     icons['rival-vesper'] = SE.rival_portrait()
+    icons.update(PO.portraits())
     icons.update({f'trophy-{i}': RO.trophy_icon(i) for i in range(5)})
     # Ícones da interface no lugar dos emojis (pacote V2).
     icons.update(UI.frames())

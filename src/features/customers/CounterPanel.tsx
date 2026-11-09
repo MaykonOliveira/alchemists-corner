@@ -1,3 +1,4 @@
+import { CustomerFace } from './CustomerFace';
 import { ARCHETYPES } from '../../domain/data/customers';
 import { MAX_HEARTS } from '../../domain/data/world';
 import { regularOf, regularState } from '../../domain/rules/world';
@@ -42,6 +43,7 @@ export function CounterPanel({ save }: { save: GameSave }) {
               className={`queue-item ${selected?.id === c.id ? 'on' : ''}`}
               onClick={() => dispatch({ type: 'SELECT_CUSTOMER', id: c.id })}
             >
+              {!c.mystery && <CustomerFace c={c} size={32} />}
               <span className="row-title">{c.mystery ? 'Viajante encapuzado' : regularOf(c)?.name.split(',')[0] ?? ARCHETYPES[c.archetype].label}{regularOf(c) ? ' ♥\uFE0E' : ''}</span>
               <span className="queue-want">{c.mystery ? <><Icon e="❓" /> charada</> : c.symptom && !c.offer ? <><Icon e="🤒" /> conta o problema</> : <><PotionIcon recipeId={r.id} /> {r.shortName}{c.offer ? ' · negociando' : ''}</>}</span>
               <Meter ratio={left} tone={left > 0.5 ? 'ok' : left > 0.25 ? 'gold' : 'warn'} label="Paciência" />
@@ -67,6 +69,7 @@ function Serve({ save, c }: { save: GameSave; c: Customer }) {
   return (
     <div className="card serve">
       <div className="card-head">
+        {!c.mystery && <CustomerFace c={c} />}
         <span className="row-title">
           {reg ? reg.name : a.label}
           {reg && <span className="serve-hearts"> {'♥\uFE0E'.repeat(regularState(save, reg.id).hearts)}{'♡'.repeat(MAX_HEARTS - regularState(save, reg.id).hearts)}</span>}

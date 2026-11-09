@@ -1,10 +1,10 @@
+import { SpriteIcon } from '../../ui/SpriteIcon';
 import { MAX_HEARTS, REGULARS, TIP_HEARTS } from '../../domain/data/world';
-import type { CustomerArchetype, GameSave } from '../../domain/models/types';
+import type { GameSave } from '../../domain/models/types';
 import { ACHIEVEMENTS, currentSeason, daysToNextSeason, giftLabel, regularState, SEASON_START_DAY } from '../../domain/rules/world';
 import { PotionName } from '../../ui/widgets';
 import { Icon } from '../../ui/Icon';
 
-const FACE: Record<CustomerArchetype, string> = { morador: '🧺', aventureiro: '⚔️', estudioso: '📚', viajante: '🎒', nobre: '👑' };
 
 function Hearts({ n }: { n: number }) {
   return (
@@ -43,7 +43,7 @@ export function AlbumPanel({ save }: { save: GameSave }) {
           const locked = save.level < r.minLevel;
           return (
             <li key={r.id} className={`card regular ${locked ? 'card-locked' : ''} ${st.hearts >= MAX_HEARTS ? 'regular-friend' : ''}`}>
-              <div className="regular-face" aria-hidden><Icon e={locked ? '❔' : FACE[r.archetype]} size={32} /></div>
+              <div className="regular-face" aria-hidden>{locked ? <Icon e="❔" size={32} /> : <SpriteIcon name={`face-${r.id}-${st.hearts >= MAX_HEARTS ? 'feliz' : 'neutro'}`} size={32} />}</div>
               <div className="regular-body">
                 <p className="row-title">{locked ? '???' : r.name}</p>
                 {locked ? (

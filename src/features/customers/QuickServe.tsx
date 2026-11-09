@@ -10,6 +10,7 @@ import { CoinIcon } from '../../ui/icons';
 import { PotionIcon } from '../../ui/SpriteIcon';
 import { Meter } from '../../ui/widgets';
 import { Icon } from '../../ui/Icon';
+import { CustomerFace } from './CustomerFace';
 
 /** Atendimento rápido sobre a loja: o cliente selecionado e um botão para vender com um toque. */
 export function QuickServe({ placement }: { placement: 'stage' | 'side' }) {
@@ -87,9 +88,9 @@ export function QuickServe({ placement }: { placement: 'stage' | 'side' }) {
     return (
       <section className={`quick-serve qs-${placement} qs-symptom`} aria-label={`Atender ${a.label}`}>
         <div className="qs-head">
-          <span className="qs-mystery-icon" aria-hidden><Icon e="🤒" size={28} /></span>
+          <CustomerFace c={c} />
           <div className="qs-who">
-            <span className="qs-name"><span className="qs-face" aria-label="Humor"><Icon e={left > 0.5 ? '🙂' : left > 0.25 ? '😐' : '😠'} /></span> {a.label} <span className="muted">conta o problema</span></span>
+            <span className="qs-name">{a.label} <span className="muted">conta o problema</span></span>
             <Meter ratio={left} tone={left > 0.5 ? 'ok' : left > 0.25 ? 'gold' : 'warn'} label="Paciência" />
           </div>
           {next && <button className="qs-icon" onClick={() => dispatch({ type: 'SELECT_CUSTOMER', id: next.id })} aria-label="Próximo cliente">{idx + 1}/{save.customers.length} ›</button>}
@@ -119,7 +120,7 @@ export function QuickServe({ placement }: { placement: 'stage' | 'side' }) {
       <section className={`quick-serve qs-${placement} qs-compact`} aria-label={`Atender ${a.label}`}>
         <PotionIcon recipeId={wanted.id} size={20} />
         <span className="qs-none">
-          <span className="qs-face" aria-label="Humor"><Icon e={left > 0.5 ? '🙂' : left > 0.25 ? '😐' : '😠'} /></span> {c.vip ? c.vip.name : reg ? reg.name.split(',')[0] : a.label} quer {wanted.shortName}
+          <CustomerFace c={c} size={32} /> {c.vip ? c.vip.name : reg ? reg.name.split(',')[0] : a.label} quer {wanted.shortName}
           <span className="muted small"> · {reserved ? 'as que você tem estão guardadas para o pedido' : 'acabou na prateleira'}</span>
         </span>
         {next && <button className="qs-icon" onClick={() => dispatch({ type: 'SELECT_CUSTOMER', id: next.id })} aria-label="Próximo cliente">{idx + 1}/{save.customers.length} ›</button>}
@@ -132,9 +133,9 @@ export function QuickServe({ placement }: { placement: 'stage' | 'side' }) {
   return (
     <section className={`quick-serve qs-${placement} ${c.vip ? 'qs-is-vip' : ''}`} aria-label={`Atender ${a.label}`}>
       <div className="qs-head">
-        <PotionIcon recipeId={c.symptom ? (offerId ?? c.offer?.recipeId ?? wanted.id) : wanted.id} size={24} />
+        <CustomerFace c={c} />
         <div className="qs-who">
-          <span className="qs-name"><span className="qs-face" aria-label="Humor"><Icon e={left > 0.5 ? '🙂' : left > 0.25 ? '😐' : '😠'} /></span> {c.symptom ? <>{a.label} <span className="muted">· você escolheu</span> {RECIPES_BY_ID[offerId ?? c.offer?.recipeId ?? c.wantedRecipeId].shortName}</> : <>{c.vip ? <span className="qs-regular qs-vip"><Icon e="✨" /> {c.vip.name}</span> : reg ? <span className="qs-regular">{reg.name.split(',')[0]} <span className="heart-on">{'♥\uFE0E'.repeat(hearts) || '♡'}</span></span> : a.label}{' '}<span className="muted">quer</span> {wanted.shortName}</>}</span>
+          <span className="qs-name">{c.symptom ? <>{a.label} <span className="muted">· você escolheu</span> {RECIPES_BY_ID[offerId ?? c.offer?.recipeId ?? c.wantedRecipeId].shortName}</> : <>{c.vip ? <span className="qs-regular qs-vip"><Icon e="✨" /> {c.vip.name}</span> : reg ? <span className="qs-regular">{reg.name.split(',')[0]} <span className="heart-on">{'♥\uFE0E'.repeat(hearts) || '♡'}</span></span> : a.label}{' '}<span className="muted">quer</span> <PotionIcon recipeId={wanted.id} size={16} /> {wanted.shortName}</>}</span>
           <Meter ratio={left} tone={left > 0.5 ? 'ok' : left > 0.25 ? 'gold' : 'warn'} label="Paciência" />
         </div>
         {next && (

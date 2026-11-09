@@ -1687,3 +1687,11 @@ html, button, input { font-variant-ligatures: none; font-feature-settings: "liga
 .qs-link { background: none; border: 0; padding: 0; margin-right: 6px; color: var(--copper); font: inherit; font-style: normal; text-decoration: underline; cursor: pointer; }
 .card.card-hint { border-color: var(--copper); box-shadow: inset 4px 0 0 var(--copper); padding-left: 14px; }
 .qs-coach { margin: 0; font-size: var(--fs-sm); font-weight: 600; color: var(--ink); background: #fff4c8; border: 2px dashed var(--gold); border-radius: var(--r-md); padding: 6px 8px; }
+
+/* Clientes com rosto (auditoria P1.5) */
+.customer-face { flex: none; line-height: 0; background: var(--parchment-2); border: 2px solid var(--parchment-edge); border-radius: var(--r-md); padding: 1px; transition: border-color .2s; }
+.customer-face.face-neutro { border-color: var(--gold); }
+.customer-face.face-bravo { border-color: var(--warn); animation: face-shake .5s ease-in-out 2; }
+@keyframes face-shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-2px); } 75% { transform: translateX(2px); } }
+@media (prefers-reduced-motion: reduce) { .customer-face.face-bravo { animation: none; } }
+.qs-compact .customer-face { padding: 0; border-width: 1px; }
