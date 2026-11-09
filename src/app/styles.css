@@ -1700,3 +1700,29 @@ html, button, input { font-variant-ligatures: none; font-feature-settings: "liga
 .regular-story { font-size: var(--fs-sm); margin-top: 4px; }
 .regular-story summary { cursor: pointer; color: var(--copper); font-weight: 600; }
 .regular-story ol { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; }
+
+/* =====================================================================
+   Auditoria P2.1: a interface na linguagem do mundo.
+   Cantos retos de pixel, bordas duras com "sombra" de 2px sem desfoque
+   (como os móveis da cena) e números grandes em Pixelify.
+   ===================================================================== */
+:root { --r-sm: 2px; --r-md: 3px; }
+.card, .quick-serve, .home-next, .goal, .chest, .track, .village-card, .talent, .regular, .order-card {
+  border-radius: 2px;
+  border: 2px solid var(--parchment-edge);
+  box-shadow: 0 2px 0 var(--parchment-edge);
+}
+.card + .card { margin-top: 2px; }
+.subtab { border-radius: 2px; border-width: 2px; box-shadow: 0 2px 0 var(--parchment-edge); }
+.subtab-on { box-shadow: 0 2px 0 var(--ink-0); }
+.btn { border-radius: 2px; box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.3), inset 0 2px 0 rgba(255, 255, 255, 0.12), 0 2px 0 var(--ink-0); }
+.btn:active:not(:disabled) { transform: translateY(2px); box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.3); }
+.side-head, .side > header { border-bottom: 3px solid var(--parchment-edge); }
+/* Painel lateral com moldura de madeira, como as bordas da cena. */
+@media (min-width: 1101px) {
+  .side { border-left: 4px solid var(--wood); box-shadow: inset 2px 0 0 var(--wood-hi), inset 4px 0 0 var(--ink-0); }
+}
+/* Números que importam em pixel: moedas, contadores e preços. */
+.goal-count, .goal-reward, .chest-top .row-title, .grimoire-kicker, .seal-badge, .crystal-n, .qs-price, .price, .stat-n { font-family: var(--font-pixel); }
+.goal-bar, .chest-bar, .meter, .track-bar { border-radius: 0; }
+.goal-bar > span, .meter > span, .track-bar > span { border-radius: 0; }
