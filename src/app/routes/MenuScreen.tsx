@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import roomUrl from '../../assets/sprites/room.png';
+import roomUrl from '../../assets/sprites/storefront.png';
+import walkerUrl from '../../assets/sprites/customer-viajante.png';
 import { AWNINGS } from '../../domain/data/catalog';
 import { useGameStore } from '../../store/gameStore';
 import { PotionIcon } from '../../ui/SpriteIcon';
@@ -20,7 +21,7 @@ function Storefront({ name, awning }: { name: string; awning: string }) {
         <span className="awning-band sf-awning" />
         <span className="sf-sign">{name}</span>
         <div className="sf-front">
-          <div className="sf-window"><img src={roomUrl} alt="" /><span className="sf-glow" /></div>
+          <div className="sf-window"><img src={roomUrl} alt="" /><span className="sf-glow" /><span className="sf-walker" style={{ backgroundImage: `url(${walkerUrl})` }} /></div>
           <div className="sf-door"><span className="sf-door-sign">Aberto</span></div>
         </div>
       </div>

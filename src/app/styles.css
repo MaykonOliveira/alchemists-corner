@@ -1540,3 +1540,34 @@ html, button, input { font-variant-ligatures: none; font-feature-settings: "liga
   font-family: var(--font-body); font-weight: 700; letter-spacing: .02em;
 }
 .hud-label, .nav-group-label, .side-area, .rare-kicker, .royal-kicker { text-transform: uppercase; font-size: var(--fs-xs); letter-spacing: .06em; }
+
+/* V4: no computador, a cena fica numa moldura de madeira pendurada numa parede de tábuas (no lugar das faixas escuras). */
+@media (min-width: 861px) {
+  .stage-host {
+    background:
+      radial-gradient(ellipse at 50% 45%, rgba(255, 190, 110, 0.10), transparent 65%),
+      linear-gradient(180deg, rgba(0, 0, 0, 0.25), transparent 18%, transparent 82%, rgba(0, 0, 0, 0.35)),
+      repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.10) 0 1px, transparent 1px 9px),
+      repeating-linear-gradient(90deg, var(--wood) 0 54px, var(--wood-dark) 54px 57px, #46291a 57px 110px, var(--wood-dark) 110px 113px);
+  }
+  .stage {
+    box-shadow:
+      0 0 0 2px var(--gold-deep),
+      0 0 0 6px var(--wood-hi),
+      0 0 0 8px #7a4e2c,
+      0 0 0 11px var(--wood-dark),
+      0 0 0 13px var(--ink-0),
+      0 18px 40px rgba(0, 0, 0, 0.7);
+  }
+}
+
+/* V4: vitrine da tela de título com a loja cheia e um viajante passando na calçada. */
+.sf-walker {
+  position: absolute; bottom: -6px; left: 0; width: 36px; height: 80px; z-index: 2;
+  background-size: 108px 80px; background-repeat: no-repeat; image-rendering: pixelated;
+  filter: brightness(.7);
+  animation: sf-walk-frames .45s steps(3) infinite, sf-walk-across 11s linear infinite;
+}
+@keyframes sf-walk-frames { from { background-position: 0 0; } to { background-position: -108px 0; } }
+@keyframes sf-walk-across { 0% { left: -44px; } 60%, 100% { left: calc(100% + 8px); } }
+@media (prefers-reduced-motion: reduce) { .sf-walker { display: none; } }

@@ -46,6 +46,35 @@ def pack(frames, width, pad=1):
     return sheet, meta
 
 
+def storefront(shop):
+    """Loja aberta e cheia vista pela vitrine da tela de título (revisão visual V4)."""
+    from customers import draw_frame
+    cv = draw_room()
+    cv.blit(shop['garland'], 0, 0)
+    for k, x, y in (('obj-cabinet', 2, 38), ('obj-shelf', 108, 22), ('obj-shelf', 170, 22), ('obj-board', 238, 32),
+                    ('obj-door', 300, 28)):
+        cv.blit(shop[k], x, y)
+    sign = shop['sign-open']
+    cv.blit(sign, 321 - sign.w // 2, 58)
+    # Frascos nas três tábuas das duas prateleiras, de cores variadas.
+    rids = list(I.LIQ)
+    n = 0
+    for sx in (108, 170):
+        for board in O.SHELF_BOARDS:
+            for i in range(6):
+                pot = shop[f'potion-{rids[(n * 7) % len(rids)]}']
+                cv.blit(pot, sx + 6 + i * 8, 22 + board - pot.h)
+                n += 1
+    cust = draw_frame(LOOKS['nobre'], 0)
+    cv.blit(cust, 224 - cust.w // 2, 133 - cust.h)
+    cv.blit(shop['obj-cauldron'], 46, 128)
+    cv.blit(shop['fire-0'], 61 - shop['fire-0'].w // 2, 176 - shop['fire-0'].h)
+    cv.blit(shop['obj-counter'], 150, 128)
+    cv.blit(shop['obj-register'], 243, 117)
+    cv.blit(shop['cat-sit-0'], 120, 196 - shop['cat-sit-0'].h)
+    return cv
+
+
 def save(cv, name):
     check_palette(cv.im, name)
     cv.im.save(os.path.join(OUT, name), optimize=True)
@@ -108,6 +137,7 @@ def main():
         shop[f'potion-{rid}'] = I.potion_small(rid)
     sheet, meta = pack(shop, 512)
     save(sheet, 'shop.png')
+    save(storefront(shop), 'storefront.png')
     with open(os.path.join(OUT, 'shop.json'), 'w') as fh:
         json.dump({'frames': meta, 'meta': {'image': 'shop.png', 'size': {'w': sheet.w, 'h': sheet.h}, 'scale': '1'}}, fh, indent=1)
 
