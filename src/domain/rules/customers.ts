@@ -3,7 +3,7 @@ import { DAY_EVENTS } from '../data/orders';
 import { RECIPES_BY_ID } from '../data/recipes';
 import type { Customer, CustomerArchetype, GameSave } from '../models/types';
 import { fail, nextId, pick, weightedPick, type Draft } from './context';
-import { getPrice, has, potionStock, takePotions } from './economy';
+import { getPrice, has, potionStock, priceRange, takePotions } from './economy';
 import { masteryStars, STAR_BONUS, talentBonus } from './mastery';
 import { gainReputation, gainXp } from './progression';
 import { CLOSE_MIN } from './time';
@@ -199,7 +199,10 @@ function removeCustomer(d: Draft, c: Customer, reason: 'paciencia' | 'preco' | '
   }
 }
 
-function completeSale(d: Draft, c: Customer, recipeId: string, price: number) {
+/** Fração da paciência até a qual o atendimento conta como rápido (reputação a mais). */
+export const FAST_SERVICE = 0.4;
+
+function completeSale(d: Draft, c: Customer, recipeId: string, price: number, discount = false) {
   const s = d.s;
   const r = RECIPES_BY_ID[recipeId];
   // Poções Finas e Primorosas saem primeiro e valem mais (toque de mestre).
@@ -210,9 +213,11 @@ function completeSale(d: Draft, c: Customer, recipeId: string, price: number) {
   s.stats.revenue += price;
   s.stats.salesByRecipe[recipeId] = (s.stats.salesByRecipe[recipeId] ?? 0) + 1;
   s.stats.served += 1;
-  const fair = price <= r.basePrice ? 1 : 0;
+  // Reputação vem de atender bem (a poção certa, sem demora, um agrado no preço), e não de cobrar pouco.
+  const exact = recipeId === c.wantedRecipeId ? 1 : 0;
+  const fast = c.waitedMs <= c.patienceMs * FAST_SERVICE ? 1 : 0;
   const cozy = (has(s, 'iluminacao-aconchegante') ? 1 : 0) + (has(s, 'vitral-arcano') && c.archetype === 'nobre' ? 1 : 0);
-  gainReputation(d, fair + cozy);
+  gainReputation(d, exact + fast + (discount ? 1 : 0) + cozy);
   s.lifetime = { sold: s.lifetime.sold + 1, earned: s.lifetime.earned + price };
   d.events.push({ type: 'SALE', customerId: c.id, recipeId, price, substitute: recipeId !== c.wantedRecipeId, ...(quality > 1 ? { quality: quality as 2 | 3 } : {}) });
   noteSale(d, price);
@@ -223,7 +228,14 @@ function completeSale(d: Draft, c: Customer, recipeId: string, price: number) {
   gainXp(d, 6 + Math.round(r.basePrice / 5) + masteryStars(s, recipeId));
 }
 
-export function serveCustomer(d: Draft, customerId: string, recipeId: string, opts: { basePrice?: boolean } = {}): boolean {
+/** Preços que o jogador pode pedir no balcão, a partir da etiqueta: com desconto, a etiqueta e um pedido mais alto. */
+export function askOptions(s: GameSave, recipeId: string) {
+  const { min, max } = priceRange(s, recipeId);
+  const tag = getPrice(s, recipeId);
+  return { discount: Math.max(min, Math.round(tag * 0.9)), tag, high: Math.min(max, Math.max(tag + 1, Math.round(tag * 1.15))) };
+}
+
+export function serveCustomer(d: Draft, customerId: string, recipeId: string, opts: { basePrice?: boolean; price?: number } = {}): boolean {
   const s = d.s;
   const c = s.customers.find((x) => x.id === customerId);
   if (!c) return fail(d, 'Esse cliente já foi embora.');
@@ -255,16 +267,26 @@ export function serveCustomer(d: Draft, customerId: string, recipeId: string, op
     return true;
   }
   // O golem não negocia: cobra o preço-base, que é sempre aceito por quem pediu a poção pelo nome.
-  const price = opts.basePrice ? RECIPES_BY_ID[recipeId].basePrice : getPrice(s, recipeId);
+  const tag = getPrice(s, recipeId);
+  let price = opts.basePrice ? RECIPES_BY_ID[recipeId].basePrice : tag;
+  // Pedido feito na hora, no balcão: só vale dentro da faixa da receita.
+  if (opts.price !== undefined) {
+    const { min, max: top } = priceRange(s, recipeId);
+    price = Math.round(Math.min(top, Math.max(min, opts.price)));
+  }
   const max = maxPriceFor(s, c, recipeId);
+  // Pedir acima da etiqueta a quem não pode pagar ofende: o morador vai embora, os outros pechincham bravos.
+  const greedy = price > tag && price > max;
+  const margin = greedy && c.archetype === 'morador' ? 1 : NEGOTIATION_MARGIN;
   if (price <= max || opts.basePrice) {
-    completeSale(d, c, recipeId, price);
-  } else if (price <= max * NEGOTIATION_MARGIN) {
+    completeSale(d, c, recipeId, price, price < tag);
+  } else if (price <= max * margin) {
     c.offer = { recipeId, price: max };
-    c.remark = `Está um pouco caro… Faz por ${max} moedas?`;
+    if (greedy) gainReputation(d, -1);
+    c.remark = greedy ? `Acima da etiqueta?! Pago ${max}, e olhe lá.` : `Está um pouco caro… Faz por ${max} moedas?`;
     d.events.push({ type: 'COUNTER_OFFER', customerId, price: max });
   } else {
-    c.remark = 'Caro demais para mim. Fica para outro dia.';
+    c.remark = greedy ? 'Acima da etiqueta? Isso é abuso. Passar bem.' : 'Caro demais para mim. Fica para outro dia.';
     d.events.push({ type: 'CUSTOMER_REFUSED', customerId, reason: 'preco' });
     removeCustomer(d, c, 'preco');
   }

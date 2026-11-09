@@ -9,7 +9,7 @@ import { maxBatches, POTIONS_PER_BATCH } from '../../domain/rules/alchemy';
 import { applyCommand, type DomainCommand } from '../../domain/rules/commands';
 import type { RuleContext } from '../../domain/rules/context';
 import { countIngredients, ingredientCapacity, potionStock, priceRange } from '../../domain/rules/economy';
-import { suits } from '../../domain/rules/customers';
+import { askOptions, suits } from '../../domain/rules/customers';
 import { createNewGame } from '../../domain/rules/initialState';
 import { sealsAvailable } from '../../domain/rules/progression';
 import { TALENTS, talentCost } from '../../domain/data/talents';
@@ -44,6 +44,10 @@ export interface BotProfile {
    * caldeirão antes de abrir. Serve para medir o valor dos ajudantes.
    */
   distractedFrom?: number;
+  /** Lê o freguês no balcão: pede mais a quem tem dinheiro e faz um agrado a quem conta moedas. */
+  readsCustomers?: boolean;
+  /** Pede mais de todo mundo, sem olhar quem está no balcão. */
+  greedy?: boolean;
 }
 
 export const CASUAL: BotProfile = {
@@ -63,6 +67,12 @@ export const EFICIENTE: BotProfile = {
   targetStock: 6,
   reserve: 40,
 };
+
+/** O casual que presta atenção em quem está no balcão (auditoria P0.3). */
+export const ESPERTO: BotProfile = { ...CASUAL, name: 'esperto', readsCustomers: true };
+
+/** Pede o preço alto de todos: serve para mostrar que ler o freguês importa. */
+export const GANANCIOSO: BotProfile = { ...ESPERTO, name: 'ganancioso', greedy: true };
 
 /** Joga como o casual até o dia 5 e depois fica distraído. */
 export const DISTRAIDO: BotProfile = { ...CASUAL, name: 'distraído', distractedFrom: 6 };
@@ -185,7 +195,14 @@ export function simulate(profile: BotProfile, days: number, seed: number): SimRe
         cmd({ type: 'DISMISS_CUSTOMER', customerId: c.id });
         continue;
       }
-      cmd({ type: 'SERVE_CUSTOMER', customerId: c.id, recipeId: options[0].recipeId });
+      const recipeId = options[0].recipeId;
+      let price: number | undefined;
+      if (profile.readsCustomers && !c.vip && recipeId === c.wantedRecipeId) {
+        const ask = askOptions(s, recipeId);
+        // Só o morador não aguenta preço salgado (é o que a dica do balcão diz).
+        if (c.archetype !== 'morador' || profile.greedy) price = ask.high;
+      }
+      cmd({ type: 'SERVE_CUSTOMER', customerId: c.id, recipeId, ...(price !== undefined ? { price } : {}) });
       const still = s.customers.find((x) => x.id === c.id);
       if (still?.offer) cmd({ type: 'ACCEPT_OFFER', customerId: c.id });
     }

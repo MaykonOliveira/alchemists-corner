@@ -35,7 +35,7 @@ export type DomainCommand =
   | { type: 'CLOSE_SHOP' }
   | { type: 'START_NEXT_DAY' }
   | { type: 'ADVANCE'; ms: number }
-  | { type: 'SERVE_CUSTOMER'; customerId: string; recipeId: string }
+  | { type: 'SERVE_CUSTOMER'; customerId: string; recipeId: string; price?: number }
   | { type: 'ACCEPT_OFFER'; customerId: string }
   | { type: 'DECLINE_OFFER'; customerId: string }
   | { type: 'DISMISS_CUSTOMER'; customerId: string }
@@ -104,7 +104,7 @@ function run(d: Draft, cmd: DomainCommand): boolean {
     case 'CLOSE_SHOP': return closeDay(d);
     case 'START_NEXT_DAY': return startNextDay(d);
     case 'ADVANCE': return advance(d, cmd.ms);
-    case 'SERVE_CUSTOMER': return serveCustomer(d, cmd.customerId, cmd.recipeId);
+    case 'SERVE_CUSTOMER': return serveCustomer(d, cmd.customerId, cmd.recipeId, cmd.price !== undefined ? { price: cmd.price } : {});
     case 'ACCEPT_OFFER': return acceptOffer(d, cmd.customerId);
     case 'DECLINE_OFFER': return declineOffer(d, cmd.customerId);
     case 'DISMISS_CUSTOMER': return dismissCustomer(d, cmd.customerId);

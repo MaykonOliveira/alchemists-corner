@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { UPGRADES } from '../../domain/data/upgrades';
-import { CASUAL, DISTRAIDO, DISTRAIDO_COM_AJUDANTES, EFICIENTE, simulate } from './bot';
+import { CASUAL, DISTRAIDO, DISTRAIDO_COM_AJUDANTES, EFICIENTE, ESPERTO, GANANCIOSO, simulate, type BotProfile, type SimResult } from './bot';
 
 // Metas de balanceamento do PRD, medidas com o robô-jogador sobre as regras puras.
 const SEEDS = [1, 2, 3, 4, 5, 6];
@@ -73,5 +73,25 @@ describe('ajudantes automáticos', () => {
         if (d.upgrades.includes('golem-balconista')) expect(d.level).toBeGreaterThanOrEqual(9);
       }
     }
+  });
+});
+
+// Auditoria P0.3: ler quem está no balcão tem de valer mais do que vender tudo pela etiqueta,
+// e pedir caro de todo mundo não pode ser a resposta fácil.
+describe('preço que depende de quem compra', () => {
+  const seeds = Array.from({ length: 8 }, (_, i) => 500 + i);
+  const runs = (p: BotProfile) => seeds.map((seed) => simulate(p, 7, seed));
+  const [casual, esperto, ganancioso] = [CASUAL, ESPERTO, GANANCIOSO].map(runs);
+  const revenue = (rs: SimResult[]) => rs.reduce((n, r) => n + r.days.reduce((m, d) => m + d.revenue, 0), 0);
+  const rep = (rs: SimResult[]) => rs.reduce((n, r) => n + r.days.at(-1)!.reputation, 0);
+
+  it('quem lê o freguês fatura mais que quem só vende pela etiqueta, sem perder reputação', () => {
+    expect(revenue(esperto)).toBeGreaterThan(revenue(casual) * 1.05);
+    expect(rep(esperto)).toBeGreaterThanOrEqual(rep(casual) * 0.95);
+  });
+
+  it('pedir caro de todo mundo rende menos que ler o freguês e custa reputação', () => {
+    expect(revenue(ganancioso)).toBeLessThan(revenue(esperto));
+    expect(rep(ganancioso)).toBeLessThan(rep(esperto));
   });
 });
