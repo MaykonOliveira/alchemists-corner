@@ -19,7 +19,7 @@ import royal as RO  # registra a Poção da Coroa em items.py
 import ui_icons as UI
 import legends as LG  # registra as receitas lendárias em items.py
 import village as VI
-from room import draw_room
+from room import draw_room, window_front_sprite, WINDOW_FRONT_POS, WINDOW_GLASS
 from customers import customer_sheet, LOOKS, FW, FH, FRAMES
 
 OUT = os.path.join(os.path.dirname(__file__), '..', 'src', 'assets', 'sprites')
@@ -101,6 +101,8 @@ def main():
     })
     for f in range(3):
         shop[f'fire-{f}'] = O.fire(f)
+    # Frente da janela: fica por cima de quem passa na rua (o resto da janela é a própria sala).
+    shop['window-front'] = window_front_sprite()
     # Ajudantes automáticos (cada quadro com contorno próprio para o hover)
     helper_frames = {
         'raven-0': H.raven(0), 'raven-1': H.raven(1), 'raven-2': H.raven(2),
@@ -169,7 +171,9 @@ def main():
               'lategame': {k: {'x': x, 'y': y} for k, (x, y) in L.POS.items()},
               'expansion': {k: {'x': x, 'y': y} for k, (x, y) in X.POS.items()},
               'decor': {k: {'x': x, 'y': y} for k, (x, y) in DE.POS.items()},
-              'royal': {k: {'x': x, 'y': y} for k, (x, y) in RO.POS.items()}}
+              'royal': {k: {'x': x, 'y': y} for k, (x, y) in RO.POS.items()},
+              'window': {'front': {'x': WINDOW_FRONT_POS[0], 'y': WINDOW_FRONT_POS[1]},
+                         'glass': dict(zip(('x', 'y', 'w', 'h'), WINDOW_GLASS))}}
     with open(os.path.join(OUT, 'layout.json'), 'w') as fh:
         json.dump(layout, fh, indent=1)
     # Obras da vila (fase 4, pacote W): grade de 4 estados por obra, mais a planta (V5) na 5ª coluna.

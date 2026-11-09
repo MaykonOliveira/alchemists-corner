@@ -7,7 +7,7 @@ import { autoFast, useGameStore } from '../../../store/gameStore';
 import { seasonOf } from '../../../domain/rules/world';
 import { gameEvents } from '../../events';
 import { outlinedText } from '../art/painter';
-import { DECOR_POS, EXPANSION, GARLAND_BULBS, LANTERNS, LATEGAME, ROYAL_POS, SHELF_BOARDS } from '../art/sprites';
+import { DECOR_POS, EXPANSION, GARLAND_BULBS, LANTERNS, LATEGAME, ROYAL_POS, SHELF_BOARDS, WINDOW } from '../art/sprites';
 import { decorAt } from '../../../domain/rules/entitlements';
 import { CatView } from '../entities/Cat';
 import { HelperViews } from '../entities/Helpers';
@@ -15,6 +15,14 @@ import { Visitor, type Mood } from '../entities/Visitor';
 import { HOTSPOTS, type HotspotDef } from '../interaction/hotspots';
 
 const OUTLINE_HOVER = 0xfff2c8;
+/** Vidro da janela (onde se vê a rua) e chão da rua, onde pisa quem passa. */
+const GLASS = WINDOW.glass;
+const STREET_Y = GLASS.y + GLASS.h - 2;
+/** Camadas da janela: céu dos eventos < clima < quem passa < frente da janela (moldura, cortinas, vasos). */
+const DEPTH_WINDOW_SKY = 1.4;
+const DEPTH_WINDOW_FX = 1.42;
+const DEPTH_PASSERBY = 1.44;
+const DEPTH_WINDOW_FRONT = 1.46;
 const OUTLINE_ACTIVE = 0xf2c95c;
 const PRESSED_TINT = 0xffd8a0;
 
@@ -78,6 +86,8 @@ export class ShopScene extends Phaser.Scene {
   private advanceAcc = 0;
   private seasonFxAt = 0;
   private passerbyAt = 4000;
+  /** Recorte do vidro da janela, compartilhado por todos que passam na rua. */
+  private windowMask!: Phaser.Display.Masks.GeometryMask;
   private rareSky: Phaser.GameObjects.Graphics | null = null;
   private rareSkyEvent: string | null = null;
   private nightness = 0;
@@ -101,6 +111,9 @@ export class ShopScene extends Phaser.Scene {
   create() {
     const save = this.store.save!;
     this.add.image(0, 0, 'room').setOrigin(0).setDepth(0);
+    // A moldura da janela já está na sala; esta cópia fica por cima de quem passa na rua.
+    this.add.image(WINDOW.front.x, WINDOW.front.y, 'window-front').setOrigin(0).setDepth(DEPTH_WINDOW_FRONT);
+    this.windowMask = this.make.graphics({}, false).fillRect(GLASS.x, GLASS.y, GLASS.w, GLASS.h).createGeometryMask();
     this.createHotspots();
     this.createCauldronFx();
     this.sign = this.add.image(321, 58, 'sign-closed').setOrigin(0.5, 0).setDepth(113);
@@ -225,7 +238,7 @@ export class ShopScene extends Phaser.Scene {
     if (!save) return;
     const season = seasonOf(save.day).id;
     this.seasonFxAt = time + (season === 'inverno' ? 260 : 420);
-    const W = { x0: 55, x1: 99, top: 26, bottom: 47 };
+    const W = { x0: GLASS.x + 2, x1: GLASS.x + GLASS.w - 3, top: GLASS.y + 1, bottom: STREET_Y - 2 };
     const x = Phaser.Math.Between(W.x0, W.x1);
     const look = {
       primavera: { tint: [0xf8b8d0, 0xffd8e8], rise: false, drift: 10 },
@@ -233,7 +246,7 @@ export class ShopScene extends Phaser.Scene {
       outono: { tint: [0xe08a3a, 0xc8602a, 0xf0b040], rise: false, drift: 8 },
       inverno: { tint: [0xffffff, 0xe0f0ff], rise: false, drift: 4 },
     }[season];
-    const p = this.add.image(x, look.rise ? W.bottom - 4 : W.top, 'px').setDepth(1.5)
+    const p = this.add.image(x, look.rise ? W.bottom - 4 : W.top, 'px').setDepth(DEPTH_WINDOW_FX).setMask(this.windowMask)
       .setTint(look.tint[Phaser.Math.Between(0, look.tint.length - 1)]).setAlpha(0.9).setScale(1.5);
     if (season === 'outono') p.setScale(2, 1.2);
     const tx = Phaser.Math.Clamp(x + Phaser.Math.Between(-look.drift, look.drift), W.x0, W.x1);
@@ -253,19 +266,20 @@ export class ShopScene extends Phaser.Scene {
     const save = this.store.save;
     const busy = save?.event === 'feira' ? 0.5 : save && save.clockMin >= 18 * 60 ? 1.8 : 1;
     this.passerbyAt = time + (3500 + Math.random() * 5000) * busy;
-    const W = { x0: 55, x1: 100, top: 26, bottom: 48 };
     const kinds = Object.keys(CUSTOMER_URLS) as (keyof typeof CUSTOMER_URLS)[];
     const key = `customer-${kinds[Phaser.Math.Between(0, kinds.length - 1)]}`;
     if (!this.textures.exists(key)) return;
     const rtl = Math.random() < 0.5;
-    const mask = this.make.graphics({}, false).fillRect(W.x0, W.top, W.x1 - W.x0, W.bottom - W.top).createGeometryMask();
-    // Só a parte de cima aparece na janela; um pouco mais escuro, como quem está do lado de fora.
-    const p = this.add.sprite(rtl ? W.x1 + 8 : W.x0 - 8, W.bottom + 12, key, 0).setOrigin(0.5, 1)
-      .setDepth(1.45).setTint(0xb8a890).setAlpha(0.9).setFlipX(rtl).setMask(mask);
+    // Corpo inteiro, com os pés na calçada lá fora: a cabeça passa no vidro de cima e as pernas no de baixo.
+    // Fica atrás da moldura, dos montantes e dos vasos; um pouco mais escuro, como quem está do lado de fora.
+    const x0 = GLASS.x - 10;
+    const x1 = GLASS.x + GLASS.w + 10;
+    const p = this.add.sprite(rtl ? x1 : x0, STREET_Y, key, 0).setOrigin(0.5, 1)
+      .setDepth(DEPTH_PASSERBY).setTint(0xb8a890).setFlipX(rtl).setMask(this.windowMask);
     if (this.anims.exists(`${key}-walk`)) p.play(`${key}-walk`);
     this.tweens.add({
-      targets: p, x: rtl ? W.x0 - 8 : W.x1 + 8, duration: 3800 + Math.random() * 1800,
-      onComplete: () => { p.destroy(); mask.geometryMask.destroy(); mask.destroy(); },
+      targets: p, x: rtl ? x0 : x1, duration: 4200 + Math.random() * 1800,
+      onComplete: () => p.destroy(),
     });
   }
 
@@ -278,8 +292,8 @@ export class ShopScene extends Phaser.Scene {
       this.rareSky?.destroy();
       this.rareSky = null;
       if (ev) {
-        const g = this.add.graphics().setDepth(1.4);
-        const W = { x: 55, y: 26, w: 45, h: 22 };
+        const g = this.add.graphics().setDepth(DEPTH_WINDOW_SKY);
+        const W = GLASS;
         if (ev === 'eclipse') {
           g.fillStyle(0x24163a, 0.55).fillRect(W.x, W.y, W.w, W.h);
           g.fillStyle(0xf2c95c, 1).fillCircle(86, 33, 6);
@@ -454,9 +468,8 @@ export class ShopScene extends Phaser.Scene {
     if (has('caldeirao-reforcado')) this.upgradeLayer.push(this.add.image(CAULDRON.x, CAULDRON.y, 'cauldron-bands').setOrigin(0).setDepth(CAULDRON.y + 48.1));
     if (has('armario-organizado')) this.upgradeLayer.push(this.add.image(2, 38, 'cabinet-labels').setOrigin(0).setDepth(136.1));
     if (has('letreiro-novo')) {
-      const sign = this.add.image(321, 9, 'shop-sign').setOrigin(0.5, 0).setDepth(115);
-      this.upgradeLayer.push(sign);
-      if (!this.reduceMotion()) this.tweens.add({ targets: sign, angle: { from: -1.5, to: 1.5 }, yoyo: true, repeat: -1, duration: 1600, ease: 'Sine.InOut' });
+      // Sem girar: pixel art girada em ângulo quebrado "rasga" e cintila a cada quadro.
+      this.upgradeLayer.push(this.add.image(321, 9, 'shop-sign').setOrigin(0.5, 0).setDepth(115));
     }
     if (has('prateleira-extra')) {
       const def: HotspotDef = { id: 'stand', label: 'Expositor de poções', panel: 'shelves', texture: 'display-stand', x: STAND.x, y: STAND.y };
@@ -469,9 +482,8 @@ export class ShopScene extends Phaser.Scene {
     // ---- late game
     if (has('estufa')) {
       const p = LATEGAME.greenhouse;
-      const g = this.add.image(p.x, p.y, 'greenhouse').setOrigin(0).setDepth(21);
-      this.upgradeLayer.push(g);
-      if (!this.reduceMotion()) this.tweens.add({ targets: g, scaleY: { from: 1, to: 1.03 }, y: p.y - 0.5, yoyo: true, repeat: -1, duration: 2200, ease: 'Sine.InOut' });
+      // Escala fixa: esticar 3% fazia uma linha de pixels aparecer e sumir sem parar.
+      this.upgradeLayer.push(this.add.image(p.x, p.y, 'greenhouse').setOrigin(0).setDepth(21));
     }
     if (has('alambique-prata')) {
       const p = LATEGAME.alembic;
@@ -524,8 +536,8 @@ export class ShopScene extends Phaser.Scene {
       const glow = this.add.image(p.x + 11, p.y + 21, 'glow-violet').setDepth(1002).setBlendMode(Phaser.BlendModes.ADD).setScale(1.4);
       this.magicGlows.push(glow);
       this.upgradeLayer.push(a, glow);
+      // Só troca de quadro (sem girar o sprite, que deixava os anéis serrilhados e tremendo).
       if (!this.reduceMotion()) {
-        this.tweens.add({ targets: a, angle: { from: -4, to: 4 }, yoyo: true, repeat: -1, duration: 2400, ease: 'Sine.InOut' });
         this.astroTimer = this.time.addEvent({ delay: 700, loop: true, callback: () => a.setTexture(a.texture.key === 'astrolabe-0' ? 'astrolabe-1' : 'astrolabe-0') });
       }
     }
@@ -586,7 +598,6 @@ export class ShopScene extends Phaser.Scene {
         .setBlendMode(Phaser.BlendModes.ADD).setScale(0.6).setTint(lamp.id === 'luminaria-cristal' ? 0xc8e8ff : lamp.id === 'luminaria-lua' ? 0xfff0b0 : 0xffb050);
       this.decorGlows.push(glow);
       this.decorLayer.push(img, glow);
-      if (!this.reduceMotion()) this.tweens.add({ targets: img, angle: { from: -2, to: 2 }, yoyo: true, repeat: -1, duration: 2000, ease: 'Sine.InOut' });
     }
     const plant = decorAt(save, 'planta');
     if (plant.look) {
@@ -866,11 +877,15 @@ export class ShopScene extends Phaser.Scene {
     const { save, ui } = this.store;
     if (!save) return;
 
-    // Cintilar das luzes (mais forte à noite)
-    const flicker = this.reduceMotion() ? 0 : Math.sin(time / 170) * 0.04 + Math.sin(time / 53) * 0.03;
+    // Chama das lanternas e do fogo: oscilação lenta e pequena, com fase própria para cada luz.
+    // (Antes a amplitude crescia com a posição na lista e mudava a cada ~50 ms, e as luzes pareciam piscar.)
+    const still = this.reduceMotion();
     const base = 0.55 + this.nightness * 0.45;
-    this.glows.forEach((g, i) => g.setAlpha(Phaser.Math.Clamp(base + flicker * (i + 1), 0, 1)));
-    this.bulbGlows.forEach((g, i) => g.setAlpha(0.5 + this.nightness * 0.5 + (this.reduceMotion() ? 0 : Math.sin(time / 400 + i) * 0.15)));
+    this.glows.forEach((g, i) => {
+      const flicker = still ? 0 : Math.sin(time / 700 + i * 2.3) * 0.035 + Math.sin(time / 260 + i * 1.1) * 0.015;
+      g.setAlpha(Phaser.Math.Clamp(base + flicker, 0, 1));
+    });
+    this.bulbGlows.forEach((g, i) => g.setAlpha(Phaser.Math.Clamp(0.5 + this.nightness * 0.5 + (still ? 0 : Math.sin(time / 900 + i * 1.7) * 0.08), 0, 1)));
     this.magicGlows.forEach((g, i) => g.setAlpha(0.35 + this.nightness * 0.65 + (this.reduceMotion() ? 0 : Math.sin(time / 600 + i * 1.7) * 0.2)));
     this.decorGlows.forEach((g) => g.setAlpha(0.15 + this.nightness * 0.85));
 

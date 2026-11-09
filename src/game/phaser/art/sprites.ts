@@ -41,6 +41,9 @@ export const DECOR_POS: Record<'rug' | 'frame' | 'lamp' | 'plant' | 'awning', { 
 /** Concurso Real (fase 4): estante dos troféus embaixo do quadro de avisos. */
 export const ROYAL_POS: Record<'trophy-shelf', { x: number; y: number }> = layout.royal;
 
+/** Janela da loja: o vidro (onde se vê a rua) e a peça da frente (moldura, cortinas e vasos) que cobre quem passa. */
+export const WINDOW: { front: { x: number; y: number }; glass: { x: number; y: number; w: number; h: number } } = layout.window;
+
 /** Linhas (y relativo) das tábuas onde os frascos ficam apoiados. */
 export const SHELF_BOARDS: number[] = layout.shelfBoards;
 

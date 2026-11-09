@@ -23,6 +23,7 @@ export class Visitor {
   leaving = false;
   private patienceRatio = 1;
   private hasOffer = false;
+  private selected = false;
 
   constructor(
     private readonly scene: Phaser.Scene,
@@ -89,6 +90,7 @@ export class Visitor {
     this.sprite.setFlipX(false);
     this.bubble.setVisible(true).setScale(this.opts.reduceMotion() ? 1 : 0.4);
     this.patience.setVisible(true);
+    this.setSelected(this.selected);
     if (!this.opts.reduceMotion()) this.scene.tweens.add({ targets: this.bubble, scale: 1, duration: 180, ease: 'Back.Out' });
   }
 
@@ -110,7 +112,9 @@ export class Visitor {
   }
 
   setSelected(selected: boolean) {
-    this.marker.setVisible(selected && !this.leaving);
+    this.selected = selected;
+    // A setinha só aparece com o cliente no balcão (entrando, ela flutuava em cima do letreiro da porta).
+    this.marker.setVisible(selected && this.arrived && !this.leaving);
   }
 
   /** Reage (coração, raiva, tristeza) e sai pela porta. */
