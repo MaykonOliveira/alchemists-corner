@@ -127,7 +127,7 @@ export const useGameStore = create<StoreState>()(
     const toast = (text: string, tone: Toast['tone'] = 'info') => {
       const t = { id: ++toastSeq, text, tone };
       set((st) => ({
-        ui: { ...st.ui, toasts: [...st.ui.toasts.filter((x) => x.text !== text).slice(-(MAX_TOASTS - 1)), t] },
+        ui: { ...st.ui, toasts: [...st.ui.toasts.filter((x) => x.text !== text), t].slice(-MAX_TOASTS) },
       }));
       setTimeout(() => get().dispatch({ type: 'DISMISS_TOAST', id: t.id }), tone === 'warn' ? 2600 : 3400);
     };

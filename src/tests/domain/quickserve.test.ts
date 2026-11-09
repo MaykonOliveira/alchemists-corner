@@ -33,7 +33,7 @@ describe('atendimento rápido: melhor poção para oferecer', () => {
 });
 
 describe('avisos e seleção de clientes', () => {
-  it('mostra no máximo 2 avisos e não repete o mesmo texto', () => {
+  it('mostra um aviso por vez e não repete o mesmo texto', () => {
     useGameStore.getState().newGame();
     const { dispatch } = useGameStore.getState();
     // Cada tentativa de abrir a loja já aberta gera um ERROR → aviso.

@@ -159,11 +159,11 @@ function HomePanel({ save }: { save: GameSave }) {
           <button className="btn btn-small" onClick={next.act}>{next.label}</button>
         </div>
       )}
-      <TipCard />
       {save.phase === 'preparacao' && (
         <button data-tut="open-shop" className="btn btn-primary btn-big btn-glow home-open" onClick={() => dispatch({ type: 'OPEN_SHOP' })}>Abrir a loja</button>
       )}
       {!next && save.phase === 'expediente' && !customerCard && <p className="home-calm">Tudo andando. Os clientes chegam pela porta.</p>}
+      <TipCard />
       <button className="home-goals" onClick={() => go('goals')} aria-label="Abrir metas do dia">
         <GoalsList save={save} compact />
       </button>
