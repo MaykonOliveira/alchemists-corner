@@ -1726,3 +1726,17 @@ html, button, input { font-variant-ligatures: none; font-feature-settings: "liga
 .goal-count, .goal-reward, .chest-top .row-title, .grimoire-kicker, .seal-badge, .crystal-n, .qs-price, .price, .stat-n { font-family: var(--font-pixel); }
 .goal-bar, .chest-bar, .meter, .track-bar { border-radius: 0; }
 .goal-bar > span, .meter > span, .track-bar > span { border-radius: 0; }
+
+/* Caldeirão com verbo próprio (auditoria P2.3): ordem, fogo e ponto. */
+.stir-step { margin: 0 0 8px; font-size: var(--fs-sm); color: var(--paper-hi); }
+.stir-dots span.now { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(242, 201, 92, 0.4); }
+.stir-order { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.stir-ing { position: relative; display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; cursor: pointer;
+  background: var(--parchment-2); color: var(--ink); border: 2px solid var(--parchment-edge); border-radius: 2px; font-size: var(--fs-sm); box-shadow: 0 2px 0 var(--ink-0); }
+.stir-ing.on { opacity: 0.6; border-color: var(--gold); }
+.stir-n { position: absolute; top: -8px; right: -8px; width: 18px; height: 18px; border-radius: 50%; background: var(--gold); color: var(--ink-0); font-family: var(--font-pixel); font-size: 12px; display: grid; place-items: center; }
+.stir-heat { background: linear-gradient(90deg, #2f5fa8, #e8b03a 55%, #d8484a); }
+.stir-heat .stir-zone { background: rgba(255, 240, 180, 0.45); box-shadow: 0 0 0 2px var(--gold) inset; }
+.stir-point { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; color: var(--paper-hi); }
+.stir-liquid { width: 48px; height: 32px; border-radius: 0 0 14px 14px; border: 2px solid var(--parchment-edge); }
+.stir-swatch { display: inline-block; width: 18px; height: 18px; vertical-align: middle; border: 2px solid var(--parchment-edge); }

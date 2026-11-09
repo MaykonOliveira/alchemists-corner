@@ -5,6 +5,7 @@ import type { GameSave } from '../../domain/models/types';
 import { useGameStore } from '../../store/gameStore';
 import { IngredientIcon, PotionIcon } from '../../ui/SpriteIcon';
 import { masteryStars } from '../../domain/rules/mastery';
+import { HEAT, STIR_LEVEL } from '../../domain/rules/quality';
 import { Stars } from '../../ui/Stars';
 import { LEGEND_LEVEL, LEGENDS, legendKnown, pagesFor } from '../../domain/rules/legends';
 import { Icon } from '../../ui/Icon';
@@ -71,6 +72,7 @@ export function RecipesPanel({ save }: { save: GameSave }) {
                   <p className="card-text muted small">
                     {r.ingredients.map((i) => `${i.qty}× ${INGREDIENTS_BY_ID[i.ingredientId].name}`).join(' + ')} · preço-base {r.basePrice}
                   </p>
+                  {save.level >= STIR_LEVEL && <p className="card-text small recipe-craft"><Icon e="🔥" /> Nesta ordem, fogo <b>{HEAT[r.category].name}</b>.</p>}
                   <More label="Quem procura"><p className="card-text small">{r.need}. Procurada por {r.customerProfile.toLowerCase()}.</p></More>
                 </>
               ) : (
