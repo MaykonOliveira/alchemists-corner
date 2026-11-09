@@ -139,6 +139,27 @@ def window(c, x, y):
     # poste
     c.vline(x + 41, y + 20, 20, 'k1')
     c.rect(x + 39, y + 16, 5, 5, 'k1'); c.rect(x + 40, y + 17, 3, 3, 'a5'); c.hline(x + 38, y + 15, 7, 'k1')
+    window_front(c, x, y)
+
+
+# Vidro da janela na sala (x, y, largura, altura): o que aparece atrás dele é a rua.
+WINDOW_POS = (50, 22)
+WINDOW_GLASS = (52, 24, 46, 46)
+# Peça da frente da janela (moldura, montantes, reflexos, cortinas, parapeito e vasos), exportada
+# à parte para quem passa na rua ficar ATRÁS dela. Posição na sala e tamanho do recorte.
+WINDOW_FRONT_POS = (43, 15)
+WINDOW_FRONT_SIZE = (64, 63)
+
+
+def window_front_sprite():
+    fx, fy = WINDOW_FRONT_POS
+    c = Canvas(*WINDOW_FRONT_SIZE)
+    window_front(c, WINDOW_POS[0] - fx, WINDOW_POS[1] - fy)
+    return c
+
+
+def window_front(c, x, y):
+    w = h = 50
     # moldura
     c.frame(x, y, w, h, 'w0')
     c.frame(x + 1, y + 1, w - 2, h - 2, 'w3')
