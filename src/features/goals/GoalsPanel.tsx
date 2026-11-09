@@ -5,6 +5,7 @@ import { rivalDaysLeft } from '../../domain/rules/street';
 import { useGameStore } from '../../store/gameStore';
 import { SpriteIcon } from '../../ui/SpriteIcon';
 import { Coins } from '../../ui/widgets';
+import { Icon } from '../../ui/Icon';
 
 /** As três metas do dia, com barra de progresso e prêmio. */
 export function GoalsList({ save, compact = false }: { save: GameSave; compact?: boolean }) {
@@ -13,11 +14,11 @@ export function GoalsList({ save, compact = false }: { save: GameSave; compact?:
   const done = list.filter((g) => g.done).length;
   return (
     <div className={`goals ${compact ? 'goals-compact' : ''}`}>
-      {compact && <h3 className="mini-title">🎯 Metas do dia · {done}/{list.length}</h3>}
+      {compact && <h3 className="mini-title"><Icon e="🎯" /> Metas do dia · {done}/{list.length}</h3>}
       <ul className="goal-list">
         {list.map((g) => (
           <li key={g.id} className={`goal ${g.done ? 'goal-done' : ''}`}>
-            <span className="goal-icon" aria-hidden>{g.done ? '✅' : GOAL_ICON[g.kind]}</span>
+            <span className="goal-icon" aria-hidden><Icon e={g.done ? '✅' : GOAL_ICON[g.kind]} /></span>
             <span className="goal-body">
               <span className="goal-text">{goalText(g)}</span>
               <span className="goal-bar" aria-label={`${g.progress} de ${g.target}`}>
@@ -49,7 +50,7 @@ export function GoalsPanel({ save }: { save: GameSave }) {
       <h3 className="mini-title">Baú da semana</h3>
       <div className={`card chest ${ready ? 'chest-ready' : ''} ${claimed ? 'chest-open' : ''}`}>
         <div className="chest-top">
-          <span className="chest-icon" aria-hidden>{claimed ? '📭' : '🎁'}</span>
+          <span className="chest-icon" aria-hidden><Icon e={claimed ? '📭' : '🎁'} size={32} /></span>
           <div>
             <p className="row-title">{claimed ? 'Baú aberto nesta semana' : ready ? 'O baú está pronto!' : `Cumpra ${CHEST_GOAL} metas na semana`}</p>
             <p className="card-text small muted">

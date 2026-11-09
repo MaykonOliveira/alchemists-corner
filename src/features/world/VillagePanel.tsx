@@ -7,6 +7,7 @@ import { potionStock } from '../../domain/rules/economy';
 import { villageBlocker, villageProgress, villageStage } from '../../domain/rules/village';
 import { useGameStore } from '../../store/gameStore';
 import { Coins, Meter } from '../../ui/widgets';
+import { Icon } from '../../ui/Icon';
 
 /** Uma obra no estado atual (terreno, fundação, paredes ou pronta), recortada de village.png. */
 export function Building({ id, stage, scale = 2 }: { id: string; stage: number; scale?: number }) {
@@ -60,7 +61,7 @@ export function VillagePanel({ save }: { save: GameSave }) {
                 <Building id={p.id} stage={stage} scale={2} />
                 <div className="row-main">
                   <div className="card-head">
-                    <span className="row-title">{p.icon} {p.name}</span>
+                    <span className="row-title"><Icon e={p.icon} /> {p.name}</span>
                     <span className="stage-pips" aria-label={`Etapa ${stage} de 3`}>
                       {STAGE_NAMES.map((n, i) => <span key={n} className={i < stage ? 'pip on' : 'pip'} title={n} />)}
                     </span>

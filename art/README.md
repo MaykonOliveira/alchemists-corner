@@ -14,6 +14,7 @@ O jogo **não desenha nada em tempo de execução**: ele só carrega os spritesh
 | `customers.py` | 4 clientes-base e a Nobre, 3 quadros cada (parado + 2 passos), 18×40 |
 | `helpers.py` | Ajudantes automáticos: corvo (pousado, voando, com trouxinha), aprendiz (parado, mexendo, cochilando) e golem (parado, entregando, cochilando), mais retratos 16×16 |
 | `lategame.py` | Melhorias do late game na loja: estufa, alambique, runas da despensa, vitral e sino |
+| `ui_icons.py` | 62 ícones da interface (navegação, HUD, metas, avisos) que substituem os emojis; o mapa emoji → ícone fica em `src/ui/Icon.tsx` |
 | `items.py` | 11 poções (frasco de formato próprio por receita, 7×10 e 16×16) e 13 ingredientes 16×16 |
 | `pix.py` | Paleta e primitivas (retângulo, elipse, dithering, contorno, sprite em texto) |
 | `build.py` | Exporta tudo para `src/assets/sprites/` |
@@ -30,7 +31,7 @@ Saída:
 - `room.png` — cenário de fundo.
 - `shop.png` + `shop.json` — atlas (JSON Hash do Phaser) com móveis, contornos de hover, placas, efeitos e frascos.
 - `customer-<arquétipo>.png` — folhas de animação dos clientes.
-- `icons.png` + `icons.json` — ícones 16×16 de poções e ingredientes usados pela interface React.
+- `icons.png` + `icons.json` — ícones 16×16 de poções, ingredientes e da interface (`ui-*`) usados pelo React.
 - `layout.json` — posições que a cena precisa conhecer (lâmpadas do cordão de luzes, tábuas das prateleiras).
 
 O `build.py` falha se alguma cor sair da paleta.

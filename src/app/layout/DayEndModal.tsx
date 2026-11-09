@@ -10,6 +10,7 @@ import { Coins } from '../../ui/widgets';
 import { tomorrowPreview } from '../../domain/rules/retention';
 import { charm } from '../../domain/rules/entitlements';
 import { RECORD_LABEL } from '../../domain/rules/records';
+import { Icon } from '../../ui/Icon';
 
 const MEDAL_LABEL = { ouro: 'Medalha de ouro', prata: 'Medalha de prata', bronze: 'Medalha de bronze' } as const;
 
@@ -65,7 +66,7 @@ function ReminderOffer() {
   };
   return (
     <div className="reminder-offer">
-      <span>🔔 Quer um aviso quando o caldeirão terminar? No máximo um por dia.</span>
+      <span><Icon e="🔔" /> Quer um aviso quando o caldeirão terminar? No máximo um por dia.</span>
       <span className="btn-row">
         <button className="btn btn-small btn-primary" onClick={yes}>Quero</button>
         <button className="btn btn-small btn-ghost" onClick={no}>Agora não</button>
@@ -114,7 +115,7 @@ export function DayEndModal() {
         </div>
         {record && <p className="record-banner">Novo recorde de lucro!</p>}
         {r.records?.map((k) => (
-          <p key={k} className="record-banner record-personal">🏅 Recorde pessoal: {RECORD_LABEL[k].toLowerCase()} ({k === 'revenue' ? `${r.revenue} moedas` : `${r.customersServed} clientes`})</p>
+          <p key={k} className="record-banner record-personal"><Icon e="🏅" /> Recorde pessoal: {RECORD_LABEL[k].toLowerCase()} ({k === 'revenue' ? `${r.revenue} moedas` : `${r.customersServed} clientes`})</p>
         ))}
         <div className={`profit-hero ${r.profit >= 0 ? 'pos' : 'neg'}`}>
           <span className="muted small">Lucro do dia</span>
@@ -168,16 +169,16 @@ export function DayEndModal() {
           </p>
         )}
         {save.challenge && !save.challenge.active && save.challenge.score !== null && save.reports.at(-1)?.day === r.day && (
-          <p className="challenge-line">⚔️ Desafio da semana {save.challenge.week}: <b>{save.challenge.score} pontos</b>{save.challengeBest?.score === save.challenge.score ? ' · seu recorde' : ''}</p>
+          <p className="challenge-line"><Icon e="⚔️" /> Desafio da semana {save.challenge.week}: <b>{save.challenge.score} pontos</b>{save.challengeBest?.score === save.challenge.score ? ' · seu recorde' : ''}</p>
         )}
-        {charm(save) > 0 && <p className="card-text small">🎀 A decoração encantou a freguesia: +{charm(save)} de reputação.</p>}
+        {charm(save) > 0 && <p className="card-text small"><Icon e="🎀" /> A decoração encantou a freguesia: +{charm(save)} de reputação.</p>}
         <p className="card-text">Caixa agora: <Coins n={save.coins} /></p>
-        <button className="btn btn-share" onClick={() => dispatch({ type: 'OPEN_MODAL', modal: 'share' })}>📸 Mostrar a loja</button>
+        <button className="btn btn-share" onClick={() => dispatch({ type: 'OPEN_MODAL', modal: 'share' })}><Icon e="📸" /> Mostrar a loja</button>
         <section className="tomorrow" aria-label="Amanhã na loja">
           <p className="tomorrow-title">Amanhã na loja</p>
           <ul>
             {tomorrowPreview(save).map((l) => (
-              <li key={l.text} className={l.tone ? `tone-${l.tone}` : ''}><span aria-hidden>{l.icon}</span> {l.text}</li>
+              <li key={l.text} className={l.tone ? `tone-${l.tone}` : ''}><span aria-hidden><Icon e={l.icon} /></span> {l.text}</li>
             ))}
           </ul>
           <ReminderOffer />

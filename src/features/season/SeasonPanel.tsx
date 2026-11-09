@@ -11,6 +11,7 @@ import { funnel } from '../../analytics/funnel';
 import { useGameStore } from '../../store/gameStore';
 import { decodeGift, encodeGift, giftMessage } from '../share/giftCode';
 import { DecorThumb } from './DecorThumb';
+import { Icon } from '../../ui/Icon';
 
 const SLOTS: DecorSlot[] = ['tapete', 'quadro', 'luminaria', 'planta', 'toldo'];
 
@@ -22,7 +23,7 @@ function Track({ save }: { save: GameSave }) {
   return (
     <section className="card track">
       <div className="card-head">
-        <h3 className="mini-title">{trackTheme(t.period).icon} {trackName(t.period)}</h3>
+        <h3 className="mini-title"><Icon e={trackTheme(t.period).icon} /> {trackName(t.period)}</h3>
         <span className="muted small">termina em {trackDaysLeft(Date.now())} dia(s)</span>
       </div>
       <p className="card-text small">Metas do dia, pedidos, contratos, presentes de visita e cada fechamento dão pontos. São 30 recompensas grátis.</p>
@@ -38,7 +39,7 @@ function Track({ save }: { save: GameSave }) {
       <ol className="track-steps">
         {TRACK_REWARDS.map((r, i) => (
           <li key={i} className={`${i < t.tier ? 'got' : i === t.tier ? 'next' : ''} ${r.kind === 'item' ? 'big' : ''}`} title={trackRewardLabel(i)}>
-            <span>{r.kind === 'coins' ? '🪙' : r.kind === 'crystals' ? '🌙' : r.kind === 'item' ? '🎀' : '🌿'}</span>
+            <span><Icon e={r.kind === 'coins' ? '🪙' : r.kind === 'crystals' ? '🌙' : r.kind === 'item' ? '🎀' : '🌿'} /></span>
             <small>{i + 1}</small>
           </li>
         ))}
@@ -54,7 +55,7 @@ function Decor({ save }: { save: GameSave }) {
   return (
     <section className="card decor">
       <div className="card-head">
-        <h3 className="mini-title">🎀 Decorar a loja</h3>
+        <h3 className="mini-title"><Icon e="🎀" /> Decorar a loja</h3>
         <span className="muted small">Encanto {charm(save)}/{MAX_CHARM}: +{charm(save)} de reputação por dia</span>
       </div>
       <div className="decor-tabs" role="tablist">
@@ -77,7 +78,7 @@ function Decor({ save }: { save: GameSave }) {
                 : have ? <button className="btn btn-small" onClick={() => { funnel.mark('first_decor'); dispatch({ type: 'PLACE_DECOR', itemId: it.id }); }}>Colocar</button>
                 : it.crystals !== null ? (
                   <button className="btn btn-small btn-primary" disabled={save.crystals < it.crystals} onClick={() => { funnel.mark('first_decor'); dispatch({ type: 'BUY_DECOR', itemId: it.id }); }}>
-                    🌙 {it.crystals}
+                    <Icon e="🌙" /> {it.crystals}
                   </button>
                 ) : <span className="decor-state muted">{it.source === 'trilha' ? 'Trilha' : it.source === 'festa' ? 'Festa' : 'Presente'}</span>}
             </li>
@@ -96,7 +97,7 @@ function Fest({ save }: { save: GameSave }) {
   const today = save.event === 'festa-estacao';
   return (
     <section className={`card fest fest-${season.id}`}>
-      <h3 className="mini-title">🎉 {f.name}</h3>
+      <h3 className="mini-title"><Icon e="🎉" /> {f.name}</h3>
       <p className="card-text small">{f.text}</p>
       <p className="card-text small">
         {today ? <b>É hoje! {f.guest} chega no fim da manhã.</b> : left <= 0 ? 'A festa é hoje.' : `Faltam ${left} dia(s) de jogo (último dia da estação).`}
@@ -112,7 +113,7 @@ function Challenge({ save }: { save: GameSave }) {
   const best = save.challengeBest?.week === week ? save.challengeBest.score : null;
   return (
     <section className="card challenge">
-      <h3 className="mini-title">⚔️ Desafio da semana {week}</h3>
+      <h3 className="mini-title"><Icon e="⚔️" /> Desafio da semana {week}</h3>
       <p className="card-text small">Um dia de loja em que os clientes são sorteados com a mesma semente para todos os jogadores. Uma tentativa por semana. Pontos: 10 por cliente atendido, 1 por moeda vendida, 50 por pedido entregue.</p>
       {save.challenge?.active ? <p className="card-text small"><b>Desafio em andamento.</b> Abra a loja e venda tudo o que puder!</p>
         : best !== null ? <p className="card-text small">Sua pontuação nesta semana: <b>{best}</b>. <button className="link-btn" onClick={() => dispatch({ type: 'OPEN_MODAL', modal: 'share' })}>Compartilhar</button></p>
@@ -150,7 +151,7 @@ function Gifts({ save }: { save: GameSave }) {
   };
   return (
     <section className="card gifts">
-      <h3 className="mini-title">💌 Presentes entre amigos</h3>
+      <h3 className="mini-title"><Icon e="💌" /> Presentes entre amigos</h3>
       <p className="card-text small">Mande um código para quem está começando: a pessoa ganha ingredientes raros e {contents.crystals} cristais. O seu primeiro presente dá o quadro “Laço da amizade”. Um por dia.</p>
       <button className="btn" disabled={!canSendGift(save, Date.now())} onClick={send}>{canSendGift(save, Date.now()) ? 'Mandar um presente' : 'Amanhã tem mais'}</button>
       {code && <textarea className="gift-code" readOnly value={giftMessage(code, save.shopName)} onFocus={(e) => e.currentTarget.select()} aria-label="Código do presente" />}
@@ -171,7 +172,7 @@ export function SeasonPanel({ save }: { save: GameSave }) {
   return (
     <div className="season-panel">
       <div className="crystal-banner">
-        <span className="crystal-n">🌙 {save.crystals}</span>
+        <span className="crystal-n"><Icon e="🌙" /> {save.crystals}</span>
         <span className="small">Cristais de luar: vêm das metas do dia, do baú, das conquistas e dos presentes. Servem só para decorar: ninguém compra vantagem.</span>
       </div>
       <Track save={save} />
@@ -179,7 +180,7 @@ export function SeasonPanel({ save }: { save: GameSave }) {
       <Fest save={save} />
       <Challenge save={save} />
       <Gifts save={save} />
-      <button className="btn btn-share" onClick={() => dispatch({ type: 'OPEN_MODAL', modal: 'share' })}>📸 Mostrar a loja</button>
+      <button className="btn btn-share" onClick={() => dispatch({ type: 'OPEN_MODAL', modal: 'share' })}><Icon e="📸" /> Mostrar a loja</button>
     </div>
   );
 }

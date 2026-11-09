@@ -5,6 +5,7 @@ import { countIngredients, ingredientCapacity, ingredientPrice } from '../../dom
 import { useGameStore } from '../../store/gameStore';
 import { IngredientIcon } from '../../ui/SpriteIcon';
 import { Coins, Meter, Stepper } from '../../ui/widgets';
+import { Icon } from '../../ui/Icon';
 
 const LOW_STOCK = 2;
 const SEASON_NAME = { primavera: 'na primavera', verao: 'no verão', outono: 'no outono', inverno: 'no inverno' } as const;
@@ -65,7 +66,7 @@ function SupplierRow({ save, id, room }: { save: GameSave; id: string; room: num
       {locked ? (
         <p className="card-text muted">O fornecedor traz este item a partir do nível {ing.supplierLevel}{ing.season ? `, só ${SEASON_NAME[ing.season]}` : ''}.</p>
       ) : ing.season && !maxByStock ? (
-        <p className="card-text muted small">🌸 Ingrediente da estação: o fornecedor só traz {SEASON_NAME[ing.season]}{save.event === 'lua-cheia' ? '' : ' (ou no Mercado da Lua Cheia)'}. A floresta das expedições também tem.</p>
+        <p className="card-text muted small"><Icon e="🌸" /> Ingrediente da estação: o fornecedor só traz {SEASON_NAME[ing.season]}{save.event === 'lua-cheia' ? '' : ' (ou no Mercado da Lua Cheia)'}. A floresta das expedições também tem.</p>
       ) : (
         <>
           <p className="card-text muted small">

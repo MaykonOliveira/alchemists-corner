@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { funnel, type FunnelStep } from '../../analytics/funnel';
+import { Icon } from '../../ui/Icon';
 
 const LABEL: Record<FunnelStep, string> = {
   new_game: 'Partida nova', story_done: 'Deu nome à loja', first_sale: 'Primeira venda', day1_done: 'Terminou o dia 1',
@@ -13,7 +14,7 @@ export function FunnelStats() {
   const f = funnel.summary();
   return (
     <div className="funnel-box">
-      <p className="mini-title">📈 Números deste aparelho</p>
+      <p className="mini-title"><Icon e="📈" /> Números deste aparelho</p>
       <p className="muted small">Medidos só aqui, sem enviar nada. Servem para entender os primeiros minutos e quem volta.</p>
       <ul className="funnel-list">
         <li>Sessões: <b>{f.sessions}</b> · dias com jogo: <b>{f.activeDays}</b></li>

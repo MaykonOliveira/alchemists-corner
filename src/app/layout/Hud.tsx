@@ -5,6 +5,7 @@ import { dayProgress, formatClock, TIME_OF_DAY_LABEL, timeOfDay } from '../../do
 import { autoFast, useGameStore } from '../../store/gameStore';
 import { CoinIcon, StarIcon } from '../../ui/icons';
 import { useAnimatedNumber } from '../../ui/useAnimatedNumber';
+import { Icon } from '../../ui/Icon';
 
 const PHASE_LABEL = { preparacao: 'Preparação', expediente: 'Loja aberta', fechamento: 'Fechamento' } as const;
 
@@ -38,16 +39,16 @@ export function Hud() {
   return (
     <header className="hud">
       <div className="hud-brand" title="Alchemist's Corner">
-        <span className="brand-full">{save.royal && save.royal.chapter >= 5 && <span className="brand-crown" title="Grão-Alquimista do Reino" aria-label="Grão-Alquimista do Reino">👑 </span>}{save.shopName}</span>
-        <button className="hud-crystals" onClick={() => dispatch({ type: 'TOGGLE_PANEL', panel: 'season' })} title="Cristais de luar: ganhe jogando e use na decoração (aba Temporada)">🌙 {save.crystals}</button>
+        <span className="brand-full">{save.royal && save.royal.chapter >= 5 && <span className="brand-crown" title="Grão-Alquimista do Reino" aria-label="Grão-Alquimista do Reino"><Icon e="👑" /> </span>}{save.shopName}</span>
+        <button className="hud-crystals" onClick={() => dispatch({ type: 'TOGGLE_PANEL', panel: 'season' })} title="Cristais de luar: ganhe jogando e use na decoração (aba Temporada)"><Icon e="🌙" /> {save.crystals}</button>
       </div>
       <div className="hud-stat" title={`Dia e fase · ${seasonOf(save.day).name}`}>
-        <span className="hud-label">Dia {save.day} <span className="hud-season" aria-label={seasonOf(save.day).name}>{seasonOf(save.day).icon}</span></span>
+        <span className="hud-label">Dia {save.day} <span className="hud-season" aria-label={seasonOf(save.day).name}><Icon e={seasonOf(save.day).icon} /></span></span>
         <span className="hud-value">{PHASE_LABEL[save.phase]}</span>
       </div>
       <div className="hud-stat hud-clock" title="Horário">
         <span className="hud-label">{TIME_OF_DAY_LABEL[timeOfDay(save.clockMin)]}</span>
-        <span className="hud-value">{formatClock(save.clockMin)}{paused && save.phase === 'expediente' ? ' ⏸' : fast ? <span className="hud-fast" title="Loja vazia: o relógio anda mais rápido até alguém entrar"> ⏩</span> : ''}</span>
+        <span className="hud-value">{formatClock(save.clockMin)}{paused && save.phase === 'expediente' ? ' ⏸\uFE0E' : fast ? <span className="hud-fast" title="Loja vazia: o relógio anda mais rápido até alguém entrar"> <Icon e="⏩" /></span> : ''}</span>
         <span className="bar" aria-hidden><span style={{ width: `${dayProgress(save.clockMin) * 100}%` }} /></span>
       </div>
       <div className="hud-stat hud-coins" title="Moedas">
@@ -83,7 +84,7 @@ export function Hud() {
               {speed === 2 ? '2×' : '1×'}
             </button>
             <button className="btn" onClick={() => dispatch({ type: 'TOGGLE_PAUSE' })} aria-pressed={paused} title="Pausar (espaço)">
-              {paused ? '▶' : '❚❚'}<span className="hide-sm">{paused ? ' Continuar' : ' Pausar'}</span>
+              {paused ? '▶\uFE0E' : '❚❚'}<span className="hide-sm">{paused ? ' Continuar' : ' Pausar'}</span>
             </button>
             {confirmClose ? (
               <>
@@ -95,7 +96,7 @@ export function Hud() {
             )}
           </>
         )}
-        <button className="btn btn-ghost" onClick={() => dispatch({ type: 'OPEN_MODAL', modal: 'settings' })} aria-label="Configurações" title="Configurações">⚙</button>
+        <button className="btn btn-ghost" onClick={() => dispatch({ type: 'OPEN_MODAL', modal: 'settings' })} aria-label="Configurações" title="Configurações"><Icon e="⚙" /></button>
       </div>
     </header>
   );

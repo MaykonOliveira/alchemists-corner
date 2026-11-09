@@ -1,7 +1,7 @@
 {
  "size": 16,
  "width": 128,
- "height": 96,
+ "height": 224,
  "icons": {
   "potion-cura-simples": [
    0,
@@ -194,6 +194,254 @@
   "trophy-4": [
    112,
    80
+  ],
+  "ui-home": [
+   0,
+   96
+  ],
+  "ui-cauldron": [
+   16,
+   96
+  ],
+  "ui-bell": [
+   32,
+   96
+  ],
+  "ui-target": [
+   48,
+   96
+  ],
+  "ui-map": [
+   64,
+   96
+  ],
+  "ui-leaf": [
+   80,
+   96
+  ],
+  "ui-fire": [
+   96,
+   96
+  ],
+  "ui-book": [
+   112,
+   96
+  ],
+  "ui-books": [
+   0,
+   112
+  ],
+  "ui-flask": [
+   16,
+   112
+  ],
+  "ui-scroll": [
+   32,
+   112
+  ],
+  "ui-hammer": [
+   48,
+   112
+  ],
+  "ui-sparkle": [
+   64,
+   112
+  ],
+  "ui-chart": [
+   80,
+   112
+  ],
+  "ui-crown": [
+   96,
+   112
+  ],
+  "ui-houses": [
+   112,
+   112
+  ],
+  "ui-castle": [
+   0,
+   128
+  ],
+  "ui-moon": [
+   16,
+   128
+  ],
+  "ui-medal": [
+   32,
+   128
+  ],
+  "ui-gift": [
+   48,
+   128
+  ],
+  "ui-ribbon": [
+   64,
+   128
+  ],
+  "ui-party": [
+   80,
+   128
+  ],
+  "ui-swords": [
+   96,
+   128
+  ],
+  "ui-cat": [
+   112,
+   128
+  ],
+  "ui-flower": [
+   0,
+   144
+  ],
+  "ui-letter": [
+   16,
+   144
+  ],
+  "ui-spoon": [
+   32,
+   144
+  ],
+  "ui-camera": [
+   48,
+   144
+  ],
+  "ui-heart": [
+   64,
+   144
+  ],
+  "ui-hourglass": [
+   80,
+   144
+  ],
+  "ui-horn": [
+   96,
+   144
+  ],
+  "ui-coin": [
+   112,
+   144
+  ],
+  "ui-question": [
+   0,
+   160
+  ],
+  "ui-lock": [
+   16,
+   160
+  ],
+  "ui-cloak": [
+   32,
+   160
+  ],
+  "ui-hat": [
+   48,
+   160
+  ],
+  "ui-basket": [
+   64,
+   160
+  ],
+  "ui-face-happy": [
+   80,
+   160
+  ],
+  "ui-face-meh": [
+   96,
+   160
+  ],
+  "ui-face-angry": [
+   112,
+   160
+  ],
+  "ui-face-sick": [
+   0,
+   176
+  ],
+  "ui-speaker": [
+   16,
+   176
+  ],
+  "ui-note": [
+   32,
+   176
+  ],
+  "ui-drop": [
+   48,
+   176
+  ],
+  "ui-gem": [
+   64,
+   176
+  ],
+  "ui-star": [
+   80,
+   176
+  ],
+  "ui-lantern": [
+   96,
+   176
+  ],
+  "ui-door": [
+   112,
+   176
+  ],
+  "ui-orb": [
+   0,
+   192
+  ],
+  "ui-sun": [
+   16,
+   192
+  ],
+  "ui-snow": [
+   32,
+   192
+  ],
+  "ui-autumn": [
+   48,
+   192
+  ],
+  "ui-tree": [
+   64,
+   192
+  ],
+  "ui-mountain": [
+   80,
+   192
+  ],
+  "ui-egg": [
+   96,
+   192
+  ],
+  "ui-key": [
+   112,
+   192
+  ],
+  "ui-bridge": [
+   0,
+   208
+  ],
+  "ui-hand": [
+   16,
+   208
+  ],
+  "ui-check": [
+   32,
+   208
+  ],
+  "ui-frame": [
+   48,
+   208
+  ],
+  "ui-gear": [
+   64,
+   208
+  ],
+  "ui-fast": [
+   80,
+   208
   ]
  }
 }

@@ -818,7 +818,7 @@ button, .stage-canvas { touch-action: manipulation; -webkit-tap-highlight-color:
 
 .achievements { list-style: none; padding: 0; margin: 0 0 12px; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
 .achievement {
-  display: grid; grid-template-columns: 30px 1fr; grid-template-rows: auto auto; column-gap: 6px; align-items: center;
+  display: grid; grid-template-columns: 32px 1fr; grid-template-rows: auto auto; column-gap: 6px; align-items: center;
   padding: 8px; border-radius: 6px; background: #e6dcc6; border: 2px dashed #b8a888; color: #8a7a68;
 }
 .achievement-icon { grid-row: span 2; font-size: 22px; text-align: center; filter: grayscale(1); opacity: .6; }
@@ -1441,3 +1441,47 @@ html, button, input { font-variant-ligatures: none; font-feature-settings: "liga
 .legend-slot.on { background: #f3e2bd; border-color: var(--gold); }
 .qs-mystery .qs-riddle, .qs-side .qs-mystery .qs-riddle, .qs-side.qs-mystery .qs-riddle { display: block; white-space: normal; overflow: visible; }
 .stir-label { font-weight: 400; color: #cbb8e8; font-size: 12px; }
+
+/* =====================================================================
+   Revisão visual V1: consertos
+   ===================================================================== */
+/* A cena zera a altura da linha (para o canvas não ganhar sobra); o que flutua sobre ela volta ao normal. */
+.stage > :not(.stage-canvas) { line-height: 1.3; }
+/* Botão fantasma sobre pergaminho: texto escuro, senão some. */
+.quick-serve .btn-ghost, .modal .btn-ghost, .side .btn-ghost { color: var(--ink); border-color: var(--parchment-edge); }
+/* Cliente sem poção no celular: uma linha só, como no computador. */
+@media (max-width: 860px) and (orientation: portrait) {
+  .quick-serve.qs-side.qs-compact { display: flex; }
+}
+/* Abas da área: painel um pouco mais largo em telas grandes, e quem quebra linha ocupa a largura toda. */
+@media (min-width: 1200px) {
+  .game-main { grid-template-columns: minmax(0, 1fr) 352px; }
+}
+.subtab { flex: 1 1 auto; text-align: center; }
+
+/* =====================================================================
+   Revisão visual V2: ícones em pixel no lugar dos emojis
+   ===================================================================== */
+.sprite-icon { vertical-align: -3px; }
+.tab-icon, .area-icon, .todo-icon, .goal-icon, .talent-icon, .season-icon, .chest-icon, .find-icon,
+.expedition-icon, .achievement-icon, .regular-face, .royal-seal, .milestone-icon, .qs-mystery-icon, .ui-spot-hand, .hud-season {
+  line-height: 0;
+}
+.tab-icon .sprite-icon, .area-icon .sprite-icon { vertical-align: top; }
+.area-icon { height: 32px; }
+@media (max-height: 520px) and (orientation: landscape) {
+  .area-icon { height: 16px; }
+  .area-icon .sprite-icon { zoom: .5; }
+}
+.talent-icon .sprite-icon, .regular-face .sprite-icon { vertical-align: top; }
+.hud-crystals .sprite-icon, .brand-crown .sprite-icon { vertical-align: -3px; }
+.btn .sprite-icon { vertical-align: -3px; margin-right: 2px; }
+.area-card-items { display: inline-flex; gap: 3px; }
+.btn .sprite-icon:only-child { margin-right: 0; vertical-align: -2px; }
+.hud-actions .btn:has(> .sprite-icon:only-child) { padding-inline: 5px; }
+.home-head + .mini-title { margin-top: 2px; }
+/* Cliente sem poção (celular): frase numa linha, botões lado a lado embaixo. */
+@media (max-width: 860px) and (orientation: portrait) {
+  .quick-serve.qs-compact .qs-none { flex: 1 1 calc(100% - 40px); }
+  .quick-serve.qs-compact > .btn { flex: 1 1 0; min-height: 38px; }
+}

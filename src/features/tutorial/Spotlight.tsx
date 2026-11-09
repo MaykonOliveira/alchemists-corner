@@ -3,6 +3,7 @@ import shopAtlas from '../../assets/sprites/shop.json';
 import { HOTSPOTS } from '../../game/phaser/interaction/hotspots';
 import { TUTORIAL_DONE, useGameStore } from '../../store/gameStore';
 import { TUTORIAL_STEPS } from './TutorialCard';
+import { Icon } from '../../ui/Icon';
 
 const frames = (shopAtlas as { frames: Record<string, { frame: { w: number; h: number } }> }).frames;
 
@@ -71,7 +72,7 @@ export function UiSpotlight() {
   if (!rect) return null;
   return (
     <div className="ui-spot" aria-hidden style={{ left: rect.left - 5, top: rect.top - 5, width: rect.width + 10, height: rect.height + 10 }}>
-      <span className="ui-spot-hand">👆</span>
+      <span className="ui-spot-hand"><Icon e="👆" size={32} /></span>
     </div>
   );
 }

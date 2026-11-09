@@ -1,6 +1,7 @@
 import { nextTip } from '../../domain/data/tips';
 import { TUTORIAL_DONE, useGameStore } from '../../store/gameStore';
 import { useStageCards } from './stage';
+import { Icon } from '../../ui/Icon';
 
 /** Dica de contexto: aparece uma vez quando a situação pede, depois do tutorial. */
 export function TipCard() {
@@ -16,7 +17,7 @@ export function TipCard() {
   return (
     <div className="tutorial tip-card" role="status" key={tip.id}>
       <div className="tutorial-head">
-        <span className="tutorial-step">{tip.icon} Dica</span>
+        <span className="tutorial-step"><Icon e={tip.icon} /> Dica</span>
         <button className="link-btn" onClick={seen} aria-label="Fechar dica">×</button>
       </div>
       <p className="tutorial-title">{tip.title}</p>

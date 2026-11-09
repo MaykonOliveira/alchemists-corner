@@ -16,6 +16,7 @@ import seasonal as SE  # registra poções e ingredientes da estação em items.
 import story as ST
 import decor as DE
 import royal as RO  # registra a Poção da Coroa em items.py
+import ui_icons as UI
 import legends as LG  # registra as receitas lendárias em items.py
 import village as VI
 from room import draw_room
@@ -119,6 +120,8 @@ def main():
     icons.update({f'helper-{h}': H.portrait(h) for h in ('corvo-entregador', 'aprendiz', 'golem-balconista')})
     icons['rival-vesper'] = SE.rival_portrait()
     icons.update({f'trophy-{i}': RO.trophy_icon(i) for i in range(5)})
+    # Ícones da interface no lugar dos emojis (pacote V2).
+    icons.update(UI.frames())
     cols = 8
     grid = Canvas(16 * cols, 16 * ((len(icons) + cols - 1) // cols))
     index = {}

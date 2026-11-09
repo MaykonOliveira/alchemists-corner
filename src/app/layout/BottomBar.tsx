@@ -1,5 +1,6 @@
 import { useGameStore } from '../../store/gameStore';
 import { groupOf, panelForGroup, SHORTCUTS, useBadges, useVisibleGroups, type NavItem } from './nav';
+import { Icon } from '../../ui/Icon';
 
 export { SHORTCUTS };
 
@@ -26,7 +27,7 @@ export function BottomBar() {
         title={`${s.title} (tecla ${s.key.toUpperCase()})`}
         onClick={() => dispatch({ type: 'TOGGLE_PANEL', panel: s.panel })}
       >
-        <span className="tab-icon" aria-hidden>{s.icon}</span>
+        <span className="tab-icon" aria-hidden><Icon e={s.icon} size={32} /></span>
         <span className="tab-label">{s.label}</span>
         <kbd className="tab-key">{s.key.toUpperCase()}</kbd>
         {badge !== null && <span className="tab-badge">{badge}</span>}
@@ -44,7 +45,7 @@ export function BottomBar() {
           title="Resumo do dia (Esc)"
           onClick={() => dispatch({ type: 'CLOSE_PANEL' })}
         >
-          <span className="tab-icon" aria-hidden>🏠</span>
+          <span className="tab-icon" aria-hidden><Icon e="🏠" size={32} /></span>
           <span className="tab-label">Início</span>
         </button>
         {groups.map((g) => (
@@ -62,7 +63,7 @@ export function BottomBar() {
           aria-pressed={active === null}
           onClick={() => dispatch({ type: 'CLOSE_PANEL' })}
         >
-          <span className="area-icon" aria-hidden>🏠</span>
+          <span className="area-icon" aria-hidden><Icon e="🏠" size={32} /></span>
           <span className="area-label">Início</span>
         </button>
         {groups.map((g) => {
@@ -79,7 +80,7 @@ export function BottomBar() {
               aria-label={`${g.label}: ${g.hint}`}
               onClick={() => (on ? dispatch({ type: 'CLOSE_PANEL' }) : dispatch({ type: 'OPEN_PANEL', panel: panelForGroup(g, badgeFor) }))}
             >
-              <span className="area-icon" aria-hidden>{g.icon}</span>
+              <span className="area-icon" aria-hidden><Icon e={g.icon} size={32} /></span>
               <span className="area-label">{g.label}</span>
               {badge !== null && <span className="tab-badge">{badge}</span>}
             </button>

@@ -10,6 +10,7 @@ import { CATEGORY_LABEL } from '../../domain/data/world';
 import { useGameStore } from '../../store/gameStore';
 import { PotionIcon, SpriteIcon } from '../../ui/SpriteIcon';
 import { Coins, Meter } from '../../ui/widgets';
+import { Icon } from '../../ui/Icon';
 
 /** Os cinco troféus: conquistados brilham, os outros aparecem apagados. */
 export function TrophyRow({ save, size = 32 }: { save: GameSave; size?: number }) {
@@ -35,13 +36,13 @@ export function RoyalPanel({ save }: { save: GameSave }) {
       <>
         <div className="royal-hero won">
           <p className="royal-kicker">Concurso vencido</p>
-          <h3 className="royal-title">👑 {ROYAL_TITLE}</h3>
+          <h3 className="royal-title"><Icon e="👑" /> {ROYAL_TITLE}</h3>
           <p className="card-text">A {QUEEN} provou a Poção da Coroa e entregou a coroa à sua loja. A fachada agora brilha e a nobreza procura a Poção da Coroa no balcão.</p>
           <TrophyRow save={save} size={48} />
         </div>
         <ul className="list">
           {ROYAL_CHAPTERS.map((c) => (
-            <li key={c.id} className="card card-owned"><span className="row-title">{c.icon} {c.title}</span> <span className="tag tag-ok">{c.trophy} ✓</span></li>
+            <li key={c.id} className="card card-owned"><span className="row-title"><Icon e={c.icon} /> {c.title}</span> <span className="tag tag-ok">{c.trophy} ✓</span></li>
           ))}
         </ul>
         <button className="btn btn-primary" onClick={() => dispatch({ type: 'OPEN_MODAL', modal: 'royal' })}>Rever a cerimônia</button>
@@ -60,13 +61,13 @@ export function RoyalPanel({ save }: { save: GameSave }) {
     <>
       <div className="royal-hero">
         <p className="royal-kicker">Capítulo {r.chapter + 1} de {ROYAL_CHAPTERS.length}</p>
-        <h3 className="royal-title">{ch.icon} {ch.title}</h3>
+        <h3 className="royal-title"><Icon e={ch.icon} /> {ch.title}</h3>
         <p className="card-text">{ch.task}</p>
         <Meter ratio={goal.total ? goal.done / goal.total : 0} tone="gold" label="Progresso do capítulo" />
         <div className="royal-stats">
           <strong>{goal.done}/{goal.total}</strong>
           {left !== null && <span className={left <= 1 ? 'neg-text' : ''}>{left === 0 ? 'último dia!' : left === 1 ? 'termina hoje' : `${left} dias`}</span>}
-          <span>Prêmio: <Coins n={ch.reward.coins} /> + {ch.reward.crystals} 🌙</span>
+          <span>Prêmio: <Coins n={ch.reward.coins} /> + {ch.reward.crystals} <Icon e="🌙" /></span>
         </div>
         {unseen && <button className="btn btn-primary btn-glow" onClick={() => dispatch({ type: 'OPEN_MODAL', modal: 'royal' })}>Ler o capítulo</button>}
       </div>

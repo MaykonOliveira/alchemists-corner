@@ -3,6 +3,7 @@ import { RECIPES_BY_ID } from '../../domain/data/recipes';
 import { repeatBatches } from '../../domain/rules/alchemy';
 import { HOTSPOTS } from '../../game/phaser/interaction/hotspots';
 import { useGameStore } from '../../store/gameStore';
+import { Icon } from '../../ui/Icon';
 
 const frames = (shopAtlas as { frames: Record<string, { frame: { w: number; h: number } }> }).frames;
 const SPOT = HOTSPOTS.find((h) => h.id === 'cauldron')!;
@@ -32,7 +33,7 @@ export function CauldronAlert() {
       onClick={() => (n > 0 ? dispatch({ type: 'REPEAT_BREW' }) : dispatch({ type: 'OPEN_PANEL', panel: 'production' }))}
       title={n > 0 ? 'O caldeirão está parado. Toque para preparar de novo.' : 'O caldeirão está parado. Toque para escolher uma receita.'}
     >
-      <span aria-hidden>🔥</span> {label}
+      <span aria-hidden><Icon e="🔥" /></span> {label}
     </button>
   );
 }

@@ -20,6 +20,7 @@ import { QuickServe } from '../../features/customers/QuickServe';
 import { SeasonPanel } from '../../features/season/SeasonPanel';
 import { RoyalPanel } from '../../features/royal/RoyalPanel';
 import { VillagePanel } from '../../features/world/VillagePanel';
+import { Icon } from '../../ui/Icon';
 
 export function SidePanel() {
   const save = useGameStore((s) => s.save)!;
@@ -41,7 +42,7 @@ export function SidePanel() {
       <div className="side-top">
       <div className="side-head">
         <div className="side-head-text">
-          {group && <span className="side-area">{group.icon} {group.label}</span>}
+          {group && <span className="side-area"><Icon e={group.icon} /> {group.label}</span>}
           <h2 className="side-title">{panelTitle(panel)}</h2>
         </div>
         <button className="icon-btn" onClick={() => dispatch({ type: 'CLOSE_PANEL' })} aria-label="Voltar ao início" title="Voltar ao início (Esc)">×</button>
@@ -58,7 +59,7 @@ export function SidePanel() {
                 className={`subtab ${panel === i.panel ? 'subtab-on' : ''}`}
                 onClick={() => dispatch({ type: 'OPEN_PANEL', panel: i.panel })}
               >
-                <span aria-hidden>{i.icon}</span> {i.label}
+                <span aria-hidden><Icon e={i.icon} /></span> {i.label}
                 {badge !== null && <span className="subtab-badge">{badge}</span>}
               </button>
             );
@@ -128,7 +129,7 @@ function HomePanel({ save }: { save: GameSave }) {
         {rows.map((r) => (
           <li key={r.panel}>
             <button className={`todo-row ${r.state} ${next === r ? 'todo-next' : ''}`} onClick={() => go(r.panel)}>
-              <span className="todo-icon" aria-hidden>{r.icon}</span>
+              <span className="todo-icon" aria-hidden><Icon e={r.icon} /></span>
               <span className="todo-text">{r.text}</span>
               <span className="todo-go" aria-hidden>{next === r ? 'Ir ›' : '›'}</span>
             </button>
@@ -144,9 +145,9 @@ function HomePanel({ save }: { save: GameSave }) {
           const alert = g.items.some((i) => badgeFor(i.panel) !== null);
           return (
             <button key={g.id} className={`area-card area-${g.id}`} onClick={() => go(panelForGroup(g, badgeFor))}>
-              <span className="area-card-head"><span aria-hidden>{g.icon}</span> {g.label}{alert && <span className="area-dot" aria-label="tem novidade" />}</span>
+              <span className="area-card-head"><span aria-hidden><Icon e={g.icon} /></span> {g.label}{alert && <span className="area-dot" aria-label="tem novidade" />}</span>
               <span className="area-card-hint">{g.hint}</span>
-              <span className="area-card-items" aria-hidden>{g.items.map((i) => i.icon).join(' ')}</span>
+              <span className="area-card-items" aria-hidden>{g.items.map((i) => <Icon key={i.panel} e={i.icon} />)}</span>
             </button>
           );
         })}

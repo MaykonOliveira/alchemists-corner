@@ -5,6 +5,7 @@ import { sfx } from '../../audio/sound';
 import { useGameStore } from '../../store/gameStore';
 import { SpriteIcon } from '../../ui/SpriteIcon';
 import { TrophyRow } from './RoyalPanel';
+import { Icon } from '../../ui/Icon';
 
 const CREDITS = [
   ['Alquimista-chefe', 'Você'],
@@ -52,7 +53,7 @@ function Ceremony({ onClose }: { onClose: () => void }) {
         ) : (
           <>
             <p className="story-kicker">{save.shopName}</p>
-            <h2 className="royal-headline">👑 {ROYAL_TITLE}</h2>
+            <h2 className="royal-headline"><Icon e="👑" /> {ROYAL_TITLE}</h2>
             <p className="story-text">A loja ganhou uma coroa na fachada, a nobreza agora pede a Poção da Coroa e os talentos sem fim esperam seus Selos. A história continua: a loja é sua.</p>
             <div className={`credits ${reduce ? 'still' : ''}`}>
               <div className="credits-roll">
@@ -102,7 +103,7 @@ export function RoyalScene() {
   return (
     <div className="story royal-scene" role="dialog" aria-modal="true" aria-label={ch.title}>
       <div className="story-card royal-card">
-        <div className="royal-seal" aria-hidden>{ch.icon}</div>
+        <div className="royal-seal" aria-hidden><Icon e={ch.icon} size={32} /></div>
         <p className="story-kicker">Concurso Real · capítulo {royal.chapter + 1} de {ROYAL_CHAPTERS.length}</p>
         <h2 className="royal-headline">{ch.title}</h2>
         {ch.intro.map((line) => <p key={line} className="story-text royal-line">{line}</p>)}

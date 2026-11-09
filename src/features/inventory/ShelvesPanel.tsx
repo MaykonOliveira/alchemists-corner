@@ -7,6 +7,7 @@ import { Stars } from '../../ui/Stars';
 import { useGameStore } from '../../store/gameStore';
 import { Meter, PotionName } from '../../ui/widgets';
 import { stackQualities } from '../../domain/rules/quality';
+import { Icon } from '../../ui/Icon';
 
 function priceLabel(price: number, base: number) {
   const r = price / base;
@@ -44,7 +45,7 @@ export function ShelvesPanel({ save }: { save: GameSave }) {
               </div>
               {stack && (stack.prime || stack.fine) ? (
                 <p className="quality-line small">
-                  {stackQualities(stack).prime > 0 && <span className="q-3">✨ {stackQualities(stack).prime} Primorosas (+50%)</span>}
+                  {stackQualities(stack).prime > 0 && <span className="q-3"><Icon e="✨" /> {stackQualities(stack).prime} Primorosas (+50%)</span>}
                   {stackQualities(stack).fine > 0 && <span className="q-2">★ {stackQualities(stack).fine} Finas (+20%)</span>}
                 </p>
               ) : null}

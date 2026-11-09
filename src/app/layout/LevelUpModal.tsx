@@ -6,6 +6,7 @@ import { DAY_EVENTS } from '../../domain/data/orders';
 import { MAX_LEVEL, SEAL_LEVEL } from '../../domain/rules/progression';
 import { useGameStore } from '../../store/gameStore';
 import { PotionName } from '../../ui/widgets';
+import { Icon } from '../../ui/Icon';
 
 /** Telas que aparecem na barra ao chegar no nível (as mesmas regras de nav.ts). */
 const AREA_UNLOCKS = [
@@ -56,7 +57,7 @@ export function LevelUpModal() {
           </details>
         )}
         {ui.levelUp.gift && (
-          <p className="level-gift">🎁 Presente do nível: +{ui.levelUp.gift.coins} moedas
+          <p className="level-gift"><Icon e="🎁" /> Presente do nível: +{ui.levelUp.gift.coins} moedas
             {ui.levelUp.gift.crystals > 0 && `, +${ui.levelUp.gift.crystals} Cristais de luar`}
             {ui.levelUp.gift.items.length > 0 && `, ${ui.levelUp.gift.items.map((i) => `${i.qty}× ${INGREDIENTS.find((x) => x.id === i.ingredientId)?.name}`).join(', ')}`}</p>
         )}

@@ -8,6 +8,7 @@ import { useGameStore } from '../../store/gameStore';
 import { PotionIcon } from '../../ui/SpriteIcon';
 import { Coins, Meter, PotionName, Stepper } from '../../ui/widgets';
 import { StirGame } from './StirGame';
+import { Icon } from '../../ui/Icon';
 
 const secs = (ms: number) => `${Math.ceil(ms / 1000)}s`;
 
@@ -74,13 +75,13 @@ export function ProductionPanel({ save }: { save: GameSave }) {
         <div className="card-head"><PotionName id={selected} size={20} /></div>
         {noSpace && !closing && (
           <div className="brew-block brew-block-space" role="status">
-            <p className="row-title">🧪 Prateleiras cheias</p>
+            <p className="row-title"><Icon e="🧪" /> Prateleiras cheias</p>
             <p className="card-text small">Não cabe mais nenhuma poção. Venda no balcão ou entregue um pedido para liberar espaço.</p>
           </div>
         )}
         {short && buy && (
           <div className="brew-block" role="status">
-            <p className="row-title">🌿 Faltam ingredientes para {b} lote{b > 1 ? 's' : ''}</p>
+            <p className="row-title"><Icon e="🌿" /> Faltam ingredientes para {b} lote{b > 1 ? 's' : ''}</p>
             <p className="card-text small">
               {buy.items.map((m) => `${m.qty}× ${INGREDIENTS_BY_ID[m.ingredientId].name}`).join(', ')}
               {max > 0 && <> · com o que você tem dá para {max} lote{max > 1 ? 's' : ''}.</>}
@@ -91,7 +92,7 @@ export function ProductionPanel({ save }: { save: GameSave }) {
         )}
         {!slot && !closing && busy && (
           <p className="card-text small muted brew-wait">
-            ⏳ {hasSecondCauldron(save) ? 'Os dois caldeirões estão ocupados' : 'O caldeirão está ocupado'}: libera em {secs(busy.totalMs - busy.elapsedMs)}.
+            <Icon e="⏳" /> {hasSecondCauldron(save) ? 'Os dois caldeirões estão ocupados' : 'O caldeirão está ocupado'}: libera em {secs(busy.totalMs - busy.elapsedMs)}.
             {short ? ' Dá para comprar os ingredientes enquanto isso.' : ''}
           </p>
         )}
@@ -120,7 +121,7 @@ export function ProductionPanel({ save }: { save: GameSave }) {
               className="btn btn-primary btn-buy"
               onClick={() => dispatch({ type: 'BUY_MISSING', recipeId: selected, batches: b })}
             >
-              🛒 Comprar o que falta · <Coins n={buy.cost} />
+              <Icon e="🛒" /> Comprar o que falta · <Coins n={buy.cost} />
             </button>
           ) : (
             <button
