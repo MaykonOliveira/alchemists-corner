@@ -1686,3 +1686,4 @@ html, button, input { font-variant-ligatures: none; font-feature-settings: "liga
 .qs-symptom-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .qs-link { background: none; border: 0; padding: 0; margin-right: 6px; color: var(--copper); font: inherit; font-style: normal; text-decoration: underline; cursor: pointer; }
 .card.card-hint { border-color: var(--copper); box-shadow: inset 4px 0 0 var(--copper); padding-left: 14px; }
+.qs-coach { margin: 0; font-size: var(--fs-sm); font-weight: 600; color: var(--ink); background: #fff4c8; border: 2px dashed var(--gold); border-radius: var(--r-md); padding: 6px 8px; }

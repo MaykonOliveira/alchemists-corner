@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ARCHETYPES } from '../../domain/data/customers';
 import { regularOf, regularState } from '../../domain/rules/world';
 import { RECIPES_BY_ID } from '../../domain/data/recipes';
-import { askOptions, bestOffer, reservedForOrder, vipPrice } from '../../domain/rules/customers';
+import { askOptions, bestOffer, LESSON_TIP, reservedForOrder, vipPrice } from '../../domain/rules/customers';
 import { potionStock } from '../../domain/rules/economy';
 import { useGameStore } from '../../store/gameStore';
 import { useStageCards } from '../tutorial/stage';
@@ -35,7 +35,22 @@ export function QuickServe({ placement }: { placement: 'stage' | 'side' }) {
   const picked = c.symptom && guess?.key === guessKey && potionStock(save, guess.recipeId) > 0 ? guess.recipeId : null;
   const offerId = c.offer ? null : c.symptom ? picked : bestOffer(save, c);
   const ask = offerId && !c.vip ? askOptions(save, offerId) : null;
-  const sell = (price?: number) => offerId && dispatch({ type: 'SERVE_CUSTOMER', customerId: c.id, recipeId: offerId, ...(price !== undefined ? { price } : {}) });
+  // Tutorial das decisões (P1.4): a primeira vez de cada conceito ganha uma linha de orientação no próprio cartão.
+  const coachId = c.symptom ? LESSON_TIP.sintoma : c.lesson ? LESSON_TIP[c.lesson] : null;
+  const coachOn = !!coachId && !save.tipsSeen.includes(coachId);
+  const coachText = !coachOn ? null
+    : c.symptom ? (c.offer ? null : picked ? 'Boa escolha? Venda e veja: acerto em cheio rende gorjeta e "CERTO!".' : 'Primeiro diagnóstico: o cliente não diz o nome da poção. Leia o problema e toque na poção que resolve.')
+    : c.lesson === 'nobre' ? 'Nobre na loja: ela mal olha a etiqueta. Toque em ARRISCAR para pedir mais pela mesma poção.'
+    : c.offer ? `Pechincha: ele oferece ${c.offer.price}. Aceite para vender mais barato, ou recuse e ele vai embora.`
+    : 'Bolso curto: pela etiqueta ele vai pechinchar. Venda e veja o que ele propõe.';
+  const learned = () => coachOn && coachId && dispatch({ type: 'SEE_TIP', tipId: coachId });
+  const sell = (price?: number) => {
+    if (!offerId) return;
+    // Na pechincha a lição termina quando o jogador responde à contraproposta, não na primeira venda.
+    if (c.lesson !== 'pechincha') learned();
+    dispatch({ type: 'SERVE_CUSTOMER', customerId: c.id, recipeId: offerId, ...(price !== undefined ? { price } : {}) });
+  };
+  const coach = coachText ? <p className="qs-coach" role="status"><Icon e="🎓" /> {coachText}</p> : null;
   const next = save.customers.length > 1 ? save.customers[(idx + 1) % save.customers.length] : null;
   const reserved = !c.offer && !offerId && reservedForOrder(save, wanted.id) > 0 && potionStock(save, wanted.id) > 0;
 
@@ -81,6 +96,7 @@ export function QuickServe({ placement }: { placement: 'stage' | 'side' }) {
           <button className="qs-icon" onClick={() => dispatch({ type: 'SELECT_CUSTOMER', id: null })} aria-label="Fechar atendimento">×</button>
         </div>
         <p className="qs-remark qs-riddle">“{c.remark}”</p>
+        {coach}
         <div className="qs-guess" role="group" aria-label="Escolha a poção">
           {stock.length === 0 ? <span className="qs-none">Nada nas prateleiras para oferecer.</span> : stock.slice(0, 8).map((p) => (
             <button key={p.recipeId} className="qs-guess-btn" title={RECIPES_BY_ID[p.recipeId].name} onClick={() => setGuess({ key: guessKey, recipeId: p.recipeId })}>
@@ -130,14 +146,15 @@ export function QuickServe({ placement }: { placement: 'stage' | 'side' }) {
       </div>
 
       {c.remark && <p className="qs-remark">“{c.remark}”</p>}
+      {coach}
 
       <div className="qs-actions">
         {c.offer ? (
           <>
-            <button className="btn btn-primary qs-main" onClick={() => dispatch({ type: 'ACCEPT_OFFER', customerId: c.id })}>
+            <button className="btn btn-primary qs-main" onClick={() => { learned(); dispatch({ type: 'ACCEPT_OFFER', customerId: c.id }); }}>
               Aceitar <CoinIcon size={14} /> {c.offer.price}
             </button>
-            <button className="btn" onClick={() => dispatch({ type: 'DECLINE_OFFER', customerId: c.id })}>Recusar</button>
+            <button className="btn" onClick={() => { learned(); dispatch({ type: 'DECLINE_OFFER', customerId: c.id }); }}>Recusar</button>
           </>
         ) : offerId ? (
           <>

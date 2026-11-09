@@ -1,3 +1,4 @@
+import { LESSON_TIP } from '../../domain/rules/customers';
 import { describe, expect, it } from 'vitest';
 import { RECIPES } from '../../domain/data/recipes';
 import { MAX_HEARTS, REGULARS, SEASON_DAYS, TIP_HEARTS } from '../../domain/data/world';
@@ -79,7 +80,7 @@ describe('fregueses fiéis', () => {
 
   it('aparecem no balcão com o pedido de sempre', () => {
     // random 0 → sempre cai na chance de freguês
-    const r = applyCommand(atLevel(5, { spawnInMs: 1, customers: [] }), { type: 'ADVANCE', ms: 10 }, { now: 0, random: () => 0 });
+    const r = applyCommand(atLevel(5, { spawnInMs: 1, customers: [], tipsSeen: Object.values(LESSON_TIP) }), { type: 'ADVANCE', ms: 10 }, { now: 0, random: () => 0 });
     const c = r.save.customers[0];
     expect(c.regularId).toBeTruthy();
     expect(c.wantedRecipeId).toBe(REGULARS.find((x) => x.id === c.regularId)!.favorite);

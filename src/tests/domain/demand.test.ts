@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { GameSave } from '../../domain/models/types';
 import { applyCommand, type DomainCommand } from '../../domain/rules/commands';
 import { brewLimits } from '../../domain/rules/alchemy';
+import { LESSON_TIP } from '../../domain/rules/customers';
 import { shelfPerRecipe } from '../../domain/rules/economy';
 import { createNewGame } from '../../domain/rules/initialState';
 import { tomorrowPreview } from '../../domain/rules/retention';
@@ -29,7 +30,7 @@ describe('demanda que pressiona a oferta (auditoria P0.4)', () => {
   });
 
   it('a rua pede bem mais a poção em alta', () => {
-    const base: GameSave = { ...createNewGame(0), day: 4, level: 4, phase: 'expediente', spawnInMs: 0, trend: ['elixir-concentracao'], knownRecipes: ['cura-simples', 'tonico-energia', 'elixir-concentracao', 'balsamo-calmante'] };
+    const base: GameSave = { ...createNewGame(0), tipsSeen: Object.values(LESSON_TIP), day: 4, level: 4, phase: 'expediente', spawnInMs: 0, trend: ['elixir-concentracao'], knownRecipes: ['cura-simples', 'tonico-energia', 'elixir-concentracao', 'balsamo-calmante'] };
     const share = (save: GameSave) => {
       let seed = 1;
       const random = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };

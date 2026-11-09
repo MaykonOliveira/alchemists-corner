@@ -68,14 +68,28 @@ function maybeSpawnMystery(d: Draft): boolean {
   return true;
 }
 
+/**
+ * Tutorial das decisões (auditoria P1.4): um conceito por dia, sempre jogando.
+ * Dia 2 o primeiro cliente conta o sintoma; dia 3 entra uma nobre que paga mais; dia 4, alguém que pechincha.
+ */
+export const LESSON_TIP = { sintoma: 'coach:sintoma', nobre: 'coach:nobre', pechincha: 'coach:pechincha' } as const;
+function lessonToday(s: GameSave): 'sintoma' | 'nobre' | 'pechincha' | null {
+  if (s.customers.length || s.stats.served + s.stats.lost > 0) return null;
+  if (s.day === 2 && !s.tipsSeen.includes(LESSON_TIP.sintoma)) return 'sintoma';
+  if (s.day === 3 && !s.tipsSeen.includes(LESSON_TIP.nobre)) return 'nobre';
+  if (s.day === 4 && !s.tipsSeen.includes(LESSON_TIP.pechincha)) return 'pechincha';
+  return null;
+}
+
 export function spawnCustomer(d: Draft) {
   const { s, ctx } = d;
-  if (maybeSpawnMystery(d)) return;
+  const lesson = lessonToday(s);
+  if (!lesson && maybeSpawnMystery(d)) return;
   // De vez em quando quem entra é um freguês fiel, que já chega pedindo o de sempre.
   const regulars = s.day >= 2 ? availableRegulars(s) : [];
   // Quem mandou carta ontem entra primeiro, como prometeu.
   const promised = letterVisitor(s);
-  if (promised || (regulars.length && ctx.random() < REGULAR_CHANCE)) {
+  if (!lesson && (promised || (regulars.length && ctx.random() < REGULAR_CHANCE))) {
     const r = promised ? REGULARS_BY_ID[promised] : pick(regulars, ctx.random);
     if (promised && s.letter) s.letter = { ...s.letter, done: true };
     const info = ARCHETYPES[r.archetype];
@@ -100,7 +114,7 @@ export function spawnCustomer(d: Draft) {
   // No baile da nobreza (Concurso Real) a rua se enche de nobres.
   if (royalChapter(s)?.goal.kind === 'nobres') weights.nobre += BALL_NOBLE_BOOST;
   if (s.level < NOBLE_LEVEL) weights.nobre = 0;
-  const archetype = weightedPick(weights, ctx.random);
+  const archetype = lesson === 'nobre' ? 'nobre' : lesson === 'pechincha' ? 'morador' : weightedPick(weights, ctx.random);
   const info = ARCHETYPES[archetype];
   // Ninguém pede o que só aparece muitos níveis depois.
   // Poções da estação só são pedidas na estação delas.
@@ -136,8 +150,19 @@ export function spawnCustomer(d: Draft) {
     offer: null,
     remark: RECIPES_BY_ID[wanted].request,
   };
+  if (lesson === 'nobre' || lesson === 'pechincha') {
+    customer.lesson = lesson;
+    // A lição precisa de uma poção que a loja tem: a nobre quer a mais cara da prateleira, o morador a mais barata.
+    const onShelf = s.potions.filter((p) => p.forSale && p.quantity > 0 && s.knownRecipes.includes(p.recipeId)).map((p) => p.recipeId)
+      .sort((a, b) => RECIPES_BY_ID[a].basePrice - RECIPES_BY_ID[b].basePrice);
+    const pool = onShelf.length ? onShelf : s.knownRecipes.filter((id) => !RECIPES_BY_ID[id].season);
+    if (pool.length) customer.wantedRecipeId = lesson === 'nobre' ? pool[pool.length - 1] : pool[0];
+    // A pechincha: um morador de bolso curto, que não alcança a etiqueta.
+    if (lesson === 'pechincha') customer.budgetFactor = 0.85;
+    customer.remark = lesson === 'nobre' ? 'Ouvi falar desta loja na corte. Quero o melhor que você tiver.' : 'Preciso de uma, mas o dinheiro está curto este mês…';
+  }
   // Quem conta o sintoma não diz o nome da poção: o diagnóstico fica com o jogador.
-  if (s.day >= SYMPTOM_DAY && !firstEver && SYMPTOMS[wanted] && ctx.random() < SYMPTOM_SHARE) {
+  else if (s.day >= SYMPTOM_DAY && !firstEver && SYMPTOMS[wanted] && (lesson === 'sintoma' || ctx.random() < SYMPTOM_SHARE)) {
     customer.symptom = true;
     customer.remark = pick(SYMPTOMS[wanted], ctx.random);
   }

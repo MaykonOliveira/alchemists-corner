@@ -89,6 +89,8 @@ export interface Customer {
   vip?: { name: string; pays: number; kind: 'estreia' | 'festa' | 'carta' };
   /** Descreve o problema em vez de dizer o nome da poção (pedido por sintoma). */
   symptom?: boolean;
+  /** Cliente que ensina uma decisão (auditoria P1.4): a nobre do dia 3 e a pechincha do dia 4. */
+  lesson?: 'nobre' | 'pechincha';
 }
 
 /** Amizade com um freguês fiel. */
