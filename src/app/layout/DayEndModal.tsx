@@ -4,7 +4,7 @@ import { RECIPES_BY_ID } from '../../domain/data/recipes';
 import type { DayReport } from '../../domain/models/types';
 import { getPrice } from '../../domain/rules/economy';
 import { askReminderPermission, remindersSupported } from '../reminders';
-import { dayMedal, mostMissed, serviceRate } from '../../domain/rules/medals';
+import { dayMedal, medalTarget, mostMissed, serviceRate } from '../../domain/rules/medals';
 import { useGameStore } from '../../store/gameStore';
 import { Coins } from '../../ui/widgets';
 import { tomorrowPreview } from '../../domain/rules/retention';
@@ -82,7 +82,14 @@ export function DayEndModal() {
   const closing = save.phase === 'fechamento';
   // Foca o botão sem rolar o fechamento até o fim (o topo, com a medalha, fica visível).
   useEffect(() => { if (closing) nextRef.current?.focus({ preventScroll: true }); }, [closing, save.day]);
+  const pendingLevel = useGameStore((s) => s.ui.levelUp);
   if (!closing) return null;
+  // Ordem do fechamento: relatório, depois a festa do nível (se houve), depois o dia seguinte.
+  const startDay = () => {
+    if (save.tutorialStep === 6) dispatch({ type: 'NEXT_TUTORIAL' });
+    dispatch({ type: 'START_NEXT_DAY' });
+    if (pendingLevel) dispatch({ type: 'OPEN_MODAL', modal: 'levelup' });
+  };
   const r = save.reports.at(-1);
   if (!r) return null;
   const { medal, record } = dayMedal(save.reports);
@@ -96,6 +103,7 @@ export function DayEndModal() {
     r.profit > 0 && rate >= 0.6 ? 'Um bom dia de trabalho. As lanternas se apagam com o caixa mais pesado.' :
     r.profit > 0 ? `Deu lucro, mas ${r.customersLost} cliente${r.customersLost > 1 ? 's saíram' : ' saiu'} sem nada. Com mais poções prontas, o caixa enchia.` :
     r.customersServed > 0 ? 'Dia apertado, mas cada cliente atendido conta. Amanhã é outro dia.' :
+    r.customersLost > 0 ? `Ninguém foi atendido hoje e ${r.customersLost} cliente${r.customersLost > 1 ? 's foram' : ' foi'} embora de mãos vazias. Amanhã, deixe poções prontas e fique de olho no balcão.` :
     'Um dia tranquilo. Que tal preparar mais poções e abrir cedo amanhã?';
 
   return (
@@ -121,6 +129,7 @@ export function DayEndModal() {
           <span className="muted small">Lucro do dia</span>
           <strong>{r.profit >= 0 ? '+' : '−'}<CountUp value={Math.abs(r.profit)} /></strong>
           {medal && <span className="small">{MEDAL_LABEL[medal]}</span>}
+          {r.level !== undefined && <span className="small muted">Ouro a partir de {medalTarget(r.level)} no nível {r.level}</span>}
         </div>
         <p className="card-text">{mood}</p>
         <div className="report-grid report-grid-3">
@@ -185,7 +194,10 @@ export function DayEndModal() {
           </ul>
           <ReminderOffer />
         </section>
-        <button ref={nextRef} className="btn btn-primary btn-big" onClick={() => dispatch({ type: 'START_NEXT_DAY' })}>
+        {save.tutorialStep === 6 && (
+          <p className="tip report-tutorial"><Icon e="📖" /> <b>Relatório do dia.</b> Aqui você vê o que vendeu, o que gastou e o lucro. Use isso para decidir o que preparar amanhã.</p>
+        )}
+        <button ref={nextRef} className="btn btn-primary btn-big" onClick={startDay}>
           Começar o dia {save.day + 1}
         </button>
       </div>

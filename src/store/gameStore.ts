@@ -195,6 +195,11 @@ export const useGameStore = create<StoreState>()(
         case 'LEVEL_UP':
           if (e.level >= 3) funnel.mark('level_3');
           if (e.level >= 5) funnel.mark('level_5');
+          // Subiu de nível no fechamento: o relatório vem primeiro e a festa do nível fica para o "Começar o dia".
+          if (get().save?.phase === 'fechamento') {
+            set((st) => ({ ui: { ...st.ui, levelUp: { level: e.level, recipes: e.recipes, gift: e.gift } } }));
+            return;
+          }
           set((st) => ({ ui: { ...st.ui, modal: 'levelup', levelUp: { level: e.level, recipes: e.recipes, gift: e.gift }, paused: true } }));
           return;
         case 'ORDER_NEW': return toast('Novo pedido especial no quadro de avisos!', 'gold');
@@ -359,7 +364,8 @@ export const useGameStore = create<StoreState>()(
         case 'SET_ZOOM':
           return ui.zoom === cmd.zoom ? ui : { ...ui, zoom: cmd.zoom };
         case 'OPEN_MODAL':
-          return { ...ui, modal: cmd.modal, levelUp: cmd.modal === 'levelup' ? ui.levelUp : null, paused: cmd.modal ? true : false };
+          // A subida de nível guardada para depois do relatório só some quando o próprio modal dela fecha.
+          return { ...ui, modal: cmd.modal, levelUp: cmd.modal === 'levelup' || ui.modal !== 'levelup' ? ui.levelUp : null, paused: cmd.modal ? true : false };
         case 'DISMISS_TOAST':
           return { ...ui, toasts: ui.toasts.filter((t) => t.id !== cmd.id) };
         default:

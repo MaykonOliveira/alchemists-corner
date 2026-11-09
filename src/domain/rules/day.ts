@@ -34,6 +34,9 @@ export function openShop(d: Draft): boolean {
   return true;
 }
 
+/** Clientes atendidos no dia 1 para a estreia garantir o nível 2. */
+export const DEBUT_LEVEL_SERVED = 3;
+
 export function closeDay(d: Draft): boolean {
   const s = d.s;
   if (s.phase !== 'expediente') return false;
@@ -43,8 +46,9 @@ export function closeDay(d: Draft): boolean {
   if (ch > 0) gainReputation(d, ch);
   const maintenance = Math.min(s.coins, maintenanceCost(s));
   s.coins -= maintenance;
-  // Estreia generosa: o primeiro fechamento sempre leva a loja ao nível 2 (depois da manutenção do dia).
-  if (s.day === 1 && s.level < 2) gainXp(d, xpForLevel(2) - s.xp);
+  // Estreia generosa: quem atendeu ao menos alguns clientes no dia 1 fecha no nível 2.
+  // Um dia parado não é premiado: o nível vem pelo caminho normal.
+  if (s.day === 1 && s.level < 2 && s.stats.served >= DEBUT_LEVEL_SERVED) gainXp(d, xpForLevel(2) - s.xp);
   const st = s.stats;
   const report: DayReport = {
     day: s.day,
@@ -62,6 +66,7 @@ export function closeDay(d: Draft): boolean {
     wages: Math.min(maintenance, helperWages(s)),
     helperWork: { ...st.helperWork },
     lostByRecipe: { ...(st.lostByRecipe ?? {}) },
+    level: st.levelStart,
   };
   const records = noteDay(d, report);
   if (records.length) report.records = records;

@@ -734,6 +734,11 @@ export class ShopScene extends Phaser.Scene {
       case 'CUSTOMER_LEFT': {
         const moods: Record<typeof e.reason, Mood> = { atendido: 'feliz', paciencia: 'triste', preco: 'bravo', 'recusou-oferta': 'bravo', fechou: 'neutro' };
         this.leaveReasons.set(e.customerId, moods[e.reason]);
+        // Quem desiste de esperar custa reputação: o jogador vê isso na hora, e não só no relatório.
+        if (e.reason === 'paciencia') {
+          const v = this.visitors.get(e.customerId);
+          this.lossPopup(v ? v.sprite.x : 230, v ? v.sprite.y - 34 : 100);
+        }
         return;
       }
       case 'CUSTOMER_ARRIVED':
@@ -856,6 +861,16 @@ export class ShopScene extends Phaser.Scene {
       const ring = this.add.image(x, y, 'glow-warm').setDepth(969).setBlendMode(Phaser.BlendModes.ADD).setScale(0.3).setAlpha(0.9);
       this.tweens.add({ targets: ring, scale: 1.1, alpha: 0, duration: 650, ease: 'Cubic.Out', onComplete: () => ring.destroy() });
     }
+  }
+
+  /** "−1 ★" vermelho subindo de quem foi embora sem ser atendido. */
+  private lossPopup(x: number, y: number) {
+    const key = 'txt-loss-rep';
+    if (!this.textures.exists(key)) this.textures.addCanvas(key, outlinedText('-1 REP', '#ff8a7a'));
+    const txt = this.add.image(x, y, key).setOrigin(0.5).setDepth(970);
+    const rise = this.reduceMotion() ? 0 : 12;
+    this.tweens.add({ targets: txt, y: y - rise, duration: 1100, ease: 'Cubic.Out' });
+    this.tweens.add({ targets: txt, alpha: 0, delay: 1300, duration: 500, onComplete: () => txt.destroy() });
   }
 
   private sparkleBurst(x: number, y: number, n: number) {

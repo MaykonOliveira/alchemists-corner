@@ -219,6 +219,8 @@ export interface DayReport {
   helperWork?: HelperWork;
   /** Placar da semana contra a rival, depois deste dia. */
   rival?: { me: number; her: number; result: 'win' | 'loss' | null };
+  /** Nível da loja no começo do dia (a medalha usa a meta do nível). */
+  level?: number;
   /** O que os clientes que foram embora queriam (receita → quantos). */
   lostByRecipe?: Record<string, number>;
   /** Recordes pessoais batidos neste dia. */
@@ -437,6 +439,8 @@ export interface GameSave {
   awning: string;
   /** A Condessa já fez a visita de estreia (dia 1). */
   debutDone: boolean;
+  /** A Condessa da estreia foi atendida no dia 1 (a carta dela depende disso). */
+  debutServed?: boolean;
   /** Carta para amanhã (freguês fiel ou Condessa). */
   letter: Letter | null;
   /** Evento sorteado no fechamento para o dia seguinte (a prévia do relatório mostra). */

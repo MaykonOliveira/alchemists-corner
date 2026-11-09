@@ -88,6 +88,7 @@ export function onVipServed(d: Draft, c: Customer, price: number) {
   const s = d.s;
   if (!c.vip) return;
   d.events.push({ type: 'VIP_SERVED', name: c.vip.name, coins: price, kind: c.vip.kind });
+  if (c.vip.kind === 'estreia') s.debutServed = true;
   if (c.vip.kind === 'festa') {
     const fest = SEASON_FESTS[seasonOf(s.day).id];
     if (!grantItem(d, fest.reward, 'festa')) grantCrystals(d, 10, fest.name);
@@ -120,7 +121,7 @@ export function seeded(seed: number) {
 export function writeLetter(d: Draft, visitedToday: string[]) {
   const s = d.s;
   if (s.day === 1) {
-    s.letter = { from: 'condessa-estreia', text: DEBUT.letter, day: 2, done: false };
+    s.letter = { from: 'condessa-estreia', text: s.debutServed ? DEBUT.letter : DEBUT.letterMissed, day: 2, done: false };
     d.events.push({ type: 'LETTER', from: 'condessa-estreia' });
     return;
   }

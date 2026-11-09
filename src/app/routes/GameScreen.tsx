@@ -4,7 +4,6 @@ import { TutorialCard } from '../../features/tutorial/TutorialCard';
 import { WelcomeBack } from '../../features/tutorial/WelcomeBack';
 import { StoryIntro } from '../../features/tutorial/StoryIntro';
 import { UiSpotlight } from '../../features/tutorial/Spotlight';
-import { QuickServe } from '../../features/customers/QuickServe';
 import { useGameStore } from '../../store/gameStore';
 import { BottomBar, SHORTCUTS } from '../layout/BottomBar';
 import { panelUnlocked } from '../layout/nav';
@@ -60,7 +59,6 @@ export function GameScreen() {
           <StageControls />
           <TutorialCard />
           <WelcomeBack />
-          <QuickServe placement="stage" />
           <Toasts />
           <Milestone />
         </div>
