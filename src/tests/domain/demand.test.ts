@@ -54,3 +54,13 @@ describe('demanda que pressiona a oferta (auditoria P0.4)', () => {
     expect((r.events[0] as { message: string }).message).toContain('de cada receita');
   });
 });
+
+// Auditoria P2.4: com dois caldeirões a prateleira chegava a 66/40.
+describe('dois caldeirões não estouram a prateleira', () => {
+  it('o que está no fogo conta como espaço ocupado', () => {
+    const base: GameSave = { ...createNewGame(0), potions: [] };
+    const cooking: GameSave = { ...base, brew: { recipeId: 'tonico-energia', batches: 50, elapsedMs: 0, totalMs: 1000, hits: 0 } as GameSave['brew'] };
+    expect(brewLimits(base, 'cura-simples').bySpace).toBeGreaterThan(0);
+    expect(brewLimits(cooking, 'cura-simples').bySpace).toBe(0);
+  });
+});

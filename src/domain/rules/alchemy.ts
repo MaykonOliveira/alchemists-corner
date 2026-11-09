@@ -29,10 +29,14 @@ export function brewDurationMs(s: GameSave, recipeId: string, batches: number) {
 export function brewLimits(s: GameSave, recipeId: string) {
   const r = RECIPES_BY_ID[recipeId];
   const byIngredients = Math.max(0, Math.min(...r.ingredients.map((i) => Math.floor((s.ingredients[i.ingredientId] ?? 0) / i.qty))));
-  const room = Math.min(potionCapacity(s) - countPotions(s), shelfPerRecipe(s) - potionStock(s, recipeId));
+  // O que está no fogo já tem lugar reservado: com dois caldeirões a prateleira passava do limite (auditoria P2.4).
+  const cooking = [s.brew, s.brew2].reduce((n, b) => n + (b ? b.batches * potionsPerBatch(s) : 0), 0);
+  const cookingThis = [s.brew, s.brew2].reduce((n, b) => n + (b?.recipeId === recipeId ? b.batches * potionsPerBatch(s) : 0), 0);
+  const free = potionCapacity(s) - countPotions(s) - cooking;
+  const room = Math.min(free, shelfPerRecipe(s) - potionStock(s, recipeId) - cookingThis);
   const bySpace = Math.max(0, Math.floor(room / potionsPerBatch(s)));
   // A prateleira desta receita está cheia, mas sobra espaço para outras?
-  const shelfFull = potionCapacity(s) - countPotions(s) >= potionsPerBatch(s) && bySpace < 1;
+  const shelfFull = free >= potionsPerBatch(s) && bySpace < 1;
   return { byIngredients, bySpace, cap: maxBatchesCap(s), shelfFull };
 }
 
