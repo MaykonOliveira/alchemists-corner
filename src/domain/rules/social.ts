@@ -6,6 +6,7 @@ import { grantCrystals, grantItem } from './entitlements';
 import { dateKey, realWeek } from './retention';
 import { addIngredients } from './street';
 
+import { tr } from '../../i18n';
 // --------------------------------------------------------------- presentes
 
 /** Conteúdo de um código de presente (o texto do código fica em src/features/share/giftCode.ts). */
@@ -32,7 +33,7 @@ export const canSendGift = (s: GameSave, now: number) => s.giftSentDate !== date
 /** Mandar um presente (uma vez por dia real). O primeiro dá o quadro "Laço da amizade". */
 export function sendGift(d: Draft): boolean {
   const s = d.s;
-  if (!canSendGift(s, d.ctx.now)) return fail(d, 'Você já mandou um presente hoje. Amanhã tem mais.');
+  if (!canSendGift(s, d.ctx.now)) return fail(d, tr('Você já mandou um presente hoje. Amanhã tem mais.'));
   s.giftSentDate = dateKey(d.ctx.now);
   s.giftsSent += 1;
   const first = grantItem(d, 'quadro-amizade', 'presente');
@@ -42,13 +43,13 @@ export function sendGift(d: Draft): boolean {
 
 export function redeemGift(d: Draft, gift: GiftPayload): boolean {
   const s = d.s;
-  if (!gift || typeof gift.id !== 'string' || typeof gift.sender !== 'number') return fail(d, 'Esse código de presente não é válido.');
-  if (gift.sender === s.createdAt) return fail(d, 'Esse presente foi mandado por esta mesma loja. Mande para um amigo!');
-  if (s.giftsRedeemed.includes(gift.id)) return fail(d, 'Esse presente já foi aberto.');
+  if (!gift || typeof gift.id !== 'string' || typeof gift.sender !== 'number') return fail(d, tr('Esse código de presente não é válido.'));
+  if (gift.sender === s.createdAt) return fail(d, tr('Esse presente foi mandado por esta mesma loja. Mande para um amigo!'));
+  if (s.giftsRedeemed.includes(gift.id)) return fail(d, tr('Esse presente já foi aberto.'));
   const { items, crystals } = giftContents(s);
   addIngredients(s, items);
   s.giftsRedeemed = [...s.giftsRedeemed, gift.id].slice(-50);
-  d.events.push({ type: 'GIFT_REDEEMED', from: String(gift.from ?? 'Uma loja amiga').slice(0, 40), crystals, items });
+  d.events.push({ type: 'GIFT_REDEEMED', from: String(gift.from ?? tr('Uma loja amiga')).slice(0, 40), crystals, items });
   grantCrystals(d, crystals, 'presente');
   return true;
 }
@@ -62,10 +63,10 @@ export const challengeAvailable = (s: GameSave, now: number) => !s.challenge?.ac
 
 export function startChallenge(d: Draft): boolean {
   const s = d.s;
-  if (s.phase !== 'preparacao') return fail(d, 'O desafio começa na preparação, antes de abrir a loja.');
-  if (s.level < 2) return fail(d, 'O desafio da semana abre no nível 2.');
+  if (s.phase !== 'preparacao') return fail(d, tr('O desafio começa na preparação, antes de abrir a loja.'));
+  if (s.level < 2) return fail(d, tr('O desafio da semana abre no nível 2.'));
   const week = realWeek(d.ctx.now);
-  if (s.challengeBest?.week === week) return fail(d, 'Você já jogou o desafio desta semana. Volte na próxima!');
+  if (s.challengeBest?.week === week) return fail(d, tr('Você já jogou o desafio desta semana. Volte na próxima!'));
   s.challenge = { week, active: true, rng: challengeSeed(week), score: null };
   d.events.push({ type: 'CHALLENGE_STARTED', week });
   return true;

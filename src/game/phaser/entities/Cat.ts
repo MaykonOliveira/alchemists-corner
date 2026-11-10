@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { useGameStore } from '../../../store/gameStore';
 
+import { tr } from '../../../i18n';
 /** Lugares do chão onde o gato gosta de parar (pés do sprite, mundo lógico 384×216). */
 const SPOTS = [
   { x: 150, y: 208 }, { x: 196, y: 212 }, { x: 250, y: 206 }, { x: 290, y: 212 }, { x: 340, y: 210 }, { x: 118, y: 212 },
@@ -32,7 +33,7 @@ export class CatView {
     this.sprite.setInteractive({ useHandCursor: true, pixelPerfect: true });
     this.sprite.on('pointerover', () => {
       this.outline.setVisible(true);
-      this.store.dispatch({ type: 'SET_HOVER', hover: { id: 'cat', label: 'Gato da loja (faça carinho)', x: this.sprite.x, y: this.sprite.y - this.sprite.height } });
+      this.store.dispatch({ type: 'SET_HOVER', hover: { id: 'cat', label: tr('Gato da loja (faça carinho)'), x: this.sprite.x, y: this.sprite.y - this.sprite.height } });
     });
     this.sprite.on('pointerout', () => {
       this.outline.setVisible(false);

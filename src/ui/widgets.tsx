@@ -3,10 +3,11 @@ import { RECIPES_BY_ID } from '../domain/data/recipes';
 import { CoinIcon } from './icons';
 import { PotionIcon } from './SpriteIcon';
 
+import { tr } from '../i18n';
 export function Stepper({ value, min, max, onChange, label }: { value: number; min: number; max: number; onChange: (v: number) => void; label: string }) {
   return (
     <div className="stepper" role="group" aria-label={label}>
-      <button className="step-btn" onClick={() => onChange(Math.max(min, value - 1))} disabled={value <= min} aria-label="Diminuir">−</button>
+      <button className="step-btn" onClick={() => onChange(Math.max(min, value - 1))} disabled={value <= min} aria-label={tr('Diminuir')}>−</button>
       <input
         type="number"
         inputMode="numeric"
@@ -19,7 +20,7 @@ export function Stepper({ value, min, max, onChange, label }: { value: number; m
           if (Number.isFinite(v)) onChange(Math.max(min, Math.min(max, Math.round(v))));
         }}
       />
-      <button className="step-btn" onClick={() => onChange(Math.min(max, value + 1))} disabled={value >= max} aria-label="Aumentar">+</button>
+      <button className="step-btn" onClick={() => onChange(Math.min(max, value + 1))} disabled={value >= max} aria-label={tr('Aumentar')}>+</button>
     </div>
   );
 }
@@ -68,7 +69,7 @@ export function Section({ title, children, aside }: { title: string; children: R
  * Detalhe sob demanda: a lista mostra nome e número, a explicação abre num toque.
  * Usado nas telas internas para o texto longo não aparecer em todo item, todo dia.
  */
-export function More({ children, label = 'Detalhes' }: { children: ReactNode; label?: string }) {
+export function More({ children, label = tr('Detalhes') }: { children: ReactNode; label?: string }) {
   return (
     <details className="more">
       <summary>{label}</summary>

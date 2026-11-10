@@ -7,6 +7,7 @@ import { potionStock, takePotions } from './economy';
 import { gainReputation, gainXp } from './progression';
 
 import { villageStage } from './villageBonus';
+import { tr } from '../../i18n';
 export { villageBonus, villageDone, villageStage } from './villageBonus';
 
 /** Progresso da vila inteira (0..1). */
@@ -16,15 +17,15 @@ export const villageProgress = (s: GameSave) => VILLAGE.reduce((n, p) => n + vil
 /** O que falta para a próxima etapa (null = pode construir). */
 export function villageBlocker(s: GameSave, id: string): string | null {
   const p = VILLAGE_BY_ID[id];
-  if (!p) return 'Obra desconhecida.';
-  if (s.level < VILLAGE_LEVEL) return `A prefeitura aceita ajuda a partir do nível ${VILLAGE_LEVEL}.`;
+  if (!p) return tr('Obra desconhecida.');
+  if (s.level < VILLAGE_LEVEL) return tr('A prefeitura aceita ajuda a partir do nível {0}.', VILLAGE_LEVEL);
   const stage = villageStage(s, id);
-  if (stage >= 3) return 'Obra já inaugurada.';
+  if (stage >= 3) return tr('Obra já inaugurada.');
   const cost = p.stages[stage];
-  if (s.coins < cost) return `Faltam ${cost - s.coins} moedas.`;
+  if (s.coins < cost) return tr('Faltam {0} moedas.', cost - s.coins);
   const need = p.needs[stage];
   if (potionStock(s, need.recipeId) < need.qty) {
-    return `A encomenda pede ${need.qty}× ${RECIPES_BY_ID[need.recipeId].name} (você tem ${potionStock(s, need.recipeId)}).`;
+    return tr('A encomenda pede {0}× {1} (você tem {2}).', need.qty, RECIPES_BY_ID[need.recipeId].name, potionStock(s, need.recipeId));
   }
   return null;
 }

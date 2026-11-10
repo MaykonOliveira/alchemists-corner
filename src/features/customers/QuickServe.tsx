@@ -13,6 +13,7 @@ import { Icon } from '../../ui/Icon';
 import { CustomerFace } from './CustomerFace';
 import { chapterFor } from '../../domain/data/stories';
 
+import { tr } from '../../i18n';
 /** Atendimento rápido sobre a loja: o cliente selecionado e um botão para vender com um toque. */
 export function QuickServe({ placement }: { placement: 'stage' | 'side' }) {
   const save = useGameStore((s) => s.save);
@@ -41,10 +42,10 @@ export function QuickServe({ placement }: { placement: 'stage' | 'side' }) {
   const coachId = c.symptom ? LESSON_TIP.sintoma : c.lesson ? LESSON_TIP[c.lesson] : null;
   const coachOn = !!coachId && !save.tipsSeen.includes(coachId);
   const coachText = !coachOn ? null
-    : c.symptom ? (c.offer ? null : picked ? 'Boa escolha? Venda e veja: acerto em cheio rende gorjeta e "CERTO!".' : 'Primeiro diagnóstico: o cliente não diz o nome da poção. Leia o problema e toque na poção que resolve.')
-    : c.lesson === 'nobre' ? 'Nobre na loja: ela mal olha a etiqueta. Toque em ARRISCAR para pedir mais pela mesma poção.'
-    : c.offer ? `Pechincha: ele oferece ${c.offer.price}. Aceite para vender mais barato, ou recuse e ele vai embora.`
-    : 'Bolso curto: pela etiqueta ele vai pechinchar. Venda e veja o que ele propõe.';
+    : c.symptom ? (c.offer ? null : picked ? tr('Boa escolha? Venda e veja: acerto em cheio rende gorjeta e "CERTO!".') : tr('Primeiro diagnóstico: o cliente não diz o nome da poção. Leia o problema e toque na poção que resolve.'))
+    : c.lesson === 'nobre' ? tr('Nobre na loja: ela mal olha a etiqueta. Toque em ARRISCAR para pedir mais pela mesma poção.')
+    : c.offer ? tr('Pechincha: ele oferece {0}. Aceite para vender mais barato, ou recuse e ele vai embora.', c.offer.price)
+    : tr('Bolso curto: pela etiqueta ele vai pechinchar. Venda e veja o que ele propõe.');
   const learned = () => coachOn && coachId && dispatch({ type: 'SEE_TIP', tipId: coachId });
   const sell = (price?: number) => {
     if (!offerId) return;
@@ -60,25 +61,25 @@ export function QuickServe({ placement }: { placement: 'stage' | 'side' }) {
   if (c.mystery) {
     const stock = save.potions.filter((p) => p.forSale && p.quantity > 0);
     return (
-      <section className={`quick-serve qs-${placement} qs-mystery`} aria-label="Atender o cliente misterioso">
+      <section className={`quick-serve qs-${placement} qs-mystery`} aria-label={tr('Atender o cliente misterioso')}>
         <div className="qs-head">
           <span className="qs-mystery-icon" aria-hidden><Icon e="❓" size={32} /></span>
           <div className="qs-who">
-            <span className="qs-name">Viajante encapuzado <span className="muted">· paga 3× e deixa cristais</span></span>
-            <Meter ratio={left} tone={left > 0.5 ? 'ok' : left > 0.25 ? 'gold' : 'warn'} label="Paciência" />
+            <span className="qs-name">{tr('Viajante encapuzado ')}<span className="muted">{tr('· paga 3× e deixa cristais')}</span></span>
+            <Meter ratio={left} tone={left > 0.5 ? 'ok' : left > 0.25 ? 'gold' : 'warn'} label={tr('Paciência')} />
           </div>
-          <button className="qs-icon" onClick={() => dispatch({ type: 'SELECT_CUSTOMER', id: null })} aria-label="Fechar atendimento">×</button>
+          <button className="qs-icon" onClick={() => dispatch({ type: 'SELECT_CUSTOMER', id: null })} aria-label={tr('Fechar atendimento')}>×</button>
         </div>
         <p className="qs-remark qs-riddle">“{c.remark}”</p>
         <div className="qs-guess">
-          {stock.length === 0 ? <span className="qs-none">Nada nas prateleiras para arriscar.</span> : stock.slice(0, 8).map((p) => (
+          {stock.length === 0 ? <span className="qs-none">{tr('Nada nas prateleiras para arriscar.')}</span> : stock.slice(0, 8).map((p) => (
             <button key={p.recipeId} className="qs-guess-btn" title={RECIPES_BY_ID[p.recipeId].name} onClick={() => dispatch({ type: 'SERVE_CUSTOMER', customerId: c.id, recipeId: p.recipeId })}>
               <PotionIcon recipeId={p.recipeId} size={22} />
               <span>{RECIPES_BY_ID[p.recipeId].shortName}</span>
             </button>
           ))}
         </div>
-        <p className="small muted">Errar não custa a poção, mas ele perde a paciência mais rápido.</p>
+        <p className="small muted">{tr('Errar não custa a poção, mas ele perde a paciência mais rápido.')}</p>
       </section>
     );
   }
@@ -87,23 +88,23 @@ export function QuickServe({ placement }: { placement: 'stage' | 'side' }) {
   if (c.symptom && !c.offer && !picked) {
     const stock = save.potions.filter((p) => p.forSale && p.quantity > 0);
     return (
-      <section className={`quick-serve qs-${placement} qs-symptom`} aria-label={`Atender ${a.label}`}>
+      <section className={`quick-serve qs-${placement} qs-symptom`} aria-label={tr('Atender {0}', a.label)}>
         <div className="qs-head">
           <CustomerFace c={c} />
           <div className="qs-who">
             <span className="qs-name">
               {reg ? <span className="qs-regular">{reg.name.split(',')[0]} <span className="heart-on">{'♥\uFE0E'.repeat(hearts) || '♡'}</span></span> : a.label}{' '}
-              <span className="muted">{c.chapter !== undefined && reg ? `· cap. ${c.chapter + 1}: ${chapterFor(reg.id, c.chapter)?.title}` : 'conta o problema'}</span>
+              <span className="muted">{c.chapter !== undefined && reg ? tr('· cap. {0}: {1}', c.chapter + 1, chapterFor(reg.id, c.chapter)?.title) : tr('conta o problema')}</span>
             </span>
-            <Meter ratio={left} tone={left > 0.5 ? 'ok' : left > 0.25 ? 'gold' : 'warn'} label="Paciência" />
+            <Meter ratio={left} tone={left > 0.5 ? 'ok' : left > 0.25 ? 'gold' : 'warn'} label={tr('Paciência')} />
           </div>
-          {next && <button className="qs-icon" onClick={() => dispatch({ type: 'SELECT_CUSTOMER', id: next.id })} aria-label="Próximo cliente">{idx + 1}/{save.customers.length} ›</button>}
-          <button className="qs-icon" onClick={() => dispatch({ type: 'SELECT_CUSTOMER', id: null })} aria-label="Fechar atendimento">×</button>
+          {next && <button className="qs-icon" onClick={() => dispatch({ type: 'SELECT_CUSTOMER', id: next.id })} aria-label={tr('Próximo cliente')}>{idx + 1}/{save.customers.length} ›</button>}
+          <button className="qs-icon" onClick={() => dispatch({ type: 'SELECT_CUSTOMER', id: null })} aria-label={tr('Fechar atendimento')}>×</button>
         </div>
         <p className="qs-remark qs-riddle">“{c.remark}”</p>
         {coach}
-        <div className="qs-guess" role="group" aria-label="Escolha a poção">
-          {stock.length === 0 ? <span className="qs-none">Nada nas prateleiras para oferecer.</span> : stock.slice(0, 8).map((p) => (
+        <div className="qs-guess" role="group" aria-label={tr('Escolha a poção')}>
+          {stock.length === 0 ? <span className="qs-none">{tr('Nada nas prateleiras para oferecer.')}</span> : stock.slice(0, 8).map((p) => (
             <button key={p.recipeId} className="qs-guess-btn" title={RECIPES_BY_ID[p.recipeId].name} onClick={() => setGuess({ key: guessKey, recipeId: p.recipeId })}>
               <PotionIcon recipeId={p.recipeId} size={22} />
               <span>{RECIPES_BY_ID[p.recipeId].shortName}</span>
@@ -111,8 +112,8 @@ export function QuickServe({ placement }: { placement: 'stage' | 'side' }) {
           ))}
         </div>
         <div className="qs-symptom-foot">
-          <span className="small muted">Acertar em cheio rende gorjeta. Errar gasta paciência.</span>
-          <button className="btn btn-small" onClick={() => dispatch({ type: 'DISMISS_CUSTOMER', customerId: c.id })}>Dispensar</button>
+          <span className="small muted">{tr('Acertar em cheio rende gorjeta. Errar gasta paciência.')}</span>
+          <button className="btn btn-small" onClick={() => dispatch({ type: 'DISMISS_CUSTOMER', customerId: c.id })}>{tr('Dispensar')}</button>
         </div>
       </section>
     );
@@ -121,33 +122,33 @@ export function QuickServe({ placement }: { placement: 'stage' | 'side' }) {
   // Sem nada para oferecer: uma linha só, para não ocupar a tela inteira enquanto o cliente espera.
   if (!c.offer && !offerId) {
     return (
-      <section className={`quick-serve qs-${placement} qs-compact`} aria-label={`Atender ${a.label}`}>
+      <section className={`quick-serve qs-${placement} qs-compact`} aria-label={tr('Atender {0}', a.label)}>
         <PotionIcon recipeId={wanted.id} size={20} />
         <span className="qs-none">
-          <CustomerFace c={c} size={32} /> {c.vip ? c.vip.name : reg ? reg.name.split(',')[0] : a.label} quer {wanted.shortName}
-          <span className="muted small"> · {reserved ? 'as que você tem estão guardadas para o pedido' : 'acabou na prateleira'}</span>
+          <CustomerFace c={c} size={32} /> {c.vip ? c.vip.name : reg ? reg.name.split(',')[0] : a.label}{tr(' quer ')}{wanted.shortName}
+          <span className="muted small"> · {reserved ? tr('as que você tem estão guardadas para o pedido') : tr('acabou na prateleira')}</span>
         </span>
-        {next && <button className="qs-icon" onClick={() => dispatch({ type: 'SELECT_CUSTOMER', id: next.id })} aria-label="Próximo cliente">{idx + 1}/{save.customers.length} ›</button>}
-        <button className="btn btn-small" onClick={() => dispatch({ type: 'DISMISS_CUSTOMER', customerId: c.id })}>Dispensar</button>
-        <button className="btn btn-small btn-ghost" onClick={() => dispatch({ type: 'OPEN_PANEL', panel: 'counter' })}>Opções</button>
+        {next && <button className="qs-icon" onClick={() => dispatch({ type: 'SELECT_CUSTOMER', id: next.id })} aria-label={tr('Próximo cliente')}>{idx + 1}/{save.customers.length} ›</button>}
+        <button className="btn btn-small" onClick={() => dispatch({ type: 'DISMISS_CUSTOMER', customerId: c.id })}>{tr('Dispensar')}</button>
+        <button className="btn btn-small btn-ghost" onClick={() => dispatch({ type: 'OPEN_PANEL', panel: 'counter' })}>{tr('Opções')}</button>
       </section>
     );
   }
 
   return (
-    <section className={`quick-serve qs-${placement} ${c.vip ? 'qs-is-vip' : ''}`} aria-label={`Atender ${a.label}`}>
+    <section className={`quick-serve qs-${placement} ${c.vip ? 'qs-is-vip' : ''}`} aria-label={tr('Atender {0}', a.label)}>
       <div className="qs-head">
         <CustomerFace c={c} />
         <div className="qs-who">
-          <span className="qs-name">{c.symptom ? <>{a.label} <span className="muted">· você escolheu</span> {RECIPES_BY_ID[offerId ?? c.offer?.recipeId ?? c.wantedRecipeId].shortName}</> : <>{c.vip ? <span className="qs-regular qs-vip"><Icon e="✨" /> {c.vip.name}</span> : reg ? <span className="qs-regular">{reg.name.split(',')[0]} <span className="heart-on">{'♥\uFE0E'.repeat(hearts) || '♡'}</span></span> : a.label}{' '}<span className="muted">quer</span> <PotionIcon recipeId={wanted.id} size={16} /> {wanted.shortName}</>}</span>
-          <Meter ratio={left} tone={left > 0.5 ? 'ok' : left > 0.25 ? 'gold' : 'warn'} label="Paciência" />
+          <span className="qs-name">{c.symptom ? <>{a.label} <span className="muted">{tr('· você escolheu')}</span> {RECIPES_BY_ID[offerId ?? c.offer?.recipeId ?? c.wantedRecipeId].shortName}</> : <>{c.vip ? <span className="qs-regular qs-vip"><Icon e="✨" /> {c.vip.name}</span> : reg ? <span className="qs-regular">{reg.name.split(',')[0]} <span className="heart-on">{'♥\uFE0E'.repeat(hearts) || '♡'}</span></span> : a.label}{' '}<span className="muted">{tr('quer')}</span> <PotionIcon recipeId={wanted.id} size={16} /> {wanted.shortName}</>}</span>
+          <Meter ratio={left} tone={left > 0.5 ? 'ok' : left > 0.25 ? 'gold' : 'warn'} label={tr('Paciência')} />
         </div>
         {next && (
-          <button className="qs-icon" onClick={() => dispatch({ type: 'SELECT_CUSTOMER', id: next.id })} aria-label="Próximo cliente" title="Próximo cliente">
+          <button className="qs-icon" onClick={() => dispatch({ type: 'SELECT_CUSTOMER', id: next.id })} aria-label={tr('Próximo cliente')} title={tr('Próximo cliente')}>
             {idx + 1}/{save.customers.length} ›
           </button>
         )}
-        <button className="qs-icon" onClick={() => dispatch({ type: 'SELECT_CUSTOMER', id: null })} aria-label="Fechar atendimento">×</button>
+        <button className="qs-icon" onClick={() => dispatch({ type: 'SELECT_CUSTOMER', id: null })} aria-label={tr('Fechar atendimento')}>×</button>
       </div>
 
       {c.remark && <p className="qs-remark">“{c.remark}”</p>}
@@ -156,10 +157,9 @@ export function QuickServe({ placement }: { placement: 'stage' | 'side' }) {
       <div className="qs-actions">
         {c.offer ? (
           <>
-            <button className="btn btn-primary qs-main" onClick={() => { learned(); dispatch({ type: 'ACCEPT_OFFER', customerId: c.id }); }}>
-              Aceitar <CoinIcon size={14} /> {c.offer.price}
+            <button className="btn btn-primary qs-main" onClick={() => { learned(); dispatch({ type: 'ACCEPT_OFFER', customerId: c.id }); }}>{tr('Aceitar ')}<CoinIcon size={14} /> {c.offer.price}
             </button>
-            <button className="btn" onClick={() => { learned(); dispatch({ type: 'DECLINE_OFFER', customerId: c.id }); }}>Recusar</button>
+            <button className="btn" onClick={() => { learned(); dispatch({ type: 'DECLINE_OFFER', customerId: c.id }); }}>{tr('Recusar')}</button>
           </>
         ) : offerId ? (
           <>
@@ -169,32 +169,32 @@ export function QuickServe({ placement }: { placement: 'stage' | 'side' }) {
               onClick={() => sell()}
             >
               <PotionIcon recipeId={offerId} size={18} />
-              <span>Vender {RECIPES_BY_ID[offerId].shortName}</span>
+              <span>{tr('Vender ')}{RECIPES_BY_ID[offerId].shortName}</span>
               <span className="qs-price"><CoinIcon size={14} /> {c.vip ? vipPrice(c, offerId) : ask!.tag}</span>
             </button>
             {ask && (
-              <span className="qs-ask" role="group" aria-label="Pedir outro preço">
+              <span className="qs-ask" role="group" aria-label={tr('Pedir outro preço')}>
                 {ask.discount < ask.tag && (
-                  <button className="btn btn-small qs-ask-low" onClick={() => sell(ask.discount)} title="Um agrado no preço: +1 de reputação">
-                    <CoinIcon size={12} /> {ask.discount} <span className="qs-ask-tag">+rep</span>
+                  <button className="btn btn-small qs-ask-low" onClick={() => sell(ask.discount)} title={tr('Um agrado no preço: +1 de reputação')}>
+                    <CoinIcon size={12} /> {ask.discount} <span className="qs-ask-tag">{tr('+rep')}</span>
                   </button>
                 )}
                 {ask.high > ask.tag && (
-                  <button className="btn btn-small qs-ask-high" onClick={() => sell(ask.high)} title="Pedir mais: quem tem dinheiro paga, os outros pechincham ou vão embora">
-                    <CoinIcon size={12} /> {ask.high} <span className="qs-ask-tag">arriscar</span>
+                  <button className="btn btn-small qs-ask-high" onClick={() => sell(ask.high)} title={tr('Pedir mais: quem tem dinheiro paga, os outros pechincham ou vão embora')}>
+                    <CoinIcon size={12} /> {ask.high} <span className="qs-ask-tag">{tr('arriscar')}</span>
                   </button>
                 )}
               </span>
             )}
-            <span className="qs-verdict">{c.symptom ? <button className="qs-link" onClick={() => setGuess(null)}>trocar a poção</button> : null}{!c.symptom && offerId !== c.wantedRecipeId ? 'parecida · ' : ''}{c.vip ? `paga ${c.vip.pays}× o preço` : a.payHint}</span>
+            <span className="qs-verdict">{c.symptom ? <button className="qs-link" onClick={() => setGuess(null)}>{tr('trocar a poção')}</button> : null}{!c.symptom && offerId !== c.wantedRecipeId ? tr('parecida · ') : ''}{c.vip ? tr('paga {0}× o preço', c.vip.pays) : a.payHint}</span>
           </>
         ) : (
           <>
-            <span className="qs-none">Sem {wanted.shortName} nas prateleiras.</span>
-            <button className="btn" onClick={() => dispatch({ type: 'DISMISS_CUSTOMER', customerId: c.id })}>Dispensar</button>
+            <span className="qs-none">{tr('Sem ')}{wanted.shortName}{tr(' nas prateleiras.')}</span>
+            <button className="btn" onClick={() => dispatch({ type: 'DISMISS_CUSTOMER', customerId: c.id })}>{tr('Dispensar')}</button>
           </>
         )}
-        <button className="btn btn-ghost qs-more" onClick={() => dispatch({ type: 'OPEN_PANEL', panel: 'counter' })}>Opções</button>
+        <button className="btn btn-ghost qs-more" onClick={() => dispatch({ type: 'OPEN_PANEL', panel: 'counter' })}>{tr('Opções')}</button>
       </div>
     </section>
   );

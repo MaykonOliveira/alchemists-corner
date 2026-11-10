@@ -1,4 +1,6 @@
-# Alchemist's Corner
+# Cantinho do Alquimista (Alchemist's Corner)
+
+Em português o jogo se chama **Cantinho do Alquimista**; em inglês, **Alchemist's Corner** (`GAME_NAME` em `src/i18n`).
 
 Jogo cozy de gerenciamento de uma loja de alquimia, no navegador. Veja o PRD para a visão completa.
 
@@ -207,3 +209,12 @@ As 13 telas ficam em 4 áreas com nome fixo, iguais no computador e no celular (
 - **Celular:** 5 botões grandes (Início, Oficina, Loja, Progresso, Mundo). Tocar numa área abre a tela que tem novidade, senão a última que você abriu ali.
 - **Dentro de cada painel:** o nome da área no topo e abas para as outras telas da mesma área.
 - **Início:** o resumo do dia virou "O que fazer agora". Cada linha leva à tela certa e a próxima tarefa vem destacada; embaixo, o mapa das 4 áreas.
+
+## Idiomas (português e inglês)
+
+O jogo tem versão em português e em inglês. O idioma segue o navegador na primeira visita e pode ser trocado no menu ou nas Configurações (a troca recarrega o jogo, o save não muda).
+
+- Todo texto que aparece na tela passa por `tr('frase em português')`, de `src/i18n`. Valores entram como `{0}`, `{1}`…: `tr('Venda {0} poções', n)`.
+- A tradução fica em `src/i18n/en.ts`, indexada pela frase em português.
+- O teste `src/tests/app/i18n.test.ts` falha se uma frase nova não tiver tradução, se a tradução perder um `{0}` ou se o dicionário guardar frase que o jogo não usa mais.
+- As placas da porta (OPEN/CLOSED) e a vitrine do menu têm versão em inglês desenhada em `art/` (`python3 art/build.py`).

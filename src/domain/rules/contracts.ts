@@ -8,6 +8,7 @@ import { talentBonus } from './mastery';
 import { findPage } from './legends';
 import { gainReputation, gainXp } from './progression';
 
+import { tr } from '../../i18n';
 /** Nível a partir do qual a loja recebe contratos de vários dias. */
 export const CONTRACT_LEVEL = 6;
 /** Dias para entregar depois de aceitar. */
@@ -81,7 +82,7 @@ export function updateContracts(d: Draft) {
 export function acceptContract(d: Draft): boolean {
   const s = d.s;
   const c = s.contract;
-  if (!c) return fail(d, 'Não há contrato no quadro.');
+  if (!c) return fail(d, tr('Não há contrato no quadro.'));
   if (c.accepted) return false;
   c.accepted = true;
   c.dueDay = s.day + CONTRACT_DAYS;
@@ -93,7 +94,7 @@ export function declineContract(d: Draft): boolean {
   const s = d.s;
   const c = s.contract;
   if (!c) return false;
-  if (c.accepted) return fail(d, 'Contrato aceito não pode ser recusado. Entregue até o prazo.');
+  if (c.accepted) return fail(d, tr('Contrato aceito não pode ser recusado. Entregue até o prazo.'));
   s.contract = null;
   s.nextContractDay = s.day + 2;
   return true;
@@ -103,8 +104,8 @@ export function declineContract(d: Draft): boolean {
 export function deliverContract(d: Draft): boolean {
   const s = d.s;
   const c = s.contract;
-  if (!c?.accepted) return fail(d, 'Aceite o contrato antes de entregar.');
-  if (s.phase === 'fechamento') return fail(d, 'Entregue amanhã cedo.');
+  if (!c?.accepted) return fail(d, tr('Aceite o contrato antes de entregar.'));
+  if (s.phase === 'fechamento') return fail(d, tr('Entregue amanhã cedo.'));
   let delivered = 0;
   for (const it of c.items) {
     const n = Math.min(it.qty - it.delivered, potionStock(s, it.recipeId));
@@ -113,7 +114,7 @@ export function deliverContract(d: Draft): boolean {
     it.delivered += n;
     delivered += n;
   }
-  if (delivered === 0) return fail(d, 'Nenhuma poção do contrato no estoque.');
+  if (delivered === 0) return fail(d, tr('Nenhuma poção do contrato no estoque.'));
   if (contractDelivered(c) < contractTotal(c)) {
     d.events.push({ type: 'CONTRACT_PROGRESS', contractId: c.id, delivered });
     return true;
@@ -137,7 +138,7 @@ function completeContract(d: Draft, c: Contract) {
   s.nextContractDay = s.day + 2;
   gainReputation(d, c.rewardRep);
   d.events.push({ type: 'CONTRACT_DONE', contractId: c.id, coins: c.rewardCoins, seal: c.rewardSeal });
-  findPage(d, 'o cliente do contrato');
+  findPage(d, tr('o cliente do contrato'));
   gainXp(d, c.rewardXp);
 }
 

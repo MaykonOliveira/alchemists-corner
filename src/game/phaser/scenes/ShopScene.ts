@@ -14,6 +14,11 @@ import { HelperViews } from '../entities/Helpers';
 import { Visitor, type Mood } from '../entities/Visitor';
 import { HOTSPOTS, type HotspotDef } from '../interaction/hotspots';
 
+import { LANG, tr } from '../../../i18n';
+
+// Placa da porta no idioma do jogo (auditoria P3.2).
+const SIGN_OPEN = LANG === 'en' ? 'sign-open-en' : 'sign-open';
+const SIGN_CLOSED = LANG === 'en' ? 'sign-closed-en' : 'sign-closed';
 const OUTLINE_HOVER = 0xfff2c8;
 /** Vidro da janela (onde se vê a rua) e chão da rua, onde pisa quem passa. */
 const GLASS = WINDOW.glass;
@@ -116,7 +121,7 @@ export class ShopScene extends Phaser.Scene {
     this.windowMask = this.make.graphics({}, false).fillRect(GLASS.x, GLASS.y, GLASS.w, GLASS.h).createGeometryMask();
     this.createHotspots();
     this.createCauldronFx();
-    this.sign = this.add.image(321, 58, 'sign-closed').setOrigin(0.5, 0).setDepth(113);
+    this.sign = this.add.image(321, 58, SIGN_CLOSED).setOrigin(0.5, 0).setDepth(113);
     this.badge = this.add.image(256, 30, 'badge').setOrigin(0.5, 1).setDepth(120).setVisible(false);
     if (!this.reduceMotion()) this.tweens.add({ targets: this.badge, y: 27, yoyo: true, repeat: -1, duration: 500, ease: 'Sine.InOut' });
 
@@ -472,7 +477,7 @@ export class ShopScene extends Phaser.Scene {
       this.upgradeLayer.push(this.add.image(321, 9, 'shop-sign').setOrigin(0.5, 0).setDepth(115));
     }
     if (has('prateleira-extra')) {
-      const def: HotspotDef = { id: 'stand', label: 'Expositor de poções', panel: 'shelves', texture: 'display-stand', x: STAND.x, y: STAND.y };
+      const def: HotspotDef = { id: 'stand', label: tr('Expositor de poções'), panel: 'shelves', texture: 'display-stand', x: STAND.x, y: STAND.y };
       const outline = this.add.image(def.x - 1, def.y - 1, 'display-stand-outline').setOrigin(0).setDepth(STAND.y + 29.5).setVisible(false);
       const sprite = this.add.image(def.x, def.y, 'display-stand').setOrigin(0).setDepth(STAND.y + 30);
       sprite.setInteractive({ useHandCursor: true, pixelPerfect: true });
@@ -515,7 +520,7 @@ export class ShopScene extends Phaser.Scene {
     // ---- expansões
     if (has('sala-dos-fundos')) {
       const p = CAULDRON2;
-      const def: HotspotDef = { id: 'cauldron-2', label: 'Segundo caldeirão', panel: 'production', texture: 'cauldron-2', x: p.x, y: p.y };
+      const def: HotspotDef = { id: 'cauldron-2', label: tr('Segundo caldeirão'), panel: 'production', texture: 'cauldron-2', x: p.x, y: p.y };
       const outline = this.add.image(p.x - 1, p.y - 1, 'cauldron-2-outline').setOrigin(0).setDepth(p.y + 47.5).setVisible(false);
       const sprite = this.add.image(p.x, p.y, 'cauldron-2').setOrigin(0).setDepth(p.y + 48);
       sprite.setInteractive({ useHandCursor: true, pixelPerfect: true });
@@ -628,7 +633,7 @@ export class ShopScene extends Phaser.Scene {
   // ------------------------------------------------------- fases e relógio
 
   private applyPhase(save: GameSave) {
-    this.sign.setTexture(save.phase === 'expediente' ? 'sign-open' : 'sign-closed');
+    this.sign.setTexture(save.phase === 'expediente' ? SIGN_OPEN : SIGN_CLOSED);
     if (save.phase !== 'expediente') this.advanceAcc = 0;
   }
 
@@ -751,7 +756,7 @@ export class ShopScene extends Phaser.Scene {
         const bonus = e.price > RECIPES_BY_ID[e.recipeId].basePrice;
         this.coinPopup(x, y, e.price, bonus);
         this.coinRain(x, y + 10, Math.min(6, 2 + Math.floor(e.price / 25)));
-        if (e.diagnosed) this.textPopup(x, y - 14, 'CERTO!', '#ffd76a');
+        if (e.diagnosed) this.textPopup(x, y - 14, tr('CERTO!'), '#ffd76a');
         return;
       }
       case 'ORDER_DONE':
@@ -867,7 +872,7 @@ export class ShopScene extends Phaser.Scene {
 
   /** "−1 ★" vermelho subindo de quem foi embora sem ser atendido. */
   private lossPopup(x: number, y: number) {
-    this.textPopup(x, y, '-1 REP', '#ff8a7a');
+    this.textPopup(x, y, tr('-1 REP'), '#ff8a7a');
   }
 
   /** Texto em pixel que sobe e some (só usa as letras do painter). */

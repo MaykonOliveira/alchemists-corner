@@ -3,6 +3,7 @@ import type { GameEvent, GameSave } from '../../../domain/models/types';
 import { APPRENTICE, GOLEM, RAVEN, helperActive } from '../../../domain/rules/helpers';
 import { useGameStore } from '../../../store/gameStore';
 
+import { tr } from '../../../i18n';
 /** Onde cada ajudante fica na loja (mundo lógico 384×216). */
 const PERCH = { x: 4, y: 33 };
 const RAVEN_POS = { x: 6, y: 21 };
@@ -12,9 +13,9 @@ const APPRENTICE_POS = { x: 82, y: 116, depth: 175 };
 const GOLEM_POS = { x: 118, y: 120, depth: 154 };
 
 const LABELS: Record<string, string> = {
-  [RAVEN]: 'Corvo entregador',
-  [APPRENTICE]: 'Aprendiz de alquimia',
-  [GOLEM]: 'Golem balconista',
+  [RAVEN]: tr('Corvo entregador'),
+  [APPRENTICE]: tr('Aprendiz de alquimia'),
+  [GOLEM]: tr('Golem balconista'),
 };
 
 interface HelperSprite {

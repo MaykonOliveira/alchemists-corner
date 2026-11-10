@@ -7,7 +7,8 @@ import { CoinIcon, StarIcon } from '../../ui/icons';
 import { useAnimatedNumber } from '../../ui/useAnimatedNumber';
 import { Icon } from '../../ui/Icon';
 
-const PHASE_LABEL = { preparacao: 'Preparação', expediente: 'Loja aberta', fechamento: 'Fechamento' } as const;
+import { GAME_NAME, tr } from '../../i18n';
+const PHASE_LABEL = { preparacao: tr('Preparação'), expediente: tr('Loja aberta'), fechamento: tr('Fechamento') } as const;
 
 export function Hud() {
   const save = useGameStore((s) => s.save)!;
@@ -40,11 +41,11 @@ export function Hud() {
 
   const season = seasonOf(save.day);
   const xpPct = levelProgress(save.xp) * 100;
-  const levelShort = isMaster ? `M${masterRank(save.xp)}` : `Nv ${save.level}`;
+  const levelShort = isMaster ? `M${masterRank(save.xp)}` : tr('Nv {0}', save.level);
 
   return (
     <header className="hud">
-      <button className="hud-compact" onClick={() => setDetails((d) => !d)} aria-expanded={details} aria-label="Ver nível, experiência e reputação">
+      <button className="hud-compact" onClick={() => setDetails((d) => !d)} aria-expanded={details} aria-label={tr('Ver nível, experiência e reputação')}>
         <span className="hc-day"><Icon e={season.icon} /> {save.day}</span>
         <span className="hc-clock">{formatClock(save.clockMin)}{paused && save.phase === 'expediente' ? ' ⏸\uFE0E' : fast ? <Icon e="⏩" /> : ''}</span>
         <span key={delta?.key ?? 0} className={`hc-coins ${delta ? (delta.n > 0 ? 'coin-gain' : 'coin-loss') : ''}`}><CoinIcon size={16} /> {coins}</span>
@@ -52,46 +53,46 @@ export function Hud() {
         <span className="hc-level" style={{ ['--xp' as string]: `${xpPct}%` }}>{levelShort}</span>
       </button>
       {details && (
-        <div className="hud-pop" role="dialog" aria-label="Sua loja">
+        <div className="hud-pop" role="dialog" aria-label={tr('Sua loja')}>
           <div className="hp-head">
             <strong>{save.shopName}</strong>
             <button className="hud-crystals" onClick={() => { setDetails(false); dispatch({ type: 'TOGGLE_PANEL', panel: 'season' }); }}><Icon e="🌙" /> {save.crystals}</button>
           </div>
-          <p className="hp-line">Dia {save.day} · {season.name} · {PHASE_LABEL[save.phase]} · {TIME_OF_DAY_LABEL[timeOfDay(save.clockMin)]}</p>
+          <p className="hp-line">{tr('Dia ')}{save.day} · {season.name} · {PHASE_LABEL[save.phase]} · {TIME_OF_DAY_LABEL[timeOfDay(save.clockMin)]}</p>
           <span className="bar hp-day" aria-hidden><span style={{ width: `${dayProgress(save.clockMin) * 100}%` }} /></span>
-          <p className="hp-line"><strong>{isMaster ? `Mestre ${masterRank(save.xp)}` : `Nível ${save.level}`}</strong> · {xpIn}/{xpSpan} XP</p>
+          <p className="hp-line"><strong>{isMaster ? tr('Mestre {0}', masterRank(save.xp)) : tr('Nível {0}', save.level)}</strong> · {xpIn}/{xpSpan} XP</p>
           <span className="bar bar-xp hp-xp" aria-hidden><span style={{ width: `${xpPct}%` }} /></span>
-          <p className="hp-line"><StarIcon size={16} /> Reputação {save.reputation}: <strong>{reputationTitle(save.reputation)}</strong></p>
-          <button className="btn btn-ghost hp-close" onClick={() => setDetails(false)}>Fechar</button>
+          <p className="hp-line"><StarIcon size={16} />{tr(' Reputação ')}{save.reputation}: <strong>{reputationTitle(save.reputation)}</strong></p>
+          <button className="btn btn-ghost hp-close" onClick={() => setDetails(false)}>{tr('Fechar')}</button>
         </div>
       )}
-      <div className="hud-brand" title="Alchemist's Corner">
-        <span className="brand-full">{save.royal && save.royal.chapter >= 5 && <span className="brand-crown" title="Grão-Alquimista do Reino" aria-label="Grão-Alquimista do Reino"><Icon e="👑" /> </span>}{save.shopName}</span>
-        <button className="hud-crystals" onClick={() => dispatch({ type: 'TOGGLE_PANEL', panel: 'season' })} title="Cristais de luar: ganhe jogando e use na decoração ou nos talentos do Grimório"><Icon e="🌙" /> {save.crystals}</button>
+      <div className="hud-brand" title={GAME_NAME}>
+        <span className="brand-full">{save.royal && save.royal.chapter >= 5 && <span className="brand-crown" title={tr('Grão-Alquimista do Reino')} aria-label={tr('Grão-Alquimista do Reino')}><Icon e="👑" /> </span>}{save.shopName}</span>
+        <button className="hud-crystals" onClick={() => dispatch({ type: 'TOGGLE_PANEL', panel: 'season' })} title={tr('Cristais de luar: ganhe jogando e use na decoração ou nos talentos do Grimório')}><Icon e="🌙" /> {save.crystals}</button>
       </div>
-      <div className="hud-stat" title={`Dia e fase · ${seasonOf(save.day).name}`}>
-        <span className="hud-label">Dia {save.day} <span className="hud-season" aria-label={seasonOf(save.day).name}><Icon e={seasonOf(save.day).icon} /></span></span>
+      <div className="hud-stat" title={tr('Dia e fase · {0}', seasonOf(save.day).name)}>
+        <span className="hud-label">{tr('Dia ')}{save.day} <span className="hud-season" aria-label={seasonOf(save.day).name}><Icon e={seasonOf(save.day).icon} /></span></span>
         <span className="hud-value">{PHASE_LABEL[save.phase]}</span>
       </div>
-      <div className="hud-stat hud-clock" title="Horário">
+      <div className="hud-stat hud-clock" title={tr('Horário')}>
         <span className="hud-label">{TIME_OF_DAY_LABEL[timeOfDay(save.clockMin)]}</span>
-        <span className="hud-value">{formatClock(save.clockMin)}{paused && save.phase === 'expediente' ? ' ⏸\uFE0E' : fast ? <span className="hud-fast" title="Loja vazia: o relógio anda mais rápido até alguém entrar"> <Icon e="⏩" /></span> : ''}</span>
+        <span className="hud-value">{formatClock(save.clockMin)}{paused && save.phase === 'expediente' ? ' ⏸\uFE0E' : fast ? <span className="hud-fast" title={tr('Loja vazia: o relógio anda mais rápido até alguém entrar')}> <Icon e="⏩" /></span> : ''}</span>
         <span className="bar" aria-hidden><span style={{ width: `${dayProgress(save.clockMin) * 100}%` }} /></span>
       </div>
-      <div className="hud-stat hud-coins" title="Moedas">
-        <span className="hud-label">Moedas</span>
+      <div className="hud-stat hud-coins" title={tr('Moedas')}>
+        <span className="hud-label">{tr('Moedas')}</span>
         <span key={delta?.key ?? 0} className={`hud-value ${delta ? (delta.n > 0 ? 'coin-gain' : 'coin-loss') : ''}`}><CoinIcon size={16} /> {coins}</span>
         {delta && <span key={`d${delta.key}`} className={`coin-delta ${delta.n > 0 ? 'up' : 'down'}`}>{delta.n > 0 ? '+' : '−'}{Math.abs(delta.n)}</span>}
       </div>
-      <div className="hud-stat" title={`Reputação ${save.reputation}: ${reputationTitle(save.reputation)}. Sobe com vendas a preço justo.`}>
-        <span className="hud-label">Reputação</span>
+      <div className="hud-stat" title={tr('Reputação {0}: {1}. Sobe com vendas a preço justo.', save.reputation, reputationTitle(save.reputation))}>
+        <span className="hud-label">{tr('Reputação')}</span>
         <span className="hud-value"><StarIcon size={16} /> {save.reputation}<span className="hud-sub hide-sm">{reputationTitle(save.reputation)}</span></span>
       </div>
-      <div className="hud-stat hud-level" title={isMaster ? 'Grau de Mestre' : 'Nível da loja'}>
+      <div className="hud-stat hud-level" title={isMaster ? tr('Grau de Mestre') : tr('Nível da loja')}>
         <span className={`hud-label ${isMaster ? 'hud-master' : ''}`}>
-          {isMaster ? `Mestre ${masterRank(save.xp)}` : `Nível ${save.level}`}
+          {isMaster ? tr('Mestre {0}', masterRank(save.xp)) : tr('Nível {0}', save.level)}
         </span>
-        <span className="bar bar-xp" aria-label={`Experiência: ${Math.round(levelProgress(save.xp) * 100)}%`}>
+        <span className="bar bar-xp" aria-label={tr('Experiência: {0}%', Math.round(levelProgress(save.xp) * 100))}>
           <span style={{ width: `${levelProgress(save.xp) * 100}%` }} />
         </span>
         <span className="hud-xp">{xpIn}/{xpSpan} XP</span>
@@ -99,7 +100,7 @@ export function Hud() {
       <div className="hud-actions">
         <div className="hud-run">
         {save.phase === 'preparacao' && !homeVisible && (
-          <button data-tut="open-shop" className="btn btn-primary btn-glow" onClick={() => dispatch({ type: 'OPEN_SHOP' })}>Abrir loja</button>
+          <button data-tut="open-shop" className="btn btn-primary btn-glow" onClick={() => dispatch({ type: 'OPEN_SHOP' })}>{tr('Abrir loja')}</button>
         )}
         {save.phase === 'expediente' && (
           <>
@@ -107,25 +108,25 @@ export function Hud() {
               className={`btn btn-speed ${speed === 2 ? 'on' : ''}`}
               onClick={() => dispatch({ type: 'TOGGLE_SPEED' })}
               aria-pressed={speed === 2}
-              title={speed === 2 ? 'Voltar à velocidade normal' : 'Acelerar o dia (2×)'}
+              title={speed === 2 ? tr('Voltar à velocidade normal') : tr('Acelerar o dia (2×)')}
             >
               {speed === 2 ? '2×' : '1×'}
             </button>
-            <button className="btn" onClick={() => dispatch({ type: 'TOGGLE_PAUSE' })} aria-pressed={paused} title="Pausar (espaço)">
-              {paused ? '▶\uFE0E' : '❚❚'}<span className="hide-sm">{paused ? ' Continuar' : ' Pausar'}</span>
+            <button className="btn" onClick={() => dispatch({ type: 'TOGGLE_PAUSE' })} aria-pressed={paused} title={tr('Pausar (espaço)')}>
+              {paused ? '▶\uFE0E' : '❚❚'}<span className="hide-sm">{paused ? tr(' Continuar') : tr(' Pausar')}</span>
             </button>
             {confirmClose ? (
               <>
-                <button className="btn btn-danger" onClick={() => { setConfirmClose(false); dispatch({ type: 'CLOSE_SHOP' }); }}>Fechar agora?</button>
-                <button className="btn btn-ghost" onClick={() => setConfirmClose(false)}>Não</button>
+                <button className="btn btn-danger" onClick={() => { setConfirmClose(false); dispatch({ type: 'CLOSE_SHOP' }); }}>{tr('Fechar agora?')}</button>
+                <button className="btn btn-ghost" onClick={() => setConfirmClose(false)}>{tr('Não')}</button>
               </>
             ) : (
-              <button data-tut="close-day" className="btn" onClick={() => setConfirmClose(true)}>Encerrar dia</button>
+              <button data-tut="close-day" className="btn" onClick={() => setConfirmClose(true)}>{tr('Encerrar dia')}</button>
             )}
           </>
         )}
         </div>
-        <button className="btn btn-ghost" onClick={() => dispatch({ type: 'OPEN_MODAL', modal: 'settings' })} aria-label="Configurações" title="Configurações"><Icon e="⚙" /></button>
+        <button className="btn btn-ghost" onClick={() => dispatch({ type: 'OPEN_MODAL', modal: 'settings' })} aria-label={tr('Configurações')} title={tr('Configurações')}><Icon e="⚙" /></button>
       </div>
     </header>
   );

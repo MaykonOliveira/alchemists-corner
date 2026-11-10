@@ -9,6 +9,7 @@ import { gainXp, MAX_LEVEL } from './progression';
 import { findPage } from './legends';
 import { grantCrystals } from './entitlements';
 
+import { tr } from '../../i18n';
 export const ROYAL_DONE = ROYAL_CHAPTERS.length;
 
 /** Capítulo em andamento (null antes do convite ou depois da vitória). */
@@ -78,7 +79,7 @@ function completeChapter(d: Draft) {
   grantCrystals(d, ch.reward.crystals, 'concurso');
   gainXp(d, 400 + 200 * r.chapter);
   d.events.push({ type: 'ROYAL_CHAPTER_DONE', chapter: r.chapter, coins: ch.reward.coins, crystals: ch.reward.crystals });
-  findPage(d, 'o arquivo da Coroa');
+  findPage(d, tr('o arquivo da Coroa'));
   const next = r.chapter + 1;
   if (next >= ROYAL_DONE) {
     s.royal = { ...r, chapter: ROYAL_DONE, progress: 0, delivered: {}, dueDay: 0 };
@@ -137,12 +138,12 @@ export function royalStarsMissing(s: GameSave): { recipeId: string; n: number; h
 export function deliverRoyal(d: Draft): boolean {
   const s = d.s;
   const ch = royalChapter(s);
-  if (!ch || ch.goal.kind !== 'entregar') return fail(d, 'Não há entrega no capítulo atual.');
-  if (!royalActive(s)) return fail(d, 'Leia o capítulo primeiro.');
+  if (!ch || ch.goal.kind !== 'entregar') return fail(d, tr('Não há entrega no capítulo atual.'));
+  if (!royalActive(s)) return fail(d, tr('Leia o capítulo primeiro.'));
   const stars = royalStarsMissing(s);
-  if (stars) return fail(d, `Os astrônomos só aceitam com ${stars.n} estrelas de maestria (você tem ${stars.have}).`);
+  if (stars) return fail(d, tr('Os astrônomos só aceitam com {0} estrelas de maestria (você tem {1}).', stars.n, stars.have));
   const items = royalDeliverable(s);
-  if (!items.length) return fail(d, 'Nenhuma poção do capítulo nas prateleiras.');
+  if (!items.length) return fail(d, tr('Nenhuma poção do capítulo nas prateleiras.'));
   const delivered = { ...s.royal!.delivered };
   for (const i of items) {
     takePotions(s, i.recipeId, i.qty);

@@ -8,6 +8,7 @@
 
 import { CATALOG, type CatalogItem } from '../domain/data/catalog';
 
+import { tr } from '../i18n';
 export const PURCHASES_ENABLED = false;
 
 export interface PurchaseResult {
@@ -33,7 +34,7 @@ export const noStore: PurchaseProvider = {
   id: 'nenhum',
   available: () => false,
   restore: async () => [],
-  buy: async (itemId) => ({ ok: false, itemId, error: 'Compras não estão ativas nesta versão.' }),
+  buy: async (itemId) => ({ ok: false, itemId, error: tr('Compras não estão ativas nesta versão.') }),
 };
 
 let provider: PurchaseProvider = noStore;
@@ -52,9 +53,9 @@ export function sellableItems(): CatalogItem[] {
  * sem sequência que zera e sem pressão de tempo falsa (itens de festa voltam no ano seguinte).
  */
 export const PRINCIPLES = [
-  'Tudo que se compra é visto antes (sem caixas-surpresa pagas).',
-  'Ninguém paga para o caldeirão andar mais rápido.',
-  'Moedas, XP e a rival não se compram.',
-  'Faltar um dia nunca tira nada.',
-  'Itens de festa voltam no ano seguinte.',
+  tr('Tudo que se compra é visto antes (sem caixas-surpresa pagas).'),
+  tr('Ninguém paga para o caldeirão andar mais rápido.'),
+  tr('Moedas, XP e a rival não se compram.'),
+  tr('Faltar um dia nunca tira nada.'),
+  tr('Itens de festa voltam no ano seguinte.'),
 ] as const;

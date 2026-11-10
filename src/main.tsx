@@ -7,7 +7,10 @@ import { App } from './app/App';
 import { initAudio } from './audio/sound';
 import { registerServiceWorker } from './app/pwa';
 import { initReminders } from './app/reminders';
+import { GAME_NAME, LANG } from './i18n';
 
+document.documentElement.lang = LANG === 'en' ? 'en' : 'pt-BR';
+document.title = GAME_NAME;
 initAudio();
 registerServiceWorker();
 

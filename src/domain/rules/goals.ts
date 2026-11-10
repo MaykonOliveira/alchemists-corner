@@ -10,6 +10,7 @@ import { gainXp } from './progression';
 import { findPage } from './legends';
 import { addIngredients, inSeason, weekOf } from './street';
 
+import { tr } from '../../i18n';
 /** Metas cumpridas na semana para abrir o baú (de 21 possíveis). */
 export const CHEST_GOAL = 10;
 
@@ -124,7 +125,7 @@ export function chestPrize(s: GameSave) {
 export function claimChest(d: Draft): boolean {
   const s = d.s;
   if (!chestReady(s)) {
-    d.events.push({ type: 'ERROR', message: `Cumpra ${CHEST_GOAL} metas na semana para abrir o baú.` });
+    d.events.push({ type: 'ERROR', message: tr('Cumpra {0} metas na semana para abrir o baú.', CHEST_GOAL) });
     return false;
   }
   const { coins, items } = chestPrize(s);
@@ -132,20 +133,20 @@ export function claimChest(d: Draft): boolean {
   addIngredients(s, items);
   s.goals.chestClaimed = true;
   d.events.push({ type: 'CHEST_OPENED', coins, items });
-  findPage(d, 'o baú da semana');
+  findPage(d, tr('o baú da semana'));
   return true;
 }
 
 /** Texto curto de cada meta, para a interface. */
 export function goalText(g: DailyGoal): string {
   switch (g.kind) {
-    case 'vender': return `Venda ${g.target} poções`;
-    case 'faturar': return `Fature ${g.target} moedas em vendas`;
-    case 'categoria': return `Venda ${g.target} poções de ${CATEGORY_LABEL[g.ref as RecipeCategory] ?? g.ref}`;
-    case 'preparar': return `Prepare ${g.target} lote${g.target > 1 ? 's' : ''} de ${RECIPES_BY_ID[g.ref ?? '']?.shortName ?? 'poção'}`;
-    case 'sem-troca': return `Atenda ${g.target} clientes com a poção que pediram`;
-    case 'pedido': return 'Entregue o pedido especial';
-    case 'carinho': return 'Faça carinho no gato da loja';
+    case 'vender': return tr('Venda {0} poções', g.target);
+    case 'faturar': return tr('Fature {0} moedas em vendas', g.target);
+    case 'categoria': return tr('Venda {0} poções de {1}', g.target, CATEGORY_LABEL[g.ref as RecipeCategory] ?? g.ref);
+    case 'preparar': return tr('Prepare {0} {1} de {2}', g.target, g.target > 1 ? tr('lotes') : tr('lote'), RECIPES_BY_ID[g.ref ?? '']?.shortName ?? tr('poção'));
+    case 'sem-troca': return tr('Atenda {0} clientes com a poção que pediram', g.target);
+    case 'pedido': return tr('Entregue o pedido especial');
+    case 'carinho': return tr('Faça carinho no gato da loja');
   }
 }
 

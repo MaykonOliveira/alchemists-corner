@@ -1,6 +1,6 @@
 {
-  "name": "Alchemist's Corner",
-  "short_name": "Alchemist's",
+  "name": "Cantinho do Alquimista",
+  "short_name": "Cantinho",
   "description": "Administre uma pequena loja de alquimia aconchegante.",
   "start_url": "./",
   "display": "fullscreen",

@@ -1,5 +1,6 @@
 import type { TimeOfDay } from '../models/types';
 
+import { tr } from '../../i18n';
 export const OPEN_MIN = 8 * 60;
 export const CLOSE_MIN = 20 * 60;
 /** Minutos de jogo que passam a cada segundo real durante o expediente (~6 min reais por dia). */
@@ -12,9 +13,9 @@ export function timeOfDay(clockMin: number): TimeOfDay {
 }
 
 export const TIME_OF_DAY_LABEL: Record<TimeOfDay, string> = {
-  manha: 'Manhã',
-  tarde: 'Tarde',
-  noite: 'Noite',
+  manha: tr('Manhã'),
+  tarde: tr('Tarde'),
+  noite: tr('Noite'),
 };
 
 export function formatClock(clockMin: number): string {

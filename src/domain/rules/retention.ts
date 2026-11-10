@@ -17,6 +17,7 @@ import { gainXp } from './progression';
 import { addIngredients, weekOf } from './street';
 import { daysToNextSeason, seasonOf } from './world';
 
+import { tr } from '../../i18n';
 // ------------------------------------------------------------------ datas reais
 
 const DAY_MS = 86_400_000;
@@ -154,34 +155,34 @@ export function tomorrowPreview(s: GameSave): PreviewLine[] {
   const event = s.festivalSponsored ? 'festival' : s.nextEvent;
   if (event === 'festa-estacao') {
     const f = SEASON_FESTS[seasonOf(day).id];
-    out.push({ icon: '🎉', text: `${f.name}: ${f.guest} vem à loja e paga o triplo. Lembrança exclusiva para quem atender.`, tone: 'gold' });
+    out.push({ icon: '🎉', text: tr('{0}: {1} vem à loja e paga o triplo. Lembrança exclusiva para quem atender.', f.name, f.guest), tone: 'gold' });
   } else if (event) {
     out.push({ icon: DAY_EVENTS[event].rare ? '🌘' : '📣', text: `${DAY_EVENTS[event].name}: ${DAY_EVENTS[event].text}`, tone: DAY_EVENTS[event].rare ? 'gold' : undefined });
   }
   if (s.nextTrend?.length) {
     const names = s.nextTrend.map((id) => RECIPES_BY_ID[id]?.shortName ?? id);
-    out.push({ icon: '📈', text: `Amanhã a rua vai procurar ${names.join(' e ')}. Prepare antes de abrir.`, tone: 'gold' });
+    out.push({ icon: '📈', text: tr('Amanhã a rua vai procurar {0}. Prepare antes de abrir.', names.join(' e ')), tone: 'gold' });
   }
   if (s.letter && !s.letter.done && s.letter.day === day) {
-    const who = s.letter.from === 'condessa-estreia' ? 'Condessa Amélia' : REGULARS_BY_ID[s.letter.from]?.name ?? 'Um freguês';
-    out.push({ icon: '✉️', text: `Carta de ${who}: “${s.letter.text}”`, tone: 'gold' });
+    const who = s.letter.from === 'condessa-estreia' ? tr('Condessa Amélia') : REGULARS_BY_ID[s.letter.from]?.name ?? tr('Um freguês');
+    out.push({ icon: '✉️', text: tr('Carta de {0}: “{1}”', who, s.letter.text), tone: 'gold' });
   }
   if (daysToNextSeason(s.day) === 1) {
     const next = seasonOf(day);
-    out.push({ icon: next.icon, text: `Começa ${next.id === 'primavera' ? 'a' : 'o'} ${next.name.toLowerCase()}. ${next.text}` });
+    out.push({ icon: next.icon, text: tr('Começa {0} {1}. {2}', next.id === 'primavera' ? 'a' : 'o', next.name.toLowerCase(), next.text) });
   }
-  if (s.expedition?.returnDay === day) out.push({ icon: '🐦‍⬛', text: 'O corvo volta da expedição com ingredientes raros.' });
-  if (s.contract?.accepted && s.contract.dueDay === day) out.push({ icon: '📜', text: `Último dia do contrato de ${s.contract.client}.`, tone: 'warn' });
+  if (s.expedition?.returnDay === day) out.push({ icon: '🐦‍⬛', text: tr('O corvo volta da expedição com ingredientes raros.') });
+  if (s.contract?.accepted && s.contract.dueDay === day) out.push({ icon: '📜', text: tr('Último dia do contrato de {0}.', s.contract.client), tone: 'warn' });
   const royal = s.royal && s.royal.chapter < ROYAL_CHAPTERS.length ? ROYAL_CHAPTERS[s.royal.chapter] : null;
   if (royal && s.royal!.seen >= s.royal!.chapter) {
     const last = s.royal!.dueDay === day;
-    out.push({ icon: '👑', text: `Concurso Real: ${royal.title}${last ? ' (último dia do prazo!)' : ''}. ${royal.task}`, tone: last ? 'warn' : 'gold' });
+    out.push({ icon: '👑', text: tr('Concurso Real: {0}{1}. {2}', royal.title, last ? tr(' (último dia do prazo!)') : '', royal.task), tone: last ? 'warn' : 'gold' });
   }
-  if (s.order && s.order.dueDay === day) out.push({ icon: '📌', text: `O pedido de ${s.order.client} vence amanhã.`, tone: 'warn' });
+  if (s.order && s.order.dueDay === day) out.push({ icon: '📌', text: tr('O pedido de {0} vence amanhã.', s.order.client), tone: 'warn' });
   if (s.rival.week === weekOf(s.day) && weekOf(day) === weekOf(s.day) && (day - 1) % 7 === 6 && s.level >= 4 && s.day >= 8) {
-    out.push({ icon: '⚔️', text: 'Último dia da disputa da semana com a Madame Vesper.' });
+    out.push({ icon: '⚔️', text: tr('Último dia da disputa da semana com a Madame Vesper.') });
   }
-  out.push({ icon: '🎁', text: `Presente de visita nº ${(s.visits.count % VISIT_GIFTS.length) + 1}: ${VISIT_GIFTS[s.visits.count % VISIT_GIFTS.length].label}.` });
+  out.push({ icon: '🎁', text: tr('Presente de visita nº {0}: {1}.', (s.visits.count % VISIT_GIFTS.length) + 1, VISIT_GIFTS[s.visits.count % VISIT_GIFTS.length].label) });
   return out;
 }
 
@@ -268,7 +269,7 @@ export const visitGift = (s: GameSave) => VISIT_GIFTS[s.visits.count % VISIT_GIF
 export function claimVisitGift(d: Draft): boolean {
   const s = d.s;
   if (!s.visits.ready) {
-    d.events.push({ type: 'ERROR', message: 'O próximo presente chega amanhã.' });
+    d.events.push({ type: 'ERROR', message: tr('O próximo presente chega amanhã.') });
     return false;
   }
   const n = s.visits.count % VISIT_GIFTS.length;
@@ -294,10 +295,10 @@ export function ensureTrack(d: Draft) {
 export function trackRewardLabel(i: number): string {
   const r = TRACK_REWARDS[i];
   switch (r.kind) {
-    case 'coins': return `${r.n} moedas`;
+    case 'coins': return tr('{0} moedas', r.n);
     case 'crystals': return `${r.n} cristais`;
     case 'ingredients': return r.items.map((it) => `${it.qty}× ${it.ingredientId.replace(/-/g, ' ')}`).join(', ');
-    case 'item': return 'decoração exclusiva';
+    case 'item': return tr('decoração exclusiva');
   }
 }
 

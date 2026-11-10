@@ -1,5 +1,6 @@
 import { useGameStore } from '../../store/gameStore';
 
+import { tr } from '../../i18n';
 /**
  * Celular em pé: velocidade e pausa num canto pequeno da cena, longe das prateleiras.
  * "Encerrar o dia" mora no Início. No computador esses botões continuam no topo.
@@ -11,11 +12,11 @@ export function StageControls() {
   const dispatch = useGameStore((s) => s.dispatch);
   if (phase !== 'expediente') return null;
   return (
-    <div className="stage-controls" role="group" aria-label="Ritmo do dia">
-      <button className={`sc-btn ${speed === 2 ? 'on' : ''}`} onClick={() => dispatch({ type: 'TOGGLE_SPEED' })} aria-pressed={speed === 2} aria-label={speed === 2 ? 'Voltar à velocidade normal' : 'Acelerar o dia (2×)'}>
+    <div className="stage-controls" role="group" aria-label={tr('Ritmo do dia')}>
+      <button className={`sc-btn ${speed === 2 ? 'on' : ''}`} onClick={() => dispatch({ type: 'TOGGLE_SPEED' })} aria-pressed={speed === 2} aria-label={speed === 2 ? tr('Voltar à velocidade normal') : tr('Acelerar o dia (2×)')}>
         {speed === 2 ? '2×' : '1×'}
       </button>
-      <button className="sc-btn" onClick={() => dispatch({ type: 'TOGGLE_PAUSE' })} aria-pressed={paused} aria-label={paused ? 'Continuar' : 'Pausar'}>
+      <button className="sc-btn" onClick={() => dispatch({ type: 'TOGGLE_PAUSE' })} aria-pressed={paused} aria-label={paused ? tr('Continuar') : tr('Pausar')}>
         {paused ? '▶︎' : '❚❚'}
       </button>
     </div>

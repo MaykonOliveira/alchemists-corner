@@ -7,6 +7,7 @@ import { talentBonus } from './mastery';
 import { gainReputation, gainXp } from './progression';
 import { grantFind } from './street';
 
+import { tr } from '../../i18n';
 /** Cria um pedido especial se não houver nenhum ativo (a partir do dia 2). */
 export function maybeCreateOrder(d: Draft) {
   const { s, ctx } = d;
@@ -33,9 +34,9 @@ export function maybeCreateOrder(d: Draft) {
 export function deliverOrder(d: Draft): boolean {
   const s = d.s;
   const o = s.order;
-  if (!o) return fail(d, 'Não há pedido ativo.');
-  if (s.phase === 'fechamento') return fail(d, 'Entregue amanhã cedo.');
-  if (potionStock(s, o.recipeId) < o.qty) return fail(d, `Você precisa de ${o.qty} unidades.`);
+  if (!o) return fail(d, tr('Não há pedido ativo.'));
+  if (s.phase === 'fechamento') return fail(d, tr('Entregue amanhã cedo.'));
+  if (potionStock(s, o.recipeId) < o.qty) return fail(d, tr('Você precisa de {0} unidades.', o.qty));
   takePotions(s, o.recipeId, o.qty);
   s.coins += o.rewardCoins;
   s.stats.orderRewards += o.rewardCoins;

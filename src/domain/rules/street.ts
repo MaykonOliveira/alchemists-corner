@@ -13,6 +13,7 @@ import { gainReputation } from './progression';
 import { findPage } from './legends';
 import { seasonOf } from './world';
 
+import { tr } from '../../i18n';
 // ------------------------------------------------------------- estação
 
 /** A poção ou o ingrediente pode ser usado hoje? (os que não são da estação, sempre) */
@@ -74,7 +75,7 @@ export function rivalOnClose(d: Draft, report: DayReport) {
       const rares = INGREDIENTS.filter((i) => i.rarity === 'raro' && !i.season && s.level >= i.supplierLevel);
       if (rares.length) addIngredients(s, [{ ingredientId: pick(rares, d.ctx.random).id, qty: 3 }]);
       s.rival = { ...s.rival, wins: s.rival.wins + 1 };
-      findPage(d, 'a despensa da Vesper');
+      findPage(d, tr('a despensa da Vesper'));
     } else {
       s.rival = { ...s.rival, losses: s.rival.losses + 1 };
     }
@@ -111,8 +112,8 @@ export function createVisitorOrder(d: Draft) {
   const qty = 3;
   s.order = {
     id: nextId(d, 'o'),
-    client: 'Visitante Misterioso',
-    text: 'Preciso disto antes do anoitecer. Pago com algo que não se vende em loja nenhuma.',
+    client: tr('Visitante Misterioso'),
+    text: tr('Preciso disto antes do anoitecer. Pago com algo que não se vende em loja nenhuma.'),
     recipeId,
     qty,
     rewardCoins: Math.round(r.basePrice * qty * 2),
@@ -145,12 +146,12 @@ export function addIngredients(s: GameSave, items: { ingredientId: string; qty: 
 export function sendExpedition(d: Draft, dest: string): boolean {
   const s = d.s;
   const info = EXPEDITIONS_BY_ID[dest];
-  if (!info) return fail(d, 'Destino desconhecido.');
-  if (!canExplore(s)) return fail(d, 'Contrate o corvo entregador para mandar expedições.');
-  if (s.level < info.minLevel) return fail(d, `Esse destino abre no nível ${info.minLevel}.`);
-  if (s.expedition) return fail(d, 'O corvo já está em viagem.');
-  if (s.phase === 'fechamento') return fail(d, 'O corvo sai de manhã cedo. Mande amanhã.');
-  if (s.coins < info.cost) return fail(d, 'Moedas insuficientes para as provisões.');
+  if (!info) return fail(d, tr('Destino desconhecido.'));
+  if (!canExplore(s)) return fail(d, tr('Contrate o corvo entregador para mandar expedições.'));
+  if (s.level < info.minLevel) return fail(d, tr('Esse destino abre no nível {0}.', info.minLevel));
+  if (s.expedition) return fail(d, tr('O corvo já está em viagem.'));
+  if (s.phase === 'fechamento') return fail(d, tr('O corvo sai de manhã cedo. Mande amanhã.'));
+  if (s.coins < info.cost) return fail(d, tr('Moedas insuficientes para as provisões.'));
   s.coins -= info.cost;
   s.stats.ingredientCost += info.cost;
   s.expedition = { dest, returnDay: s.day + info.days };

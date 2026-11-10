@@ -220,6 +220,9 @@ def door():
 
 
 TINY_FONT = {
+    # Letras extras para as placas em inglês (OPEN / CLOSED).
+    'L': ['100', '100', '100', '100', '111'], 'N': ['101', '111', '111', '101', '101'],
+    'P': ['110', '101', '110', '100', '100'], 'S': ['011', '100', '010', '001', '110'],
     'A': ['010', '101', '111', '101', '101'], 'B': ['110', '101', '110', '101', '110'],
     'C': ['011', '100', '100', '100', '011'], 'D': ['110', '101', '101', '101', '110'],
     'E': ['111', '100', '110', '100', '111'], 'F': ['111', '100', '110', '100', '100'],
@@ -237,8 +240,8 @@ def tiny_text(c, text, x, y, col):
         x += 4
 
 
-def sign(open_):
-    text = 'ABERTO' if open_ else 'FECHADO'
+def sign(open_, en=False):
+    text = ('OPEN' if open_ else 'CLOSED') if en else ('ABERTO' if open_ else 'FECHADO')
     w = len(text) * 4 - 1 + 8
     c = Canvas(w, 14)
     c.vline(w // 2 - 4, 0, 4, 'k2'); c.vline(w // 2 + 4, 0, 4, 'k2'); c.px(w // 2, 0, 'k3')

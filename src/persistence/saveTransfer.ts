@@ -1,6 +1,7 @@
 import type { GameSave } from '../domain/models/types';
 import { migrateSave } from './migrations';
 
+import { GAME_NAME, tr } from '../i18n';
 /**
  * Exportar e importar a partida como texto, para levar o save entre navegadores e aparelhos
  * (por exemplo, do link do Claude para o GitHub Pages ou para o celular).
@@ -50,7 +51,7 @@ export async function importSaveCode(input: string): Promise<GameSave> {
   let raw: unknown;
   try {
     if (text.startsWith(PREFIX_GZIP)) {
-      if (!canGzip()) throw new SaveImportError('Este navegador não consegue abrir códigos comprimidos.');
+      if (!canGzip()) throw new SaveImportError(tr('Este navegador não consegue abrir códigos comprimidos.'));
       const bytes = await pipe(fromBase64Url(text.slice(PREFIX_GZIP.length)), new DecompressionStream('gzip'));
       raw = JSON.parse(new TextDecoder().decode(bytes));
     } else if (text.startsWith(PREFIX_PLAIN)) {
@@ -61,16 +62,16 @@ export async function importSaveCode(input: string): Promise<GameSave> {
     }
   } catch (err) {
     if (err instanceof SaveImportError) throw err;
-    throw new SaveImportError('O código não parece um save do Alchemist’s Corner. Confira se copiou ele inteiro.');
+    throw new SaveImportError(tr('O código não parece um save do {0}. Confira se copiou ele inteiro.', GAME_NAME));
   }
   const save = migrateSave(raw);
-  if (!save) throw new SaveImportError('Esse save é de uma versão mais nova do jogo ou está corrompido.');
+  if (!save) throw new SaveImportError(tr('Esse save é de uma versão mais nova do jogo ou está corrompido.'));
   return save;
 }
 
 /** Resumo curto mostrado antes de confirmar a importação. */
 export const describeSave = (s: GameSave) =>
-  `Dia ${s.day} · nível ${s.level} · ${Math.floor(s.coins)} moedas`;
+  tr('Dia {0} · nível {1} · {2} moedas', s.day, s.level, Math.floor(s.coins));
 
 /** Nome do arquivo de exportação, com a data. */
 export const saveFileName = (s: GameSave, now = new Date()) =>

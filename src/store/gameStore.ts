@@ -7,6 +7,7 @@ import { RECIPES_BY_ID } from '../domain/data/recipes';
 import { REGULARS_BY_ID, SEASONS, TIP_HEARTS } from '../domain/data/world';
 import { ACHIEVEMENTS, giftLabel } from '../domain/rules/world';
 
+import { tr } from '../i18n';
 /** Conquistas mostradas em tela cheia (src/features/celebrate/Milestone.tsx). */
 const BIG_ACHIEVEMENT_IDS = ['primeira-venda', 'mil-moedas', 'primeiro-contrato', 'amigo', 'maestria', 'rival-vencida'];
 import { goalText } from '../domain/rules/goals';
@@ -150,42 +151,42 @@ export const useGameStore = create<StoreState>()(
       switch (e.type) {
         case 'ERROR': return toast(e.message, 'warn');
         case 'PURCHASE':
-          toast(`Comprou ${e.qty}× ${INGREDIENTS_BY_ID[e.ingredientId].name} por ${e.cost} moedas.`);
+          toast(tr('Comprou {0}× {1} por {2} moedas.', e.qty, INGREDIENTS_BY_ID[e.ingredientId].name, e.cost));
           return advanceTutorial(3);
         case 'BREW_STARTED':
-          if (e.by === 'aprendiz') return toast(`O aprendiz pôs no fogo: ${RECIPES_BY_ID[e.recipeId].name} (${e.batches} lote${e.batches > 1 ? 's' : ''}).`);
-          toast(`O caldeirão começou a ferver: ${RECIPES_BY_ID[e.recipeId].name}.${(get().save?.level ?? 0) >= STIR_LEVEL ? ' Dê o toque de mestre para um lote melhor!' : ''}`);
+          if (e.by === 'aprendiz') return toast(tr('O aprendiz pôs no fogo: {0} ({1} {2}).', RECIPES_BY_ID[e.recipeId].name, e.batches, e.batches > 1 ? tr('lotes') : tr('lote')));
+          toast(tr('O caldeirão começou a ferver: {0}.{1}', RECIPES_BY_ID[e.recipeId].name, (get().save?.level ?? 0) >= STIR_LEVEL ? tr(' Dê o toque de mestre para um lote melhor!') : ''));
           return advanceTutorial(4);
         case 'RAVEN_DELIVERY': {
           const units = e.items.reduce((n, i) => n + i.qty, 0);
-          return toast(`O corvo trouxe ${units} ingredientes do fornecedor (−${e.cost} moedas).`);
+          return toast(tr('O corvo trouxe {0} ingredientes do fornecedor (−{1} moedas).', units, e.cost));
         }
         case 'HELPER_TOGGLED':
-          return toast(`${UPGRADES_BY_ID[e.upgradeId].name}: ${e.on ? 'de volta ao trabalho!' : 'descansando.'}`);
+          return toast(`${UPGRADES_BY_ID[e.upgradeId].name}: ${e.on ? tr('de volta ao trabalho!') : tr('descansando.')}`);
         case 'BREW_DONE':
-          if (e.quality) return toast(`${e.qty}× ${RECIPES_BY_ID[e.recipeId].name} ${e.quality === 3 ? 'primorosas ✦✦' : 'finas ✦'} nas prateleiras! Vendem ${e.quality === 3 ? '50' : '20'}% mais caro.`, 'gold');
-          return toast(`${e.qty}× ${RECIPES_BY_ID[e.recipeId].name} prontas nas prateleiras!`, 'ok');
+          if (e.quality) return toast(tr('{0}× {1} {2} nas prateleiras! Vendem {3}% mais caro.', e.qty, RECIPES_BY_ID[e.recipeId].name, e.quality === 3 ? tr('primorosas ✦✦') : tr('finas ✦'), e.quality === 3 ? '50' : '20'), 'gold');
+          return toast(tr('{0}× {1} prontas nas prateleiras!', e.qty, RECIPES_BY_ID[e.recipeId].name), 'ok');
         case 'STIRRED':
-          return toast(e.hits >= 3 ? '🥄 Mexida perfeita! O lote sai Primoroso.' : e.hits === 2 ? '🥄 Boa mexida: o lote sai Fino.' : '🥄 A mexida saiu torta. O lote sai comum.', e.hits >= 2 ? 'gold' : undefined);
+          return toast(e.hits >= 3 ? tr('🥄 Mexida perfeita! O lote sai Primoroso.') : e.hits === 2 ? tr('🥄 Boa mexida: o lote sai Fino.') : tr('🥄 A mexida saiu torta. O lote sai comum.'), e.hits >= 2 ? 'gold' : undefined);
         case 'PAGE_FOUND':
-          return toast(`📜 Uma página rasgada veio com ${e.source}: uma lenda perdida leva ${INGREDIENTS_BY_ID[e.ingredientId].name}. Veja em Receitas.`, 'gold');
+          return toast(tr('📜 Uma página rasgada veio com {0}: uma lenda perdida leva {1}. Veja em Receitas.', e.source, INGREDIENTS_BY_ID[e.ingredientId].name), 'gold');
         case 'MYSTERY_ARRIVED':
           // O cartão do cliente já mostra o viajante e a charada: um aviso no topo só repetiria.
           return;
         case 'MYSTERY_SOLVED':
-          return toast(`❓ Charada resolvida! Era ${RECIPES_BY_ID[e.recipeId].name}: +${e.coins} moedas e +${e.crystals} cristais.`, 'gold');
+          return toast(tr('❓ Charada resolvida! Era {0}: +{1} moedas e +{2} cristais.', RECIPES_BY_ID[e.recipeId].name, e.coins, e.crystals), 'gold');
         case 'SYMPTOM_WRONG':
           // O cartão do cliente já mostra a explicação nova.
           return;
         case 'MYSTERY_WRONG':
-          return toast('❓ “Não é isso…” O viajante ficou impaciente. Tente outra.', 'warn');
+          return toast(tr('❓ “Não é isso…” O viajante ficou impaciente. Tente outra.'), 'warn');
         case 'SALE':
           selectNextAfter(e.customerId);
           funnel.mark('first_sale');
           return advanceTutorial(1);
         case 'CUSTOMER_LEFT':
           selectNextAfter(e.customerId);
-          if (e.reason === 'paciencia') toast('Um cliente cansou de esperar e foi embora (−1 reputação).', 'warn');
+          if (e.reason === 'paciencia') toast(tr('Um cliente cansou de esperar e foi embora (−1 reputação).'), 'warn');
           return;
         case 'CUSTOMER_ARRIVED': {
           const s = get().save;
@@ -206,22 +207,22 @@ export const useGameStore = create<StoreState>()(
           }
           set((st) => ({ ui: { ...st.ui, modal: 'levelup', levelUp: { level: e.level, recipes: e.recipes, gift: e.gift }, paused: true } }));
           return;
-        case 'ORDER_NEW': return toast('Novo pedido especial no quadro de avisos!', 'gold');
-        case 'ORDER_DONE': return toast(`Pedido entregue! +${e.coins} moedas.`, 'gold');
-        case 'CONTRACT_OFFERED': return toast('📜 Um contrato grande chegou ao quadro de avisos!', 'gold');
-        case 'CONTRACT_ACCEPTED': return toast('Contrato aceito! Você tem 3 dias para entregar.', 'ok');
-        case 'CONTRACT_PROGRESS': return toast(`${e.delivered} poções entregues para o contrato.`, 'ok');
-        case 'CONTRACT_DONE': return toast(`Contrato cumprido! +${e.coins} moedas${e.seal ? ', 10 Cristais de luar' : ''} e um baú de ingredientes raros.`, 'gold');
-        case 'CONTRACT_FAILED': return toast(`O contrato venceu. O cliente pagou ${e.coins} pelo que recebeu e a reputação caiu.`, 'warn');
-        case 'ORDER_EXPIRED': return toast('Um pedido especial expirou. Sem problemas, outros virão.');
+        case 'ORDER_NEW': return toast(tr('Novo pedido especial no quadro de avisos!'), 'gold');
+        case 'ORDER_DONE': return toast(tr('Pedido entregue! +{0} moedas.', e.coins), 'gold');
+        case 'CONTRACT_OFFERED': return toast(tr('📜 Um contrato grande chegou ao quadro de avisos!'), 'gold');
+        case 'CONTRACT_ACCEPTED': return toast(tr('Contrato aceito! Você tem 3 dias para entregar.'), 'ok');
+        case 'CONTRACT_PROGRESS': return toast(tr('{0} poções entregues para o contrato.', e.delivered), 'ok');
+        case 'CONTRACT_DONE': return toast(tr('Contrato cumprido! +{0} moedas{1} e um baú de ingredientes raros.', e.coins, e.seal ? tr(', 10 Cristais de luar') : ''), 'gold');
+        case 'CONTRACT_FAILED': return toast(tr('O contrato venceu. O cliente pagou {0} pelo que recebeu e a reputação caiu.', e.coins), 'warn');
+        case 'ORDER_EXPIRED': return toast(tr('Um pedido especial expirou. Sem problemas, outros virão.'));
         case 'UPGRADE_BOUGHT': {
           const up = UPGRADES_BY_ID[e.upgradeId];
-          return toast(up.category === 'ajudante' ? `${up.name} contratado! Já está trabalhando na loja.` : `Melhoria instalada: ${up.name}!`, 'gold');
+          return toast(up.category === 'ajudante' ? tr('{0} contratado! Já está trabalhando na loja.', up.name) : tr('Melhoria instalada: {0}!', up.name), 'gold');
         }
         case 'DISCOVERY':
           set((st) => ({ ui: { ...st.ui, lastHint: null } }));
-          if (e.legend) return toast(`📜 LENDA DESCOBERTA! ${RECIPES_BY_ID[e.recipeId].name} saiu do caldeirão. +5 cristais, e os clientes já ouviram falar.`, 'gold');
-          return toast(`Descoberta! ${RECIPES_BY_ID[e.recipeId].name} foi anotada no livro.`, 'gold');
+          if (e.legend) return toast(tr('📜 LENDA DESCOBERTA! {0} saiu do caldeirão. +5 cristais, e os clientes já ouviram falar.', RECIPES_BY_ID[e.recipeId].name), 'gold');
+          return toast(tr('Descoberta! {0} foi anotada no livro.', RECIPES_BY_ID[e.recipeId].name), 'gold');
         case 'EXPERIMENT_FAILED':
           set((st) => ({ ui: { ...st.ui, lastHint: e.hint } }));
           return;
@@ -234,67 +235,67 @@ export const useGameStore = create<StoreState>()(
           return;
         }
         case 'MASTERY_STAR':
-          return toast(`Maestria! ${RECIPES_BY_ID[e.recipeId].name} agora tem ${'★'.repeat(e.stars)}: clientes pagam mais por ela.${e.stars >= 5 ? ' Receita dominada: +10 Cristais de luar.' : ''}`, 'gold');
+          return toast(tr('Maestria! {0} agora tem {1}: clientes pagam mais por ela.{2}', RECIPES_BY_ID[e.recipeId].name, '★'.repeat(e.stars), e.stars >= 5 ? tr(' Receita dominada: +10 Cristais de luar.') : ''), 'gold');
         case 'MASTER_RANK':
-          return toast(`Grau de Mestre ${e.rank}! Mais 10 Cristais de luar.`, 'gold');
+          return toast(tr('Grau de Mestre {0}! Mais 10 Cristais de luar.', e.rank), 'gold');
         case 'TALENT_LEARNED':
-          return toast(`Talento aprendido: ${TALENTS_BY_ID[e.talentId].name} (grau ${e.rank}).`, 'gold');
+          return toast(tr('Talento aprendido: {0} (grau {1}).', TALENTS_BY_ID[e.talentId].name, e.rank), 'gold');
         case 'SEAL_BOUGHT':
-          return toast(`A Guilda dos Alquimistas agradece a doação de ${e.cost} moedas: +10 Cristais de luar!`, 'gold');
+          return toast(tr('A Guilda dos Alquimistas agradece a doação de {0} moedas: +10 Cristais de luar!', e.cost), 'gold');
         case 'FESTIVAL_SPONSORED':
-          return toast(`Festival patrocinado (−${e.cost} moedas)! Amanhã a cidade estará em festa.`, 'gold');
+          return toast(tr('Festival patrocinado (−{0} moedas)! Amanhã a cidade estará em festa.', e.cost), 'gold');
         case 'GREENHOUSE_HARVEST': {
           const units = e.items.reduce((n, i) => n + i.qty, 0);
-          return toast(`A estufa rendeu ${units} ervas fresquinhas para o armário.`, 'ok');
+          return toast(tr('A estufa rendeu {0} ervas fresquinhas para o armário.', units), 'ok');
         }
         case 'REGULAR_HEART': {
           const r = REGULARS_BY_ID[e.regularId];
           // Capítulo fechado: a frase final da história é a recompensa que se lê.
           const ch = e.chapter !== undefined ? chapterFor(e.regularId, e.chapter) : null;
-          if (ch) return toast(`📖 ${r.name.split(',')[0]} · ${ch.title}: “${ch.closing}”${e.hearts === TIP_HEARTS ? ' Agora deixa gorjeta!' : ''}`, 'gold');
-          if (e.hearts === TIP_HEARTS && !e.tip) return toast(`${r.name} ganhou ${TIP_HEARTS} corações: agora deixa gorjeta!`, 'ok');
+          if (ch) return toast(`📖 ${r.name.split(',')[0]} · ${ch.title}: “${ch.closing}”${e.hearts === TIP_HEARTS ? tr(' Agora deixa gorjeta!') : ''}`, 'gold');
+          if (e.hearts === TIP_HEARTS && !e.tip) return toast(tr('{0} ganhou {1} corações: agora deixa gorjeta!', r.name, TIP_HEARTS), 'ok');
           return;
         }
         case 'REGULAR_GIFT': {
           const r = REGULARS_BY_ID[e.regularId];
-          return toast(`💛 ${r.name} virou amigo da loja! "${r.thanks}" (+${giftLabel(r)})`, 'gold');
+          return toast(tr('💛 {0} virou amigo da loja! "{1}" (+{2})', r.name, r.thanks, giftLabel(r)), 'gold');
         }
         case 'ACHIEVEMENT': {
           const a = ACHIEVEMENTS.find((x) => x.id === e.id);
           // As grandes viram um momento na tela (Milestone); aqui fica só o aviso das outras.
-          return a && !BIG_ACHIEVEMENT_IDS.includes(a.id) ? toast(`🏆 Conquista no álbum: ${a.name}!`, 'gold') : undefined;
+          return a && !BIG_ACHIEVEMENT_IDS.includes(a.id) ? toast(tr('🏆 Conquista no álbum: {0}!', a.name), 'gold') : undefined;
         }
         case 'CAT_PETTED':
-          return e.lucky ? toast('O gato ronronou. Sorte do dia: +1 reputação!', 'ok') : undefined;
+          return e.lucky ? toast(tr('O gato ronronou. Sorte do dia: +1 reputação!'), 'ok') : undefined;
         case 'SEASON_STARTED': {
           const se = SEASONS.find((x) => x.id === e.season);
-          return se ? toast(`${se.icon} Chegou ${se.id === 'verao' ? 'o' : se.id === 'outono' ? 'o' : se.id === 'inverno' ? 'o' : 'a'} ${se.name.toLowerCase()}! ${se.text}`, 'gold') : undefined;
+          return se ? toast(tr('{0} Chegou {1} {2}! {3}', se.icon, se.id === 'verao' ? 'o' : se.id === 'outono' ? 'o' : se.id === 'inverno' ? 'o' : 'a', se.name.toLowerCase(), se.text), 'gold') : undefined;
         }
         case 'RIVAL_RESULT':
           return e.win
-            ? toast(`🏆 Você venceu a Madame Vesper na semana (${Math.round(e.me)} × ${Math.round(e.her)})! +${e.coins} moedas e um mimo da despensa dela.`, 'gold')
-            : toast(`A Madame Vesper venceu a semana (${Math.round(e.her)} × ${Math.round(e.me)}). Revanche amanhã!`, 'warn');
+            ? toast(tr('🏆 Você venceu a Madame Vesper na semana ({0} × {1})! +{2} moedas e um mimo da despensa dela.', Math.round(e.me), Math.round(e.her), e.coins), 'gold')
+            : toast(tr('A Madame Vesper venceu a semana ({0} × {1}). Revanche amanhã!', Math.round(e.her), Math.round(e.me)), 'warn');
         case 'EXPEDITION_SENT': {
           const x = EXPEDITIONS_BY_ID[e.dest];
-          return toast(`🐦‍⬛ O corvo partiu para ${x.name}. Volta ${x.days === 1 ? 'amanhã' : `em ${x.days} dias`}.`, 'ok');
+          return toast(tr('🐦‍⬛ O corvo partiu para {0}. Volta {1}.', x.name, x.days === 1 ? tr('amanhã') : tr('em {0} dias', x.days)), 'ok');
         }
         case 'EXPEDITION_BACK': {
           const x = EXPEDITIONS_BY_ID[e.dest];
           const units = e.items.reduce((n, i) => n + i.qty, 0);
           const f = e.find ? FINDS_BY_ID[e.find] : null;
-          return toast(`🐦‍⬛ O corvo voltou de ${x.name} com ${units} ingredientes${f ? ` e um achado: ${f.icon} ${f.name}!` : '.'}`, 'gold');
+          return toast(tr('🐦‍⬛ O corvo voltou de {0} com {1} ingredientes{2}', x.name, units, f ? tr(' e um achado: {0} {1}!', f.icon, f.name) : '.'), 'gold');
         }
         case 'FIND': {
           const f = FINDS_BY_ID[e.id];
-          return f ? toast(`${f.icon} O Visitante deixou um achado lendário: ${f.name}!`, 'gold') : undefined;
+          return f ? toast(tr('{0} O Visitante deixou um achado lendário: {1}!', f.icon, f.name), 'gold') : undefined;
         }
         case 'GOAL_DONE': {
           const g = get().save?.goals.list.find((x) => x.id === e.goalId);
-          return toast(`🎯 Meta cumprida${g ? `: ${goalText(g)}` : ''}! +${e.coins} moedas, +${e.xp} XP${e.allDone ? '. As três metas do dia estão feitas!' : ''}`, 'gold');
+          return toast(tr('🎯 Meta cumprida{0}! +{1} moedas, +{2} XP{3}', g ? `: ${goalText(g)}` : '', e.coins, e.xp, e.allDone ? tr('. As três metas do dia estão feitas!') : ''), 'gold');
         }
         case 'CHEST_OPENED': {
           const units = e.items.reduce((n, i) => n + i.qty, 0);
-          return toast(`🎁 Baú da semana aberto: +${e.coins} moedas e ${units} ingredientes raros!`, 'gold');
+          return toast(tr('🎁 Baú da semana aberto: +{0} moedas e {1} ingredientes raros!', e.coins, units), 'gold');
         }
         case 'DAY_STARTED':
           if (e.event === 'festa-estacao') {
@@ -303,41 +304,41 @@ export const useGameStore = create<StoreState>()(
           } else if (e.event) toast(`${DAY_EVENTS[e.event].name}: ${DAY_EVENTS[e.event].text}`, 'gold');
           return advanceTutorial(6);
         case 'VIP_ARRIVED':
-          return toast(`✨ ${e.name} entrou na loja!`, 'gold');
+          return toast(tr('✨ {0} entrou na loja!', e.name), 'gold');
         case 'VIP_SERVED':
-          return toast(e.kind === 'estreia' ? `👑 ${e.name} pagou ${e.coins} moedas, dez vezes o preço! E deixou uma carta…` : `🎉 ${e.name} pagou ${e.coins} moedas pela poção da festa!`, 'gold');
+          return toast(e.kind === 'estreia' ? tr('👑 {0} pagou {1} moedas, dez vezes o preço! E deixou uma carta…', e.name, e.coins) : tr('🎉 {0} pagou {1} moedas pela poção da festa!', e.name, e.coins), 'gold');
         case 'VISIT_GIFT':
-          return toast(`🎁 Presente de visita nº ${e.n} aberto!`, 'gold');
+          return toast(tr('🎁 Presente de visita nº {0} aberto!', e.n), 'gold');
         case 'CRYSTALS':
-          return e.reason === 'feitos' || e.reason === 'selo' ? undefined : toast(`🌙 +${e.n} Cristais de luar`, 'ok');
+          return e.reason === 'feitos' || e.reason === 'selo' ? undefined : toast(tr('🌙 +{0} Cristais de luar', e.n), 'ok');
         case 'TRACK_TIER':
-          return toast(`🌙 Trilha da Temporada, recompensa ${e.tier}: ${e.reward}!`, 'gold');
+          return toast(tr('🌙 Trilha da Temporada, recompensa {0}: {1}!', e.tier, e.reward), 'gold');
         case 'ITEM_GRANTED':
-          return toast(`🎀 Decoração nova: ${CATALOG_BY_ID[e.itemId]?.name ?? e.itemId}! Coloque na aba Decoração.`, 'gold');
+          return toast(tr('🎀 Decoração nova: {0}! Coloque na aba Decoração.', CATALOG_BY_ID[e.itemId]?.name ?? e.itemId), 'gold');
         case 'DECOR_BOUGHT':
-          return toast(`${CATALOG_BY_ID[e.itemId]?.name ?? 'Decoração'} já está na loja!`, 'ok');
+          return toast(tr('{0} já está na loja!', CATALOG_BY_ID[e.itemId]?.name ?? tr('Decoração')), 'ok');
         case 'GIFT_SENT':
-          return toast(e.first ? '💌 Presente pronto! Você ganhou o quadro “Laço da amizade”.' : '💌 Presente pronto para mandar!', 'gold');
+          return toast(e.first ? tr('💌 Presente pronto! Você ganhou o quadro “Laço da amizade”.') : tr('💌 Presente pronto para mandar!'), 'gold');
         case 'GIFT_REDEEMED':
-          return toast(`💌 Presente de ${e.from} aberto: ingredientes raros e ${e.crystals} cristais!`, 'gold');
+          return toast(tr('💌 Presente de {0} aberto: ingredientes raros e {1} cristais!', e.from, e.crystals), 'gold');
         case 'CHALLENGE_STARTED':
-          return toast(`⚔️ Desafio da semana ${e.week}: abra a loja quando quiser. Os clientes de hoje são os mesmos para todo mundo!`, 'gold');
+          return toast(tr('⚔️ Desafio da semana {0}: abra a loja quando quiser. Os clientes de hoje são os mesmos para todo mundo!', e.week), 'gold');
         case 'CHALLENGE_DONE':
-          return toast(`⚔️ Desafio da semana: ${e.score} pontos${e.best ? ' (seu recorde)' : ''}! Compartilhe o placar.`, 'gold');
+          return toast(tr('⚔️ Desafio da semana: {0} pontos{1}! Compartilhe o placar.', e.score, e.best ? tr(' (seu recorde)') : ''), 'gold');
         case 'ROYAL_INVITE':
-          return toast('📯 Uma carta com o selo da Coroa chegou: o Concurso Real de Alquimia começou!', 'gold');
+          return toast(tr('📯 Uma carta com o selo da Coroa chegou: o Concurso Real de Alquimia começou!'), 'gold');
         case 'ROYAL_PROGRESS':
-          return e.progress < e.goal ? toast(`👑 Concurso Real: ${e.progress}/${e.goal}`, 'ok') : undefined;
+          return e.progress < e.goal ? toast(tr('👑 Concurso Real: {0}/{1}', e.progress, e.goal), 'ok') : undefined;
         case 'ROYAL_STREAK_LOST':
-          return toast('👑 Um nobre foi embora: a sequência do baile recomeçou.', 'warn');
+          return toast(tr('👑 Um nobre foi embora: a sequência do baile recomeçou.'), 'warn');
         case 'ROYAL_RETRY':
-          return toast(`👑 O prazo de “${ROYAL_CHAPTERS[e.chapter].title}” venceu. A Rainha deu mais tempo, e o que você entregou continua valendo.`, 'warn');
+          return toast(tr('👑 O prazo de “{0}” venceu. A Rainha deu mais tempo, e o que você entregou continua valendo.', ROYAL_CHAPTERS[e.chapter].title), 'warn');
         case 'VILLAGE_STAGE': {
           const p = VILLAGE_BY_ID[e.projectId];
-          return toast(e.stage >= 3 ? `${p.icon} ${p.name} inaugurada! ${p.bonusText}` : `${p.icon} ${p.name}: ${STAGE_NAMES[e.stage - 1].toLowerCase()} pronta.`, 'gold');
+          return toast(e.stage >= 3 ? tr('{0} {1} inaugurada! {2}', p.icon, p.name, p.bonusText) : tr('{0} {1}: {2} pronta.', p.icon, p.name, STAGE_NAMES[e.stage - 1].toLowerCase()), 'gold');
         }
         case 'RECORD':
-          return e.kind === 'bestSale' ? toast(`🏅 Recorde pessoal: venda de ${e.value} moedas!`, 'gold') : undefined;
+          return e.kind === 'bestSale' ? toast(tr('🏅 Recorde pessoal: venda de {0} moedas!', e.value), 'gold') : undefined;
         default:
           return;
       }
@@ -395,7 +396,7 @@ export const useGameStore = create<StoreState>()(
           console.error(err);
           set({
             status: 'menu',
-            storageError: 'Não foi possível acessar o armazenamento do navegador. O progresso não será salvo.',
+            storageError: tr('Não foi possível acessar o armazenamento do navegador. O progresso não será salvo.'),
           });
         }
       },
@@ -471,7 +472,7 @@ function flushSave() {
   if (!data) return;
   saveRepository.save(data).catch((err) => {
     console.error(err);
-    useGameStore.setState({ storageError: 'Falha ao salvar a partida neste navegador.' });
+    useGameStore.setState({ storageError: tr('Falha ao salvar a partida neste navegador.') });
   });
 }
 

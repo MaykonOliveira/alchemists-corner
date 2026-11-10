@@ -2,13 +2,14 @@
 import type { DayReport, GameSave, RecordKind, Records } from '../models/types';
 import type { Draft } from './context';
 
+import { tr } from '../../i18n';
 /** A partir deste dia os recordes começam a ser comemorados (antes disso todo dia seria recorde). */
 export const RECORD_FROM_DAY = 4;
 
 export const RECORD_LABEL: Record<RecordKind, string> = {
-  revenue: 'Maior faturamento num dia',
-  served: 'Mais clientes atendidos num dia',
-  bestSale: 'Venda mais cara',
+  revenue: tr('Maior faturamento num dia'),
+  served: tr('Mais clientes atendidos num dia'),
+  bestSale: tr('Venda mais cara'),
 };
 
 export const emptyRecords = (): Records => ({ revenue: 0, served: 0, bestSale: 0 });

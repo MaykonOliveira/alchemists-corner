@@ -7,6 +7,7 @@ import { WORLD_H, WORLD_W } from './phaser/art/sprites';
 import { createGameConfig } from './phaser/config';
 import { setCurrentGame } from './gameRef';
 
+import { tr } from '../i18n';
 /** Maior escala inteira que cabe no espaço disponível (PRD 6.3). */
 function fitZoom(el: HTMLElement) {
   const { width, height } = el.getBoundingClientRect();
@@ -50,7 +51,7 @@ export function PhaserGame() {
   return (
     <div ref={hostRef} className="stage-host">
       <div className="stage" style={{ position: 'relative' }}>
-        <div ref={canvasRef} className="stage-canvas" aria-label="Interior da loja" role="img" />
+        <div ref={canvasRef} className="stage-canvas" aria-label={tr('Interior da loja')} role="img" />
         <HotspotTooltip />
         <SceneSpotlight />
         <CauldronAlert />

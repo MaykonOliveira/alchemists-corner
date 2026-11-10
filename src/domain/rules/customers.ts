@@ -21,6 +21,7 @@ import { REGULARS_BY_ID } from '../data/world';
 import { BALL_NOBLE_BOOST } from '../data/royal';
 import { royalChapter, royalOnLost, royalOnSale, royalWon } from './royal';
 
+import { tr } from '../../i18n';
 export const MAX_CUSTOMERS = 3;
 /** Clientes que cabem no balcão (o balcão duplo abre espaço para mais um). */
 export const maxCustomers = (s: GameSave) => MAX_CUSTOMERS + (has(s, 'balcao-duplo') ? 1 : 0);
@@ -102,7 +103,7 @@ export function spawnCustomer(d: Draft) {
       patienceMs: Math.round(info.patienceMs * 1.3 * patienceFactor(s)),
       waitedMs: 0,
       offer: null,
-      remark: promised ? 'Como prometi na carta! Hoje pago bem pelo de sempre.' : r.greeting,
+      remark: promised ? tr('Como prometi na carta! Hoje pago bem pelo de sempre.') : r.greeting,
       regularId: r.id,
     };
     // História do freguês (auditoria P1.6): enquanto não é amigo, cada visita é um capítulo, contado por sintoma.
@@ -169,7 +170,7 @@ export function spawnCustomer(d: Draft) {
     if (pool.length) customer.wantedRecipeId = lesson === 'nobre' ? pool[pool.length - 1] : pool[0];
     // A pechincha: um morador de bolso curto, que não alcança a etiqueta.
     if (lesson === 'pechincha') customer.budgetFactor = 0.85;
-    customer.remark = lesson === 'nobre' ? 'Ouvi falar desta loja na corte. Quero o melhor que você tiver.' : 'Preciso de uma, mas o dinheiro está curto este mês…';
+    customer.remark = lesson === 'nobre' ? tr('Ouvi falar desta loja na corte. Quero o melhor que você tiver.') : tr('Preciso de uma, mas o dinheiro está curto este mês…');
   }
   // Quem conta o sintoma não diz o nome da poção: o diagnóstico fica com o jogador.
   else if (s.day >= SYMPTOM_DAY && !firstEver && SYMPTOMS[wanted] && (lesson === 'sintoma' || ctx.random() < SYMPTOM_SHARE)) {
@@ -292,13 +293,13 @@ export function askOptions(s: GameSave, recipeId: string) {
 export function serveCustomer(d: Draft, customerId: string, recipeId: string, opts: { basePrice?: boolean; price?: number } = {}): boolean {
   const s = d.s;
   const c = s.customers.find((x) => x.id === customerId);
-  if (!c) return fail(d, 'Esse cliente já foi embora.');
-  if (s.phase !== 'expediente') return fail(d, 'A loja está fechada.');
+  if (!c) return fail(d, tr('Esse cliente já foi embora.'));
+  if (s.phase !== 'expediente') return fail(d, tr('A loja está fechada.'));
   const stack = s.potions.find((p) => p.recipeId === recipeId);
-  if (!stack || stack.quantity < 1 || !stack.forSale) return fail(d, 'Essa poção não está à venda.');
+  if (!stack || stack.quantity < 1 || !stack.forSale) return fail(d, tr('Essa poção não está à venda.'));
   if (c.mystery) {
     if (recipeId !== c.wantedRecipeId) {
-      c.remark = `Hmm… não era bem isso. ${RECIPES_BY_ID[c.wantedRecipeId].riddle}`;
+      c.remark = tr('Hmm… não era bem isso. {0}', RECIPES_BY_ID[c.wantedRecipeId].riddle);
       c.waitedMs += c.patienceMs * 0.15;
       d.events.push({ type: 'MYSTERY_WRONG', customerId });
       return true;
@@ -317,7 +318,7 @@ export function serveCustomer(d: Draft, customerId: string, recipeId: string, op
     return true;
   }
   if (!suits(c, recipeId)) {
-    c.remark = 'Hmm… não é bem disso que eu preciso.';
+    c.remark = tr('Hmm… não é bem disso que eu preciso.');
     d.events.push({ type: 'CUSTOMER_REFUSED', customerId, reason: 'produto' });
     return true;
   }
@@ -340,7 +341,7 @@ export function serveCustomer(d: Draft, customerId: string, recipeId: string, op
   if (c.regularId && price > tag && !opts.basePrice) {
     c.offer = { recipeId, price: tag };
     gainReputation(d, -1);
-    c.remark = `Logo comigo? Pago o de sempre: ${tag} moedas.`;
+    c.remark = tr('Logo comigo? Pago o de sempre: {0} moedas.', tag);
     d.events.push({ type: 'COUNTER_OFFER', customerId, price: tag });
     return true;
   }
@@ -354,10 +355,10 @@ export function serveCustomer(d: Draft, customerId: string, recipeId: string, op
   } else if (price <= max * margin) {
     c.offer = { recipeId, price: max };
     if (greedy) gainReputation(d, -1);
-    c.remark = greedy ? `Acima da etiqueta?! Pago ${max}, e olhe lá.` : `Está um pouco caro… Faz por ${max} moedas?`;
+    c.remark = greedy ? tr('Acima da etiqueta?! Pago {0}, e olhe lá.', max) : tr('Está um pouco caro… Faz por {0} moedas?', max);
     d.events.push({ type: 'COUNTER_OFFER', customerId, price: max });
   } else {
-    c.remark = greedy ? 'Acima da etiqueta? Isso é abuso. Passar bem.' : 'Caro demais para mim. Fica para outro dia.';
+    c.remark = greedy ? tr('Acima da etiqueta? Isso é abuso. Passar bem.') : tr('Caro demais para mim. Fica para outro dia.');
     // Quem sai ofendido conta para a vizinhança.
     if (greedy) gainReputation(d, -2);
     d.events.push({ type: 'CUSTOMER_REFUSED', customerId, reason: 'preco' });
@@ -369,8 +370,8 @@ export function serveCustomer(d: Draft, customerId: string, recipeId: string, op
 export function acceptOffer(d: Draft, customerId: string): boolean {
   const c = d.s.customers.find((x) => x.id === customerId);
   if (!c?.offer) return false;
-  if (d.s.phase !== 'expediente') return fail(d, 'A loja está fechada.');
-  if (potionStock(d.s, c.offer.recipeId) < 1) return fail(d, 'Essa poção acabou.');
+  if (d.s.phase !== 'expediente') return fail(d, tr('A loja está fechada.'));
+  if (potionStock(d.s, c.offer.recipeId) < 1) return fail(d, tr('Essa poção acabou.'));
   completeSale(d, c, c.offer.recipeId, c.offer.price);
   return true;
 }

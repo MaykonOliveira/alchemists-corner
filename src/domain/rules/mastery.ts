@@ -5,6 +5,7 @@ import { ENDLESS_TALENT_LEVEL, TALENTS_BY_ID, talentCost } from '../data/talents
 import type { GameSave } from '../models/types';
 import { fail, type Draft } from './context';
 
+import { tr } from '../../i18n';
 // ------------------------------------------------------------------ maestria
 
 /** Poções preparadas necessárias para cada estrela de maestria (1 a 5). */
@@ -63,10 +64,10 @@ export function learnTalent(d: Draft, talentId: string): boolean {
   const t = TALENTS_BY_ID[talentId];
   if (!t) return false;
   const rank = talentRank(d.s, talentId);
-  if (rank >= t.max) return fail(d, 'Este talento já está no grau máximo.');
-  if (t.endless && d.s.level < ENDLESS_TALENT_LEVEL) return fail(d, `Talentos sem fim abrem no nível ${ENDLESS_TALENT_LEVEL}.`);
+  if (rank >= t.max) return fail(d, tr('Este talento já está no grau máximo.'));
+  if (t.endless && d.s.level < ENDLESS_TALENT_LEVEL) return fail(d, tr('Talentos sem fim abrem no nível {0}.', ENDLESS_TALENT_LEVEL));
   const cost = talentCrystals(rank);
-  if (d.s.crystals < cost) return fail(d, `Faltam ${cost - d.s.crystals} Cristais de luar.`);
+  if (d.s.crystals < cost) return fail(d, tr('Faltam {0} Cristais de luar.', cost - d.s.crystals));
   d.s.crystals -= cost;
   d.s.talents[talentId] = rank + 1;
   d.events.push({ type: 'TALENT_LEARNED', talentId, rank: rank + 1 });

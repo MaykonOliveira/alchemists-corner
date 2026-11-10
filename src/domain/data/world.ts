@@ -1,5 +1,6 @@
 import type { CustomerArchetype, RecipeCategory, SeasonId } from '../models/types';
 
+import { tr } from '../../i18n';
 export type { SeasonId };
 
 /** Fregueses fiéis: sempre voltam, pedem a mesma poção e viram amigos da loja. */
@@ -18,24 +19,24 @@ export interface RegularInfo {
 }
 
 export const REGULARS: RegularInfo[] = [
-  { id: 'dona-celia', name: 'Dona Célia', archetype: 'morador', favorite: 'cura-simples', minLevel: 2,
-    greeting: 'Bom dia, querida loja! O de sempre, por favor.', gift: { ingredientId: 'orvalho-feerico', qty: 8 },
-    thanks: 'Trouxe orvalho do meu jardim. É para você!' },
-  { id: 'bram', name: 'Bram, o ferreiro', archetype: 'aventureiro', favorite: 'tonico-energia', minLevel: 2,
-    greeting: 'A forja não descansa! Me vê aquele tônico.', gift: { ingredientId: 'cristal-ambar', qty: 10 },
-    thanks: 'Achei esses cristais na mina. Fazem mais falta aqui do que lá.' },
-  { id: 'lia', name: 'Lia, aprendiz de maga', archetype: 'estudioso', favorite: 'elixir-concentracao', minLevel: 3,
-    greeting: 'Mais uma noite de estudos… O elixir de sempre?', gift: { ingredientId: 'essencia-azul', qty: 8 },
-    thanks: 'Passei na prova! Guardei um pouco de essência da academia para você.' },
-  { id: 'tobias', name: 'Tobias, o mascate', archetype: 'viajante', favorite: 'visao-noturna', minLevel: 4,
-    greeting: 'Voltei da estrada! As minas me esperam de novo.', gift: { ingredientId: 'cogumelo-lanterna', qty: 10 },
-    thanks: 'Na última viagem lembrei de você. Cogumelos fresquinhos!' },
-  { id: 'vovo-ze', name: 'Vovô Zé', archetype: 'morador', favorite: 'balsamo-calmante', minLevel: 5,
-    greeting: 'Sabe como é, na minha idade o sono é curto…', gift: { ingredientId: 'raiz-mandragora', qty: 4 },
-    thanks: 'Essa mandrágora estava no meu porão desde moço. Faça bom uso!' },
-  { id: 'condessa', name: 'Condessa Amélia', archetype: 'nobre', favorite: 'pocao-brilho', minLevel: 8,
-    greeting: 'O baile é hoje. Só confio no seu brilho.', gift: { ingredientId: 'pluma-grifo', qty: 4 },
-    thanks: 'Uma pluma de grifo do meu brasão. Você merece.' },
+  { id: 'dona-celia', name: tr('Dona Célia'), archetype: 'morador', favorite: 'cura-simples', minLevel: 2,
+    greeting: tr('Bom dia, querida loja! O de sempre, por favor.'), gift: { ingredientId: 'orvalho-feerico', qty: 8 },
+    thanks: tr('Trouxe orvalho do meu jardim. É para você!') },
+  { id: 'bram', name: tr('Bram, o ferreiro'), archetype: 'aventureiro', favorite: 'tonico-energia', minLevel: 2,
+    greeting: tr('A forja não descansa! Me vê aquele tônico.'), gift: { ingredientId: 'cristal-ambar', qty: 10 },
+    thanks: tr('Achei esses cristais na mina. Fazem mais falta aqui do que lá.') },
+  { id: 'lia', name: tr('Lia, aprendiz de maga'), archetype: 'estudioso', favorite: 'elixir-concentracao', minLevel: 3,
+    greeting: tr('Mais uma noite de estudos… O elixir de sempre?'), gift: { ingredientId: 'essencia-azul', qty: 8 },
+    thanks: tr('Passei na prova! Guardei um pouco de essência da academia para você.') },
+  { id: 'tobias', name: tr('Tobias, o mascate'), archetype: 'viajante', favorite: 'visao-noturna', minLevel: 4,
+    greeting: tr('Voltei da estrada! As minas me esperam de novo.'), gift: { ingredientId: 'cogumelo-lanterna', qty: 10 },
+    thanks: tr('Na última viagem lembrei de você. Cogumelos fresquinhos!') },
+  { id: 'vovo-ze', name: tr('Vovô Zé'), archetype: 'morador', favorite: 'balsamo-calmante', minLevel: 5,
+    greeting: tr('Sabe como é, na minha idade o sono é curto…'), gift: { ingredientId: 'raiz-mandragora', qty: 4 },
+    thanks: tr('Essa mandrágora estava no meu porão desde moço. Faça bom uso!') },
+  { id: 'condessa', name: tr('Condessa Amélia'), archetype: 'nobre', favorite: 'pocao-brilho', minLevel: 8,
+    greeting: tr('O baile é hoje. Só confio no seu brilho.'), gift: { ingredientId: 'pluma-grifo', qty: 4 },
+    thanks: tr('Uma pluma de grifo do meu brasão. Você merece.') },
 ];
 
 export const REGULARS_BY_ID: Record<string, RegularInfo> = Object.fromEntries(REGULARS.map((r) => [r.id, r]));
@@ -57,10 +58,10 @@ export interface SeasonInfo {
 }
 
 export const SEASONS: SeasonInfo[] = [
-  { id: 'primavera', name: 'Primavera', icon: '🌸', category: 'cura', text: 'Pólen no ar e joelhos ralados: poções de cura vendem mais.' },
-  { id: 'verao', name: 'Verão', icon: '☀️', category: 'vigor', text: 'Viagens longas e dias quentes: tônicos e vigor em alta.' },
-  { id: 'outono', name: 'Outono', icon: '🍂', category: 'mente', text: 'Volta às aulas na academia: elixires para a mente valem mais.' },
-  { id: 'inverno', name: 'Inverno', icon: '❄️', category: 'utilidade', text: 'Noites longas e escuras: luz, visão e utilidades em alta.' },
+  { id: 'primavera', name: tr('Primavera'), icon: '🌸', category: 'cura', text: tr('Pólen no ar e joelhos ralados: poções de cura vendem mais.') },
+  { id: 'verao', name: tr('Verão'), icon: '☀️', category: 'vigor', text: tr('Viagens longas e dias quentes: tônicos e vigor em alta.') },
+  { id: 'outono', name: tr('Outono'), icon: '🍂', category: 'mente', text: tr('Volta às aulas na academia: elixires para a mente valem mais.') },
+  { id: 'inverno', name: tr('Inverno'), icon: '❄️', category: 'utilidade', text: tr('Noites longas e escuras: luz, visão e utilidades em alta.') },
 ];
 
 /** Dias em cada estação. */
@@ -68,4 +69,4 @@ export const SEASON_DAYS = 7;
 /** Quanto a mais os clientes pagam pela categoria da estação. */
 export const SEASON_PRICE_BONUS = 1.12;
 
-export const CATEGORY_LABEL: Record<RecipeCategory, string> = { cura: 'cura', vigor: 'vigor', mente: 'mente', utilidade: 'utilidade' };
+export const CATEGORY_LABEL: Record<RecipeCategory, string> = { cura: tr('cura'), vigor: tr('vigor'), mente: tr('mente'), utilidade: tr('utilidade') };

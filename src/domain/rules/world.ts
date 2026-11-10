@@ -11,6 +11,7 @@ import { masteredRecipes } from './mastery';
 import { gainReputation, masterRank } from './progression';
 import { TALENTS } from '../data/talents';
 
+import { tr } from '../../i18n';
 // ------------------------------------------------------------------ estações
 
 /** Estação do dia: cada uma dura 7 dias, começando pela primavera. */
@@ -99,42 +100,42 @@ export interface Achievement {
 const friends = (s: GameSave) => REGULARS.filter((r) => regularState(s, r.id).hearts >= MAX_HEARTS).length;
 
 export const ACHIEVEMENTS: Achievement[] = [
-  { id: 'primeira-venda', name: 'Porta aberta', icon: '🚪', text: 'Venda a primeira poção.', done: (s) => s.lifetime.sold >= 1 },
-  { id: 'cem-vendas', name: 'Freguesia', icon: '🧪', text: 'Venda 100 poções.', done: (s) => s.lifetime.sold >= 100 },
-  { id: 'mil-vendas', name: 'Fábrica de milagres', icon: '⚗️', text: 'Venda 1.000 poções.', done: (s) => s.lifetime.sold >= 1000 },
-  { id: 'mil-moedas', name: 'Primeiro cofre', icon: '🪙', text: 'Fature 1.000 moedas.', done: (s) => s.lifetime.earned >= 1000 },
-  { id: 'cinquenta-mil', name: 'Tesouro do reino', icon: '💰', text: 'Fature 50.000 moedas.', done: (s) => s.lifetime.earned >= 50000 },
-  { id: 'nivel-5', name: 'Loja conhecida', icon: '⭐', text: 'Chegue ao nível 5.', done: (s) => s.level >= 5 },
-  { id: 'nivel-10', name: 'Loja famosa', icon: '🌟', text: 'Chegue ao nível 10.', done: (s) => s.level >= 10 },
-  { id: 'nivel-15', name: 'Lenda da cidade', icon: '👑', text: 'Chegue ao nível 15.', done: (s) => s.level >= 15 },
-  { id: 'todas-receitas', name: 'Livro completo', icon: '📖', text: 'Conheça todas as receitas.', done: (s) => RECIPES.every((r) => r.secret || r.legend || s.knownRecipes.includes(r.id)) },
-  { id: 'lendas', name: 'Guardião das lendas', icon: '📜', text: 'Descubra as seis receitas lendárias.', done: (s) => RECIPES.filter((r) => r.legend).every((r) => s.knownRecipes.includes(r.id)) },
-  { id: 'maestria', name: 'Mão de mestre', icon: '✨', text: 'Domine uma receita (5 estrelas).', done: (s) => masteredRecipes(s) >= 1 },
-  { id: 'equipe', name: 'Equipe completa', icon: '🐦', text: 'Contrate o corvo, o aprendiz e o golem.', done: (s) => [RAVEN, APPRENTICE, GOLEM].every((id) => has(s, id)) },
-  { id: 'primeiro-contrato', name: 'Palavra cumprida', icon: '📜', text: 'Cumpra um contrato.', done: (s) => s.contractsDone >= 1 },
-  { id: 'dez-contratos', name: 'Fornecedor real', icon: '🏰', text: 'Cumpra 10 contratos.', done: (s) => s.contractsDone >= 10 },
-  { id: 'torre', name: 'Torre de pedra', icon: '🔭', text: 'Conclua a expansão da loja.', done: (s) => has(s, 'torre-alquimista') },
-  { id: 'amigo', name: 'Amizade', icon: '💛', text: 'Faça um freguês virar amigo (5 corações).', done: (s) => friends(s) >= 1 },
-  { id: 'todos-amigos', name: 'Coração da cidade', icon: '💞', text: 'Seja amigo de todos os fregueses.', done: (s) => friends(s) >= REGULARS.length },
-  { id: 'um-ano', name: 'Um ano de loja', icon: '🍂', text: 'Passe pelas quatro estações.', done: (s) => s.day > SEASON_DAYS * 4 },
-  { id: 'gato', name: 'Melhor amigo', icon: '🐈', text: 'Faça 20 carinhos no gato da loja.', done: (s) => s.petCount >= 20 },
+  { id: 'primeira-venda', name: tr('Porta aberta'), icon: '🚪', text: tr('Venda a primeira poção.'), done: (s) => s.lifetime.sold >= 1 },
+  { id: 'cem-vendas', name: tr('Freguesia'), icon: '🧪', text: tr('Venda 100 poções.'), done: (s) => s.lifetime.sold >= 100 },
+  { id: 'mil-vendas', name: tr('Fábrica de milagres'), icon: '⚗️', text: tr('Venda 1.000 poções.'), done: (s) => s.lifetime.sold >= 1000 },
+  { id: 'mil-moedas', name: tr('Primeiro cofre'), icon: '🪙', text: tr('Fature 1.000 moedas.'), done: (s) => s.lifetime.earned >= 1000 },
+  { id: 'cinquenta-mil', name: tr('Tesouro do reino'), icon: '💰', text: tr('Fature 50.000 moedas.'), done: (s) => s.lifetime.earned >= 50000 },
+  { id: 'nivel-5', name: tr('Loja conhecida'), icon: '⭐', text: tr('Chegue ao nível 5.'), done: (s) => s.level >= 5 },
+  { id: 'nivel-10', name: tr('Loja famosa'), icon: '🌟', text: tr('Chegue ao nível 10.'), done: (s) => s.level >= 10 },
+  { id: 'nivel-15', name: tr('Lenda da cidade'), icon: '👑', text: tr('Chegue ao nível 15.'), done: (s) => s.level >= 15 },
+  { id: 'todas-receitas', name: tr('Livro completo'), icon: '📖', text: tr('Conheça todas as receitas.'), done: (s) => RECIPES.every((r) => r.secret || r.legend || s.knownRecipes.includes(r.id)) },
+  { id: 'lendas', name: tr('Guardião das lendas'), icon: '📜', text: tr('Descubra as seis receitas lendárias.'), done: (s) => RECIPES.filter((r) => r.legend).every((r) => s.knownRecipes.includes(r.id)) },
+  { id: 'maestria', name: tr('Mão de mestre'), icon: '✨', text: tr('Domine uma receita (5 estrelas).'), done: (s) => masteredRecipes(s) >= 1 },
+  { id: 'equipe', name: tr('Equipe completa'), icon: '🐦', text: tr('Contrate o corvo, o aprendiz e o golem.'), done: (s) => [RAVEN, APPRENTICE, GOLEM].every((id) => has(s, id)) },
+  { id: 'primeiro-contrato', name: tr('Palavra cumprida'), icon: '📜', text: tr('Cumpra um contrato.'), done: (s) => s.contractsDone >= 1 },
+  { id: 'dez-contratos', name: tr('Fornecedor real'), icon: '🏰', text: tr('Cumpra 10 contratos.'), done: (s) => s.contractsDone >= 10 },
+  { id: 'torre', name: tr('Torre de pedra'), icon: '🔭', text: tr('Conclua a expansão da loja.'), done: (s) => has(s, 'torre-alquimista') },
+  { id: 'amigo', name: tr('Amizade'), icon: '💛', text: tr('Faça um freguês virar amigo (5 corações).'), done: (s) => friends(s) >= 1 },
+  { id: 'todos-amigos', name: tr('Coração da cidade'), icon: '💞', text: tr('Seja amigo de todos os fregueses.'), done: (s) => friends(s) >= REGULARS.length },
+  { id: 'um-ano', name: tr('Um ano de loja'), icon: '🍂', text: tr('Passe pelas quatro estações.'), done: (s) => s.day > SEASON_DAYS * 4 },
+  { id: 'gato', name: tr('Melhor amigo'), icon: '🐈', text: tr('Faça 20 carinhos no gato da loja.'), done: (s) => s.petCount >= 20 },
   // Pacote E
-  { id: 'sabor-estacao', name: 'Sabor da estação', icon: '🌸', text: 'Prepare as quatro poções da estação.',
+  { id: 'sabor-estacao', name: tr('Sabor da estação'), icon: '🌸', text: tr('Prepare as quatro poções da estação.'),
     done: (s) => RECIPES.filter((r) => r.season).every((r) => (s.mastery[r.id] ?? 0) > 0) },
-  { id: 'rival-vencida', name: 'Vizinha derrotada', icon: '🏆', text: 'Vença uma semana de disputa contra a Madame Vesper.', done: (s) => s.rival.wins >= 1 },
-  { id: 'rainha-da-rua', name: 'Rainha da rua', icon: '👑', text: 'Vença 5 semanas contra a Madame Vesper.', done: (s) => s.rival.wins >= 5 },
-  { id: 'explorador', name: 'Asas longas', icon: '🗺️', text: 'Complete 5 expedições com o corvo.', done: (s) => s.expeditionsDone >= 5 },
-  { id: 'colecionador', name: 'Gabinete de curiosidades', icon: '🔮', text: 'Reúna 6 achados raros.', done: (s) => s.finds.length >= 6 },
+  { id: 'rival-vencida', name: tr('Vizinha derrotada'), icon: '🏆', text: tr('Vença uma semana de disputa contra a Madame Vesper.'), done: (s) => s.rival.wins >= 1 },
+  { id: 'rainha-da-rua', name: tr('Rainha da rua'), icon: '👑', text: tr('Vença 5 semanas contra a Madame Vesper.'), done: (s) => s.rival.wins >= 5 },
+  { id: 'explorador', name: tr('Asas longas'), icon: '🗺️', text: tr('Complete 5 expedições com o corvo.'), done: (s) => s.expeditionsDone >= 5 },
+  { id: 'colecionador', name: tr('Gabinete de curiosidades'), icon: '🔮', text: tr('Reúna 6 achados raros.'), done: (s) => s.finds.length >= 6 },
   // Conquistas de Mestre (pacote X)
-  { id: 'concurso-1', name: 'Convidada da Coroa', icon: '📯', text: 'Vença a primeira prova do Concurso Real.', done: (s) => (s.royal?.chapter ?? 0) >= 1 },
-  { id: 'grao-alquimista', name: 'Grão-Alquimista', icon: '👑', text: 'Vença o Concurso Real de Alquimia.', done: (s) => (s.royal?.chapter ?? 0) >= 5 },
-  { id: 'cinco-mil-vendas', name: 'Rio de poções', icon: '🌊', text: 'Venda 5.000 poções.', done: (s) => s.lifetime.sold >= 5000 },
-  { id: 'fortuna', name: 'Fortuna lendária', icon: '💎', text: 'Fature 250.000 moedas.', done: (s) => s.lifetime.earned >= 250000 },
-  { id: 'cinco-dominadas', name: 'Mãos de ouro', icon: '🌟', text: 'Domine 5 receitas (5 estrelas).', done: (s) => masteredRecipes(s) >= 5 },
-  { id: 'grau-10', name: 'Mestre dos mestres', icon: '🧙', text: 'Alcance o grau de Mestre 10.', done: (s) => masterRank(s.xp) >= 10 },
-  { id: 'dia-de-ouro', name: 'Dia de ouro', icon: '📈', text: 'Fature 5.000 moedas num só dia.', done: (s) => s.records.revenue >= 5000 },
-  { id: 'vila-nova', name: 'Vila renascida', icon: '🏘️', text: 'Inaugure as seis obras da vila.', done: (s) => Object.values(s.village ?? {}).filter((n) => n >= 3).length >= 6 },
-  { id: 'sem-fim', name: 'Estudo sem fim', icon: '📚', text: 'Leve um talento sem fim ao grau 5.',
+  { id: 'concurso-1', name: tr('Convidada da Coroa'), icon: '📯', text: tr('Vença a primeira prova do Concurso Real.'), done: (s) => (s.royal?.chapter ?? 0) >= 1 },
+  { id: 'grao-alquimista', name: tr('Grão-Alquimista'), icon: '👑', text: tr('Vença o Concurso Real de Alquimia.'), done: (s) => (s.royal?.chapter ?? 0) >= 5 },
+  { id: 'cinco-mil-vendas', name: tr('Rio de poções'), icon: '🌊', text: tr('Venda 5.000 poções.'), done: (s) => s.lifetime.sold >= 5000 },
+  { id: 'fortuna', name: tr('Fortuna lendária'), icon: '💎', text: tr('Fature 250.000 moedas.'), done: (s) => s.lifetime.earned >= 250000 },
+  { id: 'cinco-dominadas', name: tr('Mãos de ouro'), icon: '🌟', text: tr('Domine 5 receitas (5 estrelas).'), done: (s) => masteredRecipes(s) >= 5 },
+  { id: 'grau-10', name: tr('Mestre dos mestres'), icon: '🧙', text: tr('Alcance o grau de Mestre 10.'), done: (s) => masterRank(s.xp) >= 10 },
+  { id: 'dia-de-ouro', name: tr('Dia de ouro'), icon: '📈', text: tr('Fature 5.000 moedas num só dia.'), done: (s) => s.records.revenue >= 5000 },
+  { id: 'vila-nova', name: tr('Vila renascida'), icon: '🏘️', text: tr('Inaugure as seis obras da vila.'), done: (s) => Object.values(s.village ?? {}).filter((n) => n >= 3).length >= 6 },
+  { id: 'sem-fim', name: tr('Estudo sem fim'), icon: '📚', text: tr('Leve um talento sem fim ao grau 5.'),
     done: (s) => TALENTS.some((t) => t.endless && (s.talents[t.id] ?? 0) >= 5) },
 ];
 

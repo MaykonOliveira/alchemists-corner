@@ -7,8 +7,9 @@ import { IngredientIcon } from '../../ui/SpriteIcon';
 import { Coins, Meter, More, Stepper } from '../../ui/widgets';
 import { Icon } from '../../ui/Icon';
 
+import { tr } from '../../i18n';
 const LOW_STOCK = 2;
-const SEASON_NAME = { primavera: 'na primavera', verao: 'no verão', outono: 'no outono', inverno: 'no inverno' } as const;
+const SEASON_NAME = { primavera: tr('na primavera'), verao: tr('no verão'), outono: tr('no outono'), inverno: tr('no inverno') } as const;
 
 /**
  * Armário e fornecedor numa lista só: cada ingrediente mostra quanto você tem e o preço para comprar mais.
@@ -23,17 +24,17 @@ export function IngredientsPanel({ save }: { save: GameSave }) {
   return (
     <>
       <div className="capacity">
-        <span>Armário: {used}/{cap}</span>
-        <Meter ratio={used / cap} tone={used / cap > 0.85 ? 'warn' : 'ok'} label="Ocupação do armário" />
+        <span>{tr('Armário: ')}{used}/{cap}</span>
+        <Meter ratio={used / cap} tone={used / cap > 0.85 ? 'warn' : 'ok'} label={tr('Ocupação do armário')} />
       </div>
       <ul className="list">
         {open.map((ing) => <SupplierRow key={ing.id} save={save} id={ing.id} room={room} />)}
       </ul>
       {later.length > 0 && (
-        <More label={`Chegam nos próximos níveis (${later.length})`}>
+        <More label={tr('Chegam nos próximos níveis ({0})', later.length)}>
           <ul className="list-plain">
             {later.map((ing) => (
-              <li key={ing.id}><IngredientIcon ingredientId={ing.id} size={16} muted /> {ing.name}: nível {ing.supplierLevel}{ing.season ? `, só ${SEASON_NAME[ing.season]}` : ''}</li>
+              <li key={ing.id}><IngredientIcon ingredientId={ing.id} size={16} muted /> {ing.name}{tr(': nível ')}{ing.supplierLevel}{ing.season ? tr(', só {0}', SEASON_NAME[ing.season]) : ''}</li>
             ))}
           </ul>
         </More>
@@ -62,24 +63,23 @@ function SupplierRow({ save, id, room }: { save: GameSave; id: string; room: num
         <IngredientIcon ingredientId={ing.id} size={32} muted={locked} />
         <div className="row-main">
           <span className="row-title">{ing.name}</span>
-          <span className={`row-sub ${have <= LOW_STOCK ? 'qty-low' : ''}`}>Você tem {have}{have === 0 ? ' · acabou' : have <= LOW_STOCK ? ' · baixo' : ''}</span>
+          <span className={`row-sub ${have <= LOW_STOCK ? 'qty-low' : ''}`}>{tr('Você tem ')}{have}{have === 0 ? tr(' · acabou') : have <= LOW_STOCK ? tr(' · baixo') : ''}</span>
         </div>
         <Coins n={price} />
       </div>
       {locked ? (
-        <p className="card-text muted">O fornecedor traz este item a partir do nível {ing.supplierLevel}{ing.season ? `, só ${SEASON_NAME[ing.season]}` : ''}.</p>
+        <p className="card-text muted">{tr('O fornecedor traz este item a partir do nível ')}{ing.supplierLevel}{ing.season ? tr(', só {0}', SEASON_NAME[ing.season]) : ''}.</p>
       ) : ing.season && !maxByStock ? (
-        <p className="card-text muted small"><Icon e="🌸" /> Só {SEASON_NAME[ing.season]}{save.event === 'lua-cheia' ? '' : ' (ou no Mercado da Lua Cheia)'}.</p>
+        <p className="card-text muted small"><Icon e="🌸" />{tr(' Só ')}{SEASON_NAME[ing.season]}{save.event === 'lua-cheia' ? '' : tr(' (ou no Mercado da Lua Cheia)')}.</p>
       ) : (
         <>
           <div className="card-foot">
-            <Stepper value={q} min={1} max={max} onChange={setQty} label={`Quantidade de ${ing.name}`} />
-            <button data-tut="buy" className="btn btn-small btn-primary" disabled={!canBuy} onClick={() => dispatch({ type: 'BUY_INGREDIENT', ingredientId: id, qty: q })}>
-              Comprar · {cost}
+            <Stepper value={q} min={1} max={max} onChange={setQty} label={tr('Quantidade de {0}', ing.name)} />
+            <button data-tut="buy" className="btn btn-small btn-primary" disabled={!canBuy} onClick={() => dispatch({ type: 'BUY_INGREDIENT', ingredientId: id, qty: q })}>{tr('Comprar · ')}{cost}
             </button>
           </div>
-          <More label={left !== null && left !== undefined ? `Restam ${left} hoje · sobre` : 'Sobre'}>
-            <p className="card-text small">{ing.season && <span className="tag tag-gold">da estação</span>} {FAMILY_LABEL[ing.family]}. {ing.description}</p>
+          <More label={left !== null && left !== undefined ? tr('Restam {0} hoje · sobre', left) : tr('Sobre')}>
+            <p className="card-text small">{ing.season && <span className="tag tag-gold">{tr('da estação')}</span>} {FAMILY_LABEL[ing.family]}. {ing.description}</p>
           </More>
         </>
       )}

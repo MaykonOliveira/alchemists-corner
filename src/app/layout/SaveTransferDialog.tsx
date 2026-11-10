@@ -3,6 +3,7 @@ import type { GameSave } from '../../domain/models/types';
 import { describeSave, exportSaveCode, importSaveCode, SaveImportError, saveFileName } from '../../persistence/saveTransfer';
 import { useGameStore } from '../../store/gameStore';
 
+import { tr } from '../../i18n';
 interface Props {
   mode: 'export' | 'import';
   onClose: () => void;
@@ -29,7 +30,7 @@ function ExportBody({ onClose }: { onClose: () => void }) {
     if (save) void exportSaveCode(save).then(setCode);
   }, [save]);
 
-  if (!save) return <p>Não há partida salva para exportar.</p>;
+  if (!save) return <p>{tr('Não há partida salva para exportar.')}</p>;
 
   const copy = async () => {
     try {
@@ -52,16 +53,14 @@ function ExportBody({ onClose }: { onClose: () => void }) {
 
   return (
     <>
-      <h2 id="transfer-title">Levar a partida</h2>
+      <h2 id="transfer-title">{tr('Levar a partida')}</h2>
       <p className="muted small">
-        {describeSave(save)}. Copie o código e cole em <b>Importar save</b> no menu do jogo em outro navegador ou
-        celular. O progresso daqui continua salvo.
-      </p>
-      <textarea ref={area} className="transfer-code" readOnly value={code || 'Gerando código…'} onFocus={(e) => e.target.select()} rows={4} />
+        {describeSave(save)}{tr('. Copie o código e cole em ')}<b>{tr('Importar save')}</b>{tr(' no menu do jogo em outro navegador ou celular. O progresso daqui continua salvo.')}</p>
+      <textarea ref={area} className="transfer-code" readOnly value={code || tr('Gerando código…')} onFocus={(e) => e.target.select()} rows={4} />
       <div className="btn-row">
-        <button className="btn btn-primary" onClick={copy} disabled={!code}>{copied ? 'Copiado!' : 'Copiar código'}</button>
-        <button className="btn" onClick={download}>Baixar arquivo</button>
-        <button className="btn" onClick={onClose}>Fechar</button>
+        <button className="btn btn-primary" onClick={copy} disabled={!code}>{copied ? tr('Copiado!') : tr('Copiar código')}</button>
+        <button className="btn" onClick={download}>{tr('Baixar arquivo')}</button>
+        <button className="btn" onClick={onClose}>{tr('Fechar')}</button>
       </div>
     </>
   );
@@ -81,44 +80,40 @@ function ImportBody({ onClose }: { onClose: () => void }) {
     try {
       setReady(await importSaveCode(input));
     } catch (err) {
-      setError(err instanceof SaveImportError ? err.message : 'Não foi possível ler esse save.');
+      setError(err instanceof SaveImportError ? err.message : tr('Não foi possível ler esse save.'));
     }
   };
   const pickFile = async (file: File | undefined) => {
     if (!file) return;
     const content = await file.text();
-    setText(content.length > 400 ? `Arquivo: ${file.name}` : content);
+    setText(content.length > 400 ? tr('Arquivo: {0}', file.name) : content);
     await check(content);
   };
 
   return (
     <>
-      <h2 id="transfer-title">Importar save</h2>
-      <p className="muted small">Cole o código gerado em <b>Configurações → Levar a partida</b>, ou escolha o arquivo baixado.</p>
+      <h2 id="transfer-title">{tr('Importar save')}</h2>
+      <p className="muted small">{tr('Cole o código gerado em ')}<b>{tr('Configurações → Levar a partida')}</b>{tr(', ou escolha o arquivo baixado.')}</p>
       <textarea
         className="transfer-code"
-        placeholder="AC1z.…"
+        placeholder={tr('AC1z.…')}
         value={text}
         rows={4}
         onChange={(e) => { setText(e.target.value); void check(e.target.value); }}
-        aria-label="Código do save"
+        aria-label={tr('Código do save')}
       />
-      <label className="btn file-btn">
-        Escolher arquivo
-        <input type="file" accept=".json,application/json,text/plain" onChange={(e) => void pickFile(e.target.files?.[0])} />
+      <label className="btn file-btn">{tr('Escolher arquivo')}<input type="file" accept=".json,application/json,text/plain" onChange={(e) => void pickFile(e.target.files?.[0])} />
       </label>
       {error && <p className="alert" role="alert">{error}</p>}
       {ready && (
         <div className="transfer-ok" role="status">
-          <b>Save encontrado:</b> {describeSave(ready)}.
-          {hasStoredSave && <span className="muted small"> A partida que está neste navegador será substituída.</span>}
+          <b>{tr('Save encontrado:')}</b> {describeSave(ready)}.
+          {hasStoredSave && <span className="muted small">{tr(' A partida que está neste navegador será substituída.')}</span>}
         </div>
       )}
       <div className="btn-row">
-        <button className="btn btn-primary" disabled={!ready} onClick={() => ready && void importSave(ready).then(onClose)}>
-          Carregar e jogar
-        </button>
-        <button className="btn" onClick={onClose}>Voltar</button>
+        <button className="btn btn-primary" disabled={!ready} onClick={() => ready && void importSave(ready).then(onClose)}>{tr('Carregar e jogar')}</button>
+        <button className="btn" onClick={onClose}>{tr('Voltar')}</button>
       </div>
     </>
   );

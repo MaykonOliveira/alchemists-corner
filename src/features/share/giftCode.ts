@@ -1,6 +1,7 @@
 // Código de presente entre amigos (pacote M): "AC1g." + JSON em base64 (sem servidor).
 import type { GiftPayload } from '../../domain/rules/social';
 
+import { GAME_NAME, tr } from '../../i18n';
 const PREFIX = 'AC1g.';
 
 const toB64 = (s: string) => btoa(String.fromCharCode(...new TextEncoder().encode(s))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -30,4 +31,4 @@ export function decodeGift(text: string): GiftPayload | null {
 export const GAME_URL = 'https://maykonoliveira.github.io/alchemists-corner/';
 
 export const giftMessage = (code: string, shopName: string) =>
-  `🎁 A loja "${shopName}" mandou um presente para você no Alchemist's Corner! Jogue em ${GAME_URL} e cole este código na aba Decoração (área Mundo): ${code}`;
+  tr('🎁 A loja "{0}" mandou um presente para você no {3}! Jogue em {1} e cole este código na aba Decoração (área Mundo): {2}', shopName, GAME_URL, code, GAME_NAME);

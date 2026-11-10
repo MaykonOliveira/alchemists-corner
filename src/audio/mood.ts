@@ -2,6 +2,7 @@
 import type { GameEvent, GameSave } from '../domain/models/types';
 import { seasonOf } from '../domain/rules/world';
 
+import { tr } from '../i18n';
 export type ThemeId = 'primavera' | 'verao' | 'outono' | 'inverno' | 'noite' | 'festival' | 'misterio';
 
 export interface Theme {
@@ -29,13 +30,13 @@ const MINOR = [0, 2, 3, 5, 7, 8, 10];
 const HARM_MINOR = [0, 2, 3, 5, 7, 8, 11];
 
 export const THEMES: Record<ThemeId, Theme> = {
-  primavera: { id: 'primavera', name: 'Jardim em flor', bpm: 92, root: 293.66, mode: MAJOR, progression: [0, 3, 4, 0, 5, 3, 4, 4], lead: 'triangle', density: 0.55, perc: 'none', bell: true },
-  verao: { id: 'verao', name: 'Estrada ensolarada', bpm: 108, root: 261.63, mode: MIXO, progression: [0, 6, 3, 0, 0, 6, 4, 4], lead: 'square', density: 0.6, perc: 'soft' },
-  outono: { id: 'outono', name: 'Folhas e livros', bpm: 84, root: 220, mode: DORIAN, progression: [0, 3, 6, 4, 0, 3, 1, 4], lead: 'triangle', density: 0.5, perc: 'none' },
-  inverno: { id: 'inverno', name: 'Noite de neve', bpm: 72, root: 246.94, mode: MINOR, progression: [0, 5, 2, 6, 0, 5, 3, 4], lead: 'sine', density: 0.42, perc: 'none', bell: true },
-  noite: { id: 'noite', name: 'Lampiões acesos', bpm: 64, root: 196, mode: MINOR, progression: [0, 5, 3, 4], lead: 'sine', density: 0.3, perc: 'none', bell: true },
-  festival: { id: 'festival', name: 'Festival das Lanternas', bpm: 124, root: 293.66, mode: MAJOR, progression: [0, 4, 5, 3, 0, 4, 3, 4], lead: 'square', density: 0.75, perc: 'festa' },
-  misterio: { id: 'misterio', name: 'Céu estranho', bpm: 70, root: 220, mode: HARM_MINOR, progression: [0, 5, 3, 4], lead: 'triangle', density: 0.38, perc: 'none', bell: true },
+  primavera: { id: 'primavera', name: tr('Jardim em flor'), bpm: 92, root: 293.66, mode: MAJOR, progression: [0, 3, 4, 0, 5, 3, 4, 4], lead: 'triangle', density: 0.55, perc: 'none', bell: true },
+  verao: { id: 'verao', name: tr('Estrada ensolarada'), bpm: 108, root: 261.63, mode: MIXO, progression: [0, 6, 3, 0, 0, 6, 4, 4], lead: 'square', density: 0.6, perc: 'soft' },
+  outono: { id: 'outono', name: tr('Folhas e livros'), bpm: 84, root: 220, mode: DORIAN, progression: [0, 3, 6, 4, 0, 3, 1, 4], lead: 'triangle', density: 0.5, perc: 'none' },
+  inverno: { id: 'inverno', name: tr('Noite de neve'), bpm: 72, root: 246.94, mode: MINOR, progression: [0, 5, 2, 6, 0, 5, 3, 4], lead: 'sine', density: 0.42, perc: 'none', bell: true },
+  noite: { id: 'noite', name: tr('Lampiões acesos'), bpm: 64, root: 196, mode: MINOR, progression: [0, 5, 3, 4], lead: 'sine', density: 0.3, perc: 'none', bell: true },
+  festival: { id: 'festival', name: tr('Festival das Lanternas'), bpm: 124, root: 293.66, mode: MAJOR, progression: [0, 4, 5, 3, 0, 4, 3, 4], lead: 'square', density: 0.75, perc: 'festa' },
+  misterio: { id: 'misterio', name: tr('Céu estranho'), bpm: 70, root: 220, mode: HARM_MINOR, progression: [0, 5, 3, 4], lead: 'triangle', density: 0.38, perc: 'none', bell: true },
 };
 
 export interface Mood {

@@ -7,15 +7,16 @@ import { SpriteIcon } from '../../ui/SpriteIcon';
 import { TrophyRow } from './RoyalPanel';
 import { Icon } from '../../ui/Icon';
 
+import { GAME_NAME, tr } from '../../i18n';
 const CREDITS = [
-  ['Alquimista-chefe', 'Você'],
-  ['Gerente do caixa', 'O golem balconista'],
-  ['Entregas aéreas', 'O corvo'],
-  ['Mexedor oficial', 'O aprendiz'],
-  ['Moral da equipe', 'O gato da loja'],
-  ['Rival honrada', 'Madame Vesper'],
-  ['Primeira cliente', 'A Condessa'],
-  ['Juíza do concurso', QUEEN],
+  [tr('Alquimista-chefe'), tr('Você')],
+  [tr('Gerente do caixa'), tr('O golem balconista')],
+  [tr('Entregas aéreas'), tr('O corvo')],
+  [tr('Mexedor oficial'), tr('O aprendiz')],
+  [tr('Moral da equipe'), tr('O gato da loja')],
+  [tr('Rival honrada'), tr('Madame Vesper')],
+  [tr('Primeira cliente'), tr('A Condessa')],
+  [tr('Juíza do concurso'), QUEEN],
 ];
 
 /** Fogos de artifício em CSS (somem com "reduzir movimento"). */
@@ -38,30 +39,30 @@ function Ceremony({ onClose }: { onClose: () => void }) {
   const [step, setStep] = useState(0);
   useEffect(() => { sfx.sparkle(); }, [step]);
   return (
-    <div className="story royal-scene ceremony" role="dialog" aria-modal="true" aria-label="Cerimônia do Concurso Real">
+    <div className="story royal-scene ceremony" role="dialog" aria-modal="true" aria-label={tr('Cerimônia do Concurso Real')}>
       {!reduce && <Fireworks />}
       <div className="story-card royal-card" key={step}>
         {step === 0 ? (
           <>
-            <p className="story-kicker">O grande salão do palácio</p>
+            <p className="story-kicker">{tr('O grande salão do palácio')}</p>
             <div className="ceremony-crown" aria-hidden><SpriteIcon name="trophy-4" size={96} /></div>
-            <h2 className="royal-headline">Você venceu o Concurso Real!</h2>
-            <p className="story-text">A {QUEEN} prova a Poção da Coroa, sorri e se levanta do trono. “Nunca provei nada igual. Este reino tem um novo {ROYAL_TITLE}.”</p>
+            <h2 className="royal-headline">{tr('Você venceu o Concurso Real!')}</h2>
+            <p className="story-text">A {QUEEN}{tr(' prova a Poção da Coroa, sorri e se levanta do trono. “Nunca provei nada igual. Este reino tem um novo ')}{ROYAL_TITLE}.”</p>
             <TrophyRow save={save} size={48} />
-            <div className="story-foot"><span /><button className="btn btn-primary btn-glow" autoFocus onClick={() => setStep(1)}>Receber a coroa</button></div>
+            <div className="story-foot"><span /><button className="btn btn-primary btn-glow" autoFocus onClick={() => setStep(1)}>{tr('Receber a coroa')}</button></div>
           </>
         ) : (
           <>
             <p className="story-kicker">{save.shopName}</p>
             <h2 className="royal-headline"><Icon e="👑" /> {ROYAL_TITLE}</h2>
-            <p className="story-text">A loja ganhou uma coroa na fachada, a nobreza agora pede a Poção da Coroa e os talentos sem fim esperam seus cristais. A história continua: a loja é sua.</p>
+            <p className="story-text">{tr('A loja ganhou uma coroa na fachada, a nobreza agora pede a Poção da Coroa e os talentos sem fim esperam seus cristais. A história continua: a loja é sua.')}</p>
             <div className={`credits ${reduce ? 'still' : ''}`}>
               <div className="credits-roll">
                 {CREDITS.map(([role, who]) => <p key={role}><span>{role}</span><b>{who}</b></p>)}
-                <p className="credits-end">Obrigado por jogar Alchemist's Corner</p>
+                <p className="credits-end">{tr('Obrigado por jogar {0}', GAME_NAME)}</p>
               </div>
             </div>
-            <div className="story-foot"><span /><button className="btn btn-primary btn-glow" autoFocus onClick={onClose}>Voltar à loja</button></div>
+            <div className="story-foot"><span /><button className="btn btn-primary btn-glow" autoFocus onClick={onClose}>{tr('Voltar à loja')}</button></div>
           </>
         )}
       </div>
@@ -104,16 +105,16 @@ export function RoyalScene() {
     <div className="story royal-scene" role="dialog" aria-modal="true" aria-label={ch.title}>
       <div className="story-card royal-card">
         <div className="royal-seal" aria-hidden><Icon e={ch.icon} size={32} /></div>
-        <p className="story-kicker">Concurso Real · capítulo {royal.chapter + 1} de {ROYAL_CHAPTERS.length}</p>
+        <p className="story-kicker">{tr('Concurso Real · capítulo ')}{royal.chapter + 1}{tr(' de ')}{ROYAL_CHAPTERS.length}</p>
         <h2 className="royal-headline">{ch.title}</h2>
         {ch.intro.map((line) => <p key={line} className="story-text royal-line">{line}</p>)}
         <div className="royal-task">
           <b>{ch.task}</b>
-          <span>Prêmio: {ch.reward.coins} moedas, {ch.reward.crystals} cristais e o troféu {ch.trophy}.</span>
+          <span>{tr('Prêmio: ')}{ch.reward.coins}{tr(' moedas, ')}{ch.reward.crystals}{tr(' cristais e o troféu ')}{ch.trophy}.</span>
         </div>
         <div className="story-foot">
           <TrophyRow save={save} size={32} />
-          <button className="btn btn-primary btn-glow" autoFocus onClick={close}>{royal.seen >= royal.chapter ? 'Fechar' : 'Aceitar o desafio'}</button>
+          <button className="btn btn-primary btn-glow" autoFocus onClick={close}>{royal.seen >= royal.chapter ? tr('Fechar') : tr('Aceitar o desafio')}</button>
         </div>
       </div>
     </div>

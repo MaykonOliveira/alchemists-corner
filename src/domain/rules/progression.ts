@@ -8,6 +8,7 @@ import { addIngredients } from './street';
 import { restockUnlocked } from './economy';
 import { villageBonus } from './villageBonus';
 
+import { tr } from '../../i18n';
 export const MAX_LEVEL = 15;
 /** A partir deste nível cada nível novo rende 1 Selo de Mestre. */
 export const SEAL_LEVEL = 11;
@@ -56,9 +57,9 @@ export const sealPrice = (s: GameSave) => 3000 * (s.sealsBought + 1);
 
 export function buySeal(d: Draft): boolean {
   const s = d.s;
-  if (s.level < SEAL_LEVEL) return fail(d, `A Guilda só aceita doações de lojas nível ${SEAL_LEVEL} ou mais.`);
+  if (s.level < SEAL_LEVEL) return fail(d, tr('A Guilda só aceita doações de lojas nível {0} ou mais.', SEAL_LEVEL));
   const cost = sealPrice(s);
-  if (s.coins < cost) return fail(d, 'Moedas insuficientes.');
+  if (s.coins < cost) return fail(d, tr('Moedas insuficientes.'));
   s.coins -= cost;
   s.sealsBought += 1;
   d.events.push({ type: 'SEAL_BOUGHT', cost });
@@ -88,7 +89,7 @@ export function paySeals(d: Draft) {
 export const grimoireAwake = (s: GameSave) => s.level >= SEAL_LEVEL || sealsEarned(s) > 0;
 
 export function learnTalentCmd(d: Draft, talentId: string): boolean {
-  if (!grimoireAwake(d.s)) return fail(d, `O Grimório desperta no nível ${SEAL_LEVEL}.`);
+  if (!grimoireAwake(d.s)) return fail(d, tr('O Grimório desperta no nível {0}.', SEAL_LEVEL));
   return learnTalent(d, talentId);
 }
 
@@ -149,12 +150,12 @@ export function gainReputation(d: Draft, amount: number) {
 
 /** Nome do título da loja de acordo com a reputação. */
 export function reputationTitle(rep: number): string {
-  if (rep >= 800) return 'Real';
-  if (rep >= 620) return 'Mítica';
-  if (rep >= 450) return 'Lendária';
-  if (rep >= 280) return 'Famosa';
-  if (rep >= 160) return 'Respeitada';
-  if (rep >= 80) return 'Conhecida';
-  if (rep >= 30) return 'Promissora';
-  return 'Recém-aberta';
+  if (rep >= 800) return tr('Real');
+  if (rep >= 620) return tr('Mítica');
+  if (rep >= 450) return tr('Lendária');
+  if (rep >= 280) return tr('Famosa');
+  if (rep >= 160) return tr('Respeitada');
+  if (rep >= 80) return tr('Conhecida');
+  if (rep >= 30) return tr('Promissora');
+  return tr('Recém-aberta');
 }

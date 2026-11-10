@@ -9,6 +9,7 @@ import { grantCrystals } from './entitlements';
 import { LEGEND_CRYSTALS, LEGEND_XP } from './legends';
 import { markQuality, qualityFromHits } from './quality';
 
+import { tr } from '../../i18n';
 export const MAX_BATCHES = 5;
 export const POTIONS_PER_BATCH = 2;
 
@@ -58,15 +59,15 @@ export function freeCauldron(s: GameSave): 1 | 2 | null {
 export function startBrew(d: Draft, recipeId: string, batches: number): boolean {
   const s = d.s;
   const r = RECIPES_BY_ID[recipeId];
-  if (!r || !s.knownRecipes.includes(recipeId)) return fail(d, 'Receita desconhecida.');
-  if (s.phase === 'fechamento') return fail(d, 'A loja está fechando.');
+  if (!r || !s.knownRecipes.includes(recipeId)) return fail(d, tr('Receita desconhecida.'));
+  if (s.phase === 'fechamento') return fail(d, tr('A loja está fechando.'));
   const slot = freeCauldron(s);
-  if (!slot) return fail(d, hasSecondCauldron(s) ? 'Os dois caldeirões estão ocupados.' : 'O caldeirão já está ocupado.');
-  if (!Number.isInteger(batches) || batches < 1) return fail(d, 'Escolha ao menos um lote.');
+  if (!slot) return fail(d, hasSecondCauldron(s) ? tr('Os dois caldeirões estão ocupados.') : tr('O caldeirão já está ocupado.'));
+  if (!Number.isInteger(batches) || batches < 1) return fail(d, tr('Escolha ao menos um lote.'));
   if (batches > maxBatches(s, recipeId)) {
     const lim = brewLimits(s, recipeId);
-    if (lim.bySpace < batches) return fail(d, lim.shelfFull ? `Cabem só ${shelfPerRecipe(s)} poções de cada receita na prateleira.` : 'Não há espaço nas prateleiras.');
-    return fail(d, 'Ingredientes insuficientes.');
+    if (lim.bySpace < batches) return fail(d, lim.shelfFull ? tr('Cabem só {0} poções de cada receita na prateleira.', shelfPerRecipe(s)) : tr('Não há espaço nas prateleiras.'));
+    return fail(d, tr('Ingredientes insuficientes.'));
   }
   for (const i of r.ingredients) s.ingredients[i.ingredientId] -= i.qty * batches;
   const job = { recipeId, batches, elapsedMs: 0, totalMs: brewDurationMs(s, recipeId, batches) };
@@ -87,7 +88,7 @@ export function repeatBatches(s: GameSave): number {
 /** Repete o último preparo com um toque (o máximo que der, até a quantidade de antes). */
 export function repeatBrew(d: Draft): boolean {
   const n = repeatBatches(d.s);
-  if (n < 1) return fail(d, d.s.lastBrew ? 'Faltam ingredientes para repetir o último preparo.' : 'Escolha uma receita no caldeirão.');
+  if (n < 1) return fail(d, d.s.lastBrew ? tr('Faltam ingredientes para repetir o último preparo.') : tr('Escolha uma receita no caldeirão.'));
   return startBrew(d, d.s.lastBrew!.recipeId, n);
 }
 
@@ -117,9 +118,9 @@ export function advanceBrew(d: Draft, ms: number) {
 export function experiment(d: Draft, ingredientIds: string[]): boolean {
   const s = d.s;
   const ids = [...new Set(ingredientIds)];
-  if (ids.length < 2 || ids.length > 3) return fail(d, 'Escolha 2 ou 3 ingredientes diferentes.');
-  if (s.phase === 'fechamento') return fail(d, 'A loja está fechando.');
-  if (ids.some((id) => !INGREDIENTS_BY_ID[id] || (s.ingredients[id] ?? 0) < 1)) return fail(d, 'Você precisa de 1 unidade de cada ingrediente.');
+  if (ids.length < 2 || ids.length > 3) return fail(d, tr('Escolha 2 ou 3 ingredientes diferentes.'));
+  if (s.phase === 'fechamento') return fail(d, tr('A loja está fechando.'));
+  if (ids.some((id) => !INGREDIENTS_BY_ID[id] || (s.ingredients[id] ?? 0) < 1)) return fail(d, tr('Você precisa de 1 unidade de cada ingrediente.'));
 
   const key = [...ids].sort().join('|');
   const match = RECIPES.find((r) => !r.secret && r.ingredients.map((i) => i.ingredientId).sort().join('|') === key);
@@ -147,12 +148,12 @@ export function experiment(d: Draft, ingredientIds: string[]): boolean {
   const hinted = RECIPES.filter((r) => s.recipeHints?.includes(r.id));
   const unknown = hinted.length ? hinted : RECIPES.filter((r) => !r.secret && !r.legend && !s.knownRecipes.includes(r.id));
   let hint: string;
-  if (match) hint = `Você já conhece essa mistura: ${match.name}.`;
-  else if (unknown.length === 0) hint = 'Você já descobriu todas as receitas do livro!';
+  if (match) hint = tr('Você já conhece essa mistura: {0}.', match.name);
+  else if (unknown.length === 0) hint = tr('Você já descobriu todas as receitas do livro!');
   else {
     const target = unknown[s.researchPoints % unknown.length];
     const ing = target.ingredients[s.researchPoints % target.ingredients.length];
-    hint = `A mistura chiou e apagou. Mas uma anotação aparece no livro: “${target.name}” leva ${INGREDIENTS_BY_ID[ing.ingredientId].name}.`;
+    hint = tr('A mistura chiou e apagou. Mas uma anotação aparece no livro: “{0}” leva {1}.', target.name, INGREDIENTS_BY_ID[ing.ingredientId].name);
   }
   d.events.push({ type: 'EXPERIMENT_FAILED', hint });
   gainXp(d, 2);

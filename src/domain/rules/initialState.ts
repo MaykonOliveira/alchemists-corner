@@ -7,6 +7,7 @@ import { ensureGoals } from './goals';
 import { dateKey, trackPeriod } from './retention';
 import { DEFAULT_DECOR, STARTING_ITEMS } from '../data/catalog';
 
+import { tr } from '../../i18n';
 /** Estado de uma partida nova: a loja herdada do antigo proprietário. */
 export function createNewGame(now: number = Date.now()): GameSave {
   const s: GameSave = {
@@ -69,7 +70,7 @@ export function createNewGame(now: number = Date.now()): GameSave {
     goals: { day: 0, list: [], week: 0, weekDone: 0, chestClaimed: false },
     tipsSeen: [],
     storySeen: false,
-    shopName: 'Loja da Esquina',
+    shopName: tr('Loja da Esquina'),
     awning: 'toldo-vermelho',
     debutDone: false,
     letter: null,

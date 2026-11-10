@@ -9,7 +9,8 @@ import { useGameStore } from '../../store/gameStore';
 import { Icon } from '../../ui/Icon';
 import { SpriteIcon } from '../../ui/SpriteIcon';
 
-const STEP_NAMES = ['Ordem', 'Fogo', 'Ponto'] as const;
+import { tr } from '../../i18n';
+const STEP_NAMES = [tr('Ordem'), tr('Fogo'), tr('Ponto')] as const;
 
 /** Marcador que vai e volta (fogo) ou só vai, e recomeça (ponto). */
 function useMarker(active: boolean, period: number, bounce: boolean) {
@@ -55,8 +56,8 @@ export function StirGame({ save, job, slot, label }: { save: GameSave; job: Brew
     const q = qualityFromHits(job.hits);
     return (
       <p className={`stir-result q-${q}`}>
-        {label ? `${label}: ` : ''}<Icon e={q === 3 ? '✨' : q === 2 ? '★' : '·'} /> Qualidade <b>{QUALITY_NAME[q]}</b>
-        {q > 1 ? ` · clientes pagam ${Math.round(QUALITY_BONUS[q] * 100)}% a mais` : ' · ordem, fogo e ponto certos no próximo preparo'}
+        {label ? `${label}: ` : ''}<Icon e={q === 3 ? '✨' : q === 2 ? '★' : '·'} />{tr(' Qualidade ')}<b>{QUALITY_NAME[q]}</b>
+        {q > 1 ? tr(' · clientes pagam {0}% a mais', Math.round(QUALITY_BONUS[q] * 100)) : tr(' · ordem, fogo e ponto certos no próximo preparo')}
       </p>
     );
   }
@@ -77,17 +78,17 @@ export function StirGame({ save, job, slot, label }: { save: GameSave; job: Brew
   const [lo, hi] = steps.heat.band;
 
   return (
-    <div className="stir" aria-label="Toque de mestre">
+    <div className="stir" aria-label={tr('Toque de mestre')}>
       <div className="stir-head">
-        <span className="row-title"><Icon e="✋" /> Toque de mestre{label ? <span className="stir-label"> · {label}</span> : null}</span>
+        <span className="row-title"><Icon e="✋" />{tr(' Toque de mestre')}{label ? <span className="stir-label"> · {label}</span> : null}</span>
         <span className="stir-dots" aria-label={`${hits.filter(Boolean).length} acertos`}>
           {STEP_NAMES.map((n, i) => <span key={n} title={n} className={i < hits.length ? (hits[i] ? 'hit' : 'miss') : i === step ? 'now' : ''} />)}
         </span>
       </div>
       <p className="stir-step"><b>{step + 1}/3 · {STEP_NAMES[Math.min(step, 2)]}</b>{' '}
-        {step === 0 && 'Ponha os ingredientes na ordem do livro.'}
-        {step === 1 && <>Segure o fogo <b>{steps.heat.name}</b>: mexa com a chama na faixa.</>}
-        {step === 2 && 'Tire do fogo quando a cor ficar igual à da poção.'}
+        {step === 0 && tr('Ponha os ingredientes na ordem do livro.')}
+        {step === 1 && <>{tr('Segure o fogo ')}<b>{steps.heat.name}</b>{tr(': mexa com a chama na faixa.')}</>}
+        {step === 2 && tr('Tire do fogo quando a cor ficar igual à da poção.')}
       </p>
 
       {step === 0 && (
@@ -111,7 +112,7 @@ export function StirGame({ save, job, slot, label }: { save: GameSave; job: Brew
             <span className="stir-zone" style={{ left: `${lo}%`, width: `${hi - lo}%` }} />
             <span className="stir-marker" style={{ left: `${heat}%` }} />
           </div>
-          <button className="btn btn-primary stir-btn" onClick={() => score(heatRef.current >= lo && heatRef.current <= hi)}>Mexer!</button>
+          <button className="btn btn-primary stir-btn" onClick={() => score(heatRef.current >= lo && heatRef.current <= hi)}>{tr('Mexer!')}</button>
         </>
       )}
 
@@ -119,12 +120,12 @@ export function StirGame({ save, job, slot, label }: { save: GameSave; job: Brew
         <>
           <div className="stir-point">
             <span className="stir-liquid" style={{ background: liquidAt(point, steps.color) }} aria-hidden />
-            <span className="small">Cor certa: <span className="stir-swatch" style={{ background: steps.color }} /></span>
+            <span className="small">{tr('Cor certa: ')}<span className="stir-swatch" style={{ background: steps.color }} /></span>
           </div>
-          <button className="btn btn-primary stir-btn" onClick={() => score(pointRef.current >= POINT_BAND[0] && pointRef.current <= POINT_BAND[1])}>Tirar do fogo!</button>
+          <button className="btn btn-primary stir-btn" onClick={() => score(pointRef.current >= POINT_BAND[0] && pointRef.current <= POINT_BAND[1])}>{tr('Tirar do fogo!')}</button>
         </>
       )}
-      <p className="card-text small muted">3 acertos: Primorosa (+50%). 2: Fina (+20%). Pular é só deixar: a poção sai Comum.</p>
+      <p className="card-text small muted">{tr('3 acertos: Primorosa (+50%). 2: Fina (+20%). Pular é só deixar: a poção sai Comum.')}</p>
     </div>
   );
 }

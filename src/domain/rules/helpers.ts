@@ -7,6 +7,7 @@ import { fail, type Draft } from './context';
 import { dismissCustomer, serveCustomer } from './customers';
 import { applyPurchase, countIngredients, has, ingredientCapacity, ingredientPrice, potionStock, supplierLeft } from './economy';
 
+import { tr } from '../../i18n';
 // ---------------------------------------------------------------------------
 // Ajudantes automáticos (melhorias da categoria 'ajudante').
 // Cada um automatiza uma parte do trabalho usando exatamente as mesmas regras
@@ -45,7 +46,7 @@ export const helperActive = (s: GameSave, id: string) =>
 export function setHelper(d: Draft, upgradeId: string, on: boolean): boolean {
   const s = d.s;
   if (!HELPER_IDS.includes(upgradeId)) return false;
-  if (!has(s, upgradeId)) return fail(d, 'Contrate este ajudante primeiro.');
+  if (!has(s, upgradeId)) return fail(d, tr('Contrate este ajudante primeiro.'));
   const isOn = !s.helpers.off.includes(upgradeId);
   if (isOn === on) return false;
   s.helpers.off = on ? s.helpers.off.filter((id) => id !== upgradeId) : [...s.helpers.off, upgradeId];
