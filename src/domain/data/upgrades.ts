@@ -36,7 +36,7 @@ export const UPGRADES: ShopUpgrade[] = [
   { id: 'aprendiz', name: tr('Aprendiz de alquimia'), cost: 2200, category: 'ajudante', requiredLevel: 8, upkeep: 20,
     effect: tr('Quando o caldeirão fica livre, prepara a poção que está mais em falta (sempre Comum). Dá prioridade ao pedido especial.') },
   { id: 'golem-balconista', name: tr('Golem balconista'), cost: 3000, category: 'ajudante', requiredLevel: 9, upkeep: 25,
-    effect: tr('Atende quem pede uma poção pelo nome e cobra o preço-base. Não negocia, não troca de poção, não decifra sintomas e deixa os fregueses fiéis e as visitas para você.') },
+    effect: tr('Atende quem pede uma poção pelo nome (fregueses fiéis inclusive) e quem conta um problema que já está no caderno de diagnósticos. Cobra a sua etiqueta, ou o que o cliente pode pagar, nunca menos que o preço-base. Sintomas novos, histórias dos fregueses, charadas e visitas ficam com você.') },
   // Treino da equipe (pacote X): cada ajudante pode evoluir uma vez no fim de jogo.
   { id: 'corvo-veloz', name: tr('Corvo veloz'), cost: 9000, category: 'treino', requiredLevel: 15, requires: 'corvo-entregador',
     effect: tr('O corvo confere o armário duas vezes por hora e não cobra mais a taxa da viagem.') },

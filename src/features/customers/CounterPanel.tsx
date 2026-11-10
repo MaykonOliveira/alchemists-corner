@@ -4,7 +4,7 @@ import { MAX_HEARTS } from '../../domain/data/world';
 import { regularOf, regularState } from '../../domain/rules/world';
 import { RECIPES_BY_ID } from '../../domain/data/recipes';
 import type { Customer, GameSave } from '../../domain/models/types';
-import { suits } from '../../domain/rules/customers';
+import { knownSymptom, suits } from '../../domain/rules/customers';
 import { getPrice } from '../../domain/rules/economy';
 import { useGameStore } from '../../store/gameStore';
 import { CoinIcon } from '../../ui/icons';
@@ -46,7 +46,7 @@ export function CounterPanel({ save }: { save: GameSave }) {
             >
               {!c.mystery && <CustomerFace c={c} size={32} />}
               <span className="row-title">{c.mystery ? tr('Viajante encapuzado') : regularOf(c)?.name.split(',')[0] ?? ARCHETYPES[c.archetype].label}{regularOf(c) ? ' ♥\uFE0E' : ''}</span>
-              <span className="queue-want">{c.mystery ? <><Icon e="❓" />{tr(' charada')}</> : c.symptom && !c.offer ? <><Icon e="🤒" />{tr(' conta o problema')}</> : <><PotionIcon recipeId={r.id} /> {r.shortName}{c.offer ? tr(' · negociando') : ''}</>}</span>
+              <span className="queue-want">{c.mystery ? <><Icon e="❓" />{tr(' charada')}</> : c.symptom && !c.offer && !knownSymptom(save, c) ? <><Icon e="🤒" />{tr(' conta o problema')}</> : <><PotionIcon recipeId={r.id} /> {r.shortName}{c.offer ? tr(' · negociando') : ''}</>}</span>
               <Meter ratio={left} tone={left > 0.5 ? 'ok' : left > 0.25 ? 'gold' : 'warn'} label={tr('Paciência')} />
             </button>
           );
@@ -64,7 +64,8 @@ function Serve({ save, c }: { save: GameSave; c: Customer }) {
   const wanted = RECIPES_BY_ID[c.wantedRecipeId];
   const options = save.potions.filter((p) => p.forSale && p.quantity > 0);
   // Charada e sintoma: a lista não entrega a resposta.
-  const hidden = c.mystery || c.symptom;
+  const known = knownSymptom(save, c);
+  const hidden = c.mystery || (c.symptom && !known);
   const sorted = hidden ? options : [...options].sort((x, y) => Number(y.recipeId === c.wantedRecipeId) - Number(x.recipeId === c.wantedRecipeId));
 
   return (
@@ -83,7 +84,7 @@ function Serve({ save, c }: { save: GameSave; c: Customer }) {
       </div>
       <p className="speech">“{c.remark ?? wanted.request}”</p>
       <p className="card-text small">
-        {c.mystery ? <>{tr('Cliente misterioso: decifre a charada. Acertar paga ')}<strong>{tr('3× o preço')}</strong>{tr(' e deixa cristais.')}</> : c.symptom ? <>{tr('Conta o problema: escolha a poção certa. Acertar em cheio rende ')}<strong>{tr('gorjeta')}</strong>{tr('; uma parecida paga menos.')}</> : <>{tr('Quer: ')}<strong>{wanted.name}</strong> · {a.description}</>}
+        {c.mystery ? <>{tr('Cliente misterioso: decifre a charada. Acertar paga ')}<strong>{tr('3× o preço')}</strong>{tr(' e deixa cristais.')}</> : known ? <><Icon e="📖" />{tr(' Este problema está no caderno: é ')}<strong>{wanted.name}</strong>{tr('. O golem também resolve sozinho.')}</> : c.symptom ? <>{tr('Conta o problema: escolha a poção certa. Acertar em cheio rende ')}<strong>{tr('gorjeta')}</strong>{tr('; uma parecida paga menos.')}</> : <>{tr('Quer: ')}<strong>{wanted.name}</strong> · {a.description}</>}
       </p>
 
       {c.offer ? (

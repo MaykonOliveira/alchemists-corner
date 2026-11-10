@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ARCHETYPES } from '../../domain/data/customers';
 import { regularOf, regularState } from '../../domain/rules/world';
 import { RECIPES_BY_ID } from '../../domain/data/recipes';
-import { askOptions, bestOffer, LESSON_TIP, reservedForOrder, vipPrice } from '../../domain/rules/customers';
+import { askOptions, bestOffer, knownSymptom, LESSON_TIP, reservedForOrder, vipPrice } from '../../domain/rules/customers';
 import { potionStock } from '../../domain/rules/economy';
 import { useGameStore } from '../../store/gameStore';
 import { useStageCards } from '../tutorial/stage';
@@ -35,11 +35,15 @@ export function QuickServe({ placement }: { placement: 'stage' | 'side' }) {
   const wanted = RECIPES_BY_ID[c.wantedRecipeId];
   const left = 1 - c.waitedMs / c.patienceMs;
   const guessKey = `${c.id}|${c.remark}`;
-  const picked = c.symptom && guess?.key === guessKey && potionStock(save, guess.recipeId) > 0 ? guess.recipeId : null;
+  // Sintoma do caderno: a loja já sabe a poção, e o atendimento vira um toque, como um pedido pelo nome.
+  const known = knownSymptom(save, c);
+  const picked = !c.symptom ? null
+    : known ? (potionStock(save, c.wantedRecipeId) > 0 ? c.wantedRecipeId : null)
+    : guess?.key === guessKey && potionStock(save, guess.recipeId) > 0 ? guess.recipeId : null;
   const offerId = c.offer ? null : c.symptom ? picked : bestOffer(save, c);
   const ask = offerId && !c.vip ? askOptions(save, offerId) : null;
   // Tutorial das decisões (P1.4): a primeira vez de cada conceito ganha uma linha de orientação no próprio cartão.
-  const coachId = c.symptom ? LESSON_TIP.sintoma : c.lesson ? LESSON_TIP[c.lesson] : null;
+  const coachId = c.symptom && !known ? LESSON_TIP.sintoma : c.lesson ? LESSON_TIP[c.lesson] : null;
   const coachOn = !!coachId && !save.tipsSeen.includes(coachId);
   const coachText = !coachOn ? null
     : c.symptom ? (c.offer ? null : picked ? tr('Boa escolha? Venda e veja: acerto em cheio rende gorjeta e "CERTO!".') : tr('Primeiro diagnóstico: o cliente não diz o nome da poção. Leia o problema e toque na poção que resolve.'))
@@ -85,7 +89,7 @@ export function QuickServe({ placement }: { placement: 'stage' | 'side' }) {
   }
 
   // Cliente que conta o sintoma: o jogador escolhe a poção na prateleira (o diagnóstico é o verbo).
-  if (c.symptom && !c.offer && !picked) {
+  if (c.symptom && !known && !c.offer && !picked) {
     const stock = save.potions.filter((p) => p.forSale && p.quantity > 0);
     return (
       <section className={`quick-serve qs-${placement} qs-symptom`} aria-label={tr('Atender {0}', a.label)}>
@@ -140,7 +144,7 @@ export function QuickServe({ placement }: { placement: 'stage' | 'side' }) {
       <div className="qs-head">
         <CustomerFace c={c} />
         <div className="qs-who">
-          <span className="qs-name">{c.symptom ? <>{a.label} <span className="muted">{tr('· você escolheu')}</span> {RECIPES_BY_ID[offerId ?? c.offer?.recipeId ?? c.wantedRecipeId].shortName}</> : <>{c.vip ? <span className="qs-regular qs-vip"><Icon e="✨" /> {c.vip.name}</span> : reg ? <span className="qs-regular">{reg.name.split(',')[0]} <span className="heart-on">{'♥\uFE0E'.repeat(hearts) || '♡'}</span></span> : a.label}{' '}<span className="muted">{tr('quer')}</span> <PotionIcon recipeId={wanted.id} size={16} /> {wanted.shortName}</>}</span>
+          <span className="qs-name">{c.symptom ? <>{a.label} <span className="muted">{known ? <><Icon e="📖" />{tr(' · do caderno:')}</> : tr('· você escolheu')}</span> {RECIPES_BY_ID[offerId ?? c.offer?.recipeId ?? c.wantedRecipeId].shortName}</> : <>{c.vip ? <span className="qs-regular qs-vip"><Icon e="✨" /> {c.vip.name}</span> : reg ? <span className="qs-regular">{reg.name.split(',')[0]} <span className="heart-on">{'♥\uFE0E'.repeat(hearts) || '♡'}</span></span> : a.label}{' '}<span className="muted">{tr('quer')}</span> <PotionIcon recipeId={wanted.id} size={16} /> {wanted.shortName}</>}</span>
           <Meter ratio={left} tone={left > 0.5 ? 'ok' : left > 0.25 ? 'gold' : 'warn'} label={tr('Paciência')} />
         </div>
         {next && (
@@ -186,7 +190,7 @@ export function QuickServe({ placement }: { placement: 'stage' | 'side' }) {
                 )}
               </span>
             )}
-            <span className="qs-verdict">{c.symptom ? <button className="qs-link" onClick={() => setGuess(null)}>{tr('trocar a poção')}</button> : null}{!c.symptom && offerId !== c.wantedRecipeId ? tr('parecida · ') : ''}{c.vip ? tr('paga {0}× o preço', c.vip.pays) : a.payHint}</span>
+            <span className="qs-verdict">{c.symptom && !known ? <button className="qs-link" onClick={() => setGuess(null)}>{tr('trocar a poção')}</button> : null}{!c.symptom && offerId !== c.wantedRecipeId ? tr('parecida · ') : ''}{c.vip ? tr('paga {0}× o preço', c.vip.pays) : a.payHint}</span>
           </>
         ) : (
           <>

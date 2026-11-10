@@ -488,6 +488,8 @@ export interface GameSave {
   village: Record<string, number>;
   /** Receitas lendárias (pacote U): quantos ingredientes de cada uma as páginas rasgadas já revelaram. */
   pages: Record<string, number>;
+  /** Caderno de diagnósticos: acertos do jogador por receita, quando o cliente contou o sintoma. */
+  diagnoses: Record<string, number>;
   tutorialStep: number;
   seq: number;
   settings: Settings;
@@ -563,5 +565,6 @@ export type GameEvent =
   | { type: 'MYSTERY_SOLVED'; recipeId: string; coins: number; crystals: number }
   | { type: 'MYSTERY_WRONG'; customerId: string }
   | { type: 'SYMPTOM_WRONG'; customerId: string }
+  | { type: 'DIAGNOSIS_LEARNED'; recipeId: string }
   | { type: 'PAGE_FOUND'; recipeId: string; ingredientId: string; source: string }
   | { type: 'ERROR'; message: string };

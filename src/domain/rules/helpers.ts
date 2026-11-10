@@ -4,7 +4,7 @@ import { RECIPES_BY_ID } from '../data/recipes';
 import type { Customer, GameSave, HelperWork } from '../models/types';
 import { freeCauldron, maxBatches, potionsPerBatch, startBrew } from './alchemy';
 import { fail, type Draft } from './context';
-import { dismissCustomer, serveCustomer } from './customers';
+import { dismissCustomer, knownSymptom, serveCustomer } from './customers';
 import { applyPurchase, countIngredients, has, ingredientCapacity, ingredientPrice, potionStock, supplierLeft } from './economy';
 
 import { tr } from '../../i18n';
@@ -152,14 +152,16 @@ function runApprentice(d: Draft) {
 // -------------------------------------------------------------------- golem
 
 /**
- * Clientes que o golem atende: só quem pede uma poção pelo nome.
- * Charadas, sintomas, fregueses fiéis e visitas especiais ficam para o jogador.
+ * Clientes que o golem atende: quem pede uma poção pelo nome (inclusive o freguês fiel que pede
+ * "o de sempre") e quem conta um sintoma que já está no caderno de diagnósticos.
+ * Charadas, sintomas novos, capítulos da história dos fregueses e visitas especiais ficam com o jogador.
  */
-export const golemServes = (c: Customer) => !c.mystery && !c.symptom && !c.regularId && !c.vip;
+export const golemServes = (s: GameSave, c: Customer) =>
+  !c.mystery && !c.vip && c.chapter === undefined && (!c.symptom || knownSymptom(s, c));
 
 /** A poção que o golem entrega: exatamente a pedida (ele não sugere trocas), ou null. */
 export function golemChoice(s: GameSave, c: Customer): string | null {
-  if (!golemServes(c)) return null;
+  if (!golemServes(s, c)) return null;
   const stack = s.potions.find((p) => p.recipeId === c.wantedRecipeId && p.forSale && p.quantity > 0);
   return stack ? stack.recipeId : null;
 }
@@ -169,8 +171,8 @@ function runGolem(d: Draft, ms: number) {
   s.helpers.golemInMs = Math.max(0, s.helpers.golemInMs - ms);
   if (s.helpers.golemInMs > 0 || s.phase !== 'expediente') return;
   for (const c of s.customers) {
-    // Quem não é do golem (charada, sintoma, freguês, visita) ou já está negociando com você, fica com você.
-    if (!golemServes(c) || c.offer || c.waitedMs < golemDelayMs(s)) continue;
+    // Quem não é do golem (charada, sintoma novo, capítulo de freguês, visita) ou já está negociando com você, fica com você.
+    if (!golemServes(s, c) || c.offer || c.waitedMs < golemDelayMs(s)) continue;
     const from = d.events.length;
     {
       const recipeId = golemChoice(s, c);
@@ -181,7 +183,7 @@ function runGolem(d: Draft, ms: number) {
         s.helpers.golemInMs = golemCooldownMs(s);
         return;
       }
-      serveCustomer(d, c.id, recipeId, { basePrice: true });
+      serveCustomer(d, c.id, recipeId, { golem: true });
     }
     const sold = d.events.slice(from).filter((e) => e.type === 'SALE');
     for (const e of sold) if (e.type === 'SALE') e.by = 'golem';
