@@ -5,6 +5,7 @@ import { gameEvents } from '../game/events';
 import { useGameStore } from '../store/gameStore';
 import { ambienceFor, degreeFreq, moodFor, THEMES, vibrationFor, type AmbienceLayer, type Mood, type Theme } from './mood';
 
+import { tr } from '../i18n';
 /**
  * Som do jogo, todo sintetizado com WebAudio (nenhum arquivo, nenhum direito autoral):
  * - trilha que muda com a estação, a hora e os eventos, com troca suave entre os temas;
@@ -227,7 +228,7 @@ function updateMood() {
 }
 
 /** Tema que está tocando (para mostrar nas configurações). */
-export const nowPlaying = () => (mood ? `${THEMES[mood.theme].name}${mood.calm ? ' (calma)' : ''}` : null);
+export const nowPlaying = () => (mood ? `${THEMES[mood.theme].name}${mood.calm ? tr(' (calma)') : ''}` : null);
 
 // --------------------------------------------------------------- ambiente
 

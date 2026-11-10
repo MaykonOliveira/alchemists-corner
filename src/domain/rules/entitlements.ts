@@ -6,6 +6,7 @@ import { CATALOG_BY_ID, DEFAULT_DECOR, type DecorSlot } from '../data/catalog';
 import type { GameSave } from '../models/types';
 import { fail, type Draft } from './context';
 
+import { tr } from '../../i18n';
 export const owns = (s: GameSave, itemId: string) => s.owned.includes(itemId);
 
 /** Entrega um item (sem custo). Devolve false se o jogador já tinha. */
@@ -26,10 +27,10 @@ export function grantCrystals(d: Draft, n: number, reason: string) {
 export function buyDecor(d: Draft, itemId: string): boolean {
   const s = d.s;
   const it = CATALOG_BY_ID[itemId];
-  if (!it) return fail(d, 'Item desconhecido.');
+  if (!it) return fail(d, tr('Item desconhecido.'));
   if (owns(s, itemId)) return placeDecor(d, itemId);
-  if (it.crystals === null) return fail(d, 'Este item não se compra: ele vem da trilha, das festas ou de presente.');
-  if (s.crystals < it.crystals) return fail(d, `Faltam ${it.crystals - s.crystals} Cristais de luar.`);
+  if (it.crystals === null) return fail(d, tr('Este item não se compra: ele vem da trilha, das festas ou de presente.'));
+  if (s.crystals < it.crystals) return fail(d, tr('Faltam {0} Cristais de luar.', it.crystals - s.crystals));
   s.crystals -= it.crystals;
   s.owned = [...s.owned, itemId];
   d.events.push({ type: 'DECOR_BOUGHT', itemId });
@@ -40,7 +41,7 @@ export function buyDecor(d: Draft, itemId: string): boolean {
 export function placeDecor(d: Draft, itemId: string): boolean {
   const s = d.s;
   const it = CATALOG_BY_ID[itemId];
-  if (!it || !owns(s, itemId)) return fail(d, 'Você ainda não tem este item.');
+  if (!it || !owns(s, itemId)) return fail(d, tr('Você ainda não tem este item.'));
   if (s.decor[it.slot] === itemId) return false;
   s.decor = { ...s.decor, [it.slot]: itemId };
   return true;

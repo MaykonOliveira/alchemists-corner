@@ -11,14 +11,15 @@ import { LEGEND_LEVEL, LEGENDS, legendKnown, pagesFor } from '../../domain/rules
 import { Icon } from '../../ui/Icon';
 import { More } from '../../ui/widgets';
 
+import { tr } from '../../i18n';
 /** Lendas do grimório (pacote U): seis receitas fora do livro, montadas com páginas rasgadas e experimentos. */
 function Legends({ save }: { save: GameSave }) {
   const anyPage = LEGENDS.some((r) => pagesFor(save, r.id) > 0 || save.knownRecipes.includes(r.id));
   if (save.level < LEGEND_LEVEL && !anyPage) return null;
   return (
     <section className="group legends">
-      <h3><Icon e="📜" /> Lendas perdidas <span className="muted small">{legendKnown(save)} de {LEGENDS.length}</span></h3>
-      <p className="card-text small">Seis receitas que nenhum livro guarda. Páginas rasgadas aparecem no baú da semana, nos contratos, na vitória sobre a Vesper e no Concurso Real. Cada página revela um ingrediente: junte os três na bancada.</p>
+      <h3><Icon e="📜" />{tr(' Lendas perdidas ')}<span className="muted small">{legendKnown(save)}{tr(' de ')}{LEGENDS.length}</span></h3>
+      <p className="card-text small">{tr('Seis receitas que nenhum livro guarda. Páginas rasgadas aparecem no baú da semana, nos contratos, na vitória sobre a Vesper e no Concurso Real. Cada página revela um ingrediente: junte os três na bancada.')}</p>
       <ul className="legend-grid">
         {LEGENDS.map((r) => {
           const known = save.knownRecipes.includes(r.id);
@@ -26,13 +27,13 @@ function Legends({ save }: { save: GameSave }) {
           return (
             <li key={r.id} className={`legend-card ${known ? 'legend-known' : ''}`}>
               <PotionIcon recipeId={r.id} size={32} muted={!known} />
-              <span className="row-title">{known ? r.name : pages ? `Lenda de ${r.category}` : '??? lenda perdida'}</span>
-              <span className="legend-pages" aria-label={`${pages} de ${r.ingredients.length} páginas`}>
+              <span className="row-title">{known ? r.name : pages ? tr('Lenda de {0}', r.category) : tr('??? lenda perdida')}</span>
+              <span className="legend-pages" aria-label={tr('{0} de {1} páginas', pages, r.ingredients.length)}>
                 {r.ingredients.map((i, k) => (k < pages || known
                   ? <span key={k} className="legend-slot on" title={INGREDIENTS_BY_ID[i.ingredientId].name}><IngredientIcon ingredientId={i.ingredientId} /></span>
                   : <span key={k} className="legend-slot">?</span>))}
               </span>
-              <span className="small muted">{known ? `preço-base ${r.basePrice}` : pages >= r.ingredients.length ? 'Receita completa: misture na bancada!' : `${pages}/${r.ingredients.length} páginas`}</span>
+              <span className="small muted">{known ? tr('preço-base {0}', r.basePrice) : pages >= r.ingredients.length ? tr('Receita completa: misture na bancada!') : tr('{0}/{1} páginas', pages, r.ingredients.length)}</span>
             </li>
           );
         })}
@@ -49,11 +50,10 @@ export function RecipesPanel({ save }: { save: GameSave }) {
   const known = book.filter((r) => save.knownRecipes.includes(r.id)).length;
   return (
     <>
-      <p className="panel-lead small">{known} de {book.length} receitas anotadas.</p>
+      <p className="panel-lead small">{known}{tr(' de ')}{book.length}{tr(' receitas anotadas.')}</p>
       {(save.recipeHints?.length ?? 0) > 0 && (
         <p className="tip report-tutorial">
-          <Icon e="📜" /> {save.recipeHints!.length === 1 ? 'Uma receita nova espera' : `${save.recipeHints!.length} receitas novas esperam`} por você. Leia a pista e acerte a mistura na bancada, lá embaixo.
-        </p>
+          <Icon e="📜" /> {save.recipeHints!.length === 1 ? tr('Uma receita nova espera') : tr('{0} receitas novas esperam', save.recipeHints!.length)}{tr(' por você. Leia a pista e acerte a mistura na bancada, lá embaixo.')}</p>
       )}
       <ul className="list">
         {book.map((r) => {
@@ -63,23 +63,23 @@ export function RecipesPanel({ save }: { save: GameSave }) {
             <li key={r.id} className={`card ${isKnown ? '' : hinted ? 'card-hint' : 'card-locked'}`}>
               <div className="card-head">
                 <PotionIcon recipeId={r.id} size={32} muted={!isKnown} />
-                <span className="row-title">{isKnown || hinted ? r.name : '??? — página em branco'}</span>
-                {hinted && <span className="trend-tag">pista nova</span>}
+                <span className="row-title">{isKnown || hinted ? r.name : tr('??? — página em branco')}</span>
+                {hinted && <span className="trend-tag">{tr('pista nova')}</span>}
                 {isKnown && <Stars n={masteryStars(save, r.id)} />}
               </div>
               {isKnown ? (
                 <>
                   <p className="card-text muted small">
-                    {r.ingredients.map((i) => `${i.qty}× ${INGREDIENTS_BY_ID[i.ingredientId].name}`).join(' + ')} · preço-base {r.basePrice}
+                    {r.ingredients.map((i) => `${i.qty}× ${INGREDIENTS_BY_ID[i.ingredientId].name}`).join(' + ')}{tr(' · preço-base ')}{r.basePrice}
                   </p>
-                  {save.level >= STIR_LEVEL && <p className="card-text small recipe-craft"><Icon e="🔥" /> Nesta ordem, fogo <b>{HEAT[r.category].name}</b>.</p>}
-                  <More label="Quem procura"><p className="card-text small">{r.need}. Procurada por {r.customerProfile.toLowerCase()}.</p></More>
+                  {save.level >= STIR_LEVEL && <p className="card-text small recipe-craft"><Icon e="🔥" />{tr(' Nesta ordem, fogo ')}<b>{HEAT[r.category].name}</b>.</p>}
+                  <More label={tr('Quem procura')}><p className="card-text small">{r.need}{tr('. Procurada por ')}{r.customerProfile.toLowerCase()}.</p></More>
                 </>
               ) : (
                 hinted ? (
-                  <p className="card-text small">Pista: “{r.hint}” · leva {r.ingredients.length} ingredientes diferentes. Misture na bancada.</p>
+                  <p className="card-text small">{tr('Pista: “')}{r.hint}{tr('” · leva ')}{r.ingredients.length}{tr(' ingredientes diferentes. Misture na bancada.')}</p>
                 ) : (
-                  <p className="card-text muted small">Pista: “{r.hint}” · a pista chega no nível {r.unlockLevel}</p>
+                  <p className="card-text muted small">{tr('Pista: “')}{r.hint}{tr('” · a pista chega no nível ')}{r.unlockLevel}</p>
                 )
               )}
             </li>
@@ -102,8 +102,8 @@ function Experiment({ save }: { save: GameSave }) {
 
   return (
     <section className="group experiment">
-      <h3>Bancada de experimentos</h3>
-      <p className="card-text small">Misture 2 ou 3 ingredientes. Se der certo, a receita entra no livro. Se não, você perde só 1 ingrediente e ganha uma pista.</p>
+      <h3>{tr('Bancada de experimentos')}</h3>
+      <p className="card-text small">{tr('Misture 2 ou 3 ingredientes. Se der certo, a receita entra no livro. Se não, você perde só 1 ingrediente e ganha uma pista.')}</p>
       <div className="chips">
         {INGREDIENTS.map((i) => {
           const have = save.ingredients[i.id] ?? 0;
@@ -121,8 +121,7 @@ function Experiment({ save }: { save: GameSave }) {
           dispatch({ type: 'EXPERIMENT', ingredientIds: picked });
           setPicked([]);
         }}
-      >
-        Misturar {picked.length > 0 ? `(${picked.length})` : ''}
+      >{tr('Misturar ')}{picked.length > 0 ? `(${picked.length})` : ''}
       </button>
       {hint && <p className="hint-note" role="status">{hint}</p>}
     </section>

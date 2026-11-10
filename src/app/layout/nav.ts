@@ -6,6 +6,7 @@ import { royalChapter, royalDeliverable, royalStarsMissing } from '../../domain/
 import type { GameSave } from '../../domain/models/types';
 import { useGameStore, type PanelId } from '../../store/gameStore';
 
+import { tr } from '../../i18n';
 /**
  * Mapa da navegação: as 13 telas do jogo ficam em 4 áreas com nome fixo.
  * A mesma estrutura aparece na barra de baixo (computador), nos 5 botões do celular,
@@ -38,38 +39,38 @@ export interface NavGroup {
 
 export const NAV_GROUPS: NavGroup[] = [
   {
-    id: 'oficina', label: 'Oficina', icon: '⚗️', hint: 'Comprar ingredientes e preparar poções',
+    id: 'oficina', label: tr('Oficina'), icon: '⚗️', hint: tr('Comprar ingredientes e preparar poções'),
     items: [
-      { panel: 'ingredients', label: 'Armário', title: 'Armário e fornecedor', icon: '🌿', key: '1' },
-      { panel: 'production', label: 'Caldeirão', title: 'Caldeirão', icon: '🔥', key: '2' },
-      { panel: 'recipes', label: 'Receitas', title: 'Livro de receitas', icon: '📖', key: '3' },
+      { panel: 'ingredients', label: tr('Armário'), title: tr('Armário e fornecedor'), icon: '🌿', key: '1' },
+      { panel: 'production', label: tr('Caldeirão'), title: tr('Caldeirão'), icon: '🔥', key: '2' },
+      { panel: 'recipes', label: tr('Receitas'), title: tr('Livro de receitas'), icon: '📖', key: '3' },
     ],
   },
   {
-    id: 'loja', label: 'Loja', icon: '🛎️', hint: 'Preços, clientes e pedidos especiais',
+    id: 'loja', label: tr('Loja'), icon: '🛎️', hint: tr('Preços, clientes e pedidos especiais'),
     items: [
-      { panel: 'shelves', label: 'Prateleiras', title: 'Prateleiras e preços', icon: '🧪', key: '4' },
-      { panel: 'counter', label: 'Balcão', title: 'Balcão', icon: '🛎️', key: '5' },
-      { panel: 'orders', label: 'Pedidos', title: 'Quadro de pedidos', icon: '📜', key: '6' },
+      { panel: 'shelves', label: tr('Prateleiras'), title: tr('Prateleiras e preços'), icon: '🧪', key: '4' },
+      { panel: 'counter', label: tr('Balcão'), title: tr('Balcão'), icon: '🛎️', key: '5' },
+      { panel: 'orders', label: tr('Pedidos'), title: tr('Quadro de pedidos'), icon: '📜', key: '6' },
     ],
   },
   {
-    id: 'progresso', label: 'Progresso', icon: '🎯', hint: 'Diário, melhorias, talentos e relatório',
+    id: 'progresso', label: tr('Progresso'), icon: '🎯', hint: tr('Diário, melhorias, talentos e relatório'),
     items: [
-      { panel: 'goals', label: 'Diário', title: 'Diário da loja', icon: '🎯', key: '7' },
-      { panel: 'upgrades', label: 'Melhorias', title: 'Melhorias e ajudantes', icon: '🔨', key: '8' },
-      { panel: 'grimoire', label: 'Grimório', title: 'Grimório do Mestre', icon: '✨', key: '9', inside: 'upgrades' },
-      { panel: 'report', label: 'Relatório', title: 'Caixa e relatório', icon: '📊', key: '0', noTab: true },
-      { panel: 'royal', label: 'Concurso', title: 'Concurso Real de Alquimia', icon: '👑', key: 'c', inside: 'village' },
+      { panel: 'goals', label: tr('Diário'), title: tr('Diário da loja'), icon: '🎯', key: '7' },
+      { panel: 'upgrades', label: tr('Melhorias'), title: tr('Melhorias e ajudantes'), icon: '🔨', key: '8' },
+      { panel: 'grimoire', label: tr('Grimório'), title: tr('Grimório do Mestre'), icon: '✨', key: '9', inside: 'upgrades' },
+      { panel: 'report', label: tr('Relatório'), title: tr('Caixa e relatório'), icon: '📊', key: '0', noTab: true },
+      { panel: 'royal', label: tr('Concurso'), title: tr('Concurso Real de Alquimia'), icon: '👑', key: 'c', inside: 'village' },
     ],
   },
   {
-    id: 'mundo', label: 'Mundo', icon: '🗺️', hint: 'A rua, a vila, a decoração e o álbum',
+    id: 'mundo', label: tr('Mundo'), icon: '🗺️', hint: tr('A rua, a vila, a decoração e o álbum'),
     items: [
-      { panel: 'street', label: 'Rua', title: 'A rua da loja', icon: '🏘️', key: 'r' },
-      { panel: 'village', label: 'Vila', title: 'Reconstruir a vila', icon: '🏗️', key: 'v' },
-      { panel: 'season', label: 'Decoração', title: 'Decoração e festas', icon: '🌙', key: 't' },
-      { panel: 'album', label: 'Álbum', title: 'Álbum da loja', icon: '🏆', key: 'a' },
+      { panel: 'street', label: tr('Rua'), title: tr('A rua da loja'), icon: '🏘️', key: 'r' },
+      { panel: 'village', label: tr('Vila'), title: tr('Reconstruir a vila'), icon: '🏗️', key: 'v' },
+      { panel: 'season', label: tr('Decoração'), title: tr('Decoração e festas'), icon: '🌙', key: 't' },
+      { panel: 'album', label: tr('Álbum'), title: tr('Álbum da loja'), icon: '🏆', key: 'a' },
     ],
   },
 ];
@@ -84,9 +85,12 @@ const GROUP_BY_PANEL = new Map(NAV_GROUPS.flatMap((g) => g.items.map((i) => [i.p
 export const groupOf = (panel: PanelId | null): NavGroup | null =>
   panel ? GROUP_BY_PANEL.get(panel) ?? (panel === 'door' ? NAV_GROUPS[1] : null) : null;
 
-export const panelTitle = (panel: PanelId): string => (panel === 'door' ? 'Porta da loja' : ITEM_BY_PANEL.get(panel)?.title ?? '');
+export const panelTitle = (panel: PanelId): string => (panel === 'door' ? tr('Porta da loja') : ITEM_BY_PANEL.get(panel)?.title ?? '');
 
 /** A aba que mostra esta tela (ela mesma, ou a aba que a hospeda). */
+/** Nome curto da tela (o da aba). */
+export const panelLabel = (panel: PanelId): string => ITEM_BY_PANEL.get(panel)?.label ?? panelTitle(panel);
+
 export const tabOf = (panel: PanelId): PanelId => ITEM_BY_PANEL.get(panel)?.inside ?? panel;
 
 /** Telas que aparecem juntas numa aba: a própria e as que moram nela, na ordem do mapa. */
@@ -157,7 +161,7 @@ export function useBadges() {
   const fresh = useGameStore((s) => (s.save ? SHORTCUTS.filter((i) => panelIsNew(s.save!, i.panel)).map((i) => i.panel).join(',') : ''));
   const idlePot = useGameStore((s) => !!s.save && s.save.phase === 'expediente' && !s.save.brew && s.save.tutorialStep >= 5);
   return (panel: PanelId): string | number | null => {
-    if (fresh && fresh.split(',').includes(panel)) return 'novo';
+    if (fresh && fresh.split(',').includes(panel)) return tr('novo');
     switch (panel) {
       case 'counter': return customers > 0 ? customers : null;
       case 'production': return idlePot ? '!' : null;

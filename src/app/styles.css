@@ -1740,3 +1740,15 @@ html, button, input { font-variant-ligatures: none; font-feature-settings: "liga
 .stir-point { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; color: var(--paper-hi); }
 .stir-liquid { width: 48px; height: 32px; border-radius: 0 0 14px 14px; border: 2px solid var(--parchment-edge); }
 .stir-swatch { display: inline-block; width: 18px; height: 18px; vertical-align: middle; border: 2px solid var(--parchment-edge); }
+
+/* ===== Idioma (auditoria P3.2) ===== */
+.lang-switch { display: inline-flex; align-items: center; gap: 4px; justify-content: center; flex-wrap: wrap; }
+.lang-label { font-size: 14px; margin-right: 2px; }
+.lang-opt {
+  font: inherit; font-size: 13px; padding: 4px 10px; cursor: pointer;
+  background: transparent; color: inherit; border: 2px solid currentColor; opacity: .6;
+}
+.lang-opt.on { opacity: 1; background: var(--gold, #e8b64c); color: #2a1a0e; border-color: var(--gold, #e8b64c); }
+.lang-opt:focus-visible { outline: 2px solid var(--gold, #e8b64c); outline-offset: 2px; }
+.menu-card .lang-switch, .menu .lang-switch { margin-top: 10px; }
+.settings-lang { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 10px 0 2px; flex-wrap: wrap; }

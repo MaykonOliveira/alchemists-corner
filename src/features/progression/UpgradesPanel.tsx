@@ -7,26 +7,27 @@ import { SpriteIcon } from '../../ui/SpriteIcon';
 import { Coins, More } from '../../ui/widgets';
 import { Icon } from '../../ui/Icon';
 
+import { tr } from '../../i18n';
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
 /** Frase curta sobre o que o ajudante está fazendo agora. */
 function helperStatus(save: GameSave, id: string): string {
-  if (!helperActive(save, id)) return 'Descansando. Ligue para voltar ao trabalho.';
-  if (save.phase === 'fechamento') return 'Loja fechada: descansando até amanhã.';
+  if (!helperActive(save, id)) return tr('Descansando. Ligue para voltar ao trabalho.');
+  if (save.phase === 'fechamento') return tr('Loja fechada: descansando até amanhã.');
   const w = save.stats.helperWork;
   if (id === RAVEN) {
     const next = Math.max(1, Math.ceil(save.helpers.ravenInMs / 1000));
-    return `Hoje: ${plural(w.deliveries, 'viagem', 'viagens')}, ${plural(w.delivered, 'item', 'itens')}. Confere o armário de novo em ${next}s.`;
+    return tr('Hoje: {0}, {1}. Confere o armário de novo em {2}s.', plural(w.deliveries, tr('viagem'), tr('viagens')), plural(w.delivered, tr('item'), tr('itens')), next);
   }
   if (id === APPRENTICE) {
     const job = save.brew ?? save.brew2;
-    if (job && !apprenticePlan(save)) return `Mexendo o caldeirão: ${RECIPES_BY_ID[job.recipeId].shortName}. Hoje: ${plural(w.brews, 'preparo', 'preparos')}.`;
+    if (job && !apprenticePlan(save)) return tr('Mexendo o caldeirão: {0}. Hoje: {1}.', RECIPES_BY_ID[job.recipeId].shortName, plural(w.brews, tr('preparo'), tr('preparos')));
     const plan = apprenticePlan(save);
-    return plan ? `Vai preparar ${RECIPES_BY_ID[plan.recipeId].shortName}.` : `Esperando ingredientes ou espaço nas prateleiras. Hoje: ${plural(w.brews, 'preparo', 'preparos')}.`;
+    return plan ? tr('Vai preparar {0}.', RECIPES_BY_ID[plan.recipeId].shortName) : tr('Esperando ingredientes ou espaço nas prateleiras. Hoje: {0}.', plural(w.brews, tr('preparo'), tr('preparos')));
   }
   if (id === GOLEM) {
-    if (save.phase !== 'expediente') return 'Esperando a loja abrir.';
-    return `Atende quem espera há mais de ${Math.round(golemDelayMs(save) / 100) / 10}s. Hoje: ${plural(w.served, 'venda', 'vendas')}.`;
+    if (save.phase !== 'expediente') return tr('Esperando a loja abrir.');
+    return tr('Atende quem espera há mais de {0}s. Hoje: {1}.', Math.round(golemDelayMs(save) / 100) / 10, plural(w.served, tr('venda'), tr('vendas')));
   }
   return '';
 }
@@ -46,13 +47,13 @@ function UpgradeCard({ save, u }: { save: GameSave; u: ShopUpgrade }) {
         {helper && <SpriteIcon name={`helper-${u.id}`} size={32} muted={locked} />}
         {u.category === 'treino' && u.requires && <SpriteIcon name={`helper-${u.requires}`} size={32} muted={locked} />}
         <span className="row-title">{u.name}</span>
-        <span className={`tag ${u.category === 'visual' || expansion ? 'tag-gold' : ''} ${helper ? 'tag-helper' : ''}`}>{expansion ? 'expansão' : u.category}</span>
+        <span className={`tag ${u.category === 'visual' || expansion ? 'tag-gold' : ''} ${helper ? 'tag-helper' : ''}`}>{expansion ? tr('expansão') : u.category}</span>
       </div>
       {owned && helper ? <p className="helper-status small">{helperStatus(save, u.id)}</p> : !locked && <p className="card-text small">{u.effect}</p>}
       {(helper || (owned && !helper) || locked) && (
-        <More label={owned ? 'O que faz' : 'Detalhes'}>
+        <More label={owned ? tr('O que faz') : tr('Detalhes')}>
           <p className="card-text small">{u.effect}</p>
-          {helper && <p className="card-text small muted">Salário: {u.upkeep} moedas por dia, pago no fechamento.</p>}
+          {helper && <p className="card-text small muted">{tr('Salário: ')}{u.upkeep}{tr(' moedas por dia, pago no fechamento.')}</p>}
         </More>
       )}
       <div className="card-foot">
@@ -61,17 +62,17 @@ function UpgradeCard({ save, u }: { save: GameSave; u: ShopUpgrade }) {
           <label className="switch">
             <input type="checkbox" checked={on} onChange={(e) => dispatch({ type: 'SET_HELPER', upgradeId: u.id, on: e.target.checked })} />
             <span className="switch-track" aria-hidden />
-            <span>{on ? 'Trabalhando' : 'Descansando'}</span>
+            <span>{on ? tr('Trabalhando') : tr('Descansando')}</span>
           </label>
         ) : owned ? (
-          <span className="tag tag-ok">instalada ✓</span>
+          <span className="tag tag-ok">{tr('instalada ✓')}</span>
         ) : save.level < u.requiredLevel ? (
-          <span className="tag">nível {u.requiredLevel}</span>
+          <span className="tag">{tr('nível ')}{u.requiredLevel}</span>
         ) : needs ? (
-          <span className="tag">antes: {needs.name}</span>
+          <span className="tag">{tr('antes: {0}', needs.name)}</span>
         ) : (
           <button className="btn btn-small btn-primary" disabled={!afford} onClick={() => dispatch({ type: 'BUY_UPGRADE', upgradeId: u.id })}>
-            {afford ? (helper ? 'Contratar' : 'Comprar') : `Faltam ${u.cost - save.coins}`}
+            {afford ? (helper ? tr('Contratar') : tr('Comprar')) : tr('Faltam {0}', u.cost - save.coins)}
           </button>
         )}
       </div>
@@ -87,23 +88,23 @@ export function UpgradesPanel({ save }: { save: GameSave }) {
   const showTraining = save.level >= 13 || training.some((u) => save.upgrades.includes(u.id));
   return (
     <>
-      <h3 className="mini-title">Ajudantes</h3>
+      <h3 className="mini-title">{tr('Ajudantes')}</h3>
       <ul className="list">
         {helpers.map((u) => <UpgradeCard key={u.id} save={save} u={u} />)}
       </ul>
       {showTraining && (
         <>
-          <h3 className="mini-title"><Icon e="🎓" /> Treino da equipe</h3>
+          <h3 className="mini-title"><Icon e="🎓" />{tr(' Treino da equipe')}</h3>
           <ul className="list">
             {training.map((u) => <UpgradeCard key={u.id} save={save} u={u} />)}
           </ul>
         </>
       )}
-      <h3 className="mini-title"><Icon e="🏰" /> Expansão da loja</h3>
+      <h3 className="mini-title"><Icon e="🏰" />{tr(' Expansão da loja')}</h3>
       <ol className="list expansion-track">
         {expansions.map((u) => <UpgradeCard key={u.id} save={save} u={u} />)}
       </ol>
-      <h3 className="mini-title">Melhorias da loja</h3>
+      <h3 className="mini-title">{tr('Melhorias da loja')}</h3>
       <ul className="list">
         {others.map((u) => <UpgradeCard key={u.id} save={save} u={u} />)}
       </ul>

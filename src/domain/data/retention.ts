@@ -1,6 +1,7 @@
 // Dados da fase 3: presentes de visita, trilha da temporada, festas da estação, cartas e presentes de nível.
 import type { SeasonId } from '../models/types';
 
+import { tr } from '../../i18n';
 /** Presentes dos níveis 2 a 5: a primeira meia hora tem uma recompensa em cada degrau. */
 export const LEVEL_GIFTS: Record<number, { coins: number; crystals: number; items: { ingredientId: string; qty: number }[] }> = {
   2: { coins: 40, crystals: 0, items: [{ ingredientId: 'folha-lunar', qty: 4 }, { ingredientId: 'po-de-pedra', qty: 4 }] },
@@ -11,13 +12,13 @@ export const LEVEL_GIFTS: Record<number, { coins: number; crystals: number; item
 
 /** Calendário de 7 presentes de visita. Faltar um dia não zera nada: o próximo presente só espera. */
 export const VISIT_GIFTS: { coins: number; crystals: number; items: { ingredientId: string; qty: number }[]; decor?: string; label: string }[] = [
-  { coins: 60, crystals: 0, items: [], label: '60 moedas' },
-  { coins: 0, crystals: 0, items: [{ ingredientId: 'orvalho-feerico', qty: 3 }, { ingredientId: 'cristal-ambar', qty: 3 }], label: 'Cesta de ingredientes' },
-  { coins: 100, crystals: 0, items: [], label: '100 moedas' },
-  { coins: 0, crystals: 4, items: [], label: '4 Cristais de luar' },
-  { coins: 0, crystals: 0, items: [{ ingredientId: 'essencia-azul', qty: 3 }, { ingredientId: 'cogumelo-lanterna', qty: 3 }], label: 'Ingredientes mágicos' },
-  { coins: 180, crystals: 0, items: [], label: '180 moedas' },
-  { coins: 0, crystals: 8, items: [], decor: 'planta-cogumelos', label: 'Baú do sétimo dia: 8 cristais e um vaso de cogumelos' },
+  { coins: 60, crystals: 0, items: [], label: tr('60 moedas') },
+  { coins: 0, crystals: 0, items: [{ ingredientId: 'orvalho-feerico', qty: 3 }, { ingredientId: 'cristal-ambar', qty: 3 }], label: tr('Cesta de ingredientes') },
+  { coins: 100, crystals: 0, items: [], label: tr('100 moedas') },
+  { coins: 0, crystals: 4, items: [], label: tr('4 Cristais de luar') },
+  { coins: 0, crystals: 0, items: [{ ingredientId: 'essencia-azul', qty: 3 }, { ingredientId: 'cogumelo-lanterna', qty: 3 }], label: tr('Ingredientes mágicos') },
+  { coins: 180, crystals: 0, items: [], label: tr('180 moedas') },
+  { coins: 0, crystals: 8, items: [], decor: 'planta-cogumelos', label: tr('Baú do sétimo dia: 8 cristais e um vaso de cogumelos') },
 ];
 
 /** Pontos da trilha por tipo de feito. */
@@ -48,7 +49,7 @@ export const TRACK_REWARDS: TrackReward[] = [
 ];
 
 export const TRACK_NAMES: Record<SeasonId, string> = {
-  primavera: 'Temporada das Flores', verao: 'Temporada do Sol', outono: 'Temporada das Folhas', inverno: 'Temporada da Neve',
+  primavera: tr('Temporada das Flores'), verao: tr('Temporada do Sol'), outono: tr('Temporada das Folhas'), inverno: tr('Temporada da Neve'),
 };
 
 /** Festa de cada estação do jogo: no último dia da estação, um convidado especial passa pela loja. */
@@ -65,33 +66,33 @@ export interface SeasonFest {
 }
 
 export const SEASON_FESTS: Record<SeasonId, SeasonFest> = {
-  primavera: { season: 'primavera', name: 'Feira das Flores', text: 'A rua amanheceu enfeitada. A jardineira Flora vem buscar um néctar para a feira.',
-    guest: 'Flora, a jardineira', archetype: 'morador', wants: 'nectar-primavera', remark: 'Feliz Feira das Flores! Tem algo que cheire a primavera?', reward: 'planta-flores' },
-  verao: { season: 'verao', name: 'Festa do Sol', text: 'O dia mais longo do ano. O capitão Sol-Posto quer algo para a travessia.',
-    guest: 'Capitão Sol-Posto', archetype: 'viajante', wants: 'refresco-solar', remark: 'Hoje o sol não se põe! Preciso de vigor para a travessia.', reward: 'luminaria-sol' },
-  outono: { season: 'outono', name: 'Noite das Abóboras', text: 'Abóboras acesas em cada janela. A bruxa Morgana veio de longe atrás de um chá.',
-    guest: 'Bruxa Morgana', archetype: 'estudioso', wants: 'cha-colheita', remark: 'Doce ou travessura? Prefiro um chá bem forte…', reward: 'lanterna-abobora' },
-  inverno: { season: 'inverno', name: 'Noite do Gelo', text: 'A cidade patina no lago congelado. O guardião Bóreas procura uma luz para a noite.',
-    guest: 'Guardião Bóreas', archetype: 'aventureiro', wants: 'aurora-boreal', remark: 'A noite mais longa chegou. Tem algo que brilhe no escuro?', reward: 'quadro-neve' },
+  primavera: { season: 'primavera', name: tr('Feira das Flores'), text: tr('A rua amanheceu enfeitada. A jardineira Flora vem buscar um néctar para a feira.'),
+    guest: tr('Flora, a jardineira'), archetype: 'morador', wants: 'nectar-primavera', remark: tr('Feliz Feira das Flores! Tem algo que cheire a primavera?'), reward: 'planta-flores' },
+  verao: { season: 'verao', name: tr('Festa do Sol'), text: tr('O dia mais longo do ano. O capitão Sol-Posto quer algo para a travessia.'),
+    guest: tr('Capitão Sol-Posto'), archetype: 'viajante', wants: 'refresco-solar', remark: tr('Hoje o sol não se põe! Preciso de vigor para a travessia.'), reward: 'luminaria-sol' },
+  outono: { season: 'outono', name: tr('Noite das Abóboras'), text: tr('Abóboras acesas em cada janela. A bruxa Morgana veio de longe atrás de um chá.'),
+    guest: tr('Bruxa Morgana'), archetype: 'estudioso', wants: 'cha-colheita', remark: tr('Doce ou travessura? Prefiro um chá bem forte…'), reward: 'lanterna-abobora' },
+  inverno: { season: 'inverno', name: tr('Noite do Gelo'), text: tr('A cidade patina no lago congelado. O guardião Bóreas procura uma luz para a noite.'),
+    guest: tr('Guardião Bóreas'), archetype: 'aventureiro', wants: 'aurora-boreal', remark: tr('A noite mais longa chegou. Tem algo que brilhe no escuro?'), reward: 'quadro-neve' },
 };
 
 /** Cartas curtas dos fregueses fiéis, que anunciam a visita do dia seguinte. */
 export const LETTERS: Record<string, string[]> = {
-  'dona-celia': ['Meu neto ralou o joelho de novo. Passo aí amanhã cedinho!', 'Fiz bolo de fubá. Amanhã levo um pedaço e busco o de sempre.'],
-  bram: ['A forja vai trabalhar dobrado amanhã. Separa um tônico para mim?', 'Ganhei uma encomenda grande de ferraduras. Amanhã apareço!'],
-  lia: ['Prova de runas amanhã! Vou precisar do elixir. Torça por mim.', 'O professor passou trabalho para a noite toda. Amanhã eu passo aí.'],
-  tobias: ['Volto da estrada amanhã. Guarda uma visão noturna para o mascate?', 'Achei um atalho pelas minas. Amanhã conto tudo e levo uma poção.'],
-  'vovo-ze': ['Os joelhos avisaram que vem chuva. Amanhã passo para o bálsamo.', 'Minha netinha vem me visitar. Amanhã quero dormir cedo, sabe como é.'],
-  condessa: ['Há um baile no palácio amanhã. Conto com seu brilho, como sempre.', 'A duquesa de Valtória copiou meu vestido. Amanhã preciso brilhar mais.'],
+  'dona-celia': [tr('Meu neto ralou o joelho de novo. Passo aí amanhã cedinho!'), tr('Fiz bolo de fubá. Amanhã levo um pedaço e busco o de sempre.')],
+  bram: [tr('A forja vai trabalhar dobrado amanhã. Separa um tônico para mim?'), tr('Ganhei uma encomenda grande de ferraduras. Amanhã apareço!')],
+  lia: [tr('Prova de runas amanhã! Vou precisar do elixir. Torça por mim.'), tr('O professor passou trabalho para a noite toda. Amanhã eu passo aí.')],
+  tobias: [tr('Volto da estrada amanhã. Guarda uma visão noturna para o mascate?'), tr('Achei um atalho pelas minas. Amanhã conto tudo e levo uma poção.')],
+  'vovo-ze': [tr('Os joelhos avisaram que vem chuva. Amanhã passo para o bálsamo.'), tr('Minha netinha vem me visitar. Amanhã quero dormir cedo, sabe como é.')],
+  condessa: [tr('Há um baile no palácio amanhã. Conto com seu brilho, como sempre.'), tr('A duquesa de Valtória copiou meu vestido. Amanhã preciso brilhar mais.')],
 };
 
 /** Carta da Condessa no fim do dia 1 e a encomenda que ela faz no dia 2. */
 export const DEBUT = {
-  name: 'Condessa Amélia',
-  remark: 'Então esta é a loja nova! Dizem que suas poções são as melhores da rua.',
-  letter: 'Fiquei encantada com a loja. Volte amanhã: tenho uma encomenda maior para você.',
+  name: tr('Condessa Amélia'),
+  remark: tr('Então esta é a loja nova! Dizem que suas poções são as melhores da rua.'),
+  letter: tr('Fiquei encantada com a loja. Volte amanhã: tenho uma encomenda maior para você.'),
   /** Carta quando ninguém atendeu a Condessa no dia 1. */
-  letterMissed: 'Passei pela loja ontem à tarde e esperei, mas ninguém me atendeu. Vou dar mais uma chance: preciso de poções para o baile.',
+  letterMissed: tr('Passei pela loja ontem à tarde e esperei, mas ninguém me atendeu. Vou dar mais uma chance: preciso de poções para o baile.'),
   pays: 10,
-  order: { client: 'Condessa Amélia', text: 'Como prometido: o baile da corte precisa de poções de cura para os dançarinos mais animados.', recipeId: 'cura-simples', qty: 4, rewardCoins: 160, rewardRep: 6, rewardXp: 60 },
+  order: { client: tr('Condessa Amélia'), text: tr('Como prometido: o baile da corte precisa de poções de cura para os dançarinos mais animados.'), recipeId: 'cura-simples', qty: 4, rewardCoins: 160, rewardRep: 6, rewardXp: 60 },
 };

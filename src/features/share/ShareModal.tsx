@@ -4,6 +4,7 @@ import { useGameStore } from '../../store/gameStore';
 import { canvasBlob, drawShopCard } from './shareCard';
 import { GAME_URL } from './giftCode';
 
+import { tr } from '../../i18n';
 /** "Mostrar a loja": gera o cartão e deixa compartilhar, baixar ou copiar o link do jogo. */
 export function ShareModal() {
   const modal = useGameStore((s) => s.ui.modal);
@@ -35,7 +36,7 @@ export function ShareModal() {
 
   if (!open || !save) return null;
   const close = () => dispatch({ type: 'OPEN_MODAL', modal: null });
-  const text = `Olha a minha loja de poções "${save.shopName}" no Alchemist's Corner! ${GAME_URL}`;
+  const text = tr('Olha a minha loja de poções "{0}" no Alchemist\'s Corner! {1}', save.shopName, GAME_URL);
   const file = blob ? new File([blob], 'minha-loja.png', { type: 'image/png' }) : null;
   const canShareFile = !!file && typeof navigator.canShare === 'function' && navigator.canShare({ files: [file] });
 
@@ -54,27 +55,27 @@ export function ShareModal() {
     a.href = url;
     a.download = `${save.shopName.replace(/[^\p{L}\p{N}]+/gu, '-').toLowerCase() || 'minha-loja'}.png`;
     a.click();
-    setMsg('Imagem salva.');
+    setMsg(tr('Imagem salva.'));
   };
   const copy = async () => {
-    try { await navigator.clipboard.writeText(text); setMsg('Link copiado!'); } catch { setMsg(text); }
+    try { await navigator.clipboard.writeText(text); setMsg(tr('Link copiado!')); } catch { setMsg(text); }
   };
 
   return (
     <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && close()}>
       <div className="modal modal-share" role="dialog" aria-modal="true" aria-labelledby="share-title">
-        <p className="modal-kicker">Mostrar a loja</p>
+        <p className="modal-kicker">{tr('Mostrar a loja')}</p>
         <h2 id="share-title">{save.shopName}</h2>
         <div className="share-preview">
-          {url ? <img src={url} alt={`Cartão da loja ${save.shopName}`} /> : <span className="muted">Pintando o cartão…</span>}
+          {url ? <img src={url} alt={tr('Cartão da loja {0}', save.shopName)} /> : <span className="muted">{tr('Pintando o cartão…')}</span>}
         </div>
         <div className="btn-row">
-          <button className="btn btn-primary btn-glow" disabled={!url} onClick={share}>Compartilhar</button>
-          <button className="btn" disabled={!url} onClick={download}>Baixar imagem</button>
-          <button className="btn" onClick={copy}>Copiar link</button>
+          <button className="btn btn-primary btn-glow" disabled={!url} onClick={share}>{tr('Compartilhar')}</button>
+          <button className="btn" disabled={!url} onClick={download}>{tr('Baixar imagem')}</button>
+          <button className="btn" onClick={copy}>{tr('Copiar link')}</button>
         </div>
         {msg && <p className="muted small">{msg}</p>}
-        <button className="btn btn-ghost-dark" onClick={close}>Voltar</button>
+        <button className="btn btn-ghost-dark" onClick={close}>{tr('Voltar')}</button>
       </div>
     </div>
   );

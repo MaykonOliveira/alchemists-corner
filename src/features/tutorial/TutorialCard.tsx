@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { TUTORIAL_DONE, useGameStore, type PanelId } from '../../store/gameStore';
 import { useStageCards } from './stage';
 
+import { tr } from '../../i18n';
 interface Step {
   title: string;
   text: string;
@@ -14,13 +15,13 @@ interface Step {
 
 /** Tutorial contextual do primeiro dia (PRD 7.3). Cada passo avança sozinho quando o jogador faz a ação. */
 export const TUTORIAL_STEPS: Step[] = [
-  { title: 'Abra as portas!', text: 'O antigo dono deixou 5 poções na prateleira. Abra a loja e faça sua primeira venda agora mesmo.', spot: 'door', ui: '[data-tut="open-shop"]' },
-  { title: 'Seu primeiro cliente', text: 'O pedido aparece sobre a loja. Toque em Vender para atender com um toque.', spot: 'counter', ui: '[data-tut="quick-sell"]' },
-  { title: 'Primeira venda!', text: 'As moedas já estão no caixa. Agora vamos repor o estoque: abra o armário para comprar ingredientes.', action: { label: 'Abrir o armário', panel: 'ingredients' }, spot: 'cabinet', ui: '[data-tut~="tab-ingredients"]' },
-  { title: 'Compre ingredientes', text: 'A Poção de Cura leva Folha lunar e Pó de pedra. Escolha a quantidade e toque em Comprar.', spot: 'cabinet', ui: '[data-tut="buy"]' },
-  { title: 'Hora de ferver', text: 'No caldeirão, escolha a receita e toque em Preparar. Ele já sugere o máximo de lotes que dá, e cada lote rende 2 poções.', action: { label: 'Ir ao caldeirão', panel: 'production' }, spot: 'cauldron', ui: '[data-tut="brew"]' },
-  { title: 'Muito bem!', text: 'Atenda quem aparecer. Hoje o dia passa rápido, e dizem que uma visita importante vem à tarde… Ao anoitecer (ou quando quiser) encerre o dia.', spot: 'register', ui: '[data-tut="close-day"]' },
-  { title: 'Relatório do dia', text: 'Aqui você vê o que vendeu, o que gastou e o lucro. Use isso para decidir o que preparar amanhã.' },
+  { title: tr('Abra as portas!'), text: tr('O antigo dono deixou 5 poções na prateleira. Abra a loja e faça sua primeira venda agora mesmo.'), spot: 'door', ui: '[data-tut="open-shop"]' },
+  { title: tr('Seu primeiro cliente'), text: tr('O pedido aparece sobre a loja. Toque em Vender para atender com um toque.'), spot: 'counter', ui: '[data-tut="quick-sell"]' },
+  { title: tr('Primeira venda!'), text: tr('As moedas já estão no caixa. Agora vamos repor o estoque: abra o armário para comprar ingredientes.'), action: { label: tr('Abrir o armário'), panel: 'ingredients' }, spot: 'cabinet', ui: '[data-tut~="tab-ingredients"]' },
+  { title: tr('Compre ingredientes'), text: tr('A Poção de Cura leva Folha lunar e Pó de pedra. Escolha a quantidade e toque em Comprar.'), spot: 'cabinet', ui: '[data-tut="buy"]' },
+  { title: tr('Hora de ferver'), text: tr('No caldeirão, escolha a receita e toque em Preparar. Ele já sugere o máximo de lotes que dá, e cada lote rende 2 poções.'), action: { label: tr('Ir ao caldeirão'), panel: 'production' }, spot: 'cauldron', ui: '[data-tut="brew"]' },
+  { title: tr('Muito bem!'), text: tr('Atenda quem aparecer. Hoje o dia passa rápido, e dizem que uma visita importante vem à tarde… Ao anoitecer (ou quando quiser) encerre o dia.'), spot: 'register', ui: '[data-tut="close-day"]' },
+  { title: tr('Relatório do dia'), text: tr('Aqui você vê o que vendeu, o que gastou e o lucro. Use isso para decidir o que preparar amanhã.') },
 ];
 
 export function TutorialCard() {
@@ -44,17 +45,17 @@ export function TutorialCard() {
   const side = s.spot === 'cauldron' || s.spot === 'cabinet' ? 'tut-right' : '';
   if (compact) {
     return (
-      <button className={`tutorial tutorial-compact ${side}`} onClick={() => setOpen(true)} aria-label={`Dica ${step + 1}: ${s.title}. Toque para ver.`}>
-        <span className="tutorial-step">Dica {step + 1}/{TUTORIAL_STEPS.length}</span> <span className="tutorial-title">{s.title}</span> <span aria-hidden>▸</span>
+      <button className={`tutorial tutorial-compact ${side}`} onClick={() => setOpen(true)} aria-label={tr('Dica {0}: {1}. Toque para ver.', step + 1, s.title)}>
+        <span className="tutorial-step">{tr('Dica ')}{step + 1}/{TUTORIAL_STEPS.length}</span> <span className="tutorial-title">{s.title}</span> <span aria-hidden>▸</span>
       </button>
     );
   }
   return (
     <div className={`tutorial ${side}`} role="status">
       <div className="tutorial-head">
-        <span className="tutorial-step">Dica {step + 1}/{TUTORIAL_STEPS.length}</span>
-        {customer ? <button className="link-btn" onClick={() => setOpen(false)}>Recolher</button>
-          : <button className="link-btn" onClick={() => dispatch({ type: 'SKIP_TUTORIAL' })}>Pular tutorial</button>}
+        <span className="tutorial-step">{tr('Dica ')}{step + 1}/{TUTORIAL_STEPS.length}</span>
+        {customer ? <button className="link-btn" onClick={() => setOpen(false)}>{tr('Recolher')}</button>
+          : <button className="link-btn" onClick={() => dispatch({ type: 'SKIP_TUTORIAL' })}>{tr('Pular tutorial')}</button>}
       </div>
       <p className="tutorial-title">{s.title}</p>
       <p className="tutorial-text">{s.text}</p>
@@ -62,7 +63,7 @@ export function TutorialCard() {
         {action && (
           <button className="btn btn-small btn-primary" onClick={() => dispatch({ type: 'OPEN_PANEL', panel: action.panel })}>{action.label}</button>
         )}
-        <button className="btn btn-small" onClick={() => dispatch({ type: 'NEXT_TUTORIAL' })}>{step === TUTORIAL_STEPS.length - 1 ? 'Entendi' : 'Próxima'}</button>
+        <button className="btn btn-small" onClick={() => dispatch({ type: 'NEXT_TUTORIAL' })}>{step === TUTORIAL_STEPS.length - 1 ? tr('Entendi') : tr('Próxima')}</button>
       </div>
     </div>
   );

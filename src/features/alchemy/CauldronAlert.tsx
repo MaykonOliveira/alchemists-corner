@@ -5,6 +5,7 @@ import { HOTSPOTS } from '../../game/phaser/interaction/hotspots';
 import { useGameStore } from '../../store/gameStore';
 import { Icon } from '../../ui/Icon';
 
+import { tr } from '../../i18n';
 const frames = (shopAtlas as { frames: Record<string, { frame: { w: number; h: number } }> }).frames;
 const SPOT = HOTSPOTS.find((h) => h.id === 'cauldron')!;
 const W = frames[SPOT.texture]?.frame.w ?? 32;
@@ -27,8 +28,8 @@ export function CauldronAlert() {
   const n = repeatBatches(save);
   const last = save.lastBrew ? RECIPES_BY_ID[save.lastBrew.recipeId] : null;
   const two = hasSecondCauldron(save);
-  const idle = two ? (!save.brew && !save.brew2 ? 'Os 2 caldeirões estão parados' : 'Um caldeirão está parado') : 'Caldeirão parado';
-  const label = n > 0 && last ? `${idle}. Toque para repetir ${last.shortName} ×${n}.` : `${idle}. Toque para escolher uma receita.`;
+  const idle = two ? (!save.brew && !save.brew2 ? tr('Os 2 caldeirões estão parados') : tr('Um caldeirão está parado')) : tr('Caldeirão parado');
+  const label = n > 0 && last ? tr('{0}. Toque para repetir {1} ×{2}.', idle, last.shortName, n) : tr('{0}. Toque para escolher uma receita.', idle);
   return (
     <button
       className={`cauldron-alert ${n > 0 ? 'can-repeat' : ''}`}

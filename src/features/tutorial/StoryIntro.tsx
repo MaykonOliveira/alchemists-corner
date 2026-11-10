@@ -6,7 +6,8 @@ import { useGameStore } from '../../store/gameStore';
 import { AWNINGS } from '../../domain/data/catalog';
 import { funnel } from '../../analytics/funnel';
 
-const NAME_IDEAS = ['Loja da Esquina', 'Caldeirão Dourado', 'Frasco Encantado', 'Pó de Estrela', 'Elixir & Cia.'];
+import { tr } from '../../i18n';
+const NAME_IDEAS = [tr('Loja da Esquina'), tr('Caldeirão Dourado'), tr('Frasco Encantado'), tr('Pó de Estrela'), tr('Elixir & Cia.')];
 
 /** Último passo da abertura: o jogador dá nome à loja e escolhe a cor do toldo. */
 function NameShop({ onDone }: { onDone: () => void }) {
@@ -21,28 +22,28 @@ function NameShop({ onDone }: { onDone: () => void }) {
   };
   return (
     <div className="story-card name-shop">
-      <p className="story-kicker">A loja é sua</p>
+      <p className="story-kicker">{tr('A loja é sua')}</p>
       <div className="awning-preview" style={{ ['--awning' as string]: color }} aria-hidden>
         <span className="awning-band" />
         <span className="awning-sign">{name.trim() || idea}</span>
       </div>
       <form className="name-form" onSubmit={(e) => { e.preventDefault(); finish(); }}>
-        <label htmlFor="shop-name" className="name-label">Como a loja vai se chamar?</label>
+        <label htmlFor="shop-name" className="name-label">{tr('Como a loja vai se chamar?')}</label>
         <input id="shop-name" className="name-input" maxLength={28} placeholder={idea} value={name} autoFocus
           onChange={(e) => setName(e.target.value)} autoComplete="off" />
         <div className="name-ideas">
           {NAME_IDEAS.slice(1).map((n) => <button type="button" key={n} className="chip" onClick={() => setName(n)}>{n}</button>)}
         </div>
-        <p className="name-label">Cor do toldo</p>
-        <div className="awning-swatches" role="radiogroup" aria-label="Cor do toldo">
+        <p className="name-label">{tr('Cor do toldo')}</p>
+        <div className="awning-swatches" role="radiogroup" aria-label={tr('Cor do toldo')}>
           {AWNINGS.map((a) => (
             <button type="button" key={a.id} role="radio" aria-checked={awning === a.id} aria-label={a.name} title={a.name}
               className={`swatch ${awning === a.id ? 'on' : ''}`} style={{ background: a.color }} onClick={() => setAwning(a.id)} />
           ))}
         </div>
         <div className="story-foot">
-          <span className="muted small">Dá para mudar depois nas Configurações.</span>
-          <button type="submit" className="btn btn-primary btn-glow">Pronto, é minha!</button>
+          <span className="muted small">{tr('Dá para mudar depois nas Configurações.')}</span>
+          <button type="submit" className="btn btn-primary btn-glow">{tr('Pronto, é minha!')}</button>
         </div>
       </form>
     </div>
@@ -50,9 +51,9 @@ function NameShop({ onDone }: { onDone: () => void }) {
 }
 
 const FRAMES = [
-  { img: story1, kicker: 'Uma carta chegou', text: 'O velho alquimista Bartolomeu se aposentou para cuidar das abelhas. Na carta, uma chave de latão e um bilhete: “A loja da esquina agora é sua. Cuide bem do caldeirão.”' },
-  { img: story2, kicker: 'A loja da esquina', text: 'As prateleiras estão vazias e o pó cobre tudo. Mas o armário ainda guarda umas folhas, umas pedras e um resto de orvalho feérico.' },
-  { img: story3, kicker: 'Fogo aceso', text: 'Você acende o caldeirão, e o gato da loja volta para o balcão como se nunca tivesse saído. A cidade está esperando suas poções.' },
+  { img: story1, kicker: tr('Uma carta chegou'), text: tr('O velho alquimista Bartolomeu se aposentou para cuidar das abelhas. Na carta, uma chave de latão e um bilhete: “A loja da esquina agora é sua. Cuide bem do caldeirão.”') },
+  { img: story2, kicker: tr('A loja da esquina'), text: tr('As prateleiras estão vazias e o pó cobre tudo. Mas o armário ainda guarda umas folhas, umas pedras e um resto de orvalho feérico.') },
+  { img: story3, kicker: tr('Fogo aceso'), text: tr('Você acende o caldeirão, e o gato da loja volta para o balcão como se nunca tivesse saído. A cidade está esperando suas poções.') },
 ];
 
 /** História de abertura (três quadros) mostrada uma vez, numa partida nova. */
@@ -67,7 +68,7 @@ export function StoryIntro() {
   const done = () => { funnel.mark('story_done'); dispatch({ type: 'SEE_STORY' }); };
   if (i >= FRAMES.length || framesSeen) {
     return (
-      <div className="story" role="dialog" aria-modal="true" aria-label="Nome da loja">
+      <div className="story" role="dialog" aria-modal="true" aria-label={tr('Nome da loja')}>
         <NameShop onDone={done} />
       </div>
     );
@@ -75,7 +76,7 @@ export function StoryIntro() {
   const f = FRAMES[i];
   const last = i === FRAMES.length - 1;
   return (
-    <div className="story" role="dialog" aria-modal="true" aria-label="História de abertura">
+    <div className="story" role="dialog" aria-modal="true" aria-label={tr('História de abertura')}>
       <div className="story-card" key={i}>
         <div className="story-frame">
           <img src={f.img} alt="" className="story-img" />
@@ -84,12 +85,12 @@ export function StoryIntro() {
         <p className="story-kicker">{f.kicker}</p>
         <p className="story-text">{f.text}</p>
         <div className="story-foot">
-          <span className="story-dots" aria-label={`Quadro ${i + 1} de ${FRAMES.length}`}>
+          <span className="story-dots" aria-label={tr('Quadro {0} de {1}', i + 1, FRAMES.length)}>
             {FRAMES.map((_, n) => <span key={n} className={n === i ? 'on' : ''} />)}
           </span>
-          <button className="link-btn" onClick={toName}>Pular</button>
+          <button className="link-btn" onClick={toName}>{tr('Pular')}</button>
           <button className="btn btn-primary btn-glow" autoFocus onClick={() => (last ? toName() : setI(i + 1))}>
-            {last ? 'Dar nome à loja' : 'Continuar'}
+            {last ? tr('Dar nome à loja') : tr('Continuar')}
           </button>
         </div>
       </div>

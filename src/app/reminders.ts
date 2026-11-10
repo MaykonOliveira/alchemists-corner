@@ -5,6 +5,7 @@ import { useGameStore } from '../store/gameStore';
 import { RECIPES_BY_ID } from '../domain/data/recipes';
 import { AWAY_MIN_MS } from '../domain/rules/retention';
 
+import { tr } from '../i18n';
 const KEY = 'ac-reminder-day';
 let timer: ReturnType<typeof setTimeout> | null = null;
 
@@ -40,7 +41,7 @@ function schedule() {
   if (!brews.length) return;
   const next = brews.sort((a, b) => (a.totalMs - a.elapsedMs) - (b.totalMs - b.elapsedMs))[0];
   const ms = Math.max(5_000, next.totalMs - next.elapsedMs);
-  timer = setTimeout(() => notify(`${save.shopName}: o caldeirão terminou!`, `${RECIPES_BY_ID[next.recipeId].name} pronta nas prateleiras.`), ms);
+  timer = setTimeout(() => notify(tr('{0}: o caldeirão terminou!', save.shopName), tr('{0} pronta nas prateleiras.', RECIPES_BY_ID[next.recipeId].name)), ms);
 }
 
 /** Liga os lembretes ao ciclo de vida da página. */

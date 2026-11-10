@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { MenuScreen } from './routes/MenuScreen';
 
+import { tr } from '../i18n';
 // A loja (com o Phaser, a maior parte do código) carrega à parte: a tela de título abre mais rápido no 4G.
 const loadGame = () => import('./routes/GameScreen');
 const GameScreen = lazy(() => loadGame().then((m) => ({ default: m.GameScreen })));
@@ -21,7 +22,7 @@ export function App() {
     return () => clearTimeout(t);
   }, [status]);
 
-  const loading = <div className="loading">Acendendo as lanternas…</div>;
+  const loading = <div className="loading">{tr('Acendendo as lanternas…')}</div>;
   if (status === 'loading') return loading;
   if (status === 'menu') return <MenuScreen />;
   return <Suspense fallback={loading}><GameScreen /></Suspense>;

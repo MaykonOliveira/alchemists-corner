@@ -7,9 +7,10 @@ import { PotionName } from '../../ui/widgets';
 import { Icon } from '../../ui/Icon';
 
 
+import { tr } from '../../i18n';
 function Hearts({ n }: { n: number }) {
   return (
-    <span className="hearts" aria-label={`${n} de ${MAX_HEARTS} corações`}>
+    <span className="hearts" aria-label={tr('{0} de {1} corações', n, MAX_HEARTS)}>
       {Array.from({ length: MAX_HEARTS }, (_, i) => <span key={i} className={i < n ? 'heart-on' : 'heart-off'}>{i < n ? '♥\uFE0E' : '♡'}</span>)}
     </span>
   );
@@ -27,17 +28,14 @@ export function AlbumPanel({ save }: { save: GameSave }) {
         <div>
           <p className="row-title">{season.name}</p>
           <p className="card-text small">
-            {save.day >= SEASON_START_DAY ? season.text : 'A cidade ainda está conhecendo a loja. A partir do dia 3, cada estação muda o que vende mais.'}
+            {save.day >= SEASON_START_DAY ? season.text : tr('A cidade ainda está conhecendo a loja. A partir do dia 3, cada estação muda o que vende mais.')}
           </p>
-          <p className="muted small">{left === 1 ? 'Muda amanhã.' : `Faltam ${left} dias para a próxima estação.`}</p>
+          <p className="muted small">{left === 1 ? tr('Muda amanhã.') : tr('Faltam {0} dias para a próxima estação.', left)}</p>
         </div>
       </div>
 
-      <h3 className="mini-title">Fregueses fiéis</h3>
-      <p className="card-text small muted">
-        Eles voltam sempre pedindo o de sempre. Cada vez que você entrega a favorita, ganham um coração. Com {TIP_HEARTS} corações deixam gorjeta;
-        com {MAX_HEARTS} viram amigos e trazem um presente.
-      </p>
+      <h3 className="mini-title">{tr('Fregueses fiéis')}</h3>
+      <p className="card-text small muted">{tr('Eles voltam sempre pedindo o de sempre. Cada vez que você entrega a favorita, ganham um coração. Com ')}{TIP_HEARTS}{tr(' corações deixam gorjeta; com ')}{MAX_HEARTS}{tr(' viram amigos e trazem um presente.')}</p>
       <ul className="list regulars">
         {REGULARS.map((r) => {
           const st = regularState(save, r.id);
@@ -48,12 +46,12 @@ export function AlbumPanel({ save }: { save: GameSave }) {
               <div className="regular-body">
                 <p className="row-title">{locked ? '???' : r.name}</p>
                 {locked ? (
-                  <p className="card-text small muted">Aparece a partir do nível {r.minLevel}.</p>
+                  <p className="card-text small muted">{tr('Aparece a partir do nível ')}{r.minLevel}.</p>
                 ) : (
                   <>
-                    <p className="card-text small">Sempre pede: <PotionName id={r.favorite} /></p>
-                    <p className="card-text small"><Hearts n={st.hearts} /> <span className="muted">· {st.visits} visita{st.visits === 1 ? '' : 's'}</span></p>
-                    {st.gift && <p className="card-text small regular-gift"><Icon e="🎁" /> Presenteou: {giftLabel(r)}</p>}
+                    <p className="card-text small">{tr('Sempre pede: ')}<PotionName id={r.favorite} /></p>
+                    <p className="card-text small"><Hearts n={st.hearts} /> <span className="muted">· {st.visits}{tr(' visita')}{st.visits === 1 ? '' : 's'}</span></p>
+                    {st.gift && <p className="card-text small regular-gift"><Icon e="🎁" />{tr(' Presenteou: ')}{giftLabel(r)}</p>}
                     <Story id={r.id} read={Math.min(st.hearts, REGULAR_STORIES[r.id]?.length ?? 0)} />
                   </>
                 )}
@@ -63,7 +61,7 @@ export function AlbumPanel({ save }: { save: GameSave }) {
         })}
       </ul>
 
-      <h3 className="mini-title">Conquistas · {got.size}/{ACHIEVEMENTS.length}</h3>
+      <h3 className="mini-title">{tr('Conquistas · ')}{got.size}/{ACHIEVEMENTS.length}</h3>
       <ul className="achievements">
         {ACHIEVEMENTS.map((a) => (
           <li key={a.id} className={`achievement ${got.has(a.id) ? 'achievement-on' : ''}`} title={a.text}>
@@ -74,7 +72,7 @@ export function AlbumPanel({ save }: { save: GameSave }) {
         ))}
       </ul>
 
-      <p className="card-text small muted album-cat"><Icon e="🐈" /> Carinhos no gato da loja: {save.petCount}. Ele dá sorte uma vez por dia.</p>
+      <p className="card-text small muted album-cat"><Icon e="🐈" />{tr(' Carinhos no gato da loja: ')}{save.petCount}{tr('. Ele dá sorte uma vez por dia.')}</p>
     </>
   );
 }
@@ -85,11 +83,11 @@ function Story({ id, read }: { id: string; read: number }) {
   if (!story) return null;
   return (
     <details className="regular-story">
-      <summary>História · {read}/{story.length} capítulos</summary>
+      <summary>{tr('História · ')}{read}/{story.length}{tr(' capítulos')}</summary>
       <ol>
         {story.map((ch, i) => (
           <li key={ch.title} className={i < read ? '' : 'muted'}>
-            {i < read ? <><strong>{ch.title}.</strong> {ch.opening} <em>“{ch.closing}”</em></> : i === read ? 'Próximo capítulo na próxima visita: atenda o que ele contar.' : '???'}
+            {i < read ? <><strong>{ch.title}.</strong> {ch.opening} <em>“{ch.closing}”</em></> : i === read ? tr('Próximo capítulo na próxima visita: atenda o que ele contar.') : '???'}
           </li>
         ))}
       </ol>

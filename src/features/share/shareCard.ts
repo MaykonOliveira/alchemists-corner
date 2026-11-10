@@ -8,6 +8,7 @@ import { snapshotScene } from '../../game/gameRef';
 import { GAME_URL } from './giftCode';
 import { AWNINGS } from '../../domain/data/catalog';
 
+import { tr } from '../../i18n';
 const SIZE = 1080;
 
 function roundRect(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
@@ -84,11 +85,11 @@ export async function drawShopCard(save: GameSave, opts: CardOptions = {}): Prom
 
   // Números da partida.
   const y0 = py + ph + 60;
-  const master = save.level >= MAX_LEVEL ? `Mestre ${masterRank(save.xp)}` : `Nível ${save.level}`;
+  const master = save.level >= MAX_LEVEL ? tr('Mestre {0}', masterRank(save.xp)) : tr('Nível {0}', save.level);
   const best = bestPotion(save);
   const stats: [string, string][] = opts.challenge
-    ? [['Desafio da semana', `${opts.challenge.score} pts`], ['Semana', String(opts.challenge.week)], [master, `Dia ${save.day}`]]
-    : [[master, `Dia ${save.day}`], ['Reputação', reputationTitle(save.reputation)], ['Poções vendidas', String(save.lifetime.sold)]];
+    ? [[tr('Desafio da semana'), `${opts.challenge.score} pts`], [tr('Semana'), String(opts.challenge.week)], [master, tr('Dia {0}', save.day)]]
+    : [[master, tr('Dia {0}', save.day)], [tr('Reputação'), reputationTitle(save.reputation)], [tr('Poções vendidas'), String(save.lifetime.sold)]];
   stats.forEach(([label, value], i) => {
     const x = 60 + i * ((SIZE - 120) / 3);
     const w = (SIZE - 120) / 3 - 20;
@@ -106,11 +107,11 @@ export async function drawShopCard(save: GameSave, opts: CardOptions = {}): Prom
   g.font = `500 32px ${pixel}`;
   g.fillStyle = '#f3e6c8';
   const season = seasonOf(save.day);
-  g.fillText(`${season.icon} ${season.name}${best ? ` · especialidade: ${RECIPES_BY_ID[best].name}` : ''}`, SIZE / 2, y0 + 200, SIZE - 120);
+  g.fillText(`${season.icon} ${season.name}${best ? tr(' · especialidade: {0}', RECIPES_BY_ID[best].name) : ''}`, SIZE / 2, y0 + 200, SIZE - 120);
 
   g.fillStyle = '#f2c95c';
   g.font = `700 38px ${pixel}`;
-  g.fillText("Alchemist's Corner", SIZE / 2, SIZE - 96);
+  g.fillText(tr('Alchemist\'s Corner'), SIZE / 2, SIZE - 96);
   g.fillStyle = '#a9a3b8';
   g.font = `500 26px ${pixel}`;
   g.fillText(GAME_URL.replace('https://', ''), SIZE / 2, SIZE - 52);

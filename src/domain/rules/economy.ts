@@ -9,6 +9,7 @@ import { MOON_MARKET_EXTRA, seasonalStock } from './street';
 import { villageBonus } from './villageBonus';
 import { clampQualities } from './quality';
 
+import { tr } from '../../i18n';
 export const PRICE_MIN_FACTOR = 0.8;
 export const PRICE_MAX_FACTOR = 1.3;
 
@@ -77,13 +78,13 @@ export function supplierLeft(s: GameSave, ingredientId: string) {
 /** Valida uma compra. Retorna a mensagem de erro ou null se a compra é possível. */
 export function purchaseError(s: GameSave, ingredientId: string, qty: number): string | null {
   const ing = INGREDIENTS_BY_ID[ingredientId];
-  if (!ing || !Number.isInteger(qty) || qty <= 0) return 'Quantidade inválida.';
-  if (s.phase === 'fechamento') return 'O fornecedor já foi embora hoje.';
-  if (s.level < ing.supplierLevel) return `${ing.name} só aparece no nível ${ing.supplierLevel}.`;
+  if (!ing || !Number.isInteger(qty) || qty <= 0) return tr('Quantidade inválida.');
+  if (s.phase === 'fechamento') return tr('O fornecedor já foi embora hoje.');
+  if (s.level < ing.supplierLevel) return tr('{0} só aparece no nível {1}.', ing.name, ing.supplierLevel);
   const available = supplierLeft(s, ingredientId);
-  if (qty > available) return `O fornecedor só tem ${available} hoje.`;
-  if (countIngredients(s) + qty > ingredientCapacity(s)) return 'O armário está cheio.';
-  if (ingredientPrice(s, ingredientId) * qty > s.coins) return 'Moedas insuficientes.';
+  if (qty > available) return tr('O fornecedor só tem {0} hoje.', available);
+  if (countIngredients(s) + qty > ingredientCapacity(s)) return tr('O armário está cheio.');
+  if (ingredientPrice(s, ingredientId) * qty > s.coins) return tr('Moedas insuficientes.');
   return null;
 }
 
@@ -120,26 +121,26 @@ export function missingPurchase(s: GameSave, recipeId: string, batches: number) 
   const cost = items.reduce((n, m) => n + ingredientPrice(s, m.ingredientId) * m.qty, 0);
   const qty = items.reduce((n, m) => n + m.qty, 0);
   let error: string | null = null;
-  if (s.phase === 'fechamento') error = 'O fornecedor já foi embora hoje.';
+  if (s.phase === 'fechamento') error = tr('O fornecedor já foi embora hoje.');
   for (const m of items) {
     if (error) break;
     const ing = INGREDIENTS_BY_ID[m.ingredientId];
-    if (s.level < ing.supplierLevel) error = `${ing.name} só aparece no nível ${ing.supplierLevel}.`;
+    if (s.level < ing.supplierLevel) error = tr('{0} só aparece no nível {1}.', ing.name, ing.supplierLevel);
     else if (supplierLeft(s, m.ingredientId) < m.qty) {
       const left = supplierLeft(s, m.ingredientId);
-      error = left > 0 ? `O fornecedor só tem ${left} ${ing.name} hoje.` : `O fornecedor está sem ${ing.name} hoje.`;
+      error = left > 0 ? tr('O fornecedor só tem {0} {1} hoje.', left, ing.name) : tr('O fornecedor está sem {0} hoje.', ing.name);
     }
   }
-  if (!error && countIngredients(s) + qty > ingredientCapacity(s)) error = 'O armário está cheio.';
-  if (!error && cost > s.coins) error = `Faltam ${cost - s.coins} moedas.`;
+  if (!error && countIngredients(s) + qty > ingredientCapacity(s)) error = tr('O armário está cheio.');
+  if (!error && cost > s.coins) error = tr('Faltam {0} moedas.', cost - s.coins);
   return { items, cost, error };
 }
 
 /** Compra de uma vez tudo o que falta para a receita (ou nada, se algo impedir). */
 export function buyMissing(d: Draft, recipeId: string, batches: number): boolean {
-  if (!RECIPES_BY_ID[recipeId] || !Number.isInteger(batches) || batches < 1) return fail(d, 'Quantidade inválida.');
+  if (!RECIPES_BY_ID[recipeId] || !Number.isInteger(batches) || batches < 1) return fail(d, tr('Quantidade inválida.'));
   const { items, error } = missingPurchase(d.s, recipeId, batches);
-  if (!items.length) return fail(d, 'Você já tem tudo para esta receita.');
+  if (!items.length) return fail(d, tr('Você já tem tudo para esta receita.'));
   if (error) return fail(d, error);
   for (const m of items) {
     const cost = applyPurchase(d.s, m.ingredientId, m.qty);
@@ -168,10 +169,10 @@ export function buyUpgrade(d: Draft, upgradeId: string): boolean {
   const s = d.s;
   const up = UPGRADES_BY_ID[upgradeId];
   if (!up) return false;
-  if (has(s, upgradeId)) return fail(d, 'Você já tem esta melhoria.');
-  if (s.level < up.requiredLevel) return fail(d, `Disponível no nível ${up.requiredLevel}.`);
-  if (up.requires && !has(s, up.requires)) return fail(d, `Compre antes: ${UPGRADES_BY_ID[up.requires].name}.`);
-  if (s.coins < up.cost) return fail(d, 'Moedas insuficientes.');
+  if (has(s, upgradeId)) return fail(d, tr('Você já tem esta melhoria.'));
+  if (s.level < up.requiredLevel) return fail(d, tr('Disponível no nível {0}.', up.requiredLevel));
+  if (up.requires && !has(s, up.requires)) return fail(d, tr('Compre antes: {0}.', UPGRADES_BY_ID[up.requires].name));
+  if (s.coins < up.cost) return fail(d, tr('Moedas insuficientes.'));
   s.coins -= up.cost;
   s.upgrades.push(upgradeId);
   // Ajudante recém-contratado começa a trabalhar logo.

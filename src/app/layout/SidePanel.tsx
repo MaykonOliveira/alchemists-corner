@@ -14,7 +14,7 @@ import { GoalsList, GoalsPanel } from '../../features/goals/GoalsPanel';
 import { useEffect, useRef, useState } from 'react';
 import type { GameSave } from '../../domain/models/types';
 import { useGameStore, type PanelId } from '../../store/gameStore';
-import { groupOf, panelIsNew, panelsInTab, panelTitle, panelUnlocked, rememberPanel, SHORTCUTS, tabOf, tabsOf, useBadges, useVisibleGroups } from './nav';
+import { groupOf, panelIsNew, panelLabel, panelsInTab, panelTitle, panelUnlocked, rememberPanel, SHORTCUTS, tabOf, tabsOf, useBadges, useVisibleGroups } from './nav';
 import { potionStock } from '../../domain/rules/economy';
 import { freeCauldron, hasSecondCauldron, repeatBatches } from '../../domain/rules/alchemy';
 import { RECIPES_BY_ID } from '../../domain/data/recipes';
@@ -26,6 +26,7 @@ import { RoyalPanel } from '../../features/royal/RoyalPanel';
 import { VillagePanel } from '../../features/world/VillagePanel';
 import { Icon } from '../../ui/Icon';
 
+import { tr } from '../../i18n';
 const BODY: Partial<Record<PanelId, (save: GameSave) => React.ReactNode>> = {
   ingredients: (s) => <IngredientsPanel save={s} />,
   shelves: (s) => <ShelvesPanel save={s} />,
@@ -73,12 +74,12 @@ export function SidePanel() {
       <div className="side-head">
         <h2 className="side-title">
           {group && <span className="side-area"><Icon e={group.icon} /> {group.label}</span>}
-          {shown.length > 1 ? (shown.includes('royal') ? 'Vila e Concurso Real' : shown.map((p) => panelTitle(p).split(' ')[0]).join(' e ')) : panelTitle(panel)}
+          {shown.length > 1 ? (shown.includes('royal') ? tr('Vila e Concurso Real') : shown.map((p) => panelLabel(p)).join(tr(' e '))) : panelTitle(panel)}
         </h2>
-        <button className="icon-btn" onClick={() => dispatch({ type: 'CLOSE_PANEL' })} aria-label="Voltar ao início" title="Voltar ao início (Esc)">×</button>
+        <button className="icon-btn" onClick={() => dispatch({ type: 'CLOSE_PANEL' })} aria-label={tr('Voltar ao início')} title={tr('Voltar ao início (Esc)')}>×</button>
       </div>
       {tabs.length > 1 && (
-        <div className="subtabs" role="tablist" aria-label={`Telas de ${group!.label}`}>
+        <div className="subtabs" role="tablist" aria-label={tr('Telas de {0}', group!.label)}>
           {tabs.map((i) => {
             const badge = tabBadge(i.panel);
             return (
@@ -136,46 +137,46 @@ function HomePanel({ save }: { save: GameSave }) {
   if (tutorial) next = null;
   else if (save.customers.length > 0 && !customerCard) {
     const n = save.customers.length;
-    next = { icon: '🛎️', title: n > 1 ? `${n} clientes esperando no balcão` : 'Um cliente esperando no balcão', label: 'Atender', act: () => go('counter') };
+    next = { icon: '🛎️', title: n > 1 ? tr('{0} clientes esperando no balcão', n) : tr('Um cliente esperando no balcão'), label: tr('Atender'), act: () => go('counter') };
   } else if (free && repeat > 0 && last) {
-    next = { icon: '🔥', title: twoPots && !save.brew && !save.brew2 ? 'Os 2 caldeirões estão parados' : twoPots ? 'Um caldeirão está parado' : 'O caldeirão está parado', label: `Repetir ${last.shortName} ×${repeat}`, act: () => dispatch({ type: 'REPEAT_BREW' }) };
+    next = { icon: '🔥', title: twoPots && !save.brew && !save.brew2 ? tr('Os 2 caldeirões estão parados') : twoPots ? tr('Um caldeirão está parado') : tr('O caldeirão está parado'), label: tr('Repetir {0} ×{1}', last.shortName, repeat), act: () => dispatch({ type: 'REPEAT_BREW' }) };
   } else if (free && !lowStock) {
-    next = { icon: '🔥', title: twoPots && !save.brew && !save.brew2 ? 'Os 2 caldeirões estão parados' : twoPots ? 'Um caldeirão está parado' : 'O caldeirão está parado', label: 'Preparar poções', act: () => go('production') };
+    next = { icon: '🔥', title: twoPots && !save.brew && !save.brew2 ? tr('Os 2 caldeirões estão parados') : twoPots ? tr('Um caldeirão está parado') : tr('O caldeirão está parado'), label: tr('Preparar poções'), act: () => go('production') };
   } else if (lowStock) {
-    next = { icon: '🌿', title: 'Os ingredientes estão acabando', label: 'Comprar ingredientes', act: () => go('ingredients') };
+    next = { icon: '🌿', title: tr('Os ingredientes estão acabando'), label: tr('Comprar ingredientes'), act: () => go('ingredients') };
   } else if (stock === 0) {
-    next = { icon: '🧪', title: 'As prateleiras estão vazias', label: 'Ver prateleiras', act: () => go('shelves') };
+    next = { icon: '🧪', title: tr('As prateleiras estão vazias'), label: tr('Ver prateleiras'), act: () => go('shelves') };
   } else if (save.order && potionStock(save, save.order.recipeId) < save.order.qty) {
-    next = { icon: '📜', title: `Pedido especial: ${potionStock(save, save.order.recipeId)}/${save.order.qty} ${RECIPES_BY_ID[save.order.recipeId].shortName}`, label: 'Ver pedido', act: () => go('orders') };
+    next = { icon: '📜', title: tr('Pedido especial: {0}/{1} {2}', potionStock(save, save.order.recipeId), save.order.qty, RECIPES_BY_ID[save.order.recipeId].shortName), label: tr('Ver pedido'), act: () => go('orders') };
   }
 
   return (
-    <aside className="side side-idle" aria-label="Início">
+    <aside className="side side-idle" aria-label={tr('Início')}>
       <QuickServe placement="side" />
       {next && (
         <div className="home-next">
-          <span className="home-next-kicker">Próximo passo</span>
+          <span className="home-next-kicker">{tr('Próximo passo')}</span>
           <p className="home-next-title"><Icon e={next.icon} /> {next.title}</p>
           <button className="btn btn-small" onClick={next.act}>{next.label}</button>
         </div>
       )}
       {save.phase === 'preparacao' && (
-        <button data-tut="open-shop" className="btn btn-primary btn-big btn-glow home-open" onClick={() => dispatch({ type: 'OPEN_SHOP' })}>Abrir a loja</button>
+        <button data-tut="open-shop" className="btn btn-primary btn-big btn-glow home-open" onClick={() => dispatch({ type: 'OPEN_SHOP' })}>{tr('Abrir a loja')}</button>
       )}
-      {!next && save.phase === 'expediente' && !customerCard && <p className="home-calm">Tudo andando. Os clientes chegam pela porta.</p>}
+      {!next && save.phase === 'expediente' && !customerCard && <p className="home-calm">{tr('Tudo andando. Os clientes chegam pela porta.')}</p>}
       <TipCard />
-      <button className="home-goals" onClick={() => go('goals')} aria-label="Abrir metas do dia">
+      <button className="home-goals" onClick={() => go('goals')} aria-label={tr('Abrir metas do dia')}>
         <GoalsList save={save} compact />
       </button>
       {save.phase === 'expediente' && (
         <div className="home-close only-phone">
           {confirmClose ? (
             <>
-              <button className="btn btn-danger btn-small" onClick={() => { setConfirmClose(false); dispatch({ type: 'CLOSE_SHOP' }); }}>Fechar a loja agora?</button>
-              <button className="btn btn-ghost btn-small" onClick={() => setConfirmClose(false)}>Não</button>
+              <button className="btn btn-danger btn-small" onClick={() => { setConfirmClose(false); dispatch({ type: 'CLOSE_SHOP' }); }}>{tr('Fechar a loja agora?')}</button>
+              <button className="btn btn-ghost btn-small" onClick={() => setConfirmClose(false)}>{tr('Não')}</button>
             </>
           ) : (
-            <button data-tut="close-day" className="btn btn-ghost btn-small" onClick={() => setConfirmClose(true)}>Encerrar o dia</button>
+            <button data-tut="close-day" className="btn btn-ghost btn-small" onClick={() => setConfirmClose(true)}>{tr('Encerrar o dia')}</button>
           )}
         </div>
       )}

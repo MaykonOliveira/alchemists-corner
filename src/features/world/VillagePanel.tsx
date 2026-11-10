@@ -9,6 +9,7 @@ import { useGameStore } from '../../store/gameStore';
 import { Coins, Meter, More } from '../../ui/widgets';
 import { Icon } from '../../ui/Icon';
 
+import { tr } from '../../i18n';
 /** Uma obra no estado atual (terreno, fundação, paredes ou pronta), recortada de village.png. */
 export function Building({ id, stage, scale = 2 }: { id: string; stage: number; scale?: number }) {
   const row = sheet.rows.indexOf(id);
@@ -38,16 +39,16 @@ export function VillagePanel({ save }: { save: GameSave }) {
   return (
     <>
       <div className="village-hero">
-        <div className="village-panorama" aria-label="A vila">
+        <div className="village-panorama" aria-label={tr('A vila')}>
           {VILLAGE.map((p) => <Building key={p.id} id={p.id} stage={villageStage(save, p.id)} scale={1} />)}
         </div>
         <div className="village-progress">
-          <span>Vila reconstruída</span>
+          <span>{tr('Vila reconstruída')}</span>
           <strong>{Math.round(progress * 100)}%</strong>
         </div>
-        <Meter ratio={progress} tone="gold" label="Vila reconstruída" />
+        <Meter ratio={progress} tone="gold" label={tr('Vila reconstruída')} />
       </div>
-      {locked && <p className="panel-lead small">A prefeitura aceita ajuda a partir do nível {VILLAGE_LEVEL}.</p>}
+      {locked && <p className="panel-lead small">{tr('A prefeitura aceita ajuda a partir do nível ')}{VILLAGE_LEVEL}.</p>}
       <ul className="list">
         {VILLAGE.map((p) => {
           const stage = villageStage(save, p.id);
@@ -62,12 +63,12 @@ export function VillagePanel({ save }: { save: GameSave }) {
                 <div className="row-main">
                   <div className="card-head">
                     <span className="row-title"><Icon e={p.icon} /> {p.name}</span>
-                    <span className="stage-pips" aria-label={`Etapa ${stage} de 3`}>
+                    <span className="stage-pips" aria-label={tr('Etapa {0} de 3', stage)}>
                       {STAGE_NAMES.map((n, i) => <span key={n} className={i < stage ? 'pip on' : 'pip'} title={n} />)}
                     </span>
                   </div>
-                  <p className="card-text small"><b>{done ? 'Bônus ativo:' : 'Ao inaugurar:'}</b> {p.bonusText}</p>
-                  <More label="A história da obra"><p className="card-text small">{p.text}</p></More>
+                  <p className="card-text small"><b>{done ? tr('Bônus ativo:') : tr('Ao inaugurar:')}</b> {p.bonusText}</p>
+                  <More label={tr('A história da obra')}><p className="card-text small">{p.text}</p></More>
                 </div>
               </div>
               {!done && (
@@ -76,9 +77,9 @@ export function VillagePanel({ save }: { save: GameSave }) {
                     {STAGE_NAMES[stage]}: <Coins n={cost} />
                     {need && <> + {need.qty}× {RECIPES_BY_ID[need.recipeId].shortName} <span className="muted">({potionStock(save, need.recipeId)})</span></>}
                   </span>
-                  {locked ? <span className="tag">nível {VILLAGE_LEVEL}</span> : (
+                  {locked ? <span className="tag">{tr('nível ')}{VILLAGE_LEVEL}</span> : (
                     <button className="btn btn-small btn-primary" disabled={!!blocker} title={blocker ?? undefined} onClick={() => dispatch({ type: 'BUILD_VILLAGE', projectId: p.id })}>
-                      {blocker && save.coins < cost ? `Faltam ${cost - save.coins}` : stage === 2 ? 'Inaugurar' : 'Construir'}
+                      {blocker && save.coins < cost ? tr('Faltam {0}', cost - save.coins) : stage === 2 ? tr('Inaugurar') : tr('Construir')}
                     </button>
                   )}
                 </div>

@@ -7,7 +7,9 @@ import { App } from './app/App';
 import { initAudio } from './audio/sound';
 import { registerServiceWorker } from './app/pwa';
 import { initReminders } from './app/reminders';
+import { LANG } from './i18n';
 
+document.documentElement.lang = LANG === 'en' ? 'en' : 'pt-BR';
 initAudio();
 registerServiceWorker();
 

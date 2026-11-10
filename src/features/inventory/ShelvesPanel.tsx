@@ -9,12 +9,13 @@ import { Meter, PotionName, More } from '../../ui/widgets';
 import { stackQualities } from '../../domain/rules/quality';
 import { Icon } from '../../ui/Icon';
 
+import { tr } from '../../i18n';
 function priceLabel(price: number, base: number) {
   const r = price / base;
-  if (r <= 0.9) return { text: 'barato · vende fácil', tone: 'tag-ok' };
-  if (r <= 1.05) return { text: 'preço justo', tone: '' };
-  if (r <= 1.18) return { text: 'salgado', tone: 'tag-gold' };
-  return { text: 'caro · muitos recusam', tone: 'tag-warn' };
+  if (r <= 0.9) return { text: tr('barato · vende fácil'), tone: 'tag-ok' };
+  if (r <= 1.05) return { text: tr('preço justo'), tone: '' };
+  if (r <= 1.18) return { text: tr('salgado'), tone: 'tag-gold' };
+  return { text: tr('caro · muitos recusam'), tone: 'tag-warn' };
 }
 
 export function ShelvesPanel({ save }: { save: GameSave }) {
@@ -24,10 +25,10 @@ export function ShelvesPanel({ save }: { save: GameSave }) {
   return (
     <>
       <div className="capacity">
-        <span>Prateleiras: {total}/{cap} poções · até {shelfPerRecipe(save)} de cada</span>
-        <Meter ratio={total / cap} tone={total / cap > 0.85 ? 'warn' : 'ok'} label="Ocupação das prateleiras" />
+        <span>{tr('Prateleiras: ')}{total}/{cap}{tr(' poções · até ')}{shelfPerRecipe(save)}{tr(' de cada')}</span>
+        <Meter ratio={total / cap} tone={total / cap > 0.85 ? 'warn' : 'ok'} label={tr('Ocupação das prateleiras')} />
       </div>
-      <More label="Como o preço funciona"><p className="card-text small">Mais caro rende mais, mas clientes com pouco dinheiro recusam.</p></More>
+      <More label={tr('Como o preço funciona')}><p className="card-text small">{tr('Mais caro rende mais, mas clientes com pouco dinheiro recusam.')}</p></More>
       <ul className="list">
         {save.knownRecipes.map((id) => {
           const stock = potionStock(save, id);
@@ -40,14 +41,14 @@ export function ShelvesPanel({ save }: { save: GameSave }) {
             <li key={id} className={`card ${stock === 0 ? 'card-empty' : ''}`}>
               <div className="card-head">
                 <PotionName id={id} size={18} />
-                {save.trend?.includes(id) && <span className="trend-tag" title="Procurada hoje">em alta</span>}
+                {save.trend?.includes(id) && <span className="trend-tag" title={tr('Procurada hoje')}>{tr('em alta')}</span>}
                 <Stars n={masteryStars(save, id)} />
                 <span className={`qty ${stock === 0 ? 'qty-low' : ''}`}>{stock}</span>
               </div>
               {stack && (stack.prime || stack.fine) ? (
                 <p className="quality-line small">
-                  {stackQualities(stack).prime > 0 && <span className="q-3"><Icon e="✨" /> {stackQualities(stack).prime} Primorosas (+50%)</span>}
-                  {stackQualities(stack).fine > 0 && <span className="q-2">★ {stackQualities(stack).fine} Finas (+20%)</span>}
+                  {stackQualities(stack).prime > 0 && <span className="q-3"><Icon e="✨" /> {stackQualities(stack).prime}{tr(' Primorosas (+50%)')}</span>}
+                  {stackQualities(stack).fine > 0 && <span className="q-2">★ {stackQualities(stack).fine}{tr(' Finas (+20%)')}</span>}
                 </p>
               ) : null}
               <div className="price-row">
@@ -56,20 +57,18 @@ export function ShelvesPanel({ save }: { save: GameSave }) {
                   min={min}
                   max={max}
                   value={price}
-                  aria-label={`Preço de ${RECIPES_BY_ID[id].name}`}
+                  aria-label={tr('Preço de {0}', RECIPES_BY_ID[id].name)}
                   onChange={(e) => dispatch({ type: 'SET_PRICE', recipeId: id, price: Number(e.target.value) })}
                 />
                 <span className="price-value">{price}</span>
               </div>
               <div className="card-foot small">
                 <span className={`tag ${label.tone}`}>{label.text}</span>
-                <span className="muted">base {base} · custo ≈ {unitCost}</span>
+                <span className="muted">{tr('base ')}{base}{tr(' · custo ≈ ')}{unitCost}</span>
               </div>
               {stack && (
                 <label className="toggle small">
-                  <input type="checkbox" checked={stack.forSale} onChange={(e) => dispatch({ type: 'SET_FOR_SALE', recipeId: id, forSale: e.target.checked })} />
-                  Expor à venda
-                </label>
+                  <input type="checkbox" checked={stack.forSale} onChange={(e) => dispatch({ type: 'SET_FOR_SALE', recipeId: id, forSale: e.target.checked })} />{tr('Expor à venda')}</label>
               )}
             </li>
           );

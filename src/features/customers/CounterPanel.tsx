@@ -12,6 +12,7 @@ import { PotionIcon } from '../../ui/SpriteIcon';
 import { Meter } from '../../ui/widgets';
 import { Icon } from '../../ui/Icon';
 
+import { tr } from '../../i18n';
 /** Quão "cheio" parece o bolso do cliente (dica, não o valor exato). */
 function wallet(c: Customer) {
   return c.budgetFactor >= 1.22 ? 3 : c.budgetFactor >= 1.08 ? 2 : 1;
@@ -22,16 +23,16 @@ export function CounterPanel({ save }: { save: GameSave }) {
   const dispatch = useGameStore((s) => s.dispatch);
 
   if (save.phase !== 'expediente') {
-    return <p className="empty">A loja está fechada. Abra a porta para receber clientes.</p>;
+    return <p className="empty">{tr('A loja está fechada. Abra a porta para receber clientes.')}</p>;
   }
   if (save.customers.length === 0) {
-    return <p className="empty">Ninguém no balcão agora. Logo alguém entra pela porta…</p>;
+    return <p className="empty">{tr('Ninguém no balcão agora. Logo alguém entra pela porta…')}</p>;
   }
   const selected = save.customers.find((c) => c.id === selectedId) ?? null;
 
   return (
     <>
-      <div className="queue" role="listbox" aria-label="Clientes no balcão">
+      <div className="queue" role="listbox" aria-label={tr('Clientes no balcão')}>
         {save.customers.map((c) => {
           const r = RECIPES_BY_ID[c.wantedRecipeId];
           const left = 1 - c.waitedMs / c.patienceMs;
@@ -44,14 +45,14 @@ export function CounterPanel({ save }: { save: GameSave }) {
               onClick={() => dispatch({ type: 'SELECT_CUSTOMER', id: c.id })}
             >
               {!c.mystery && <CustomerFace c={c} size={32} />}
-              <span className="row-title">{c.mystery ? 'Viajante encapuzado' : regularOf(c)?.name.split(',')[0] ?? ARCHETYPES[c.archetype].label}{regularOf(c) ? ' ♥\uFE0E' : ''}</span>
-              <span className="queue-want">{c.mystery ? <><Icon e="❓" /> charada</> : c.symptom && !c.offer ? <><Icon e="🤒" /> conta o problema</> : <><PotionIcon recipeId={r.id} /> {r.shortName}{c.offer ? ' · negociando' : ''}</>}</span>
-              <Meter ratio={left} tone={left > 0.5 ? 'ok' : left > 0.25 ? 'gold' : 'warn'} label="Paciência" />
+              <span className="row-title">{c.mystery ? tr('Viajante encapuzado') : regularOf(c)?.name.split(',')[0] ?? ARCHETYPES[c.archetype].label}{regularOf(c) ? ' ♥\uFE0E' : ''}</span>
+              <span className="queue-want">{c.mystery ? <><Icon e="❓" />{tr(' charada')}</> : c.symptom && !c.offer ? <><Icon e="🤒" />{tr(' conta o problema')}</> : <><PotionIcon recipeId={r.id} /> {r.shortName}{c.offer ? tr(' · negociando') : ''}</>}</span>
+              <Meter ratio={left} tone={left > 0.5 ? 'ok' : left > 0.25 ? 'gold' : 'warn'} label={tr('Paciência')} />
             </button>
           );
         })}
       </div>
-      {selected ? <Serve save={save} c={selected} /> : <p className="empty">Toque em um cliente para atender.</p>}
+      {selected ? <Serve save={save} c={selected} /> : <p className="empty">{tr('Toque em um cliente para atender.')}</p>}
     </>
   );
 }
@@ -74,7 +75,7 @@ function Serve({ save, c }: { save: GameSave; c: Customer }) {
           {reg ? reg.name : a.label}
           {reg && <span className="serve-hearts"> {'♥\uFE0E'.repeat(regularState(save, reg.id).hearts)}{'♡'.repeat(MAX_HEARTS - regularState(save, reg.id).hearts)}</span>}
         </span>
-        <span className="wallet" title="Disposição para pagar" aria-label={`Bolso: ${wallet(c)} de 3`}>
+        <span className="wallet" title={tr('Disposição para pagar')} aria-label={tr('Bolso: {0} de 3', wallet(c))}>
           {Array.from({ length: 3 }, (_, i) => (
             <span key={i} className={i < wallet(c) ? '' : 'faded'}><CoinIcon size={12} /></span>
           ))}
@@ -82,24 +83,23 @@ function Serve({ save, c }: { save: GameSave; c: Customer }) {
       </div>
       <p className="speech">“{c.remark ?? wanted.request}”</p>
       <p className="card-text small">
-        {c.mystery ? <>Cliente misterioso: decifre a charada. Acertar paga <strong>3× o preço</strong> e deixa cristais.</> : c.symptom ? <>Conta o problema: escolha a poção certa. Acertar em cheio rende <strong>gorjeta</strong>; uma parecida paga menos.</> : <>Quer: <strong>{wanted.name}</strong> · {a.description}</>}
+        {c.mystery ? <>{tr('Cliente misterioso: decifre a charada. Acertar paga ')}<strong>{tr('3× o preço')}</strong>{tr(' e deixa cristais.')}</> : c.symptom ? <>{tr('Conta o problema: escolha a poção certa. Acertar em cheio rende ')}<strong>{tr('gorjeta')}</strong>{tr('; uma parecida paga menos.')}</> : <>{tr('Quer: ')}<strong>{wanted.name}</strong> · {a.description}</>}
       </p>
 
       {c.offer ? (
         <div className="offer">
-          <p className="card-text">
-            Contraproposta: <strong>{c.offer.price} moedas</strong> por {RECIPES_BY_ID[c.offer.recipeId].name}
+          <p className="card-text">{tr('Contraproposta: ')}<strong>{c.offer.price}{tr(' moedas')}</strong>{tr(' por ')}{RECIPES_BY_ID[c.offer.recipeId].name}
           </p>
           <div className="btn-row">
-            <button className="btn btn-primary" onClick={() => dispatch({ type: 'ACCEPT_OFFER', customerId: c.id })}>Aceitar {c.offer.price}</button>
-            <button className="btn" onClick={() => dispatch({ type: 'DECLINE_OFFER', customerId: c.id })}>Recusar</button>
+            <button className="btn btn-primary" onClick={() => dispatch({ type: 'ACCEPT_OFFER', customerId: c.id })}>{tr('Aceitar ')}{c.offer.price}</button>
+            <button className="btn" onClick={() => dispatch({ type: 'DECLINE_OFFER', customerId: c.id })}>{tr('Recusar')}</button>
           </div>
         </div>
       ) : (
         <>
-          <h3 className="mini-title">Oferecer</h3>
+          <h3 className="mini-title">{tr('Oferecer')}</h3>
           {sorted.length === 0 ? (
-            <p className="empty">Nada nas prateleiras. Prepare poções no caldeirão.</p>
+            <p className="empty">{tr('Nada nas prateleiras. Prepare poções no caldeirão.')}</p>
           ) : (
             <ul className="offer-list">
               {sorted.map((p) => {
@@ -114,7 +114,7 @@ function Serve({ save, c }: { save: GameSave; c: Customer }) {
                     >
                       <PotionIcon recipeId={r.id} />
                       <span className="offer-name">{r.name} <span className="muted">×{p.quantity}</span></span>
-                      <span className="offer-tag">{hidden ? 'arriscar' : exact ? 'o pedido' : ok ? 'parecida' : 'não serve'}</span>
+                      <span className="offer-tag">{hidden ? 'arriscar' : exact ? tr('o pedido') : ok ? 'parecida' : tr('não serve')}</span>
                       <span className="offer-price"><CoinIcon size={12} /> {getPrice(save, p.recipeId)}</span>
                     </button>
                   </li>
@@ -122,9 +122,7 @@ function Serve({ save, c }: { save: GameSave; c: Customer }) {
               })}
             </ul>
           )}
-          <button className="btn btn-ghost-dark btn-small" onClick={() => dispatch({ type: 'DISMISS_CUSTOMER', customerId: c.id })}>
-            Hoje não tenho (dispensar com educação)
-          </button>
+          <button className="btn btn-ghost-dark btn-small" onClick={() => dispatch({ type: 'DISMISS_CUSTOMER', customerId: c.id })}>{tr('Hoje não tenho (dispensar com educação)')}</button>
         </>
       )}
     </div>

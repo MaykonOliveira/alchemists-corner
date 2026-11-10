@@ -47,7 +47,7 @@ def pack(frames, width, pad=1):
     return sheet, meta
 
 
-def storefront(shop):
+def storefront(shop, en=False):
     """Loja aberta e cheia vista pela vitrine da tela de título (revisão visual V4)."""
     from customers import draw_frame
     cv = draw_room()
@@ -55,7 +55,7 @@ def storefront(shop):
     for k, x, y in (('obj-cabinet', 2, 38), ('obj-shelf', 108, 22), ('obj-shelf', 170, 22), ('obj-board', 238, 32),
                     ('obj-door', 300, 28)):
         cv.blit(shop[k], x, y)
-    sign = shop['sign-open']
+    sign = shop['sign-open-en' if en else 'sign-open']
     cv.blit(sign, 321 - sign.w // 2, 58)
     # Frascos nas três tábuas das duas prateleiras, de cores variadas.
     rids = list(I.LIQ)
@@ -92,7 +92,8 @@ def main():
         shop[k] = cv
         shop[f'{k}-outline'] = outline_mask(cv)
     shop.update({
-        'sign-open': O.sign(True), 'sign-closed': O.sign(False), 'jar': O.empty_jar(), 'bubble': O.bubble(),
+        'sign-open': O.sign(True), 'sign-closed': O.sign(False),
+        'sign-open-en': O.sign(True, True), 'sign-closed-en': O.sign(False, True), 'jar': O.empty_jar(), 'bubble': O.bubble(),
         'marker': O.marker(), 'coin': O.coin(), 'heart': O.heart(), 'angry': O.angry(), 'sad': O.sad(),
         'sparkle': O.sparkle(), 'liquid': O.liquid(), 'cauldron-bands': O.cauldron_bands(),
         'cabinet-labels': O.cabinet_labels(), 'shop-sign': O.shop_sign(), 'garland': O.garland(), 'badge': O.badge(),
@@ -141,6 +142,7 @@ def main():
     sheet, meta = pack(shop, 512)
     save(sheet, 'shop.png')
     save(storefront(shop), 'storefront.png')
+    save(storefront(shop, en=True), 'storefront-en.png')
     with open(os.path.join(OUT, 'shop.json'), 'w') as fh:
         json.dump({'frames': meta, 'meta': {'image': 'shop.png', 'size': {'w': sheet.w, 'h': sheet.h}, 'scale': '1'}}, fh, indent=1)
 

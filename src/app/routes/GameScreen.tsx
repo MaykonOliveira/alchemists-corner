@@ -18,6 +18,7 @@ import { ShareModal } from '../../features/share/ShareModal';
 import { RoyalScene } from '../../features/royal/RoyalScene';
 import { StageControls } from '../../features/stage/StageControls';
 
+import { tr } from '../../i18n';
 export function GameScreen() {
   const dispatch = useGameStore((s) => s.dispatch);
   const phase = useGameStore((s) => s.save?.phase);
@@ -64,7 +65,7 @@ export function GameScreen() {
         </div>
         <button
           className="drawer-handle"
-          aria-label={drawerUp ? 'Mostrar a loja de novo' : 'Abrir o painel na tela toda'}
+          aria-label={drawerUp ? tr('Mostrar a loja de novo') : tr('Abrir o painel na tela toda')}
           aria-expanded={drawerUp}
           onPointerDown={(e) => { dragY.current = e.clientY; }}
           onPointerUp={(e) => {

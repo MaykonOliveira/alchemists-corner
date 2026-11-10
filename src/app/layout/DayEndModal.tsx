@@ -12,7 +12,8 @@ import { charm } from '../../domain/rules/entitlements';
 import { RECORD_LABEL } from '../../domain/rules/records';
 import { Icon } from '../../ui/Icon';
 
-const MEDAL_LABEL = { ouro: 'Medalha de ouro', prata: 'Medalha de prata', bronze: 'Medalha de bronze' } as const;
+import { tr } from '../../i18n';
+const MEDAL_LABEL = { ouro: tr('Medalha de ouro'), prata: tr('Medalha de prata'), bronze: tr('Medalha de bronze') } as const;
 
 /** Número que conta do zero até o valor ao abrir o fechamento. */
 function CountUp({ value, ms = 900 }: { value: number; ms?: number }) {
@@ -37,9 +38,9 @@ function WeekChart({ reports }: { reports: DayReport[] }) {
   if (last.length < 2) return null;
   const max = Math.max(1, ...last.map((r) => Math.abs(r.profit)));
   return (
-    <div className="week-chart" aria-label="Lucro dos últimos dias">
+    <div className="week-chart" aria-label={tr('Lucro dos últimos dias')}>
       {last.map((r, i) => (
-        <div key={r.day} className={`week-col ${i === last.length - 1 ? 'today' : ''}`} title={`Dia ${r.day}: ${r.profit}`}>
+        <div key={r.day} className={`week-col ${i === last.length - 1 ? 'today' : ''}`} title={tr('Dia {0}: {1}', r.day, r.profit)}>
           <span className={`week-bar ${r.profit >= 0 ? 'pos' : 'neg'}`} style={{ height: `${Math.max(4, (Math.abs(r.profit) / max) * 100)}%` }} />
           <span className="week-day">{r.day}</span>
         </div>
@@ -66,10 +67,10 @@ function ReminderOffer() {
   };
   return (
     <div className="reminder-offer">
-      <span><Icon e="🔔" /> Quer um aviso quando o caldeirão terminar? No máximo um por dia.</span>
+      <span><Icon e="🔔" />{tr(' Quer um aviso quando o caldeirão terminar? No máximo um por dia.')}</span>
       <span className="btn-row">
-        <button className="btn btn-small btn-primary" onClick={yes}>Quero</button>
-        <button className="btn btn-small btn-ghost" onClick={no}>Agora não</button>
+        <button className="btn btn-small btn-primary" onClick={yes}>{tr('Quero')}</button>
+        <button className="btn btn-small btn-ghost" onClick={no}>{tr('Agora não')}</button>
       </span>
     </div>
   );
@@ -99,12 +100,12 @@ export function DayEndModal() {
   // Quanto se deixou de vender: cada cliente perdido pela receita que queria, no preço da prateleira.
   const leftOnTable = Object.entries(r.lostByRecipe ?? {}).reduce((n, [id, q]) => n + getPrice(save, id) * q, 0);
   const mood =
-    r.profit > 60 && rate >= 0.8 ? 'Que dia! A cidade inteira está falando da loja.' :
-    r.profit > 0 && rate >= 0.6 ? 'Um bom dia de trabalho. As lanternas se apagam com o caixa mais pesado.' :
-    r.profit > 0 ? `Deu lucro, mas ${r.customersLost} cliente${r.customersLost > 1 ? 's saíram' : ' saiu'} sem nada. Com mais poções prontas, o caixa enchia.` :
-    r.customersServed > 0 ? 'Dia apertado, mas cada cliente atendido conta. Amanhã é outro dia.' :
-    r.customersLost > 0 ? `Ninguém foi atendido hoje e ${r.customersLost} cliente${r.customersLost > 1 ? 's foram' : ' foi'} embora de mãos vazias. Amanhã, deixe poções prontas e fique de olho no balcão.` :
-    'Um dia tranquilo. Que tal preparar mais poções e abrir cedo amanhã?';
+    r.profit > 60 && rate >= 0.8 ? tr('Que dia! A cidade inteira está falando da loja.') :
+    r.profit > 0 && rate >= 0.6 ? tr('Um bom dia de trabalho. As lanternas se apagam com o caixa mais pesado.') :
+    r.profit > 0 ? tr('Deu lucro, mas {0} cliente{1} sem nada. Com mais poções prontas, o caixa enchia.', r.customersLost, r.customersLost > 1 ? tr('s saíram') : tr(' saiu')) :
+    r.customersServed > 0 ? tr('Dia apertado, mas cada cliente atendido conta. Amanhã é outro dia.') :
+    r.customersLost > 0 ? tr('Ninguém foi atendido hoje e {0} cliente{1} embora de mãos vazias. Amanhã, deixe poções prontas e fique de olho no balcão.', r.customersLost, r.customersLost > 1 ? tr('s foram') : tr(' foi')) :
+    tr('Um dia tranquilo. Que tal preparar mais poções e abrir cedo amanhã?');
 
   return (
     <div className="modal-backdrop">
@@ -112,8 +113,8 @@ export function DayEndModal() {
         {(medal === 'ouro' || record || !!r.records?.length) && <div className="confetti" aria-hidden />}
         <div className="report-head">
           <div>
-            <p className="modal-kicker">Fechamento</p>
-            <h2 id="day-end-title">Fim do dia {r.day}</h2>
+            <p className="modal-kicker">{tr('Fechamento')}</p>
+            <h2 id="day-end-title">{tr('Fim do dia ')}{r.day}</h2>
           </div>
           {medal && (
             <div className={`medal medal-${medal}`} title={MEDAL_LABEL[medal]} aria-label={MEDAL_LABEL[medal]}>
@@ -121,72 +122,69 @@ export function DayEndModal() {
             </div>
           )}
         </div>
-        {record && <p className="record-banner">Novo recorde de lucro!</p>}
+        {record && <p className="record-banner">{tr('Novo recorde de lucro!')}</p>}
         {r.records?.map((k) => (
-          <p key={k} className="record-banner record-personal"><Icon e="🏅" /> Recorde pessoal: {RECORD_LABEL[k].toLowerCase()} ({k === 'revenue' ? `${r.revenue} moedas` : `${r.customersServed} clientes`})</p>
+          <p key={k} className="record-banner record-personal"><Icon e="🏅" />{tr(' Recorde pessoal: ')}{RECORD_LABEL[k].toLowerCase()} ({k === 'revenue' ? tr('{0} moedas', r.revenue) : `${r.customersServed} clientes`})</p>
         ))}
         <div className={`profit-hero ${r.profit >= 0 ? 'pos' : 'neg'}`}>
-          <span className="muted small">Lucro do dia</span>
+          <span className="muted small">{tr('Lucro do dia')}</span>
           <strong>{r.profit >= 0 ? '+' : '−'}<CountUp value={Math.abs(r.profit)} /></strong>
           {medal && <span className="small">{MEDAL_LABEL[medal]}</span>}
-          {r.level !== undefined && <span className="small muted">Ouro a partir de {medalTarget(r.level)} no nível {r.level}</span>}
+          {r.level !== undefined && <span className="small muted">{tr('Ouro a partir de ')}{medalTarget(r.level)}{tr(' no nível ')}{r.level}</span>}
         </div>
         <p className="card-text">{mood}</p>
         <div className="report-grid report-grid-3">
-          <div><span className="muted small">Clientes atendidos</span><strong>{r.customersServed}</strong></div>
-          <div><span className="muted small">Experiência</span><strong>+{r.xpGained}</strong></div>
-          <div><span className="muted small">Reputação</span><strong>{r.reputationDelta >= 0 ? '+' : ''}{r.reputationDelta}</strong></div>
+          <div><span className="muted small">{tr('Clientes atendidos')}</span><strong>{r.customersServed}</strong></div>
+          <div><span className="muted small">{tr('Experiência')}</span><strong>+{r.xpGained}</strong></div>
+          <div><span className="muted small">{tr('Reputação')}</span><strong>{r.reputationDelta >= 0 ? '+' : ''}{r.reputationDelta}</strong></div>
         </div>
         {r.customersLost > 0 && (
           <p className="tip lost-line">
-            {leftOnTable > 0 && <><b>Ficou na mesa: cerca de {leftOnTable} moedas</b> de quem foi embora. </>}
+            {leftOnTable > 0 && <><b>{tr('Ficou na mesa: cerca de ')}{leftOnTable}{tr(' moedas')}</b>{tr(' de quem foi embora. ')}</>}
             {missed
-              ? <>O que mais faltou: <b>{RECIPES_BY_ID[missed.recipeId].shortName}</b> ({missed.n} pedido{missed.n > 1 ? 's' : ''}). Deixe algumas prontas antes de abrir amanhã.</>
-              : <>Clientes vão embora quando falta a poção certa ou o preço está alto.</>}
+              ? <>{tr('O que mais faltou: ')}<b>{RECIPES_BY_ID[missed.recipeId].shortName}</b> ({missed.n}{tr(' pedido')}{missed.n > 1 ? 's' : ''}{tr('). Deixe algumas prontas antes de abrir amanhã.')}</>
+              : <>{tr('Clientes vão embora quando falta a poção certa ou o preço está alto.')}</>}
           </p>
         )}
         <details className="day-more">
-          <summary>Ver o caixa do dia</summary>
+          <summary>{tr('Ver o caixa do dia')}</summary>
         <WeekChart reports={save.reports} />
         <table className="ledger">
           <tbody>
-            <tr><td>Vendas no balcão</td><td className="pos-text">+{r.revenue}</td></tr>
-            {r.orderRewards > 0 && <tr><td>Pedidos especiais</td><td className="pos-text">+{r.orderRewards}</td></tr>}
-            <tr><td>Ingredientes comprados</td><td className="neg-text">−{r.ingredientCost}</td></tr>
-            <tr><td>Manutenção (aluguel, lenha, velas{r.wages ? ', salários' : ''})</td><td className="neg-text">−{r.maintenance}</td></tr>
+            <tr><td>{tr('Vendas no balcão')}</td><td className="pos-text">+{r.revenue}</td></tr>
+            {r.orderRewards > 0 && <tr><td>{tr('Pedidos especiais')}</td><td className="pos-text">+{r.orderRewards}</td></tr>}
+            <tr><td>{tr('Ingredientes comprados')}</td><td className="neg-text">−{r.ingredientCost}</td></tr>
+            <tr><td>{tr('Manutenção (aluguel, lenha, velas')}{r.wages ? tr(', salários') : ''})</td><td className="neg-text">−{r.maintenance}</td></tr>
           </tbody>
         </table>
         {r.rival && (
           <p className={`card-text small rival-line ${r.rival.result ? `rival-${r.rival.result}` : ''}`}>
             <SpriteIcon name="rival-vesper" size={16} />
-            <span>{r.rival.result === 'win' ? <><b>Você venceu a semana contra a Madame Vesper!</b> {r.rival.me} × {r.rival.her} moedas. Prêmio no caixa.</>
-              : r.rival.result === 'loss' ? <>A Madame Vesper levou a semana: {r.rival.her} × {r.rival.me}. Revanche começa amanhã!</>
-              : <>Disputa da semana: você {r.rival.me} × {r.rival.her} Vesper.</>}</span>
+            <span>{r.rival.result === 'win' ? <><b>{tr('Você venceu a semana contra a Madame Vesper!')}</b> {r.rival.me} × {r.rival.her}{tr(' moedas. Prêmio no caixa.')}</>
+              : r.rival.result === 'loss' ? <>{tr('A Madame Vesper levou a semana: ')}{r.rival.her} × {r.rival.me}{tr('. Revanche começa amanhã!')}</>
+              : <>{tr('Disputa da semana: você ')}{r.rival.me} × {r.rival.her}{tr(' Vesper.')}</>}</span>
           </p>
         )}
         {r.helperWork && (r.helperWork.brews + r.helperWork.served + r.helperWork.deliveries > 0) && (
-          <p className="card-text small">
-            Ajudantes: {[
-              r.helperWork.deliveries > 0 && `o corvo fez ${r.helperWork.deliveries} entrega${r.helperWork.deliveries > 1 ? 's' : ''}`,
-              r.helperWork.brews > 0 && `o aprendiz cuidou de ${r.helperWork.brews} preparo${r.helperWork.brews > 1 ? 's' : ''}`,
-              r.helperWork.served > 0 && `o golem vendeu ${r.helperWork.served} poç${r.helperWork.served > 1 ? 'ões' : 'ão'}`,
-            ].filter(Boolean).join(', ')}. Salários: {r.wages ?? 0} moedas (já na manutenção).
-          </p>
+          <p className="card-text small">{tr('Ajudantes: ')}{[
+              r.helperWork.deliveries > 0 && tr('o corvo fez {0} entrega{1}', r.helperWork.deliveries, r.helperWork.deliveries > 1 ? 's' : ''),
+              r.helperWork.brews > 0 && tr('o aprendiz cuidou de {0} preparo{1}', r.helperWork.brews, r.helperWork.brews > 1 ? 's' : ''),
+              r.helperWork.served > 0 && tr('o golem vendeu {0} poç{1}', r.helperWork.served, r.helperWork.served > 1 ? tr('ões') : tr('ão')),
+            ].filter(Boolean).join(', ')}{tr('. Salários: ')}{r.wages ?? 0}{tr(' moedas (já na manutenção).')}</p>
         )}
         {sales.length > 0 && (
-          <p className="card-text small">
-            Mais vendidas: {sales.slice(0, 3).map(([id, n]) => `${RECIPES_BY_ID[id].shortName} (${n})`).join(', ')}
+          <p className="card-text small">{tr('Mais vendidas: ')}{sales.slice(0, 3).map(([id, n]) => `${RECIPES_BY_ID[id].shortName} (${n})`).join(', ')}
           </p>
         )}
         {save.challenge && !save.challenge.active && save.challenge.score !== null && save.reports.at(-1)?.day === r.day && (
-          <p className="challenge-line"><Icon e="⚔️" /> Desafio da semana {save.challenge.week}: <b>{save.challenge.score} pontos</b>{save.challengeBest?.score === save.challenge.score ? ' · seu recorde' : ''}</p>
+          <p className="challenge-line"><Icon e="⚔️" />{tr(' Desafio da semana ')}{save.challenge.week}: <b>{save.challenge.score}{tr(' pontos')}</b>{save.challengeBest?.score === save.challenge.score ? tr(' · seu recorde') : ''}</p>
         )}
-        {charm(save) > 0 && <p className="card-text small"><Icon e="🎀" /> A decoração encantou a freguesia: +{charm(save)} de reputação.</p>}
-        <p className="card-text">Caixa agora: <Coins n={save.coins} /></p>
-        <button className="btn btn-share" onClick={() => dispatch({ type: 'OPEN_MODAL', modal: 'share' })}><Icon e="📸" /> Mostrar a loja</button>
+        {charm(save) > 0 && <p className="card-text small"><Icon e="🎀" />{tr(' A decoração encantou a freguesia: +')}{charm(save)}{tr(' de reputação.')}</p>}
+        <p className="card-text">{tr('Caixa agora: ')}<Coins n={save.coins} /></p>
+        <button className="btn btn-share" onClick={() => dispatch({ type: 'OPEN_MODAL', modal: 'share' })}><Icon e="📸" />{tr(' Mostrar a loja')}</button>
         </details>
-        <section className="tomorrow" aria-label="Amanhã na loja">
-          <p className="tomorrow-title">Amanhã na loja</p>
+        <section className="tomorrow" aria-label={tr('Amanhã na loja')}>
+          <p className="tomorrow-title">{tr('Amanhã na loja')}</p>
           <ul>
             {tomorrowPreview(save).slice(0, 2).map((l) => (
               <li key={l.text} className={l.tone ? `tone-${l.tone}` : ''}><span aria-hidden><Icon e={l.icon} /></span> {l.text}</li>
@@ -195,10 +193,9 @@ export function DayEndModal() {
           <ReminderOffer />
         </section>
         {save.tutorialStep === 6 && (
-          <p className="tip report-tutorial"><Icon e="📖" /> <b>Relatório do dia.</b> Aqui você vê o que vendeu, o que gastou e o lucro. Use isso para decidir o que preparar amanhã.</p>
+          <p className="tip report-tutorial"><Icon e="📖" /> <b>{tr('Relatório do dia.')}</b>{tr(' Aqui você vê o que vendeu, o que gastou e o lucro. Use isso para decidir o que preparar amanhã.')}</p>
         )}
-        <button ref={nextRef} className="btn btn-primary btn-big" onClick={startDay}>
-          Começar o dia {save.day + 1}
+        <button ref={nextRef} className="btn btn-primary btn-big" onClick={startDay}>{tr('Começar o dia ')}{save.day + 1}
         </button>
       </div>
     </div>

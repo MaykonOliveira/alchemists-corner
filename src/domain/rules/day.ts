@@ -20,6 +20,7 @@ import { gainReputation, gainXp, xpForLevel } from './progression';
 import { noteDay } from './records';
 import { royalNewDay } from './royal';
 
+import { tr } from '../../i18n';
 export function freshStats(s: GameSave): DayStats {
   return {
     revenue: 0, ingredientCost: 0, orderRewards: 0, salesByRecipe: {}, served: 0, lost: 0,
@@ -151,10 +152,10 @@ export const festivalPrice = (s: GameSave) => 600 + 150 * s.level;
 export function sponsorFestival(d: Draft): boolean {
   const s = d.s;
   const minLevel = DAY_EVENTS.festival.minLevel ?? 1;
-  if (s.level < minLevel) return fail(d, `O festival só pode ser patrocinado a partir do nível ${minLevel}.`);
-  if (s.festivalSponsored) return fail(d, 'O festival de amanhã já está garantido.');
+  if (s.level < minLevel) return fail(d, tr('O festival só pode ser patrocinado a partir do nível {0}.', minLevel));
+  if (s.festivalSponsored) return fail(d, tr('O festival de amanhã já está garantido.'));
   const cost = festivalPrice(s);
-  if (s.coins < cost) return fail(d, 'Moedas insuficientes.');
+  if (s.coins < cost) return fail(d, tr('Moedas insuficientes.'));
   s.coins -= cost;
   s.festivalSponsored = true;
   d.events.push({ type: 'FESTIVAL_SPONSORED', cost });

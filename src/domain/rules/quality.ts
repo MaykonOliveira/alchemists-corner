@@ -4,8 +4,9 @@ import { RECIPES_BY_ID } from '../data/recipes';
 import type { GameSave, PotionStack, RecipeCategory } from '../models/types';
 import { fail, type Draft } from './context';
 
+import { tr } from '../../i18n';
 export type Quality = 1 | 2 | 3;
-export const QUALITY_NAME: Record<Quality, string> = { 1: 'Comum', 2: 'Fina', 3: 'Primorosa' };
+export const QUALITY_NAME: Record<Quality, string> = { 1: tr('Comum'), 2: tr('Fina'), 3: tr('Primorosa') };
 /** Quanto a mais o cliente paga por qualidade (sobre o preço da prateleira). */
 export const QUALITY_BONUS: Record<Quality, number> = { 1: 0, 2: 0.2, 3: 0.5 };
 /** Nível em que o toque de mestre aparece no caldeirão. */
@@ -23,10 +24,10 @@ export const qualityFromHits = (hits: number | undefined): Quality => (hits === 
  * Saber a receita (ordem e fogo) vale tanto quanto ter a mão rápida.
  */
 export const HEAT: Record<RecipeCategory, { band: [number, number]; name: string }> = {
-  cura: { band: [14, 36], name: 'brando' },
-  mente: { band: [34, 56], name: 'médio' },
-  utilidade: { band: [50, 72], name: 'firme' },
-  vigor: { band: [66, 88], name: 'forte' },
+  cura: { band: [14, 36], name: tr('brando') },
+  mente: { band: [34, 56], name: tr('médio') },
+  utilidade: { band: [50, 72], name: tr('firme') },
+  vigor: { band: [66, 88], name: tr('forte') },
 };
 /** Faixa do ponto certo na barra do ponto (0 = cru, 100 = passou). */
 export const POINT_BAND: [number, number] = [68, 84];
@@ -94,10 +95,10 @@ export function takeBestQuality(s: GameSave, recipeId: string): Quality {
 /** O jogador mexeu o caldeirão: guarda os acertos (uma vez por preparo). */
 export function stir(d: Draft, slot: 1 | 2, hits: number): boolean {
   const s = d.s;
-  if (s.level < STIR_LEVEL) return fail(d, `O toque de mestre aparece no nível ${STIR_LEVEL}.`);
+  if (s.level < STIR_LEVEL) return fail(d, tr('O toque de mestre aparece no nível {0}.', STIR_LEVEL));
   const job = slot === 1 ? s.brew : s.brew2;
-  if (!job) return fail(d, 'O caldeirão está vazio.');
-  if (job.byHelper) return fail(d, 'Este preparo é do aprendiz.');
+  if (!job) return fail(d, tr('O caldeirão está vazio.'));
+  if (job.byHelper) return fail(d, tr('Este preparo é do aprendiz.'));
   if (job.hits !== undefined) return false;
   job.hits = Math.max(0, Math.min(STIR_TAPS, Math.floor(hits)));
   d.events.push({ type: 'STIRRED', hits: job.hits, slot });

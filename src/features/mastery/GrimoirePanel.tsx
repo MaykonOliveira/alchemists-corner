@@ -16,10 +16,11 @@ import { Stars } from '../../ui/Stars';
 import { Meter } from '../../ui/widgets';
 import { Icon } from '../../ui/Icon';
 
+import { tr } from '../../i18n';
 /** Uma moeda de prestígio só (auditoria P1.1): o Grimório mostra os mesmos cristais do topo da tela. */
 function CrystalBadge({ n }: { n: number }) {
   return (
-    <span className="seal-badge" aria-label={`${n} Cristais de luar`}>
+    <span className="seal-badge" aria-label={tr('{0} Cristais de luar', n)}>
       <Icon e="🌙" />
       {n}
     </span>
@@ -38,27 +39,27 @@ export function GrimoirePanel({ save }: { save: GameSave }) {
     <>
       <div className={`grimoire-hero ${awake ? 'awake' : ''}`}>
         <div>
-          <p className="grimoire-kicker">{save.level >= MAX_LEVEL ? `Mestre alquimista · grau ${rank}` : `Nível ${save.level} de ${MAX_LEVEL}`}</p>
-          {!awake && <p className="card-text small">O Grimório desperta no nível {SEAL_LEVEL}, ou antes, quando você dominar uma receita ({MAX_STARS} estrelas).</p>}
-          <p className="card-text small">Talentos custam Cristais de luar, os mesmos da decoração: deixar a loja mais forte ou mais bonita é escolha sua.</p>
+          <p className="grimoire-kicker">{save.level >= MAX_LEVEL ? tr('Mestre alquimista · grau {0}', rank) : tr('Nível {0} de {1}', save.level, MAX_LEVEL)}</p>
+          {!awake && <p className="card-text small">{tr('O Grimório desperta no nível ')}{SEAL_LEVEL}{tr(', ou antes, quando você dominar uma receita (')}{MAX_STARS}{tr(' estrelas).')}</p>}
+          <p className="card-text small">{tr('Talentos custam Cristais de luar, os mesmos da decoração: deixar a loja mais forte ou mais bonita é escolha sua.')}</p>
         </div>
         <CrystalBadge n={free} />
       </div>
-      <p className="muted small">Cada uma destas conquistas rende {SEAL_CRYSTALS} cristais:</p>
+      <p className="muted small">{tr('Cada uma destas conquistas rende {0} cristais:', SEAL_CRYSTALS)}</p>
       <ul className="seal-sources small">
-        <li>Níveis {SEAL_LEVEL}+: <strong>{fromLevels}</strong></li>
-        <li>Graus de Mestre: <strong>{rank}</strong></li>
-        <li>Receitas dominadas: <strong>{mastered}</strong></li>
-        {save.sealsBought > 0 && <li>Doações: <strong>{save.sealsBought}</strong></li>}
+        <li>{tr('Níveis ')}{SEAL_LEVEL}+: <strong>{fromLevels}</strong></li>
+        <li>{tr('Graus de Mestre: ')}<strong>{rank}</strong></li>
+        <li>{tr('Receitas dominadas: ')}<strong>{mastered}</strong></li>
+        {save.sealsBought > 0 && <li>{tr('Doações: ')}<strong>{save.sealsBought}</strong></li>}
       </ul>
       {save.level >= MAX_LEVEL && (
         <div className="grimoire-progress">
-          <span className="small">Próximo grau de Mestre ({MASTER_STEP_XP} XP por grau)</span>
-          <Meter ratio={levelProgress(save.xp)} tone="gold" label="Progresso do grau de Mestre" />
+          <span className="small">{tr('Próximo grau de Mestre (')}{MASTER_STEP_XP}{tr(' XP por grau)')}</span>
+          <Meter ratio={levelProgress(save.xp)} tone="gold" label={tr('Progresso do grau de Mestre')} />
         </div>
       )}
 
-      <h3 className="mini-title">Talentos</h3>
+      <h3 className="mini-title">{tr('Talentos')}</h3>
       <ul className="list">
         {TALENTS.filter((t) => !t.endless).map((t) => {
           const r = talentRank(save, t.id);
@@ -69,18 +70,18 @@ export function GrimoirePanel({ save }: { save: GameSave }) {
               <div className="card-head">
                 <span className="talent-icon" aria-hidden><Icon e={t.icon} /></span>
                 <span className="row-title">{t.name}</span>
-                <span className="pips" aria-label={`Grau ${r} de ${t.max}`}>
+                <span className="pips" aria-label={tr('Grau {0} de {1}', r, t.max)}>
                   {Array.from({ length: t.max }, (_, i) => <span key={i} className={i < r ? 'pip on' : 'pip'} />)}
                 </span>
               </div>
-              <p className="card-text small">{t.perRank} <span className="muted">(por grau)</span></p>
+              <p className="card-text small">{t.perRank} <span className="muted">{tr('(por grau)')}</span></p>
               <div className="card-foot">
-                <span className="muted small">{maxed ? 'Grau máximo' : `Próximo grau: ${cost} cristais`}</span>
+                <span className="muted small">{maxed ? tr('Grau máximo') : tr('Próximo grau: {0} cristais', cost)}</span>
                 {maxed ? (
-                  <span className="tag tag-ok">completo ✓</span>
+                  <span className="tag tag-ok">{tr('completo ✓')}</span>
                 ) : (
                   <button className="btn btn-small btn-primary" disabled={!awake || free < cost} onClick={() => dispatch({ type: 'LEARN_TALENT', talentId: t.id })}>
-                    {free >= cost ? 'Aprender' : `Faltam ${cost - free}`}
+                    {free >= cost ? tr('Aprender') : tr('Faltam {0}', cost - free)}
                   </button>
                 )}
               </div>
@@ -89,8 +90,8 @@ export function GrimoirePanel({ save }: { save: GameSave }) {
         })}
       </ul>
 
-      <h3 className="mini-title">Talentos sem fim</h3>
-      <More label="Como funcionam"><p className="card-text small">Sem grau máximo: cada grau custa 10 cristais a mais que o anterior. {save.level < ENDLESS_TALENT_LEVEL ? `Abrem no nível ${ENDLESS_TALENT_LEVEL}.` : 'Seus cristais nunca ficam parados.'}</p></More>
+      <h3 className="mini-title">{tr('Talentos sem fim')}</h3>
+      <More label={tr('Como funcionam')}><p className="card-text small">{tr('Sem grau máximo: cada grau custa 10 cristais a mais que o anterior. ')}{save.level < ENDLESS_TALENT_LEVEL ? tr('Abrem no nível {0}.', ENDLESS_TALENT_LEVEL) : tr('Seus cristais nunca ficam parados.')}</p></More>
       <ul className="list">
         {TALENTS.filter((t) => t.endless).map((t) => {
           const r = talentRank(save, t.id);
@@ -101,14 +102,14 @@ export function GrimoirePanel({ save }: { save: GameSave }) {
               <div className="card-head">
                 <span className="talent-icon" aria-hidden><Icon e={t.icon} /></span>
                 <span className="row-title">{t.name}</span>
-                <span className="tag tag-gold">grau {r}</span>
+                <span className="tag tag-gold">{tr('grau ')}{r}</span>
               </div>
-              <p className="card-text small">{t.perRank} <span className="muted">(por grau; agora {Math.round(r * t.value * 100)}%)</span></p>
+              <p className="card-text small">{t.perRank} <span className="muted">{tr('(por grau; agora ')}{Math.round(r * t.value * 100)}%)</span></p>
               <div className="card-foot">
-                <span className="muted small">Próximo grau: {cost} cristais</span>
-                {locked ? <span className="tag">nível {ENDLESS_TALENT_LEVEL}</span> : (
+                <span className="muted small">{tr('Próximo grau: ')}{cost}{tr(' cristais')}</span>
+                {locked ? <span className="tag">{tr('nível ')}{ENDLESS_TALENT_LEVEL}</span> : (
                   <button className="btn btn-small btn-primary" disabled={!awake || free < cost} onClick={() => dispatch({ type: 'LEARN_TALENT', talentId: t.id })}>
-                    {free >= cost ? 'Aprender' : `Faltam ${cost - free}`}
+                    {free >= cost ? tr('Aprender') : tr('Faltam {0}', cost - free)}
                   </button>
                 )}
               </div>
@@ -117,39 +118,37 @@ export function GrimoirePanel({ save }: { save: GameSave }) {
         })}
       </ul>
 
-      <h3 className="mini-title">Investimentos de mestre</h3>
+      <h3 className="mini-title">{tr('Investimentos de mestre')}</h3>
       <ul className="list">
         <li className={`card ${save.level < SEAL_LEVEL ? 'card-locked' : ''}`}>
-          <div className="card-head"><span className="talent-icon" aria-hidden><Icon e="🏛️" /></span><span className="row-title">Doação à Guilda dos Alquimistas</span></div>
-          <p className="card-text small">A Guilda retribui cada doação com {SEAL_CRYSTALS} Cristais de luar. O valor sobe a cada doação.</p>
+          <div className="card-head"><span className="talent-icon" aria-hidden><Icon e="🏛️" /></span><span className="row-title">{tr('Doação à Guilda dos Alquimistas')}</span></div>
+          <p className="card-text small">{tr('A Guilda retribui cada doação com ')}{SEAL_CRYSTALS}{tr(' Cristais de luar. O valor sobe a cada doação.')}</p>
           <div className="card-foot">
             <Coins n={sealPrice(save)} />
-            {save.level < SEAL_LEVEL ? <span className="tag">nível {SEAL_LEVEL}</span> : (
+            {save.level < SEAL_LEVEL ? <span className="tag">{tr('nível ')}{SEAL_LEVEL}</span> : (
               <button className="btn btn-small btn-primary" disabled={save.coins < sealPrice(save)} onClick={() => dispatch({ type: 'BUY_SEAL' })}>
-                {save.coins >= sealPrice(save) ? 'Doar' : `Faltam ${sealPrice(save) - save.coins}`}
+                {save.coins >= sealPrice(save) ? tr('Doar') : tr('Faltam {0}', sealPrice(save) - save.coins)}
               </button>
             )}
           </div>
         </li>
         <li className={`card ${save.level < (DAY_EVENTS.festival.minLevel ?? 1) ? 'card-locked' : ''}`}>
-          <div className="card-head"><span className="talent-icon" aria-hidden><Icon e="🏮" /></span><span className="row-title">Patrocinar o Festival das Lanternas</span></div>
-          <p className="card-text small">Garante o festival no próximo dia: muito mais movimento, nobres na rua e clientes pagando melhor.</p>
+          <div className="card-head"><span className="talent-icon" aria-hidden><Icon e="🏮" /></span><span className="row-title">{tr('Patrocinar o Festival das Lanternas')}</span></div>
+          <p className="card-text small">{tr('Garante o festival no próximo dia: muito mais movimento, nobres na rua e clientes pagando melhor.')}</p>
           <div className="card-foot">
             <Coins n={festivalPrice(save)} />
-            {save.level < (DAY_EVENTS.festival.minLevel ?? 1) ? <span className="tag">nível {DAY_EVENTS.festival.minLevel}</span>
-              : save.festivalSponsored ? <span className="tag tag-ok">amanhã tem festa ✓</span> : (
+            {save.level < (DAY_EVENTS.festival.minLevel ?? 1) ? <span className="tag">{tr('nível ')}{DAY_EVENTS.festival.minLevel}</span>
+              : save.festivalSponsored ? <span className="tag tag-ok">{tr('amanhã tem festa ✓')}</span> : (
                 <button className="btn btn-small btn-primary" disabled={save.coins < festivalPrice(save)} onClick={() => dispatch({ type: 'SPONSOR_FESTIVAL' })}>
-                  {save.coins >= festivalPrice(save) ? 'Patrocinar' : `Faltam ${festivalPrice(save) - save.coins}`}
+                  {save.coins >= festivalPrice(save) ? tr('Patrocinar') : tr('Faltam {0}', festivalPrice(save) - save.coins)}
                 </button>
               )}
           </div>
         </li>
       </ul>
 
-      <h3 className="mini-title">Maestria das receitas</h3>
-      <More label="Como funciona"><p className="card-text small">
-        Cada poção que sai do caldeirão conta. Estrelas em {MASTERY_STEPS.join(', ')} preparos: cada uma faz o cliente aceitar pagar 4% a mais, sobe o teto de preço e dá XP extra por venda.
-      </p></More>
+      <h3 className="mini-title">{tr('Maestria das receitas')}</h3>
+      <More label={tr('Como funciona')}><p className="card-text small">{tr('Cada poção que sai do caldeirão conta. Estrelas em ')}{MASTERY_STEPS.join(', ')}{tr(' preparos: cada uma faz o cliente aceitar pagar 4% a mais, sobe o teto de preço e dá XP extra por venda.')}</p></More>
       <ul className="list mastery-list">
         {RECIPES.filter((r) => save.knownRecipes.includes(r.id)).map((r) => {
           const stars = masteryStars(save, r.id);
@@ -159,8 +158,8 @@ export function GrimoirePanel({ save }: { save: GameSave }) {
               <PotionIcon recipeId={r.id} size={32} />
               <div className="row-main">
                 <span className="row-title">{RECIPES_BY_ID[r.id].shortName} <Stars n={stars} showEmpty /></span>
-                <Meter ratio={masteryProgress(save, r.id)} tone={stars >= MAX_STARS ? 'ok' : 'potion'} label={`Maestria de ${r.name}`} />
-                <span className="row-sub">{stars >= MAX_STARS ? `Dominada! ${n} preparadas` : `${n}/${MASTERY_STEPS[stars]} para a próxima estrela`}</span>
+                <Meter ratio={masteryProgress(save, r.id)} tone={stars >= MAX_STARS ? 'ok' : 'potion'} label={tr('Maestria de {0}', r.name)} />
+                <span className="row-sub">{stars >= MAX_STARS ? tr('Dominada! {0} preparadas', n) : tr('{0}/{1} para a próxima estrela', n, MASTERY_STEPS[stars])}</span>
               </div>
             </li>
           );

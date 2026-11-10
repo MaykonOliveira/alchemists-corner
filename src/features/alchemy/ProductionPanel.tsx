@@ -10,6 +10,7 @@ import { Coins, Meter, PotionName, Stepper } from '../../ui/widgets';
 import { StirGame } from './StirGame';
 import { Icon } from '../../ui/Icon';
 
+import { tr } from '../../i18n';
 const secs = (ms: number) => `${Math.ceil(ms / 1000)}s`;
 
 export function ProductionPanel({ save }: { save: GameSave }) {
@@ -31,27 +32,27 @@ export function ProductionPanel({ save }: { save: GameSave }) {
   const buy = short ? missingPurchase(save, selected, b) : null;
   const canBrew = !!slot && !closing && !noSpace && !short;
   const busy = [save.brew, save.brew2].filter((j): j is BrewJob => !!j).sort((a, c) => (a.totalMs - a.elapsedMs) - (c.totalMs - c.elapsedMs))[0];
-  const label = closing ? 'A loja está fechando'
-    : noSpace ? (lim.shelfFull ? 'Prateleira desta poção cheia' : 'Prateleiras cheias')
-    : short ? 'Faltam ingredientes'
-    : !slot ? (hasSecondCauldron(save) ? 'Caldeirões ocupados' : 'Caldeirão ocupado')
-    : `Preparar ${b} lote${b > 1 ? 's' : ''}${b === max && max > 1 ? ' (máx.)' : ''}${hasSecondCauldron(save) ? ` no caldeirão ${slot}` : ''}`;
+  const label = closing ? tr('A loja está fechando')
+    : noSpace ? (lim.shelfFull ? tr('Prateleira desta poção cheia') : tr('Prateleiras cheias'))
+    : short ? tr('Faltam ingredientes')
+    : !slot ? (hasSecondCauldron(save) ? tr('Caldeirões ocupados') : tr('Caldeirão ocupado'))
+    : tr('Preparar {0} {1}{2}{3}', b, b > 1 ? tr('lotes') : tr('lote'), b === max && max > 1 ? tr(' (máx.)') : '', hasSecondCauldron(save) ? tr(' no caldeirão {0}', slot) : '');
 
   return (
     <>
       {save.brew || save.brew2 ? (
         <div className={hasSecondCauldron(save) ? 'cauldron-pair' : ''}>
-          <BrewCard job={save.brew} slot={1} label={hasSecondCauldron(save) ? 'Caldeirão 1' : null} save={save} />
-          {hasSecondCauldron(save) && <BrewCard job={save.brew2} slot={2} label="Caldeirão 2" save={save} />}
+          <BrewCard job={save.brew} slot={1} label={hasSecondCauldron(save) ? tr('Caldeirão 1') : null} save={save} />
+          {hasSecondCauldron(save) && <BrewCard job={save.brew2} slot={2} label={tr('Caldeirão 2')} save={save} />}
         </div>
       ) : null}
-      {save.brew && <StirGame key={`1-${save.brew.recipeId}-${save.brew.totalMs}`} save={save} job={save.brew} slot={1} label={hasSecondCauldron(save) ? 'Caldeirão 1' : undefined} />}
-      {save.brew2 && hasSecondCauldron(save) && <StirGame key={`2-${save.brew2.recipeId}-${save.brew2.totalMs}`} save={save} job={save.brew2} slot={2} label="Caldeirão 2" />}
+      {save.brew && <StirGame key={`1-${save.brew.recipeId}-${save.brew.totalMs}`} save={save} job={save.brew} slot={1} label={hasSecondCauldron(save) ? tr('Caldeirão 1') : undefined} />}
+      {save.brew2 && hasSecondCauldron(save) && <StirGame key={`2-${save.brew2.recipeId}-${save.brew2.totalMs}`} save={save} job={save.brew2} slot={2} label={tr('Caldeirão 2')} />}
       {save.brew || save.brew2 ? null : (
-        <p className="panel-lead small">Cada lote rende {perBatch} poções.</p>
+        <p className="panel-lead small">{tr('Cada lote rende ')}{perBatch}{tr(' poções.')}</p>
       )}
 
-      <div className="recipe-picker" role="radiogroup" aria-label="Receitas conhecidas">
+      <div className="recipe-picker" role="radiogroup" aria-label={tr('Receitas conhecidas')}>
         {save.knownRecipes.map((id) => {
           const can = maxBatches(save, id) > 0;
           return (
@@ -61,11 +62,11 @@ export function ProductionPanel({ save }: { save: GameSave }) {
               aria-checked={selected === id}
               className={`recipe-chip ${selected === id ? 'on' : ''} ${can ? '' : 'dim'}`}
               onClick={() => { setSelected(id); setBatches(null); }}
-              title={can ? undefined : 'Faltam ingredientes ou espaço'}
+              title={can ? undefined : tr('Faltam ingredientes ou espaço')}
             >
               <PotionIcon recipeId={id} />
               <span>{RECIPES_BY_ID[id].shortName}</span>
-              {save.trend?.includes(id) && <span className="trend-tag" title="Procurada hoje">em alta</span>}
+              {save.trend?.includes(id) && <span className="trend-tag" title={tr('Procurada hoje')}>{tr('em alta')}</span>}
               {can ? <span className="dot-ok" aria-label="pode preparar">●</span> : <span className="dot-miss" aria-label="falta ingrediente">✗</span>}
             </button>
           );
@@ -78,32 +79,32 @@ export function ProductionPanel({ save }: { save: GameSave }) {
           <div className="brew-block brew-block-space" role="status">
             {lim.shelfFull ? (
               <>
-                <p className="row-title"><Icon e="🧪" /> Prateleira de {r.shortName} cheia</p>
-                <p className="card-text small">Cabem {shelfPerRecipe(save)} poções de cada receita. Use o caldeirão para outra poção.</p>
+                <p className="row-title"><Icon e="🧪" />{tr(' Prateleira de ')}{r.shortName}{tr(' cheia')}</p>
+                <p className="card-text small">{tr('Cabem ')}{shelfPerRecipe(save)}{tr(' poções de cada receita. Use o caldeirão para outra poção.')}</p>
               </>
             ) : (
               <>
-                <p className="row-title"><Icon e="🧪" /> Prateleiras cheias</p>
-                <p className="card-text small">Não cabe mais nenhuma poção. Venda no balcão ou entregue um pedido para liberar espaço.</p>
+                <p className="row-title"><Icon e="🧪" />{tr(' Prateleiras cheias')}</p>
+                <p className="card-text small">{tr('Não cabe mais nenhuma poção. Venda no balcão ou entregue um pedido para liberar espaço.')}</p>
               </>
             )}
           </div>
         )}
         {short && buy && (
           <div className="brew-block" role="status">
-            <p className="row-title"><Icon e="🌿" /> Faltam ingredientes para {b} lote{b > 1 ? 's' : ''}</p>
+            <p className="row-title"><Icon e="🌿" />{tr(' Faltam ingredientes para ')}{b}{b > 1 ? tr(' lotes') : tr(' lote')}</p>
             <p className="card-text small">
               {buy.items.map((m) => `${m.qty}× ${INGREDIENTS_BY_ID[m.ingredientId].name}`).join(', ')}
-              {max > 0 && <> · com o que você tem dá para {max} lote{max > 1 ? 's' : ''}.</>}
+              {max > 0 && <>{tr(' · com o que você tem dá para ')}{max}{max > 1 ? tr(' lotes') : tr(' lote')}.</>}
             </p>
-            {max > 0 && <div className="row-actions"><button className="btn btn-small" onClick={() => setBatches(max)}>Fazer só {max} lote{max > 1 ? 's' : ''}</button></div>}
+            {max > 0 && <div className="row-actions"><button className="btn btn-small" onClick={() => setBatches(max)}>{tr('Fazer só ')}{max}{max > 1 ? tr(' lotes') : tr(' lote')}</button></div>}
             {buy.error && <p className="card-text small text-warn">{buy.error}</p>}
           </div>
         )}
         {!slot && !closing && busy && (
           <p className="card-text small muted brew-wait">
-            <Icon e="⏳" /> {hasSecondCauldron(save) ? 'Os dois caldeirões estão ocupados' : 'O caldeirão está ocupado'}: libera em {secs(busy.totalMs - busy.elapsedMs)}.
-            {short ? ' Dá para comprar os ingredientes enquanto isso.' : ''}
+            <Icon e="⏳" /> {hasSecondCauldron(save) ? tr('Os dois caldeirões estão ocupados') : tr('O caldeirão está ocupado')}{tr(': libera em ')}{secs(busy.totalMs - busy.elapsedMs)}.
+            {short ? tr(' Dá para comprar os ingredientes enquanto isso.') : ''}
           </p>
         )}
         <ul className="needs">
@@ -112,26 +113,26 @@ export function ProductionPanel({ save }: { save: GameSave }) {
             const need = i.qty * b;
             return (
               <li key={i.ingredientId} className={have >= need ? '' : 'missing'}>
-                {have >= need ? '✓' : '✗'} {need}× {INGREDIENTS_BY_ID[i.ingredientId].name} <span className="muted">(tem {have})</span>
+                {have >= need ? '✓' : '✗'} {need}× {INGREDIENTS_BY_ID[i.ingredientId].name} <span className="muted">{tr('(tem ')}{have})</span>
               </li>
             );
           })}
         </ul>
         <div className="brew-facts">
-          <span>Rende <strong>{b * perBatch}</strong></span>
-          <span>Custo ≈ <strong>{recipeCost(save, selected) * b}</strong></span>
-          <span>Venda ≈ <strong>{(save.prices[selected] ?? r.basePrice) * b * perBatch}</strong></span>
-          <span>Tempo <strong>{secs(brewDurationMs(save, selected, b))}</strong></span>
+          <span>{tr('Rende ')}<strong>{b * perBatch}</strong></span>
+          <span>{tr('Custo ≈ ')}<strong>{recipeCost(save, selected) * b}</strong></span>
+          <span>{tr('Venda ≈ ')}<strong>{(save.prices[selected] ?? r.basePrice) * b * perBatch}</strong></span>
+          <span>{tr('Tempo ')}<strong>{secs(brewDurationMs(save, selected, b))}</strong></span>
         </div>
         <div className="card-foot sticky-actions">
-          <Stepper value={b} min={1} max={roomMax} onChange={setBatches} label="Lotes" />
+          <Stepper value={b} min={1} max={roomMax} onChange={setBatches} label={tr('Lotes')} />
           {short && buy && !buy.error ? (
             <button
               data-tut="buy-missing"
               className="btn btn-primary btn-buy"
               onClick={() => dispatch({ type: 'BUY_MISSING', recipeId: selected, batches: b })}
             >
-              <Icon e="🛒" /> Comprar o que falta · <Coins n={buy.cost} />
+              <Icon e="🛒" />{tr(' Comprar o que falta · ')}<Coins n={buy.cost} />
             </button>
           ) : (
             <button
@@ -153,8 +154,8 @@ function BrewCard({ job, label, save }: { job: BrewJob | null; label: string | n
   if (!job) {
     return (
       <div className="card brewing brewing-idle">
-        <p className="row-title">{label}: livre</p>
-        <p className="card-text muted small">Escolha uma receita abaixo para usar este caldeirão.</p>
+        <p className="row-title">{label}{tr(': livre')}</p>
+        <p className="card-text muted small">{tr('Escolha uma receita abaixo para usar este caldeirão.')}</p>
       </div>
     );
   }
@@ -162,12 +163,12 @@ function BrewCard({ job, label, save }: { job: BrewJob | null; label: string | n
     <div className="card brewing">
       <div className="card-head">
         <PotionIcon recipeId={job.recipeId} size={32} />
-        <span className="row-title">{label ? `${label}: ` : 'Fervendo: '}{RECIPES_BY_ID[job.recipeId].name}</span>
+        <span className="row-title">{label ? `${label}: ` : tr('Fervendo: ')}{RECIPES_BY_ID[job.recipeId].name}</span>
       </div>
-      <Meter ratio={job.elapsedMs / job.totalMs} tone="potion" label="Progresso do preparo" />
+      <Meter ratio={job.elapsedMs / job.totalMs} tone="potion" label={tr('Progresso do preparo')} />
       <p className="card-text muted">
-        {job.batches * potionsPerBatch(save)} poções · faltam {secs(job.totalMs - job.elapsedMs)}
-        {save.phase === 'preparacao' && !label ? '. Você pode abrir a loja enquanto isso.' : ''}
+        {job.batches * potionsPerBatch(save)}{tr(' poções · faltam ')}{secs(job.totalMs - job.elapsedMs)}
+        {save.phase === 'preparacao' && !label ? tr('. Você pode abrir a loja enquanto isso.') : ''}
       </p>
     </div>
   );
