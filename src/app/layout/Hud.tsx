@@ -7,7 +7,7 @@ import { CoinIcon, StarIcon } from '../../ui/icons';
 import { useAnimatedNumber } from '../../ui/useAnimatedNumber';
 import { Icon } from '../../ui/Icon';
 
-import { tr } from '../../i18n';
+import { GAME_NAME, tr } from '../../i18n';
 const PHASE_LABEL = { preparacao: tr('Preparação'), expediente: tr('Loja aberta'), fechamento: tr('Fechamento') } as const;
 
 export function Hud() {
@@ -66,7 +66,7 @@ export function Hud() {
           <button className="btn btn-ghost hp-close" onClick={() => setDetails(false)}>{tr('Fechar')}</button>
         </div>
       )}
-      <div className="hud-brand" title={tr('Alchemist\'s Corner')}>
+      <div className="hud-brand" title={GAME_NAME}>
         <span className="brand-full">{save.royal && save.royal.chapter >= 5 && <span className="brand-crown" title={tr('Grão-Alquimista do Reino')} aria-label={tr('Grão-Alquimista do Reino')}><Icon e="👑" /> </span>}{save.shopName}</span>
         <button className="hud-crystals" onClick={() => dispatch({ type: 'TOGGLE_PANEL', panel: 'season' })} title={tr('Cristais de luar: ganhe jogando e use na decoração ou nos talentos do Grimório')}><Icon e="🌙" /> {save.crystals}</button>
       </div>

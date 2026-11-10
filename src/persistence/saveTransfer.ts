@@ -1,7 +1,7 @@
 import type { GameSave } from '../domain/models/types';
 import { migrateSave } from './migrations';
 
-import { tr } from '../i18n';
+import { GAME_NAME, tr } from '../i18n';
 /**
  * Exportar e importar a partida como texto, para levar o save entre navegadores e aparelhos
  * (por exemplo, do link do Claude para o GitHub Pages ou para o celular).
@@ -62,7 +62,7 @@ export async function importSaveCode(input: string): Promise<GameSave> {
     }
   } catch (err) {
     if (err instanceof SaveImportError) throw err;
-    throw new SaveImportError(tr('O código não parece um save do Alchemist’s Corner. Confira se copiou ele inteiro.'));
+    throw new SaveImportError(tr('O código não parece um save do {0}. Confira se copiou ele inteiro.', GAME_NAME));
   }
   const save = migrateSave(raw);
   if (!save) throw new SaveImportError(tr('Esse save é de uma versão mais nova do jogo ou está corrompido.'));

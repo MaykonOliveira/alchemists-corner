@@ -1,4 +1,6 @@
-# Alchemist's Corner
+# Cantinho do Alquimista (Alchemist's Corner)
+
+Em português o jogo se chama **Cantinho do Alquimista**; em inglês, **Alchemist's Corner** (`GAME_NAME` em `src/i18n`).
 
 Jogo cozy de gerenciamento de uma loja de alquimia, no navegador. Veja o PRD para a visão completa.
 

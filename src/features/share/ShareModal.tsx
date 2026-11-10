@@ -4,7 +4,7 @@ import { useGameStore } from '../../store/gameStore';
 import { canvasBlob, drawShopCard } from './shareCard';
 import { GAME_URL } from './giftCode';
 
-import { tr } from '../../i18n';
+import { GAME_NAME, tr } from '../../i18n';
 /** "Mostrar a loja": gera o cartão e deixa compartilhar, baixar ou copiar o link do jogo. */
 export function ShareModal() {
   const modal = useGameStore((s) => s.ui.modal);
@@ -36,7 +36,7 @@ export function ShareModal() {
 
   if (!open || !save) return null;
   const close = () => dispatch({ type: 'OPEN_MODAL', modal: null });
-  const text = tr('Olha a minha loja de poções "{0}" no Alchemist\'s Corner! {1}', save.shopName, GAME_URL);
+  const text = tr('Olha a minha loja de poções "{0}" no {2}! {1}', save.shopName, GAME_URL, GAME_NAME);
   const file = blob ? new File([blob], 'minha-loja.png', { type: 'image/png' }) : null;
   const canShareFile = !!file && typeof navigator.canShare === 'function' && navigator.canShare({ files: [file] });
 

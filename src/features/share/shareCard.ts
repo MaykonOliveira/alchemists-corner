@@ -8,7 +8,7 @@ import { snapshotScene } from '../../game/gameRef';
 import { GAME_URL } from './giftCode';
 import { AWNINGS } from '../../domain/data/catalog';
 
-import { tr } from '../../i18n';
+import { GAME_NAME, tr } from '../../i18n';
 const SIZE = 1080;
 
 function roundRect(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
@@ -111,7 +111,7 @@ export async function drawShopCard(save: GameSave, opts: CardOptions = {}): Prom
 
   g.fillStyle = '#f2c95c';
   g.font = `700 38px ${pixel}`;
-  g.fillText(tr('Alchemist\'s Corner'), SIZE / 2, SIZE - 96);
+  g.fillText(GAME_NAME, SIZE / 2, SIZE - 96);
   g.fillStyle = '#a9a3b8';
   g.font = `500 26px ${pixel}`;
   g.fillText(GAME_URL.replace('https://', ''), SIZE / 2, SIZE - 52);

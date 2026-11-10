@@ -7,7 +7,7 @@ import { SpriteIcon } from '../../ui/SpriteIcon';
 import { TrophyRow } from './RoyalPanel';
 import { Icon } from '../../ui/Icon';
 
-import { tr } from '../../i18n';
+import { GAME_NAME, tr } from '../../i18n';
 const CREDITS = [
   [tr('Alquimista-chefe'), tr('Você')],
   [tr('Gerente do caixa'), tr('O golem balconista')],
@@ -59,7 +59,7 @@ function Ceremony({ onClose }: { onClose: () => void }) {
             <div className={`credits ${reduce ? 'still' : ''}`}>
               <div className="credits-roll">
                 {CREDITS.map(([role, who]) => <p key={role}><span>{role}</span><b>{who}</b></p>)}
-                <p className="credits-end">{tr('Obrigado por jogar Alchemist\'s Corner')}</p>
+                <p className="credits-end">{tr('Obrigado por jogar {0}', GAME_NAME)}</p>
               </div>
             </div>
             <div className="story-foot"><span /><button className="btn btn-primary btn-glow" autoFocus onClick={onClose}>{tr('Voltar à loja')}</button></div>

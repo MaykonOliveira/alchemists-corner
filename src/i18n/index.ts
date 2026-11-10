@@ -38,5 +38,8 @@ export function tr(pt: string, ...args: unknown[]): string {
   return args.length ? s.replace(/\{(\d+)\}/g, (m, i) => (args[+i] === undefined ? m : String(args[+i]))) : s;
 }
 
+/** Nome do jogo em cada idioma (auditoria P2.7): Cantinho do Alquimista em português, Alchemist's Corner em inglês. */
+export const GAME_NAME = LANG === 'en' ? "Alchemist's Corner" : 'Cantinho do Alquimista';
+
 /** Locale para números e datas. */
 export const LOCALE = LANG === 'en' ? 'en-US' : 'pt-BR';

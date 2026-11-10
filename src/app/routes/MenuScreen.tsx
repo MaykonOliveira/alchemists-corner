@@ -11,7 +11,7 @@ import { PrivacyDialog } from '../layout/PrivacyDialog';
 import { Icon } from '../../ui/Icon';
 
 import { LangSwitch } from '../../ui/LangSwitch';
-import { LANG, tr } from '../../i18n';
+import { GAME_NAME, LANG, tr } from '../../i18n';
 
 const roomUrl = LANG === 'en' ? roomEn : roomPt;
 const TITLE_POTIONS = ['cura-simples', 'tonico-energia', 'elixir-concentracao', 'pocao-sorte', 'elixir-estelar', 'elixir-fenix'];
@@ -49,7 +49,7 @@ export function MenuScreen() {
 
   return (
     <main className="menu">
-      <Storefront name={stored?.shopName || "Alchemist's Corner"} awning={awning} />
+      <Storefront name={stored?.shopName || GAME_NAME} awning={awning} />
       <div className="menu-card">
         <div className="menu-potions" aria-hidden="true">
           {TITLE_POTIONS.map((id, i) => (
@@ -59,7 +59,7 @@ export function MenuScreen() {
           ))}
         </div>
         <p className="menu-kicker">{tr('Uma pequena loja de alquimia')}</p>
-        <h1 className="menu-title">{tr('Alchemist\'s Corner')}</h1>
+        <h1 className="menu-title">{GAME_NAME}</h1>
         <p className="menu-text">{tr('Você herdou uma loja modesta numa rua comercial da cidade. Equipamentos básicos, algumas moedas e um livro de receitas incompleto. O resto é com você.')}</p>
         {storageError && <p className="alert" role="alert">{storageError}</p>}
         <div className="menu-actions">
