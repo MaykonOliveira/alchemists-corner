@@ -98,6 +98,7 @@ export function createNewGame(now: number = Date.now()): GameSave {
     festivalSponsored: false,
     royal: null,
     pages: {},
+    diagnoses: {},
     village: {},
     records: { revenue: 0, served: 0, bestSale: 0 },
     tutorialStep: 0,

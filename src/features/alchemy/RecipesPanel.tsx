@@ -5,6 +5,8 @@ import type { GameSave } from '../../domain/models/types';
 import { useGameStore } from '../../store/gameStore';
 import { IngredientIcon, PotionIcon } from '../../ui/SpriteIcon';
 import { masteryStars } from '../../domain/rules/mastery';
+import { DIAGNOSIS_LEARN, diagnosisLearned } from '../../domain/rules/customers';
+import { SYMPTOMS } from '../../domain/data/symptoms';
 import { HEAT, STIR_LEVEL } from '../../domain/rules/quality';
 import { Stars } from '../../ui/Stars';
 import { LEGEND_LEVEL, LEGENDS, legendKnown, pagesFor } from '../../domain/rules/legends';
@@ -72,6 +74,7 @@ export function RecipesPanel({ save }: { save: GameSave }) {
                   <p className="card-text muted small">
                     {r.ingredients.map((i) => `${i.qty}× ${INGREDIENTS_BY_ID[i.ingredientId].name}`).join(' + ')}{tr(' · preço-base ')}{r.basePrice}
                   </p>
+                  {SYMPTOMS[r.id] && <p className="card-text small muted"><Icon e="📖" /> {diagnosisLearned(save, r.id) ? tr('No caderno: o golem e o atendimento rápido reconhecem quem conta este problema.') : tr('Caderno de diagnósticos: {0}/{1} acertos', save.diagnoses?.[r.id] ?? 0, DIAGNOSIS_LEARN)}</p>}
                   {save.level >= STIR_LEVEL && <p className="card-text small recipe-craft"><Icon e="🔥" />{tr(' Nesta ordem, fogo ')}<b>{HEAT[r.category].name}</b>.</p>}
                   <More label={tr('Quem procura')}><p className="card-text small">{r.need}{tr('. Procurada por ')}{r.customerProfile.toLowerCase()}.</p></More>
                 </>

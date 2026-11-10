@@ -37,7 +37,23 @@ export function nextSpawnDelay(s: GameSave, random: () => number) {
 
 /** A partir deste dia, a maioria dos clientes conta o problema em vez de dizer o nome da poção (auditoria P0.2). */
 export const SYMPTOM_DAY = 2;
-export const SYMPTOM_SHARE = 0.7;
+/**
+ * Fração dos clientes comuns que conta o sintoma. Era 0,7 e deixava o golem sem trabalho:
+ * só 1 em cada 4 clientes pedia a poção pelo nome. Com 0,45 o diagnóstico continua sendo o desafio
+ * do balcão, mas a rotina volta a existir para a automação.
+ */
+export const SYMPTOM_SHARE = 0.45;
+/** Acertos do mesmo diagnóstico até ele entrar no caderno: daí em diante o golem e o atendimento rápido resolvem. */
+export const DIAGNOSIS_LEARN = 3;
+
+/** O jogador já acertou este diagnóstico vezes suficientes para a loja reconhecer o problema sozinha. */
+export const diagnosisLearned = (s: GameSave, recipeId: string) => (s.diagnoses?.[recipeId] ?? 0) >= DIAGNOSIS_LEARN;
+
+/**
+ * Sintoma que a loja já conhece (está no caderno). Capítulos da história dos fregueses
+ * continuam sendo do jogador: são conversa, não rotina.
+ */
+export const knownSymptom = (s: GameSave, c: Customer) => !!c.symptom && c.chapter === undefined && diagnosisLearned(s, c.wantedRecipeId);
 /** Acertar o diagnóstico rende uma gorjeta sobre o preço. */
 export const DIAGNOSIS_TIP = 0.2;
 /** Errar o diagnóstico gasta esta fração da paciência do cliente. */
@@ -230,9 +246,11 @@ export function reservedForOrder(save: GameSave, recipeId: string): number {
 export function bestOffer(save: GameSave, c: Customer): string | null {
   // Poções guardadas para o pedido especial não saem no atendimento rápido.
   // A charada é para o jogador resolver: o atendimento rápido não entrega a resposta.
-  if (c.mystery || c.symptom) return null;
+  if (c.mystery || (c.symptom && !knownSymptom(save, c))) return null;
   const forSale = save.potions.filter((p) => p.forSale && p.quantity - reservedForOrder(save, p.recipeId) > 0).map((p) => p.recipeId);
   if (forSale.includes(c.wantedRecipeId)) return c.wantedRecipeId;
+  // Sintoma do caderno: a loja sabe a poção certa, e não arrisca uma parecida.
+  if (c.symptom) return null;
   if (c.vip) return forSale.filter((id) => suits(c, id)).sort((a, b) => RECIPES_BY_ID[b].basePrice - RECIPES_BY_ID[a].basePrice)[0] ?? null;
   const similar = forSale.filter((id) => suits(c, id));
   if (similar.length === 0) return null;
@@ -259,7 +277,12 @@ function completeSale(d: Draft, c: Customer, recipeId: string, price: number, di
   const r = RECIPES_BY_ID[recipeId];
   // Diagnóstico certeiro: o cliente agradece com uma gorjeta.
   const diagnosed = !!c.symptom && recipeId === c.wantedRecipeId;
-  if (diagnosed) price += Math.max(1, Math.round(price * DIAGNOSIS_TIP));
+  if (diagnosed) {
+    price += Math.max(1, Math.round(price * DIAGNOSIS_TIP));
+    const before = s.diagnoses?.[recipeId] ?? 0;
+    s.diagnoses = { ...s.diagnoses, [recipeId]: before + 1 };
+    if (before + 1 === DIAGNOSIS_LEARN) d.events.push({ type: 'DIAGNOSIS_LEARNED', recipeId });
+  }
   // Poções Finas e Primorosas saem primeiro e valem mais (toque de mestre).
   const quality = takeBestQuality(s, recipeId);
   price = Math.round(price * (1 + QUALITY_BONUS[quality]));
@@ -290,7 +313,16 @@ export function askOptions(s: GameSave, recipeId: string) {
   return { discount: Math.max(min, Math.round(tag * 0.9)), tag, high: Math.min(max, Math.max(tag + 1, Math.round(tag * 1.15))) };
 }
 
-export function serveCustomer(d: Draft, customerId: string, recipeId: string, opts: { basePrice?: boolean; price?: number } = {}): boolean {
+/**
+ * Preço que o golem cobra: a sua etiqueta. Se o cliente não alcança a etiqueta, o golem baixa até
+ * o que ele pode pagar, mas nunca abaixo do preço-base (que quem pediu a poção sempre aceita).
+ */
+export function golemPrice(s: GameSave, c: Customer, recipeId: string) {
+  const tag = getPrice(s, recipeId);
+  return Math.min(tag, Math.max(maxPriceFor(s, c, recipeId), RECIPES_BY_ID[recipeId].basePrice));
+}
+
+export function serveCustomer(d: Draft, customerId: string, recipeId: string, opts: { golem?: boolean; price?: number } = {}): boolean {
   const s = d.s;
   const c = s.customers.find((x) => x.id === customerId);
   if (!c) return fail(d, tr('Esse cliente já foi embora.'));
@@ -328,9 +360,9 @@ export function serveCustomer(d: Draft, customerId: string, recipeId: string, op
     onVipServed(d, c, price);
     return true;
   }
-  // O golem não negocia: cobra o preço-base, que é sempre aceito por quem pediu a poção pelo nome.
+  // O golem não pechincha com ninguém: cobra a etiqueta, ou o que o cliente pode pagar (nunca menos que o preço-base).
   const tag = getPrice(s, recipeId);
-  let price = opts.basePrice ? RECIPES_BY_ID[recipeId].basePrice : tag;
+  let price = opts.golem ? golemPrice(s, c, recipeId) : tag;
   // Pedido feito na hora, no balcão: só vale dentro da faixa da receita.
   if (opts.price !== undefined) {
     const { min, max: top } = priceRange(s, recipeId);
@@ -338,7 +370,7 @@ export function serveCustomer(d: Draft, customerId: string, recipeId: string, op
   }
   const max = maxPriceFor(s, c, recipeId);
   // Freguês fiel não paga acima da etiqueta, mesmo podendo: contrapropõe o preço de sempre e fica chateado.
-  if (c.regularId && price > tag && !opts.basePrice) {
+  if (c.regularId && price > tag && !opts.golem) {
     c.offer = { recipeId, price: tag };
     gainReputation(d, -1);
     c.remark = tr('Logo comigo? Pago o de sempre: {0} moedas.', tag);
@@ -347,10 +379,10 @@ export function serveCustomer(d: Draft, customerId: string, recipeId: string, op
   }
   // Pedir acima da etiqueta ofende quem não pode pagar, e o morador nunca paga acima dela (é o que a dica do balcão diz):
   // o morador vai embora, os outros pechincham bravos.
-  const salty = c.archetype === 'morador' && price > tag && !opts.basePrice;
+  const salty = c.archetype === 'morador' && price > tag && !opts.golem;
   const greedy = price > tag && (price > max || salty);
   const margin = greedy && c.archetype === 'morador' ? 0 : NEGOTIATION_MARGIN;
-  if ((price <= max && !salty) || opts.basePrice) {
+  if ((price <= max && !salty) || opts.golem) {
     completeSale(d, c, recipeId, price, price < tag);
   } else if (price <= max * margin) {
     c.offer = { recipeId, price: max };

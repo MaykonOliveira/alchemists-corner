@@ -175,6 +175,8 @@ export const useGameStore = create<StoreState>()(
           return;
         case 'MYSTERY_SOLVED':
           return toast(tr('❓ Charada resolvida! Era {0}: +{1} moedas e +{2} cristais.', RECIPES_BY_ID[e.recipeId].name, e.coins, e.crystals), 'gold');
+        case 'DIAGNOSIS_LEARNED':
+          return toast(tr('📖 {0} entrou no caderno de diagnósticos: daqui em diante o golem e o atendimento rápido reconhecem esse problema.', RECIPES_BY_ID[e.recipeId].name), 'gold');
         case 'SYMPTOM_WRONG':
           // O cartão do cliente já mostra a explicação nova.
           return;

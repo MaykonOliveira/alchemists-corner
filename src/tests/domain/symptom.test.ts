@@ -3,7 +3,7 @@ import { SYMPTOMS } from '../../domain/data/symptoms';
 import { RECIPES } from '../../domain/data/recipes';
 import type { Customer, GameSave } from '../../domain/models/types';
 import { applyCommand, type DomainCommand } from '../../domain/rules/commands';
-import { bestOffer, DIAGNOSIS_TIP, WRONG_GUESS_PATIENCE } from '../../domain/rules/customers';
+import { bestOffer, DIAGNOSIS_LEARN, DIAGNOSIS_TIP, WRONG_GUESS_PATIENCE } from '../../domain/rules/customers';
 import { createNewGame } from '../../domain/rules/initialState';
 
 const run = (s: GameSave, c: DomainCommand, random = () => 0.5) => applyCommand(s, c, { now: 0, random });
@@ -28,7 +28,7 @@ describe('pedido por sintoma (auditoria P0.2)', () => {
     for (const r of RECIPES.filter((x) => !x.legend && !x.secret)) expect(SYMPTOMS[r.id]?.length, r.id).toBe(3);
   });
 
-  it('a partir do dia 2, a maioria conta o problema; no dia 1, todo mundo diz o nome', () => {
+  it('a partir do dia 2, uma boa parte conta o problema (mas não quase todos); no dia 1, todo mundo diz o nome', () => {
     const count = (day: number) => {
       let seed = 7;
       const random = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
@@ -44,7 +44,9 @@ describe('pedido por sintoma (auditoria P0.2)', () => {
       return n / total;
     };
     expect(count(1)).toBe(0);
-    expect(count(3)).toBeGreaterThan(0.55);
+    // Diagnóstico é o desafio do balcão, mas a rotina precisa existir para o golem (era 70% e o golem ficava sem trabalho).
+    expect(count(3)).toBeGreaterThan(0.3);
+    expect(count(3)).toBeLessThan(0.6);
   });
 
   it('o atendimento rápido não entrega a resposta', () => {
@@ -72,5 +74,35 @@ describe('pedido por sintoma (auditoria P0.2)', () => {
     expect(c.remark).toContain('recuperação de ferimentos');
     expect(c.waitedMs).toBe(30000 * WRONG_GUESS_PATIENCE);
     expect(save.potions.find((p) => p.recipeId === 'tonico-energia')!.quantity).toBe(3);
+  });
+});
+
+describe('caderno de diagnósticos', () => {
+  it('cada acerto do jogador entra no caderno; no terceiro, a loja passa a reconhecer o problema', () => {
+    let s = open(customer(), { diagnoses: { 'cura-simples': DIAGNOSIS_LEARN - 2 } });
+    let r = serve(s, 'cura-simples');
+    expect(r.save.diagnoses['cura-simples']).toBe(DIAGNOSIS_LEARN - 1);
+    expect(r.events.find((e) => e.type === 'DIAGNOSIS_LEARNED')).toBeUndefined();
+    s = { ...r.save, customers: [customer()] };
+    r = serve(s, 'cura-simples');
+    expect(r.save.diagnoses['cura-simples']).toBe(DIAGNOSIS_LEARN);
+    expect(r.events).toContainEqual({ type: 'DIAGNOSIS_LEARNED', recipeId: 'cura-simples' });
+  });
+
+  it('a parecida não conta como diagnóstico', () => {
+    const { save } = serve(open(customer({ budgetFactor: 2 })), 'balsamo-calmante');
+    expect(save.diagnoses['cura-simples'] ?? 0).toBe(0);
+  });
+
+  it('sintoma do caderno vira atendimento de um toque (só a poção exata)', () => {
+    const s = open(customer(), { diagnoses: { 'cura-simples': DIAGNOSIS_LEARN } });
+    expect(bestOffer(s, s.customers[0])).toBe('cura-simples');
+    const out = open(customer(), { diagnoses: { 'cura-simples': DIAGNOSIS_LEARN }, potions: [{ recipeId: 'balsamo-calmante', quantity: 3, quality: 1, forSale: true }] });
+    expect(bestOffer(out, out.customers[0])).toBeNull();
+  });
+
+  it('capítulo da história do freguês continua sendo do jogador', () => {
+    const s = open(customer({ regularId: 'celia', chapter: 1 }), { diagnoses: { 'cura-simples': DIAGNOSIS_LEARN } });
+    expect(bestOffer(s, s.customers[0])).toBeNull();
   });
 });

@@ -6,6 +6,7 @@ import {
   APPRENTICE, apprenticePlan, GOLEM, GOLEM_DELAY_MS, RAVEN, RAVEN_FEE, RAVEN_INTERVAL_MS, ravenShoppingList,
 } from '../../domain/rules/helpers';
 import { createNewGame } from '../../domain/rules/initialState';
+import { DIAGNOSIS_LEARN } from '../../domain/rules/customers';
 import { migrateSave } from '../../persistence/migrations';
 
 const ctx = { now: 0, random: () => 0.5 };
@@ -122,19 +123,44 @@ describe('golem balconista', () => {
     expect(save.stats.helperWork.served).toBe(1);
   });
 
-  it('cobra o preço-base, mesmo com a prateleira mais cara', () => {
+  it('cobra a sua etiqueta de quem pode pagar', () => {
+    const s = open({ customers: [customer({ waitedMs: GOLEM_DELAY_MS, archetype: 'aventureiro', budgetFactor: 1.4 })], prices: { 'cura-simples': 23 } });
+    const { save, events } = run(s, { type: 'ADVANCE', ms: 200 });
+    expect(save.customers).toHaveLength(0);
+    expect(events.find((e) => e.type === 'SALE')).toMatchObject({ price: 23, by: 'golem' });
+  });
+
+  it('quem não alcança a etiqueta paga o que pode, nunca menos que o preço-base', () => {
     const s = open({ customers: [customer({ waitedMs: GOLEM_DELAY_MS, budgetFactor: 0.9 })], prices: { 'cura-simples': 23 } });
     const { save, events } = run(s, { type: 'ADVANCE', ms: 200 });
     expect(save.customers).toHaveLength(0);
     expect(events.find((e) => e.type === 'SALE')).toMatchObject({ price: 18 });
   });
 
-  it('deixa para o jogador quem negocia, fregueses fiéis, visitas e sintomas', () => {
+  it('deixa para o jogador quem negocia, capítulos de freguês, visitas, charadas e sintomas novos', () => {
     const offer = customer({ waitedMs: GOLEM_DELAY_MS, offer: { recipeId: 'cura-simples', price: 15 } });
-    const regular = customer({ id: 'c-r', waitedMs: GOLEM_DELAY_MS, regularId: 'celia' });
+    const chapter = customer({ id: 'c-r', waitedMs: GOLEM_DELAY_MS, regularId: 'celia', symptom: true, chapter: 0 });
     const symptom = customer({ id: 'c-s', waitedMs: GOLEM_DELAY_MS, symptom: true });
-    const s = open({ customers: [offer, regular, symptom] });
-    expect(run(s, { type: 'ADVANCE', ms: 200 }).save.customers).toHaveLength(3);
+    const vip = customer({ id: 'c-v', waitedMs: GOLEM_DELAY_MS, vip: { name: 'Condessa', pays: 3, kind: 'festa' } });
+    const s = open({ customers: [offer, chapter, symptom, vip] });
+    expect(run(s, { type: 'ADVANCE', ms: 200 }).save.customers).toHaveLength(4);
+  });
+
+  it('atende o freguês fiel que pede o de sempre', () => {
+    const s = open({ customers: [customer({ id: 'c-r', waitedMs: GOLEM_DELAY_MS, regularId: 'celia' })] });
+    const { save, events } = run(s, { type: 'ADVANCE', ms: 200 });
+    expect(save.customers).toHaveLength(0);
+    expect(events).toContainEqual(expect.objectContaining({ type: 'SALE', by: 'golem' }));
+  });
+
+  it('atende sintoma que já está no caderno de diagnósticos', () => {
+    const c = customer({ id: 'c-s', waitedMs: GOLEM_DELAY_MS, symptom: true });
+    const learning = open({ customers: [c], diagnoses: { 'cura-simples': DIAGNOSIS_LEARN - 1 } });
+    expect(run(learning, { type: 'ADVANCE', ms: 200 }).save.customers).toHaveLength(1);
+    const learned = open({ customers: [c], diagnoses: { 'cura-simples': DIAGNOSIS_LEARN } });
+    const { save, events } = run(learned, { type: 'ADVANCE', ms: 200 });
+    expect(save.customers).toHaveLength(0);
+    expect(events).toContainEqual(expect.objectContaining({ type: 'SALE', by: 'golem', recipeId: 'cura-simples' }));
   });
 
   it('não oferece outra poção no lugar da pedida', () => {
