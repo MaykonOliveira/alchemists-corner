@@ -19,6 +19,8 @@ O jogo **não desenha nada em tempo de execução**: ele só carrega os spritesh
 | `pix.py` | Paleta e primitivas (retângulo, elipse, dithering, contorno, sprite em texto) |
 | `build.py` | Exporta tudo para `src/assets/sprites/` |
 
+> Existe também um visual vetorial em teste, com fontes próprios em [`art/vector/`](vector/README.md).
+
 ## Gerar os spritesheets
 
 ```bash

@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { touchable } from '../art/hires';
 import type { GameEvent, GameSave } from '../../../domain/models/types';
 import { APPRENTICE, BARD, GNOME, GOLEM, OWL, RAVEN, helperActive } from '../../../domain/rules/helpers';
 import { SALAMANDER } from '../../../domain/rules/alchemy';
@@ -153,7 +154,7 @@ export class HelperViews {
     const pin = this.scene.add.image(0, 0, 'pin-1').setVisible(false);
     const hat = this.scene.add.image(0, 0, 'hat-gorro').setOrigin(0.5, 1).setVisible(false);
     const view: HelperSprite = { id, sprite, outline, zz, pin, hat, hovered: false };
-    sprite.setInteractive({ useHandCursor: true, pixelPerfect: true });
+    sprite.setInteractive(touchable(this.scene, sprite.texture.key));
     sprite.on('pointerover', () => {
       view.hovered = true;
       outline.setVisible(true);

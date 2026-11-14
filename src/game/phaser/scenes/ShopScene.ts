@@ -8,7 +8,9 @@ import { autoFast, useGameStore } from '../../../store/gameStore';
 import { seasonOf } from '../../../domain/rules/world';
 import { gameEvents } from '../../events';
 import { outlinedText } from '../art/painter';
-import { DECOR_POS, EXPANSION, GARLAND_BULBS, LANTERNS, LATEGAME, ROYAL_POS, SHELF_BOARDS, WINDOW } from '../art/sprites';
+import { getRenderScale, logicalize, roundText, touchable } from '../art/hires';
+import { VECTOR } from '../../../app/skin';
+import { DECOR_POS, EXPANSION, GARLAND_BULBS, LANTERNS, LATEGAME, ROYAL_POS, SHELF_BOARDS, WINDOW, WORLD_H, WORLD_W } from '../art/sprites';
 import { decorAt } from '../../../domain/rules/entitlements';
 import { CatView } from '../entities/Cat';
 import { HelperViews } from '../entities/Helpers';
@@ -119,6 +121,8 @@ export class ShopScene extends Phaser.Scene {
 
   create() {
     const save = this.store.save!;
+    // Visual vetorial: o canvas tem mais pixels que o mundo, então a câmera aproxima para caber as mesmas 384×216 unidades.
+    this.cameras.main.setOrigin(0, 0).setZoom(getRenderScale());
     this.add.image(0, 0, 'room').setOrigin(0).setDepth(0);
     // A moldura da janela já está na sala; esta cópia fica por cima de quem passa na rua.
     this.add.image(WINDOW.front.x, WINDOW.front.y, 'window-front').setOrigin(0).setDepth(DEPTH_WINDOW_FRONT);
@@ -131,7 +135,7 @@ export class ShopScene extends Phaser.Scene {
 
     // Luz ambiente (manhã → tarde → noite) e brilhos que atravessam a sombra.
     this.overlay = this.add
-      .rectangle(0, 0, this.scale.width, this.scale.height, 0xffffff)
+      .rectangle(0, 0, WORLD_W, WORLD_H, 0xffffff)
       .setOrigin(0)
       .setDepth(1000)
       .setBlendMode(Phaser.BlendModes.MULTIPLY);
@@ -199,7 +203,7 @@ export class ShopScene extends Phaser.Scene {
       const depth = def.depth ?? def.y + sprite.height;
       outline.setDepth(depth - 0.5);
       sprite.setDepth(depth);
-      sprite.setInteractive({ useHandCursor: true, pixelPerfect: true });
+      sprite.setInteractive(touchable(this, sprite.texture.key));
       this.bindHotspot({ def, sprite, outline, hovered: false });
     }
   }
@@ -493,7 +497,7 @@ export class ShopScene extends Phaser.Scene {
       const def: HotspotDef = { id: 'stand', label: tr('Expositor de poções'), panel: 'shelves', texture: 'display-stand', x: STAND.x, y: STAND.y };
       const outline = this.add.image(def.x - 1, def.y - 1, 'display-stand-outline').setOrigin(0).setDepth(STAND.y + 29.5).setVisible(false);
       const sprite = this.add.image(def.x, def.y, 'display-stand').setOrigin(0).setDepth(STAND.y + 30);
-      sprite.setInteractive({ useHandCursor: true, pixelPerfect: true });
+      sprite.setInteractive(touchable(this, sprite.texture.key));
       this.bindHotspot({ def, sprite, outline, hovered: false });
       this.upgradeLayer.push(outline, sprite);
     }
@@ -536,7 +540,7 @@ export class ShopScene extends Phaser.Scene {
       const def: HotspotDef = { id: 'cauldron-2', label: tr('Segundo caldeirão'), panel: 'production', texture: 'cauldron-2', x: p.x, y: p.y };
       const outline = this.add.image(p.x - 1, p.y - 1, 'cauldron-2-outline').setOrigin(0).setDepth(p.y + 47.5).setVisible(false);
       const sprite = this.add.image(p.x, p.y, 'cauldron-2').setOrigin(0).setDepth(p.y + 48);
-      sprite.setInteractive({ useHandCursor: true, pixelPerfect: true });
+      sprite.setInteractive(touchable(this, sprite.texture.key));
       this.bindHotspot({ def, sprite, outline, hovered: false });
       this.liquid2 = this.add.image(p.x + 8, p.y + 7, 'liquid').setOrigin(0).setDepth(p.y + 48.2).setVisible(false);
       this.fire2 = this.add.image(p.cx, p.y + 48, 'fire-0').setOrigin(0.5, 1).setDepth(p.y + 48.1);
@@ -690,8 +694,8 @@ export class ShopScene extends Phaser.Scene {
 
   /** Texturas da luz desenhadas na hora (raio de sol em faixas e sombra dos cantos). */
   private createLightFx() {
-    const W = this.scale.width;
-    const H = this.scale.height;
+    const W = WORLD_W;
+    const H = WORLD_H;
     if (!this.textures.exists('fx-sunbeam')) {
       const t = this.textures.createCanvas('fx-sunbeam', W, H)!;
       const ctx = t.getContext();
@@ -822,6 +826,19 @@ export class ShopScene extends Phaser.Scene {
   private fxTexture(key: 'fx-dot' | 'fx-puff') {
     if (this.textures.exists(key)) return key;
     const size = key === 'fx-dot' ? 2 : 5;
+    if (VECTOR) {
+      // Bolinha lisa em alta resolução.
+      const k = 8;
+      const tex = this.textures.createCanvas(key, size * k, size * k)!;
+      const ctx = tex.getContext();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc((size * k) / 2, (size * k) / 2, (size * k) / 2 - 0.5, 0, Math.PI * 2);
+      ctx.fill();
+      tex.refresh();
+      logicalize(tex, k);
+      return key;
+    }
     const tex = this.textures.createCanvas(key, size, size)!;
     const ctx = tex.getContext();
     ctx.fillStyle = '#ffffff';
@@ -881,7 +898,7 @@ export class ShopScene extends Phaser.Scene {
 
   private coinPopup(x: number, y: number, amount: number, bonus = false) {
     const key = `txt-+${amount}${bonus ? '!' : ''}`;
-    if (!this.textures.exists(key)) this.textures.addCanvas(key, outlinedText(`+${amount}${bonus ? '!' : ''}`, bonus ? '#fff3a0' : '#f2c95c'));
+    if (!this.textures.exists(key)) this.addText(key, `+${amount}${bonus ? '!' : ''}`, bonus ? '#fff3a0' : '#ffd24d');
     const coin = this.add.image(x - 6, y, 'coin').setDepth(970);
     const txt = this.add.image(x + 3, y, key).setOrigin(0, 0.5).setDepth(970);
     const rise = this.reduceMotion() ? 0 : 14;
@@ -897,6 +914,13 @@ export class ShopScene extends Phaser.Scene {
     }
   }
 
+  /** Textura de um aviso flutuante: letras de pixel no visual clássico, letra arredondada no vetorial. */
+  private addText(key: string, text: string, color: string) {
+    if (!VECTOR) { this.textures.addCanvas(key, outlinedText(text, color)); return; }
+    const tex = this.textures.addCanvas(key, roundText(text, color));
+    if (tex) logicalize(tex);
+  }
+
   /** "−1 ★" vermelho subindo de quem foi embora sem ser atendido. */
   private lossPopup(x: number, y: number) {
     this.textPopup(x, y, tr('-1 REP'), '#ff8a7a');
@@ -905,7 +929,7 @@ export class ShopScene extends Phaser.Scene {
   /** Texto em pixel que sobe e some (só usa as letras do painter). */
   private textPopup(x: number, y: number, text: string, color: string) {
     const key = `txt-${text}-${color}`;
-    if (!this.textures.exists(key)) this.textures.addCanvas(key, outlinedText(text, color));
+    if (!this.textures.exists(key)) this.addText(key, text, color);
     const txt = this.add.image(x, y, key).setOrigin(0.5).setDepth(970);
     const rise = this.reduceMotion() ? 0 : 12;
     this.tweens.add({ targets: txt, y: y - rise, duration: 1100, ease: 'Cubic.Out' });

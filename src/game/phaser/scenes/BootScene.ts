@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
 import { ARCHETYPES } from '../../../domain/data/customers';
 import type { CustomerArchetype } from '../../../domain/models/types';
-import { CUSTOMER_FRAMES, CUSTOMER_H, CUSTOMER_URLS, CUSTOMER_W, ROOM_URL, SHOP_ATLAS } from '../art/sprites';
+import { ART_SCALE, CUSTOMER_FRAMES, CUSTOMER_H, CUSTOMER_URLS, CUSTOMER_W, ROOM_URL, SHOP_ATLAS } from '../art/sprites';
+import { logicalize } from '../art/hires';
 
 /**
  * Carrega os spritesheets do jogo (src/assets/sprites, gerados a partir de art/).
@@ -19,12 +20,13 @@ export class BootScene extends Phaser.Scene {
     for (const id of Object.keys(ARCHETYPES) as CustomerArchetype[]) {
       const key = `customer-${id}`;
       if (!this.textures.exists(key)) {
-        this.load.spritesheet(key, CUSTOMER_URLS[id], { frameWidth: CUSTOMER_W, frameHeight: CUSTOMER_H, endFrame: CUSTOMER_FRAMES - 1 });
+        this.load.spritesheet(key, CUSTOMER_URLS[id], { frameWidth: CUSTOMER_W * ART_SCALE, frameHeight: CUSTOMER_H * ART_SCALE, endFrame: CUSTOMER_FRAMES - 1 });
       }
     }
   }
 
   create() {
+    logicalize(this.textures.get('room'));
     const atlas = this.textures.get('shop-atlas');
     for (const name of atlas.getFrameNames()) {
       if (this.textures.exists(name)) continue;
@@ -32,10 +34,12 @@ export class BootScene extends Phaser.Scene {
       const tex = this.textures.createCanvas(name, frame.cutWidth, frame.cutHeight)!;
       tex.drawFrame('shop-atlas', name);
       tex.refresh();
+      logicalize(tex);
     }
 
     for (const id of Object.keys(ARCHETYPES) as CustomerArchetype[]) {
       const key = `customer-${id}`;
+      logicalize(this.textures.get(key));
       if (!this.anims.exists(`${key}-walk`)) {
         this.anims.create({ key: `${key}-walk`, frames: [{ key, frame: 1 }, { key, frame: 0 }, { key, frame: 2 }, { key, frame: 0 }], frameRate: 8, repeat: -1 });
       }

@@ -9,6 +9,7 @@ import { PrivacyDialog } from './PrivacyDialog';
 import { Icon } from '../../ui/Icon';
 
 import { LangSwitch } from '../../ui/LangSwitch';
+import { SkinSwitch } from '../../ui/SkinSwitch';
 import { tr } from '../../i18n';
 function Slider({ label, icon, value, onChange, disabled, toggle }: {
   label: string; icon: string; value: number; onChange: (v: number) => void; disabled?: boolean;
@@ -69,6 +70,8 @@ export function SettingsModal() {
         <p className="muted small">{tr('O jogo fica pausado enquanto esta janela está aberta.')}</p>
         <div className="settings-lang"><span className="mixer-name">{tr('Idioma')}</span><LangSwitch /></div>
         <p className="muted small">{tr('Trocar o idioma recarrega o jogo. Seu progresso fica salvo.')}</p>
+        <div className="settings-lang"><span className="mixer-name">{tr('Visual')} <span className="tag">{tr('em teste')}</span></span><SkinSwitch /></div>
+        <p className="muted small">{tr('O visual novo é um teste só da loja: capa, vila e reino ainda aparecem em pixel art. Trocar recarrega o jogo e o progresso fica salvo.')}</p>
         <div className="mixer" role="group" aria-label={tr('Mixer de som')}>
           <Slider label={tr('Geral')} icon="🔊" value={settings.volume} onChange={(v) => set({ volume: v })} />
           <Slider label={tr('Música')} icon="🎵" value={settings.musicVolume} disabled={!settings.music} onChange={(v) => set({ musicVolume: v })}

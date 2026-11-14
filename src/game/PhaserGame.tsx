@@ -6,6 +6,8 @@ import { useGameStore } from '../store/gameStore';
 import { WORLD_H, WORLD_W } from './phaser/art/sprites';
 import { createGameConfig } from './phaser/config';
 import { setCurrentGame } from './gameRef';
+import { VECTOR } from '../app/skin';
+import { setRenderScale } from './phaser/art/hires';
 
 import { tr } from '../i18n';
 /** Maior escala inteira que cabe no espaço disponível (PRD 6.3). */
@@ -16,6 +18,8 @@ function fitZoom(el: HTMLElement) {
   const exact = Math.min((width - pad) / WORLD_W, (height - pad) / WORLD_H);
   // Escala inteira sempre que possível (pixels perfeitos); em telas pequenas (celular) usa a escala exata.
   const whole = Math.floor(exact);
+  // O visual vetorial não precisa de escala inteira: ocupa todo o espaço.
+  if (VECTOR) return Math.max(0.5, Math.floor(exact * 100) / 100);
   if (whole >= 2 && whole / exact >= 0.88) return whole;
   return Math.max(0.5, Math.floor(exact * 100) / 100);
 }
@@ -31,12 +35,15 @@ export function PhaserGame() {
     const parent = canvasRef.current!;
     const zoom = fitZoom(host);
     dispatch({ type: 'SET_ZOOM', zoom });
-    const game = new Phaser.Game(createGameConfig(parent, zoom));
+    // Visual vetorial: o canvas é desenhado na resolução da tela (até 6×) e reduzido pelo navegador.
+    const res = VECTOR ? Math.min(6, Math.max(2, Math.ceil(zoom * (window.devicePixelRatio || 1)))) : 1;
+    setRenderScale(res);
+    const game = new Phaser.Game(createGameConfig(parent, zoom, res));
     setCurrentGame(game);
 
     const ro = new ResizeObserver(() => {
       const z = fitZoom(host);
-      if (game.scale.zoom !== z) game.scale.setZoom(z);
+      if (game.scale.zoom !== z / res) game.scale.setZoom(z / res);
       dispatch({ type: 'SET_ZOOM', zoom: z });
     });
     ro.observe(host);

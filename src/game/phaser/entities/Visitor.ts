@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { touchable } from '../art/hires';
 import type { CustomerArchetype } from '../../../domain/models/types';
 
 export const DOOR_X = 321;
@@ -35,7 +36,7 @@ export class Visitor {
   ) {
     const key = `customer-${archetype}`;
     this.sprite = scene.add.sprite(DOOR_X, DOOR_Y, key, 0).setOrigin(0.5, 1).setAlpha(0);
-    this.sprite.setInteractive({ useHandCursor: true, pixelPerfect: true });
+    this.sprite.setInteractive(touchable(scene, this.sprite.texture.key));
     this.sprite.on('pointerup', () => !this.leaving && this.opts.onClick(this));
 
     const bg = scene.add.image(0, 0, 'bubble').setOrigin(0.5, 1);
