@@ -39,7 +39,13 @@ export const countIngredients = (s: GameSave) => Object.values(s.ingredients).re
 export const potionStock = (s: GameSave, recipeId: string) => s.potions.find((p) => p.recipeId === recipeId)?.quantity ?? 0;
 
 /** Salário diário dos ajudantes contratados (mesmo descansando, continuam na folha). */
-export const helperWages = (s: GameSave) => s.upgrades.reduce((n, id) => n + (UPGRADES_BY_ID[id]?.upkeep ?? 0), 0);
+/** Ajudante contratado e ligado (o jogador não mandou descansar). */
+export const staffOn = (s: GameSave, id: string) => has(s, id) && !s.helpers.off.includes(id);
+
+/** Refeitório da equipe: comida quente no fundo da loja, salários 40% menores. */
+export const CANTEEN_DISCOUNT = 0.4;
+export const helperWages = (s: GameSave) =>
+  Math.round(s.upgrades.reduce((n, id) => n + (UPGRADES_BY_ID[id]?.upkeep ?? 0), 0) * (has(s, 'refeitorio') ? 1 - CANTEEN_DISCOUNT : 1));
 
 /** Custo de manutenção cobrado no fechamento (aluguel, lenha, velas e salários). Informado antes de fechar. */
 export const maintenanceCost = (s: GameSave) => 10 + 5 * (s.level - 1) + 3 * s.upgrades.length + helperWages(s);
@@ -199,12 +205,24 @@ export const GREENHOUSE_YIELD: { ingredientId: string; qty: number }[] = [
   { ingredientId: 'raiz-mandragora', qty: 2 },
 ];
 
+/** Gnomo jardineiro: o ingrediente mais raro que o fornecedor vende no nível atual (fora os da estação). */
+export function gnomeGift(s: GameSave): string | null {
+  const pool = INGREDIENTS.filter((i) => !i.season && s.level >= i.supplierLevel).sort((a, b) => b.price - a.price);
+  return pool[0]?.id ?? null;
+}
+export const GNOME = 'gnomo-jardineiro';
+export const GNOME_GIFT_QTY = 3;
+
 export function harvestGreenhouse(d: Draft) {
   const s = d.s;
   if (!has(s, 'estufa')) return;
   let room = ingredientCapacity(s) - countIngredients(s);
   const items: { ingredientId: string; qty: number }[] = [];
-  for (const it of GREENHOUSE_YIELD) {
+  // O gnomo cuida dos canteiros: a estufa rende o dobro e ele ainda traz um punhado do ingrediente mais raro.
+  const gnome = staffOn(s, GNOME);
+  const gift = gnome ? gnomeGift(s) : null;
+  const yieldList = [...GREENHOUSE_YIELD.map((it) => ({ ...it, qty: it.qty * (gnome ? 2 : 1) })), ...(gift ? [{ ingredientId: gift, qty: GNOME_GIFT_QTY }] : [])];
+  for (const it of yieldList) {
     const qty = Math.min(it.qty, room);
     if (qty <= 0) break;
     s.ingredients[it.ingredientId] = (s.ingredients[it.ingredientId] ?? 0) + qty;

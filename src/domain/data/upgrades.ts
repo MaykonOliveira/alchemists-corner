@@ -21,6 +21,8 @@ export const UPGRADES: ShopUpgrade[] = [
     effect: tr('Runas que dobram o espaço por dentro: +40 de capacidade para ingredientes e +12 lugares para poções.') },
   { id: 'vitral-arcano', name: tr('Vitral arcano'), cost: 5500, category: 'visual', requiredLevel: 13,
     effect: tr('Uma janela de vidro colorido que brilha à noite. Clientes pagam 5% a mais e a nobreza aparece com mais frequência.') },
+  { id: 'refeitorio', name: tr('Refeitório da equipe'), cost: 6500, category: 'funcional', requiredLevel: 10,
+    effect: tr('Uma mesa farta no fundo da loja: os salários de todos os ajudantes ficam 40% menores.') },
   { id: 'sino-encantado', name: tr('Sino encantado'), cost: 7000, category: 'funcional', requiredLevel: 15,
     effect: tr('Um sino na porta que acalma quem espera: clientes têm 30% mais paciência e chegam com mais frequência.') },
   // Expansão da loja: etapas caras, em ordem, para o late game.
@@ -36,7 +38,14 @@ export const UPGRADES: ShopUpgrade[] = [
   { id: 'aprendiz', name: tr('Aprendiz de alquimia'), cost: 2200, category: 'ajudante', requiredLevel: 8, upkeep: 20,
     effect: tr('Quando o caldeirão fica livre, prepara a poção que está mais em falta (sempre Comum). Dá prioridade ao pedido especial.') },
   { id: 'golem-balconista', name: tr('Golem balconista'), cost: 3000, category: 'ajudante', requiredLevel: 9, upkeep: 25,
-    effect: tr('Atende quem pede uma poção pelo nome (fregueses fiéis inclusive) e quem conta um problema que já está no caderno de diagnósticos. Cobra a sua etiqueta, ou o que o cliente pode pagar, nunca menos que o preço-base. Sintomas novos, histórias dos fregueses, charadas e visitas ficam com você.') },
+    effect: tr('Atende o balcão sozinho: reconhece qualquer problema que o cliente contar, entrega a poção certa (ou uma parecida, se acabou) e cobra a sua etiqueta, ou o que o cliente pode pagar, nunca menos que o preço-base. Histórias dos fregueses e visitas especiais ele deixa alguns segundos para você. Quer diagnosticar você mesmo? Mande o golem descansar.') },
+  // Funcionários novos: cada um tira mais um trabalho das suas mãos e deixa a loja mais viva.
+  { id: 'gnomo-jardineiro', name: tr('Gnomo jardineiro'), cost: 2800, category: 'ajudante', requiredLevel: 7, requires: 'estufa', upkeep: 15,
+    effect: tr('Cuida dos canteiros da estufa: a colheita da manhã rende o dobro, e ele ainda traz 3 unidades do ingrediente mais raro que o fornecedor vende no seu nível.') },
+  { id: 'coruja-sabia', name: tr('Coruja sábia'), cost: 4500, category: 'ajudante', requiredLevel: 10, upkeep: 30,
+    effect: tr('Decifra a charada do Cliente misterioso (se a poção está na prateleira) e entrega o pedido especial assim que o estoque fica pronto. Você continua ganhando os cristais e a recompensa.') },
+  { id: 'bardo-da-porta', name: tr('Bardo da porta'), cost: 6000, category: 'ajudante', requiredLevel: 12, upkeep: 35,
+    effect: tr('Toca alaúde na entrada: 15% mais clientes, 25% mais paciência na fila e todo mundo paga 3% a mais, de bom humor.') },
   // Treino da equipe (pacote X): cada ajudante pode evoluir uma vez no fim de jogo.
   { id: 'corvo-veloz', name: tr('Corvo veloz'), cost: 9000, category: 'treino', requiredLevel: 15, requires: 'corvo-entregador',
     effect: tr('O corvo confere o armário duas vezes por hora e não cobra mais a taxa da viagem.') },
@@ -44,7 +53,21 @@ export const UPGRADES: ShopUpgrade[] = [
     effect: tr('O aprendiz prepara até 5 lotes de uma vez e mantém 10 poções de cada receita nas prateleiras.') },
   { id: 'golem-polido', name: tr('Golem polido'), cost: 15000, category: 'treino', requiredLevel: 15, requires: 'golem-balconista',
     effect: tr('Engrenagens novas: o golem atende duas vezes mais rápido e espera menos antes de dar a vez a você.') },
+  // Mestres da equipe: a segunda evolução de cada ajudante, para quem já treinou o primeiro passo.
+  { id: 'corvo-da-guilda', name: tr('Corvo da guilda'), cost: 22000, category: 'treino', requiredLevel: 15, requires: 'corvo-veloz',
+    effect: tr('O corvo vira sócio da guilda dos fornecedores: tudo o que ele compra sai 20% mais barato.') },
+  { id: 'aprendiz-prodigio', name: tr('Aprendiz prodígio'), cost: 28000, category: 'treino', requiredLevel: 15, requires: 'aprendiz-dedicado',
+    effect: tr('O aprendiz aprendeu o toque de mestre: todo preparo dele sai Fino (★★), que vende mais caro.') },
+  { id: 'golem-de-cristal', name: tr('Golem de cristal'), cost: 35000, category: 'treino', requiredLevel: 15, requires: 'golem-polido',
+    effect: tr('Um coração de cristal: o golem atende dois clientes de cada vez e convence quem pode pagar a deixar até 10% acima da etiqueta.') },
 ];
+
+/** Ajudante de origem de uma evolução (para o retrato): segue a cadeia de "requires" até um ajudante. */
+export function helperRoot(id: string): string | null {
+  let u = UPGRADES.find((x) => x.id === id);
+  while (u && u.category !== 'ajudante') u = u.requires ? UPGRADES.find((x) => x.id === u!.requires) : undefined;
+  return u?.id ?? null;
+}
 
 export const HELPER_IDS = UPGRADES.filter((u) => u.category === 'ajudante').map((u) => u.id);
 

@@ -1,7 +1,9 @@
 import { RECIPES_BY_ID } from '../../domain/data/recipes';
-import { UPGRADES } from '../../domain/data/upgrades';
+import { helperRoot, UPGRADES } from '../../domain/data/upgrades';
 import type { GameSave, ShopUpgrade } from '../../domain/models/types';
-import { APPRENTICE, apprenticePlan, GOLEM, golemDelayMs, helperActive, RAVEN } from '../../domain/rules/helpers';
+import { APPRENTICE, apprenticePlan, BARD, GNOME, GOLEM, golemDelayMs, helperActive, OWL, RAVEN } from '../../domain/rules/helpers';
+import { gnomeGift } from '../../domain/rules/economy';
+import { INGREDIENTS_BY_ID } from '../../domain/data/ingredients';
 import { useGameStore } from '../../store/gameStore';
 import { SpriteIcon } from '../../ui/SpriteIcon';
 import { Coins, More } from '../../ui/widgets';
@@ -29,6 +31,15 @@ function helperStatus(save: GameSave, id: string): string {
     if (save.phase !== 'expediente') return tr('Esperando a loja abrir.');
     return tr('Atende quem espera há mais de {0}s. Hoje: {1}.', Math.round(golemDelayMs(save) / 100) / 10, plural(w.served, tr('venda'), tr('vendas')));
   }
+  if (id === GNOME) {
+    const gift = gnomeGift(save);
+    return gift ? tr('Cuidando da estufa. Amanhã cedo traz {0}.', INGREDIENTS_BY_ID[gift].name) : tr('Cuidando da estufa.');
+  }
+  if (id === OWL) {
+    if (save.order) return tr('De olho no pedido especial: entrega quando houver {0} {1}.', save.order.qty, RECIPES_BY_ID[save.order.recipeId].shortName);
+    return tr('Esperando uma charada ou um pedido especial. Hoje: {0}.', plural((w.riddles ?? 0) + (w.orders ?? 0), tr('tarefa'), tr('tarefas')));
+  }
+  if (id === BARD) return save.phase === 'expediente' ? tr('Tocando na porta: mais clientes e mais paciência.') : tr('Afinando o alaúde para a loja abrir.');
   return '';
 }
 
@@ -45,7 +56,7 @@ function UpgradeCard({ save, u }: { save: GameSave; u: ShopUpgrade }) {
     <li className={`card ${locked ? 'card-locked' : ''} ${owned ? 'card-owned' : ''} ${helper ? 'card-helper' : ''} ${expansion ? 'card-expansion' : ''}`}>
       <div className="card-head">
         {helper && <SpriteIcon name={`helper-${u.id}`} size={32} muted={locked} />}
-        {u.category === 'treino' && u.requires && <SpriteIcon name={`helper-${u.requires}`} size={32} muted={locked} />}
+        {u.category === 'treino' && helperRoot(u.id) && <SpriteIcon name={`helper-${helperRoot(u.id)}`} size={32} muted={locked} />}
         <span className="row-title">{u.name}</span>
         <span className={`tag ${u.category === 'visual' || expansion ? 'tag-gold' : ''} ${helper ? 'tag-helper' : ''}`}>{expansion ? tr('expansão') : u.category}</span>
       </div>

@@ -3,6 +3,7 @@ import { CUSTOMER_URLS } from '../art/sprites';
 import { RECIPES_BY_ID } from '../../../domain/data/recipes';
 import type { Customer, GameEvent, GameSave } from '../../../domain/models/types';
 import { CLOSE_MIN, OPEN_MIN } from '../../../domain/rules/time';
+import { knownSymptom } from '../../../domain/rules/customers';
 import { autoFast, useGameStore } from '../../../store/gameStore';
 import { seasonOf } from '../../../domain/rules/world';
 import { gameEvents } from '../../events';
@@ -715,8 +716,11 @@ export class ShopScene extends Phaser.Scene {
       const slotX = COUNTER_SLOTS[idx] ?? COUNTER_SLOTS[COUNTER_SLOTS.length - 1];
       let v = this.visitors.get(c.id);
       if (!v) {
-        // Quem conta o sintoma não diz o nome da poção: o balão mostra só a interrogação.
-        v = new Visitor(this, c.id, c.archetype, c.mystery || c.symptom ? 'misterio' : c.wantedRecipeId, slotX, {
+        // Quem conta o sintoma não diz o nome da poção: o balão mostra só a interrogação
+        // (a não ser que a loja já reconheça o problema, pelo caderno ou pelo golem).
+        const save = this.store.save;
+        const hidden = c.mystery || (c.symptom && !(save && knownSymptom(save, c)));
+        v = new Visitor(this, c.id, c.archetype, hidden ? 'misterio' : c.wantedRecipeId, slotX, {
           instant,
           regular: !!c.regularId,
           reduceMotion: this.reduceMotion,

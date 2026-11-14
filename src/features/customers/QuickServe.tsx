@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ARCHETYPES } from '../../domain/data/customers';
 import { regularOf, regularState } from '../../domain/rules/world';
 import { RECIPES_BY_ID } from '../../domain/data/recipes';
-import { askOptions, bestOffer, knownSymptom, LESSON_TIP, reservedForOrder, vipPrice } from '../../domain/rules/customers';
+import { askOptions, bestOffer, knownSymptom, LESSON_TIP, reservedForOrder, symptomSource, vipPrice } from '../../domain/rules/customers';
 import { potionStock } from '../../domain/rules/economy';
 import { useGameStore } from '../../store/gameStore';
 import { useStageCards } from '../tutorial/stage';
@@ -144,7 +144,7 @@ export function QuickServe({ placement }: { placement: 'stage' | 'side' }) {
       <div className="qs-head">
         <CustomerFace c={c} />
         <div className="qs-who">
-          <span className="qs-name">{c.symptom ? <>{a.label} <span className="muted">{known ? <><Icon e="📖" />{tr(' · do caderno:')}</> : tr('· você escolheu')}</span> {RECIPES_BY_ID[offerId ?? c.offer?.recipeId ?? c.wantedRecipeId].shortName}</> : <>{c.vip ? <span className="qs-regular qs-vip"><Icon e="✨" /> {c.vip.name}</span> : reg ? <span className="qs-regular">{reg.name.split(',')[0]} <span className="heart-on">{'♥\uFE0E'.repeat(hearts) || '♡'}</span></span> : a.label}{' '}<span className="muted">{tr('quer')}</span> <PotionIcon recipeId={wanted.id} size={16} /> {wanted.shortName}</>}</span>
+          <span className="qs-name">{c.symptom ? <>{a.label} <span className="muted">{known ? symptomSource(save, c) === 'golem' ? <><Icon e="🗿" />{tr(' · o golem reconhece:')}</> : <><Icon e="📖" />{tr(' · do caderno:')}</> : tr('· você escolheu')}</span> {RECIPES_BY_ID[offerId ?? c.offer?.recipeId ?? c.wantedRecipeId].shortName}</> : <>{c.vip ? <span className="qs-regular qs-vip"><Icon e="✨" /> {c.vip.name}</span> : reg ? <span className="qs-regular">{reg.name.split(',')[0]} <span className="heart-on">{'♥\uFE0E'.repeat(hearts) || '♡'}</span></span> : a.label}{' '}<span className="muted">{tr('quer')}</span> <PotionIcon recipeId={wanted.id} size={16} /> {wanted.shortName}</>}</span>
           <Meter ratio={left} tone={left > 0.5 ? 'ok' : left > 0.25 ? 'gold' : 'warn'} label={tr('Paciência')} />
         </div>
         {next && (

@@ -5,7 +5,7 @@ import { chapterFor } from '../data/stories';
 import { RECIPES_BY_ID } from '../data/recipes';
 import type { Customer, CustomerArchetype, GameSave } from '../models/types';
 import { fail, nextId, pick, weightedPick, type Draft } from './context';
-import { getPrice, has, potionStock, priceRange, takePotions } from './economy';
+import { getPrice, has, potionStock, priceRange, staffOn, takePotions } from './economy';
 import { masteryStars, STAR_BONUS, talentBonus } from './mastery';
 import { gainReputation, gainXp } from './progression';
 import { CLOSE_MIN } from './time';
@@ -30,7 +30,7 @@ export const NEGOTIATION_MARGIN = 1.2;
 
 export function nextSpawnDelay(s: GameSave, random: () => number) {
   const event = s.event ? DAY_EVENTS[s.event].spawnFactor : 1;
-  const sign = (has(s, 'letreiro-novo') ? 0.75 : 1) * (has(s, 'sino-encantado') ? 0.9 : 1) * (has(s, 'balcao-duplo') ? 0.9 : 1);
+  const sign = (has(s, 'letreiro-novo') ? 0.75 : 1) * (has(s, 'sino-encantado') ? 0.9 : 1) * (has(s, 'balcao-duplo') ? 0.9 : 1) * (staffOn(s, BARD) ? 1 - BARD_CROWD : 1);
   const fame = (1 + Math.min(s.reputation, 400) / 800) * (1 + talentBonus(s, 'fama')) * (1 + talentBonus(s, 'renome')) * (1 + villageBonus(s, 'movimento'));
   return Math.round((16000 * event * sign) / fame * (0.7 + random() * 0.6));
 }
@@ -53,7 +53,17 @@ export const diagnosisLearned = (s: GameSave, recipeId: string) => (s.diagnoses?
  * Sintoma que a loja já conhece (está no caderno). Capítulos da história dos fregueses
  * continuam sendo do jogador: são conversa, não rotina.
  */
-export const knownSymptom = (s: GameSave, c: Customer) => !!c.symptom && c.chapter === undefined && diagnosisLearned(s, c.wantedRecipeId);
+export const knownSymptom = (s: GameSave, c: Customer) =>
+  !!c.symptom && c.chapter === undefined && (diagnosisLearned(s, c.wantedRecipeId) || golemReads(s));
+
+/**
+ * Com o golem trabalhando, a loja reconhece qualquer sintoma: o atendimento volta a ser automático.
+ * Quem quiser o desafio do diagnóstico de volta manda o golem descansar.
+ */
+export const golemReads = (s: GameSave) => staffOn(s, 'golem-balconista');
+/** Quem reconheceu o sintoma: o caderno (3 acertos) ou o golem. */
+export const symptomSource = (s: GameSave, c: Customer): 'caderno' | 'golem' | null =>
+  !c.symptom || c.chapter !== undefined ? null : diagnosisLearned(s, c.wantedRecipeId) ? 'caderno' : golemReads(s) ? 'golem' : null;
 /** Acertar o diagnóstico rende uma gorjeta sobre o preço. */
 export const DIAGNOSIS_TIP = 0.2;
 /** Errar o diagnóstico gasta esta fração da paciência do cliente. */
@@ -197,15 +207,21 @@ export function spawnCustomer(d: Draft) {
   d.events.push({ type: 'CUSTOMER_ARRIVED', customerId: customer.id });
 }
 
-/** Multiplicador de paciência (sino encantado e talento "Freguesia fiel"). */
-export const patienceFactor = (s: GameSave) => (has(s, 'sino-encantado') ? 1.3 : 1) * (1 + talentBonus(s, 'freguesia')) * (1 + villageBonus(s, 'paciencia'));
+/** Bardo da porta: a música chama gente da rua e distrai quem espera. */
+export const BARD = 'bardo-da-porta';
+export const BARD_CROWD = 0.15;
+export const BARD_PATIENCE = 0.25;
+export const BARD_PRICE = 1.03;
+
+/** Multiplicador de paciência (sino encantado, bardo e talento "Freguesia fiel"). */
+export const patienceFactor = (s: GameSave) => (has(s, 'sino-encantado') ? 1.3 : 1) * (staffOn(s, BARD) ? 1 + BARD_PATIENCE : 1) * (1 + talentBonus(s, 'freguesia')) * (1 + villageBonus(s, 'paciencia'));
 
 /** Preço máximo que o cliente aceita por uma poção. */
 export function maxPriceFor(s: GameSave, c: Customer, recipeId: string) {
   const r = RECIPES_BY_ID[recipeId];
   const substitute = recipeId !== c.wantedRecipeId;
   const fame = 1 + Math.min(s.reputation, 240) / 800;
-  const decor = (has(s, 'prateleira-extra') ? 1.03 : 1) * (has(s, 'iluminacao-aconchegante') ? 1.04 : 1) * (has(s, 'vitral-arcano') ? 1.05 : 1) * (has(s, 'torre-alquimista') ? 1.08 : 1);
+  const decor = (has(s, 'prateleira-extra') ? 1.03 : 1) * (has(s, 'iluminacao-aconchegante') ? 1.04 : 1) * (has(s, 'vitral-arcano') ? 1.05 : 1) * (has(s, 'torre-alquimista') ? 1.08 : 1) * (staffOn(s, BARD) ? BARD_PRICE : 1);
   const skill = (1 + masteryStars(s, recipeId) * STAR_BONUS) * (1 + talentBonus(s, 'labia')) * (1 + talentBonus(s, 'toque-de-ouro')) * (1 + villageBonus(s, 'preco'));
   const season = r.category === seasonCategory(s) ? SEASON_PRICE_BONUS : 1;
   const event = eventCategoryFactor(s, recipeId);
@@ -319,7 +335,9 @@ export function askOptions(s: GameSave, recipeId: string) {
  */
 export function golemPrice(s: GameSave, c: Customer, recipeId: string) {
   const tag = getPrice(s, recipeId);
-  return Math.min(tag, Math.max(maxPriceFor(s, c, recipeId), RECIPES_BY_ID[recipeId].basePrice));
+  // O golem de cristal convence quem pode pagar: até 10% acima da etiqueta.
+  const top = has(s, 'golem-de-cristal') ? Math.round(tag * 1.1) : tag;
+  return Math.min(top, Math.max(maxPriceFor(s, c, recipeId), RECIPES_BY_ID[recipeId].basePrice));
 }
 
 export function serveCustomer(d: Draft, customerId: string, recipeId: string, opts: { golem?: boolean; price?: number } = {}): boolean {
