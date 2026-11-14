@@ -1,3 +1,4 @@
+import { emptyEvo } from './evoCore';
 import { RECIPES } from '../data/recipes';
 import { SAVE_VERSION, type GameSave } from '../models/types';
 import { freshStats } from './day';
@@ -99,6 +100,7 @@ export function createNewGame(now: number = Date.now()): GameSave {
     royal: null,
     pages: {},
     diagnoses: {},
+    evo: emptyEvo(),
     village: {},
     records: { revenue: 0, served: 0, bestSale: 0 },
     tutorialStep: 0,

@@ -234,6 +234,10 @@ export interface DayReport {
   lostByRecipe?: Record<string, number>;
   /** Recordes pessoais batidos neste dia. */
   records?: RecordKind[];
+  /** Funcionário do dia (E1): quem mais trabalhou. */
+  staffOfDay?: { id: string; work: number };
+  /** Lucro das filiais no fechamento (E3). */
+  branches?: number;
 }
 
 /** Concurso Real de Alquimia (fase 4): campanha em 5 capítulos que abre no nível máximo. */
@@ -299,6 +303,8 @@ export interface GoalsState {
 export interface Expedition {
   dest: string;
   returnDay: number;
+  /** Mandada pela exploradora (E2): o corvo continua trabalhando em casa. */
+  byExplorer?: boolean;
 }
 
 export type DayPhase = 'preparacao' | 'expediente' | 'fechamento';
@@ -368,7 +374,76 @@ export interface ChallengeState {
   score: number | null;
 }
 
-export const SAVE_VERSION = 10 as const;
+// ------------------------------------------------------------ evoluções (E1 a E7)
+/** Lado escolhido em cada degrau de carreira (níveis 3, 6 e 9): 'a' = rapidez, 'b' = capricho. */
+export type PerkSide = 'a' | 'b';
+/** Carreira de um funcionário (E1): experiência ganha trabalhando, teto liberado por cursos e caminhos escolhidos. */
+export interface StaffMember {
+  xp: number;
+  /** Nível máximo liberado (5 de saída; cada curso na Guilda sobe 1, até 10). */
+  cap: number;
+  perks: PerkSide[];
+  /** Nome dado pelo jogador (vazio = nome do cargo). */
+  name?: string;
+}
+export type FairyStrategy = 'volume' | 'lucro' | 'fama';
+/** Filial em outra cidade do reino (E3). */
+export interface BranchState {
+  /** 1 = barraca, 2 = loja, 3 = empório. */
+  size: number;
+  /** Funcionário que supervisiona (id do ajudante) ou null. */
+  manager: string | null;
+  /** Total que a filial já rendeu. */
+  earned: number;
+}
+/** Ovo no ninho da loja (E4): choca no dia indicado. */
+export interface Egg {
+  id: number;
+  hatchDay: number;
+  source: string;
+}
+export type MomentKind = 'estrela' | 'dragao' | 'borboleta';
+/** Momento especial na cena (E5): aparece por alguns segundos; tocar dá um prêmio, ignorar não tira nada. */
+export interface Moment {
+  kind: MomentKind;
+  leftMs: number;
+}
+export type NewsKind = 'staff-level' | 'hatch' | 'branch' | 'branch-open' | 'moment' | 'record' | 'peddler' | 'expedition';
+/** Uma notícia guardada para a Gazeta da manhã seguinte. */
+export interface NewsItem {
+  kind: NewsKind;
+  ref?: string;
+  n?: number;
+}
+export interface Gazette {
+  /** Dia que o jornal conta (o dia anterior). */
+  day: number;
+  items: NewsItem[];
+  read: boolean;
+}
+/** Tudo o que as evoluções acrescentaram ao save (v11). */
+export interface EvoState {
+  staff: Record<string, StaffMember>;
+  /** Trabalho de cada funcionário hoje (para o funcionário do dia). */
+  dayWork: Record<string, number>;
+  fairy: { strategy: FairyStrategy; locked: string[]; inMs: number };
+  peddlerInMs: number;
+  branches: Record<string, BranchState>;
+  eggs: Egg[];
+  eggSeq: number;
+  /** Último dia em que um recorde deu ovo (no máximo um por dia). */
+  eggDay: number;
+  familiars: string[];
+  shiny: string[];
+  activeFamiliars: string[];
+  moment: Moment | null;
+  /** Minuto do relógio em que o momento de hoje aparece (null = nenhum hoje). */
+  momentAt: number | null;
+  news: NewsItem[];
+  gazette: Gazette | null;
+}
+
+export const SAVE_VERSION = 11 as const;
 
 export interface GameSave {
   saveVersion: typeof SAVE_VERSION;
@@ -493,6 +568,8 @@ export interface GameSave {
   pages: Record<string, number>;
   /** Caderno de diagnósticos: acertos do jogador por receita, quando o cliente contou o sintoma. */
   diagnoses: Record<string, number>;
+  /** Evoluções (equipe com carreira, filiais, familiares, Gazeta e momentos). */
+  evo: EvoState;
   tutorialStep: number;
   seq: number;
   settings: Settings;
@@ -537,8 +614,8 @@ export type GameEvent =
   | { type: 'CAT_PETTED'; lucky: boolean }
   | { type: 'SEASON_STARTED'; season: string }
   | { type: 'RIVAL_RESULT'; win: boolean; me: number; her: number; coins: number }
-  | { type: 'EXPEDITION_SENT'; dest: string; returnDay: number }
-  | { type: 'EXPEDITION_BACK'; dest: string; items: { ingredientId: string; qty: number }[]; find: string | null }
+  | { type: 'EXPEDITION_SENT'; dest: string; returnDay: number; byExplorer?: boolean }
+  | { type: 'EXPEDITION_BACK'; dest: string; items: { ingredientId: string; qty: number }[]; find: string | null; byExplorer?: boolean }
   | { type: 'FIND'; id: string }
   | { type: 'GOAL_DONE'; goalId: string; coins: number; xp: number; allDone: boolean }
   | { type: 'CHEST_OPENED'; coins: number; items: { ingredientId: string; qty: number }[] }
@@ -570,4 +647,17 @@ export type GameEvent =
   | { type: 'SYMPTOM_WRONG'; customerId: string }
   | { type: 'DIAGNOSIS_LEARNED'; recipeId: string }
   | { type: 'PAGE_FOUND'; recipeId: string; ingredientId: string; source: string }
+  | { type: 'STAFF_LEVEL'; staffId: string; level: number; perk: boolean }
+  | { type: 'STAFF_PERK'; staffId: string; side: PerkSide }
+  | { type: 'STAFF_COURSE'; staffId: string; cap: number; cost: number }
+  | { type: 'PRICE_TUNED'; count: number }
+  | { type: 'PEDDLER_SALE'; recipeId: string; qty: number; coins: number }
+  | { type: 'STAFF_TIP'; staffId: string; coins: number }
+  | { type: 'BRANCH_OPENED'; cityId: string; size: number }
+  | { type: 'BRANCH_INCOME'; total: number; shipped: number }
+  | { type: 'EGG_FOUND'; source: string }
+  | { type: 'FAMILIAR_HATCHED'; familiarId: string; shiny: boolean; crystals?: number }
+  | { type: 'MOMENT_STARTED'; kind: MomentKind }
+  | { type: 'MOMENT_GONE'; kind: MomentKind }
+  | { type: 'MOMENT_CAUGHT'; kind: MomentKind; coins: number; crystals: number; egg: boolean }
   | { type: 'ERROR'; message: string };

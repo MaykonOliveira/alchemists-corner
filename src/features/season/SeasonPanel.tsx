@@ -14,8 +14,10 @@ import { DecorThumb } from './DecorThumb';
 import { Icon } from '../../ui/Icon';
 import { More } from '../../ui/widgets';
 
+import { showcaseVisible } from '../../monetization/entitlements';
+
 import { tr } from '../../i18n';
-const SLOTS: DecorSlot[] = ['tapete', 'quadro', 'luminaria', 'planta', 'toldo'];
+const SLOTS: DecorSlot[] = ['tema', 'uniforme', 'tapete', 'quadro', 'luminaria', 'planta', 'toldo'];
 
 /** Trilha da temporada: mora no Diário da loja, junto das metas e do baú (auditoria P1.1). */
 export function Track({ save }: { save: GameSave }) {
@@ -54,7 +56,7 @@ export function Track({ save }: { save: GameSave }) {
 function Decor({ save }: { save: GameSave }) {
   const dispatch = useGameStore((s) => s.dispatch);
   const [slot, setSlot] = useState<DecorSlot>('tapete');
-  const items = CATALOG.filter((i) => i.slot === slot && (i.source !== 'inicial' || slot !== 'toldo' || owns(save, i.id)));
+  const items = CATALOG.filter((i) => i.slot === slot && (i.source !== 'inicial' || slot !== 'toldo' || owns(save, i.id)) && showcaseVisible(i.source, owns(save, i.id)));
   return (
     <section className="card decor">
       <div className="card-head">
@@ -83,7 +85,7 @@ function Decor({ save }: { save: GameSave }) {
                   <button className="btn btn-small btn-primary" disabled={save.crystals < it.crystals} onClick={() => { funnel.mark('first_decor'); dispatch({ type: 'BUY_DECOR', itemId: it.id }); }}>
                     <Icon e="🌙" /> {it.crystals}
                   </button>
-                ) : <span className="decor-state muted">{it.source === 'trilha' ? tr('Trilha') : it.source === 'festa' ? tr('Festa') : tr('Presente')}</span>}
+                ) : <span className="decor-state muted">{it.source === 'trilha' ? tr('Trilha') : it.source === 'festa' ? tr('Festa') : it.source === 'apoio' ? tr('Apoiador') : tr('Presente')}</span>}
             </li>
           );
         })}

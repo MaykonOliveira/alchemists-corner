@@ -7,6 +7,10 @@ import { RECIPES_BY_ID } from '../domain/data/recipes';
 import { ROYAL_CHAPTERS } from '../domain/data/royal';
 import { recordsFromReports } from '../domain/rules/records';
 import type { DayReport } from '../domain/models/types';
+import { emptyEvo } from '../domain/rules/evoCore';
+import { STAFF_BASE_CAP, STAFF_MAX_LEVEL } from '../domain/data/staff';
+import { CITIES_BY_ID } from '../domain/data/kingdom';
+import { ACTIVE_FAMILIARS, FAMILIARS_BY_ID, NEST_SIZE } from '../domain/data/familiars';
 
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 const num = (v: unknown, fallback: number) => (typeof v === 'number' && Number.isFinite(v) ? v : fallback);
@@ -40,6 +44,56 @@ function migrateRoyal(v: unknown): GameSave['royal'] {
     dueDay: Math.max(0, Math.floor(num(v.dueDay, 0))),
     seen: Math.max(-1, Math.min(chapter, Math.floor(num(v.seen, -1)))),
     retries: Math.max(0, Math.floor(num(v.retries, 0))),
+  };
+}
+
+/** v10 → v11: evoluções (carreira da equipe, filiais, familiares, Gazeta e momentos). */
+function migrateEvo(v: unknown): GameSave['evo'] {
+  const base = emptyEvo();
+  if (!isObj(v)) return base;
+  const str = (x: unknown): x is string => typeof x === 'string';
+  const staff: GameSave['evo']['staff'] = {};
+  if (isObj(v.staff)) {
+    for (const [id, m] of Object.entries(v.staff)) {
+      if (!isObj(m)) continue;
+      staff[id] = {
+        xp: Math.max(0, Math.floor(num(m.xp, 0))),
+        cap: Math.max(STAFF_BASE_CAP, Math.min(STAFF_MAX_LEVEL, Math.floor(num(m.cap, STAFF_BASE_CAP)))),
+        perks: arr<string>(m.perks, []).filter((p): p is 'a' | 'b' => p === 'a' || p === 'b').slice(0, 3),
+        ...(str(m.name) && m.name.trim() ? { name: m.name.trim().slice(0, 16) } : {}),
+      };
+    }
+  }
+  const branches: GameSave['evo']['branches'] = {};
+  if (isObj(v.branches)) {
+    for (const [id, b] of Object.entries(v.branches)) {
+      if (!isObj(b) || !CITIES_BY_ID[id]) continue;
+      branches[id] = { size: Math.max(1, Math.min(3, Math.floor(num(b.size, 1)))), manager: str(b.manager) ? b.manager : null, earned: Math.max(0, num(b.earned, 0)) };
+    }
+  }
+  const fairy = isObj(v.fairy) ? v.fairy : {};
+  const strategy = fairy.strategy === 'volume' || fairy.strategy === 'fama' || fairy.strategy === 'lucro' ? fairy.strategy : base.fairy.strategy;
+  const familiars = arr<string>(v.familiars, []).filter((id) => str(id) && FAMILIARS_BY_ID[id]);
+  const moment = isObj(v.moment) && (v.moment.kind === 'estrela' || v.moment.kind === 'dragao' || v.moment.kind === 'borboleta')
+    ? { kind: v.moment.kind, leftMs: Math.max(0, num(v.moment.leftMs, 0)) } as GameSave['evo']['moment'] : null;
+  const news = arr<unknown>(v.news, []).filter((n): n is GameSave['evo']['news'][number] => isObj(n) && str(n.kind));
+  const g = isObj(v.gazette) ? v.gazette : null;
+  return {
+    staff,
+    dayWork: numRecord(v.dayWork, {}),
+    fairy: { strategy, locked: arr<string>(fairy.locked, []).filter((id) => str(id) && id in RECIPES_BY_ID), inMs: num(fairy.inMs, base.fairy.inMs) },
+    peddlerInMs: num(v.peddlerInMs, base.peddlerInMs),
+    branches,
+    eggs: arr<unknown>(v.eggs, []).filter(isObj).map((e) => ({ id: Math.floor(num(e.id, 0)), hatchDay: Math.floor(num(e.hatchDay, 0)), source: str(e.source) ? e.source : '' })).slice(0, NEST_SIZE),
+    eggSeq: Math.max(0, Math.floor(num(v.eggSeq, 0))),
+    eggDay: Math.floor(num(v.eggDay, 0)),
+    familiars,
+    shiny: arr<string>(v.shiny, []).filter((id) => familiars.includes(id)),
+    activeFamiliars: arr<string>(v.activeFamiliars, []).filter((id) => familiars.includes(id)).slice(0, ACTIVE_FAMILIARS),
+    moment,
+    momentAt: typeof v.momentAt === 'number' ? v.momentAt : null,
+    news: news.slice(-20),
+    gazette: g && Array.isArray(g.items) ? { day: Math.floor(num(g.day, 0)), items: (g.items as unknown[]).filter((n): n is GameSave['evo']['news'][number] => isObj(n) && str(n.kind)), read: bool(g.read, true) } : null,
   };
 }
 
@@ -147,7 +201,7 @@ export function migrateSave(raw: unknown): GameSave | null {
         }
       : base.rival,
     expedition: isObj(raw.expedition) && typeof raw.expedition.dest === 'string'
-      ? { dest: raw.expedition.dest, returnDay: num(raw.expedition.returnDay, 0) }
+      ? { dest: raw.expedition.dest, returnDay: num(raw.expedition.returnDay, 0), ...(raw.expedition.byExplorer === true ? { byExplorer: true } : {}) }
       : null,
     expeditionsDone: Math.max(0, Math.floor(num(raw.expeditionsDone, 0))),
     finds: arr<string>(raw.finds, []).filter((x) => typeof x === 'string'),
@@ -200,6 +254,7 @@ export function migrateSave(raw: unknown): GameSave | null {
     village: numRecord(raw.village, {}),
     pages: numRecord(raw.pages, {}),
     diagnoses: numRecord(raw.diagnoses, {}),
+    evo: migrateEvo(raw.evo),
     // Saves antigos: os recordes começam dos melhores dias guardados nos relatórios.
     records: isObj(raw.records)
       ? { revenue: Math.max(0, num(raw.records.revenue, 0)), served: Math.max(0, num(raw.records.served, 0)), bestSale: Math.max(0, num(raw.records.bestSale, 0)) }

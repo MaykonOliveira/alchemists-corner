@@ -1,6 +1,7 @@
 // Decide o clima sonoro a partir do estado da partida. Sem WebAudio: funções puras, testáveis.
 import type { GameEvent, GameSave } from '../domain/models/types';
 import { seasonOf } from '../domain/rules/world';
+import { decorAt } from '../domain/rules/entitlements';
 
 import { tr } from '../i18n';
 export type ThemeId = 'primavera' | 'verao' | 'outono' | 'inverno' | 'noite' | 'festival' | 'misterio';
@@ -55,8 +56,13 @@ export function moodFor(s: GameSave | null): Mood {
   if (s.event === 'festival') return { theme: 'festival', calm: s.phase === 'preparacao' };
   if (s.event === 'eclipse' || s.event === 'lua-cheia' || s.event === 'visitante') return { theme: 'misterio', calm: s.phase === 'preparacao' };
   if (s.phase === 'expediente' && s.clockMin >= NIGHT_MIN) return { theme: 'noite', calm: false };
-  return { theme: seasonOf(s.day).id, calm: s.phase === 'preparacao' };
+  return { theme: SHOP_THEME_MUSIC[decorAt(s, 'tema').look] ?? seasonOf(s.day).id, calm: s.phase === 'preparacao' };
 }
+
+/** Temas da loja (vitrine E6) trocam a trilha de todo dia. */
+const SHOP_THEME_MUSIC: Record<string, ThemeId> = {
+  'theme-inverno': 'inverno', 'theme-bruxas': 'misterio', 'theme-cerejeira': 'primavera', 'theme-dourado': 'festival',
+};
 
 export type AmbienceLayer = 'chuva' | 'vento' | 'multidao' | 'passaros' | 'caldeirao' | 'lareira';
 

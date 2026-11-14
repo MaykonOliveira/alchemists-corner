@@ -4,7 +4,7 @@ import { tr } from '../../i18n';
 // O campo `price` fica vazio de propósito: é onde um preço em dinheiro entraria no futuro, sem mudar as regras.
 
 /** Lugares da loja que aceitam decoração. */
-export type DecorSlot = 'tapete' | 'quadro' | 'luminaria' | 'planta' | 'toldo';
+export type DecorSlot = 'tapete' | 'quadro' | 'luminaria' | 'planta' | 'toldo' | 'tema' | 'uniforme';
 
 export type ItemSource = 'inicial' | 'cristais' | 'trilha' | 'festa' | 'presente' | 'apoio';
 
@@ -20,14 +20,18 @@ export interface CatalogItem {
   /** Cor (toldo) ou textura (os outros) usada pela cena. */
   look: string;
   text: string;
-  /** Preço em dinheiro, em centavos. Sempre null por enquanto: nada é vendido. */
-  price: null;
+  /**
+   * Preço em dinheiro, em centavos, para a vitrine (pacote E6). Só vale quando as compras forem
+   * ligadas (PURCHASES_ENABLED). Itens com preço são sempre cosméticos e mostrados antes da compra.
+   */
+  price: number | null;
 }
 
-const item = (i: Omit<CatalogItem, 'price'>): CatalogItem => ({ ...i, price: null });
+const item = (i: Omit<CatalogItem, 'price'> & { price?: number }): CatalogItem => ({ ...i, price: i.price ?? null });
 
 export const SLOT_LABEL: Record<DecorSlot, string> = {
   tapete: tr('Tapete'), quadro: tr('Quadro'), luminaria: tr('Luminária'), planta: tr('Planta'), toldo: tr('Toldo'),
+  tema: tr('Tema'), uniforme: tr('Uniforme'),
 };
 
 /** Cores do toldo que o jogador escolhe ao dar nome à loja (todas grátis). */
@@ -70,6 +74,26 @@ export const CATALOG: CatalogItem[] = [
   item({ id: 'planta-cogumelos', name: tr('Vaso de cogumelos'), slot: 'planta', crystals: 10, charm: 0, source: 'cristais', look: 'plant-cogumelos', text: tr('Cogumelos-lanterna que piscam devagar.') }),
   item({ id: 'planta-cacto', name: tr('Cacto lunar'), slot: 'planta', crystals: 25, charm: 1, source: 'cristais', look: 'plant-cacto', text: tr('Floresce uma vez por lua. +1 de encanto.') }),
   item({ id: 'planta-flores', name: tr('Cesto de flores'), slot: 'planta', crystals: null, charm: 1, source: 'festa', look: 'plant-flores', text: tr('Lembrança da Feira das Flores (festa da primavera).') }),
+
+  // Temas completos da loja (pacote E6): trocam a luz, o clima, a música e põem enfeites próprios.
+  item({ id: 'tema-nenhum', name: tr('Loja de sempre'), slot: 'tema', crystals: null, charm: 0, source: 'inicial', look: '', text: tr('A luz e a música de cada estação.') }),
+  item({ id: 'tema-inverno', name: tr('Loja de inverno'), slot: 'tema', crystals: 120, charm: 1, source: 'cristais', look: 'theme-inverno', text: tr('Neve caindo, luz azulada, gelo na janela e a trilha do inverno o ano todo.'), price: 299 }),
+  item({ id: 'tema-bruxas', name: tr('Noite das Bruxas'), slot: 'tema', crystals: 120, charm: 1, source: 'cristais', look: 'theme-bruxas', text: tr('Morcegos voando, abóboras acesas e um brilho roxo e laranja.'), price: 299 }),
+  item({ id: 'tema-cerejeira', name: tr('Jardim de cerejeiras'), slot: 'tema', crystals: 120, charm: 1, source: 'cristais', look: 'theme-cerejeira', text: tr('Pétalas rosadas caindo e galhos floridos no teto.'), price: 299 }),
+  item({ id: 'tema-dourado', name: tr('Loja dourada'), slot: 'tema', crystals: null, charm: 1, source: 'apoio', look: 'theme-dourado', text: tr('Faíscas douradas e luz de festa. Do pacote apoiador.'), price: 499 }),
+
+  // Uniformes da equipe (pacote E6): um chapéu para todo mundo que trabalha na loja.
+  item({ id: 'uniforme-nenhum', name: tr('Roupa de trabalho'), slot: 'uniforme', crystals: null, charm: 0, source: 'inicial', look: '', text: tr('Cada um com a sua roupa de sempre.') }),
+  item({ id: 'uniforme-gorro', name: tr('Gorros de lã'), slot: 'uniforme', crystals: 40, charm: 0, source: 'cristais', look: 'hat-gorro', text: tr('Gorros vermelhos com pompom para a equipe toda.'), price: 199 }),
+  item({ id: 'uniforme-bruxa', name: tr('Chapéus de bruxa'), slot: 'uniforme', crystals: 50, charm: 0, source: 'cristais', look: 'hat-bruxa', text: tr('Chapéus pontudos roxos com fivela dourada.'), price: 199 }),
+  item({ id: 'uniforme-flores', name: tr('Coroas de flores'), slot: 'uniforme', crystals: 50, charm: 0, source: 'cristais', look: 'hat-flores', text: tr('Flores do campo trançadas para a equipe.'), price: 199 }),
+  item({ id: 'uniforme-cartola', name: tr('Cartolas douradas'), slot: 'uniforme', crystals: null, charm: 0, source: 'apoio', look: 'hat-cartola', text: tr('Cartolas de festa com fita dourada. Do pacote apoiador.'), price: 299 }),
+];
+
+/** Pacote apoiador (E6): compra única com um tema e um uniforme. Só aparece com as compras ligadas. */
+export const BUNDLES = [
+  { id: 'pacote-apoiador', name: tr('Pacote apoiador'), items: ['tema-dourado', 'uniforme-cartola', 'passe-apoiador'], price: 799,
+    text: tr('Um tema, um uniforme dourado, a linha do apoiador no Livro da estação e o seu nome nos créditos. Nada que dê vantagem.') },
 ];
 
 export const CATALOG_BY_ID: Record<string, CatalogItem> = Object.fromEntries(CATALOG.map((i) => [i.id, i]));
@@ -79,4 +103,5 @@ export const STARTING_ITEMS = CATALOG.filter((i) => i.source === 'inicial' && i.
 
 export const DEFAULT_DECOR: Record<DecorSlot, string> = {
   tapete: 'tapete-classico', quadro: 'quadro-noite', luminaria: 'luminaria-nenhuma', planta: 'planta-nenhuma', toldo: 'toldo-vermelho',
+  tema: 'tema-nenhum', uniforme: 'uniforme-nenhum',
 };

@@ -8,6 +8,7 @@ import { addIngredients } from './street';
 import { restockUnlocked } from './economy';
 import { villageBonus } from './villageBonus';
 
+import { famBonus } from './evoCore';
 import { tr } from '../../i18n';
 export const MAX_LEVEL = 15;
 /** A partir deste nível cada nível novo rende 1 Selo de Mestre. */
@@ -116,7 +117,7 @@ export function hintRecipesUpTo(s: GameSave, level: number): string[] {
 export function gainXp(d: Draft, amount: number) {
   const s = d.s;
   const rankBefore = masterRank(s.xp);
-  s.xp += Math.max(0, Math.round(amount * (1 + talentBonus(s, 'sabedoria')) * (1 + villageBonus(s, 'experiencia'))));
+  s.xp += Math.max(0, Math.round(amount * (1 + talentBonus(s, 'sabedoria')) * (1 + villageBonus(s, 'experiencia')) * (1 + famBonus(s, 'xp'))));
   const newLevel = levelFromXp(s.xp);
   while (s.level < newLevel) {
     s.level += 1;

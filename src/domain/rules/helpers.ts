@@ -8,6 +8,10 @@ import { dismissCustomer, priceVerdict, reservedForOrder, serveCustomer, suits }
 import { deliverOrder } from './orders';
 import { applyPurchase, countIngredients, has, ingredientCapacity, ingredientPrice, potionStock, staffOn, supplierLeft } from './economy';
 
+import { evoRandom, perkCount, staffSpeed } from './evoCore';
+import { advanceStaff, EXPLORER } from './staff';
+import { SALAMANDER } from './alchemy';
+
 import { tr } from '../../i18n';
 // ---------------------------------------------------------------------------
 // Ajudantes automáticos (melhorias da categoria 'ajudante').
@@ -42,7 +46,7 @@ export const emptyHelperWork = (): HelperWork => ({ brews: 0, served: 0, deliver
 
 /** Ajudante contratado e trabalhando (não está descansando). */
 export const helperActive = (s: GameSave, id: string) =>
-  staffOn(s, id) && !(id === RAVEN && s.expedition);
+  staffOn(s, id) && !(id === RAVEN && s.expedition && !s.expedition.byExplorer) && !(id === EXPLORER && s.expedition?.byExplorer);
 
 /** Funcionários novos: gnomo (estufa), coruja (charadas e pedido especial) e bardo (porta). */
 export { GNOME } from './economy';
@@ -110,27 +114,29 @@ export const CRYSTAL_GOLEM = 'golem-de-cristal';
 export const GUILD_DISCOUNT = 0.2;
 
 const ravenFee = (s: GameSave) => (has(s, FAST_RAVEN) ? 0 : RAVEN_FEE);
-const apprenticeTarget = (s: GameSave) => (has(s, DEDICATED_APPRENTICE) ? 10 : APPRENTICE_TARGET);
-const apprenticeMaxBatches = (s: GameSave) => (has(s, DEDICATED_APPRENTICE) ? 5 : APPRENTICE_MAX_BATCHES);
+const apprenticeTarget = (s: GameSave) => (has(s, DEDICATED_APPRENTICE) ? 10 : APPRENTICE_TARGET) + 2 * perkCount(s, APPRENTICE, 'a');
+const apprenticeMaxBatches = (s: GameSave) => (has(s, DEDICATED_APPRENTICE) ? 5 : APPRENTICE_MAX_BATCHES) + perkCount(s, APPRENTICE, 'a');
 /** Quantos clientes o golem atende antes de descansar as engrenagens. */
 const golemPerTurn = (s: GameSave) => (has(s, CRYSTAL_GOLEM) ? 2 : 1);
 /** Espera mínima do cliente antes de o golem atender (o golem polido é mais rápido). */
-export const golemDelayMs = (s: GameSave) => (has(s, POLISHED_GOLEM) ? 2_500 : GOLEM_DELAY_MS);
-const golemCooldownMs = (s: GameSave) => (has(s, POLISHED_GOLEM) ? 1_200 : GOLEM_COOLDOWN_MS);
+export const golemDelayMs = (s: GameSave) => (has(s, POLISHED_GOLEM) ? 2_500 : GOLEM_DELAY_MS) / staffSpeed(s, GOLEM);
+const golemCooldownMs = (s: GameSave) => (has(s, POLISHED_GOLEM) ? 1_200 : GOLEM_COOLDOWN_MS) / staffSpeed(s, GOLEM);
 
 function runRaven(d: Draft, ms: number) {
   const s = d.s;
   s.helpers.ravenInMs -= ms;
   if (s.helpers.ravenInMs > 0) return;
-  s.helpers.ravenInMs = has(s, FAST_RAVEN) ? RAVEN_INTERVAL_MS / 2 : RAVEN_INTERVAL_MS;
+  s.helpers.ravenInMs = (has(s, FAST_RAVEN) ? RAVEN_INTERVAL_MS / 2 : RAVEN_INTERVAL_MS) / staffSpeed(s, RAVEN);
   const items = ravenShoppingList(s);
   if (!items.length) return;
   let cost = 0;
   const fee = ravenFee(s);
   for (const it of items) cost += applyPurchase(s, it.ingredientId, it.qty);
   // Corvo da guilda: conhece o fornecedor e volta com o troco.
-  if (has(s, GUILD_RAVEN)) {
-    const back = Math.round(cost * GUILD_DISCOUNT);
+  // Bom de troco (carreira): 4% de volta por escolha.
+  const discount = (has(s, GUILD_RAVEN) ? GUILD_DISCOUNT : 0) + 0.04 * perkCount(s, RAVEN, 'b');
+  if (discount > 0) {
+    const back = Math.round(cost * discount);
     s.coins += back;
     s.stats.ingredientCost -= back;
     cost -= back;
@@ -172,10 +178,18 @@ function runApprentice(d: Draft) {
   for (const e of d.events.slice(from)) if (e.type === 'BREW_STARTED') e.by = 'aprendiz';
   // O aprendiz não tem o toque de mestre: o preparo dele sai Comum.
   // O aprendiz prodígio já mexe como gente grande: o preparo dele sai Fino.
-  for (const job of [d.s.brew, d.s.brew2]) {
+  // Salamandra (E2): acerta o fogo e o ponto, então o preparo da equipe sai Fino.
+  // Caprichoso (carreira do aprendiz) e Ponto perfeito (da salamandra) dão chance de subir mais um grau.
+  const s = d.s;
+  const salamander = staffOn(s, SALAMANDER);
+  for (const job of [s.brew, s.brew2]) {
     if (job && job.elapsedMs === 0 && job.hits === undefined) {
       job.byHelper = true;
-      if (has(d.s, PRODIGY_APPRENTICE)) job.hits = 2;
+      let q = has(s, PRODIGY_APPRENTICE) || salamander ? 2 : 1;
+      const fussy = perkCount(s, APPRENTICE, 'b');
+      if (fussy && evoRandom(s, 500 + d.events.length) < 0.2 * fussy) q += 1;
+      if (salamander && evoRandom(s, 600 + d.events.length) < 0.1 + 0.1 * perkCount(s, SALAMANDER, 'b')) q = 3;
+      if (q >= 2) job.hits = Math.min(3, q);
     }
   }
   d.s.stats.helperWork.brews += 1;
@@ -232,6 +246,16 @@ function runGolem(d: Draft, ms: number) {
     serveCustomer(d, c.id, recipeId, { golem: true });
     const sold = d.events.slice(from).filter((e) => e.type === 'SALE');
     for (const e of sold) if (e.type === 'SALE') e.by = 'golem';
+    // Charmoso (carreira do golem): gorjeta de 3% por escolha.
+    const charm = perkCount(s, GOLEM, 'b');
+    if (charm) {
+      const tip = sold.reduce((n, e) => n + (e.type === 'SALE' ? Math.round(e.price * 0.03 * charm) : 0), 0);
+      if (tip > 0) {
+        s.coins += tip;
+        s.stats.revenue += tip;
+        d.events.push({ type: 'STAFF_TIP', staffId: GOLEM, coins: tip });
+      }
+    }
     s.stats.helperWork.served += sold.length;
     done += 1;
   }
@@ -246,7 +270,7 @@ function runOwl(d: Draft) {
   if (s.phase !== 'expediente') return false;
   let busy = false;
   for (const c of [...s.customers]) {
-    if (!c.mystery || c.waitedMs < OWL_THINK_MS) continue;
+    if (!c.mystery || c.waitedMs < OWL_THINK_MS / staffSpeed(s, OWL)) continue;
     if (!s.potions.some((p) => p.recipeId === c.wantedRecipeId && p.forSale && p.quantity > 0)) continue;
     const from = d.events.length;
     serveCustomer(d, c.id, c.wantedRecipeId);
@@ -257,8 +281,15 @@ function runOwl(d: Draft) {
   const o = s.order;
   if (o && potionStock(s, o.recipeId) >= o.qty) {
     const from = d.events.length;
+    const bonus = Math.round(o.rewardCoins * 0.1 * perkCount(s, OWL, 'b'));
     if (deliverOrder(d)) {
       for (const e of d.events.slice(from)) if (e.type === 'ORDER_DONE') e.by = 'coruja';
+      // Negociadora (carreira da coruja): o pedido rende mais.
+      if (bonus > 0) {
+        s.coins += bonus;
+        s.stats.orderRewards += bonus;
+        d.events.push({ type: 'STAFF_TIP', staffId: OWL, coins: bonus });
+      }
       s.stats.helperWork.orders = (s.stats.helperWork.orders ?? 0) + 1;
       busy = true;
     }
@@ -285,5 +316,6 @@ export function advanceHelpers(d: Draft, ms: number): boolean {
     busy = true;
   }
   if (helperActive(s, OWL)) busy = runOwl(d) || busy;
+  busy = advanceStaff(d, ms) || busy;
   return busy;
 }

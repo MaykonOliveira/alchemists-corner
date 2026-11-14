@@ -6,6 +6,11 @@ import { royalChapter, royalDeliverable, royalStarsMissing } from '../../domain/
 import type { GameSave } from '../../domain/models/types';
 import { useGameStore, type PanelId } from '../../store/gameStore';
 
+import { HELPER_IDS } from '../../domain/data/upgrades';
+import { STAFF_ROLES } from '../../domain/data/staff';
+import { pendingPerks } from '../../domain/rules/evoCore';
+import { KINGDOM_LEVEL } from '../../domain/rules/kingdom';
+
 import { tr } from '../../i18n';
 /**
  * Mapa da navegação: as 13 telas do jogo ficam em 4 áreas com nome fixo.
@@ -22,7 +27,7 @@ export interface NavItem {
   title: string;
   icon: string;
   key: string;
-  /** Tela que mora dentro de outra (mesma aba): o Grimório fica em Melhorias, o Concurso na Vila (é o capítulo final da reconstrução). */
+  /** Tela que mora dentro de outra (mesma aba): o Grimório e a Equipe ficam em Melhorias; o Concurso e o Reino na Vila (depois da vila, o reino). */
   inside?: PanelId;
   /** Tela sem aba própria: abre por atalho ou por um link (o Relatório abre pelo fim do dia). */
   noTab?: boolean;
@@ -59,8 +64,10 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { panel: 'goals', label: tr('Diário'), title: tr('Diário da loja'), icon: '🎯', key: '7' },
       { panel: 'upgrades', label: tr('Melhorias'), title: tr('Melhorias e ajudantes'), icon: '🔨', key: '8' },
+      { panel: 'staff', label: tr('Equipe'), title: tr('Carreira da equipe'), icon: '🧙', key: 'e', inside: 'upgrades' },
       { panel: 'grimoire', label: tr('Grimório'), title: tr('Grimório do Mestre'), icon: '✨', key: '9', inside: 'upgrades' },
       { panel: 'report', label: tr('Relatório'), title: tr('Caixa e relatório'), icon: '📊', key: '0', noTab: true },
+      { panel: 'gazette', label: tr('Gazeta'), title: tr('Gazeta da Vila'), icon: '📜', key: 'g', noTab: true },
       { panel: 'royal', label: tr('Concurso'), title: tr('Concurso Real de Alquimia'), icon: '👑', key: 'c', inside: 'village' },
     ],
   },
@@ -69,6 +76,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { panel: 'street', label: tr('Rua'), title: tr('A rua da loja'), icon: '🏘️', key: 'r' },
       { panel: 'village', label: tr('Vila'), title: tr('Reconstruir a vila'), icon: '🏗️', key: 'v' },
+      { panel: 'kingdom', label: tr('Reino'), title: tr('Filiais pelo reino'), icon: '🏰', key: 'k', inside: 'village' },
       { panel: 'season', label: tr('Decoração'), title: tr('Decoração e festas'), icon: '🌙', key: 't' },
       { panel: 'album', label: tr('Álbum'), title: tr('Álbum da loja'), icon: '🏆', key: 'a' },
     ],
@@ -119,6 +127,9 @@ const UNLOCK: Partial<Record<PanelId, { open: (s: GameSave) => boolean; fresh: (
   grimoire: { open: (s) => s.level >= 8 || grimoireAwake(s), fresh: (s) => s.level <= 9 },
   village: { open: (s) => s.level >= 10, fresh: (s) => s.level <= 12 && Object.keys(s.village ?? {}).length === 0 },
   royal: { open: (s) => !!s.royal, fresh: (s) => (s.royal?.chapter ?? 0) === 0 },
+  staff: { open: (s) => HELPER_IDS.some((id) => s.upgrades.includes(id)), fresh: (s) => Object.keys(s.evo?.staff ?? {}).length === 0 },
+  kingdom: { open: (s) => s.level >= KINGDOM_LEVEL, fresh: (s) => Object.keys(s.evo?.branches ?? {}).length === 0 },
+  gazette: { open: (s) => !!s.evo?.gazette, fresh: () => false },
 };
 
 export const panelUnlocked = (s: GameSave | null, panel: PanelId): boolean => !s || (UNLOCK[panel]?.open(s) ?? true);
@@ -159,6 +170,7 @@ export function useBadges() {
   const royal = useGameStore((s) => (s.save ? royalBadge(s.save) : null));
   // Caldeirão parado com a loja aberta: a aba avisa, para ninguém esquecer dele em outra tela.
   const fresh = useGameStore((s) => (s.save ? SHORTCUTS.filter((i) => panelIsNew(s.save!, i.panel)).map((i) => i.panel).join(',') : ''));
+  const perks = useGameStore((s) => (s.save?.evo ? STAFF_ROLES.filter((r) => s.save!.upgrades.includes(r.id) && pendingPerks(s.save!, r.id) > 0).length : 0));
   const idlePot = useGameStore((s) => !!s.save && s.save.phase === 'expediente' && !s.save.brew && s.save.tutorialStep >= 5);
   return (panel: PanelId): string | number | null => {
     if (fresh && fresh.split(',').includes(panel)) return tr('novo');
@@ -171,6 +183,7 @@ export function useBadges() {
       case 'goals': return chest ? '🎁' : null;
       case 'season': return fest ? '🎉' : null;
       case 'royal': return royal;
+      case 'staff': return perks > 0 ? perks : null;
       default: return null;
     }
   };

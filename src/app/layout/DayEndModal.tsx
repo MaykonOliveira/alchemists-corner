@@ -12,6 +12,8 @@ import { charm } from '../../domain/rules/entitlements';
 import { RECORD_LABEL } from '../../domain/rules/records';
 import { Icon } from '../../ui/Icon';
 
+import { staffName } from '../../domain/rules/staff';
+
 import { tr } from '../../i18n';
 const MEDAL_LABEL = { ouro: tr('Medalha de ouro'), prata: tr('Medalha de prata'), bronze: tr('Medalha de bronze') } as const;
 
@@ -133,6 +135,12 @@ export function DayEndModal() {
           {r.level !== undefined && <span className="small muted">{tr('Ouro a partir de ')}{medalTarget(r.level)}{tr(' no nível ')}{r.level}</span>}
         </div>
         <p className="card-text">{mood}</p>
+        {r.staffOfDay && (
+          <p className="staff-of-day">
+            <SpriteIcon name={`helper-${r.staffOfDay.id}`} size={32} />
+            <span><span className="muted small">{tr('Funcionário do dia')}</span><b>{staffName(save, r.staffOfDay.id)}</b></span>
+          </p>
+        )}
         <div className="report-grid report-grid-3">
           <div><span className="muted small">{tr('Clientes atendidos')}</span><strong>{r.customersServed}</strong></div>
           <div><span className="muted small">{tr('Experiência')}</span><strong>+{r.xpGained}</strong></div>
@@ -153,6 +161,7 @@ export function DayEndModal() {
           <tbody>
             <tr><td>{tr('Vendas no balcão')}</td><td className="pos-text">+{r.revenue}</td></tr>
             {r.orderRewards > 0 && <tr><td>{tr('Pedidos especiais')}</td><td className="pos-text">+{r.orderRewards}</td></tr>}
+            {(r.branches ?? 0) > 0 && <tr><td>{tr('Filiais pelo reino')}</td><td className="pos-text">+{r.branches}</td></tr>}
             <tr><td>{tr('Ingredientes comprados')}</td><td className="neg-text">−{r.ingredientCost}</td></tr>
             <tr><td>{tr('Manutenção (aluguel, lenha, velas')}{r.wages ? tr(', salários') : ''})</td><td className="neg-text">−{r.maintenance}</td></tr>
           </tbody>

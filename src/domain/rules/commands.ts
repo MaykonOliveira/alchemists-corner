@@ -1,4 +1,9 @@
-import type { GameEvent, GameSave, Settings } from '../models/types';
+import type { FairyStrategy, GameEvent, GameSave, PerkSide, Settings } from '../models/types';
+import { buyCourse, choosePerk, FAIRY, lockPrice, renameStaff, setStrategy, staffFromEvents } from './staff';
+import { growBranch, openBranch, setManager } from './kingdom';
+import { eggsFromEvents, setFamiliar } from './familiars';
+import { catchMoment, readGazette } from './gazette';
+import { staffOn } from './economy';
 import { experiment, repeatBrew, startBrew } from './alchemy';
 import type { Draft, RuleContext } from './context';
 import { acceptOffer, declineOffer, dismissCustomer, serveCustomer } from './customers';
@@ -12,7 +17,7 @@ import { buySeal, learnTalentCmd, paySeals } from './progression';
 import { sponsorFestival } from './day';
 import { sendExpedition } from './street';
 import { claimChest, trackGoals } from './goals';
-import { buyDecor, placeDecor } from './entitlements';
+import { buyDecor, grantPurchase, placeDecor } from './entitlements';
 import { claimVisitGift, rewardFromEvents, sessionStart } from './retention';
 import { challengeContext, redeemGift, sendGift, startChallenge, type GiftPayload } from './social';
 import { AWNINGS } from '../data/catalog';
@@ -68,7 +73,19 @@ export type DomainCommand =
   | { type: 'DELIVER_ROYAL' }
   | { type: 'SEE_ROYAL' }
   | { type: 'BUILD_VILLAGE'; projectId: string }
-  | { type: 'STIR'; slot: 1 | 2; hits: number };
+  | { type: 'STIR'; slot: 1 | 2; hits: number }
+  | { type: 'CHOOSE_PERK'; staffId: string; side: PerkSide }
+  | { type: 'BUY_COURSE'; staffId: string }
+  | { type: 'RENAME_STAFF'; staffId: string; name: string }
+  | { type: 'SET_STRATEGY'; strategy: FairyStrategy }
+  | { type: 'LOCK_PRICE'; recipeId: string; locked: boolean }
+  | { type: 'OPEN_BRANCH'; cityId: string }
+  | { type: 'GROW_BRANCH'; cityId: string }
+  | { type: 'SET_MANAGER'; cityId: string; staffId: string | null }
+  | { type: 'SET_FAMILIAR'; familiarId: string; on: boolean }
+  | { type: 'CATCH_MOMENT' }
+  | { type: 'READ_GAZETTE' }
+  | { type: 'GRANT_PURCHASE'; itemId: string };
 
 export interface CommandResult {
   save: GameSave;
@@ -88,6 +105,8 @@ export function applyCommand(save: GameSave, cmd: DomainCommand, ctx: RuleContex
   checkRoyalInvite(d);
   checkAchievements(d);
   rewardFromEvents(d, [...d.events]);
+  staffFromEvents(d, [...d.events]);
+  eggsFromEvents(d, [...d.events]);
   paySeals(d);
   d.s.updatedAt = ctx.now;
   return { save: d.s, events: d.events };
@@ -99,7 +118,12 @@ function run(d: Draft, cmd: DomainCommand): boolean {
     case 'START_BREW': return startBrew(d, cmd.recipeId, cmd.batches);
     case 'REPEAT_BREW': return repeatBrew(d);
     case 'BUY_MISSING': return buyMissing(d, cmd.recipeId, cmd.batches);
-    case 'SET_PRICE': return setPrice(d, cmd.recipeId, cmd.price);
+    case 'SET_PRICE': {
+      if (!setPrice(d, cmd.recipeId, cmd.price)) return false;
+      // Preço mexido à mão com a fada na loja: fica travado (ela não muda o que você decidiu).
+      if (staffOn(d.s, FAIRY)) lockPrice(d, cmd.recipeId, true);
+      return true;
+    }
     case 'SET_FOR_SALE': return setForSale(d, cmd.recipeId, cmd.forSale);
     case 'OPEN_SHOP': return openShop(d);
     case 'CLOSE_SHOP': return closeDay(d);
@@ -165,5 +189,17 @@ function run(d: Draft, cmd: DomainCommand): boolean {
     case 'SEE_ROYAL': return seeRoyal(d);
     case 'BUILD_VILLAGE': return buildVillage(d, cmd.projectId);
     case 'STIR': return stir(d, cmd.slot, cmd.hits);
+    case 'CHOOSE_PERK': return choosePerk(d, cmd.staffId, cmd.side);
+    case 'BUY_COURSE': return buyCourse(d, cmd.staffId);
+    case 'RENAME_STAFF': return renameStaff(d, cmd.staffId, cmd.name);
+    case 'SET_STRATEGY': return setStrategy(d, cmd.strategy);
+    case 'LOCK_PRICE': return lockPrice(d, cmd.recipeId, cmd.locked);
+    case 'OPEN_BRANCH': return openBranch(d, cmd.cityId);
+    case 'GROW_BRANCH': return growBranch(d, cmd.cityId);
+    case 'SET_MANAGER': return setManager(d, cmd.cityId, cmd.staffId);
+    case 'SET_FAMILIAR': return setFamiliar(d, cmd.familiarId, cmd.on);
+    case 'CATCH_MOMENT': return catchMoment(d);
+    case 'READ_GAZETTE': return readGazette(d);
+    case 'GRANT_PURCHASE': return grantPurchase(d, cmd.itemId);
   }
 }

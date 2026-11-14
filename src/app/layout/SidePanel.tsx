@@ -25,6 +25,13 @@ import { SeasonPanel } from '../../features/season/SeasonPanel';
 import { RoyalPanel } from '../../features/royal/RoyalPanel';
 import { VillagePanel } from '../../features/world/VillagePanel';
 import { Icon } from '../../ui/Icon';
+import { StaffPanel } from '../../features/staff/StaffPanel';
+import { KingdomPanel } from '../../features/kingdom/KingdomPanel';
+import { GazettePanel } from '../../features/gazette/GazettePanel';
+import { gazetteUnread } from '../../domain/rules/gazette';
+import { staffName } from '../../domain/rules/staff';
+import { pendingPerks } from '../../domain/rules/evoCore';
+import { STAFF_ROLES } from '../../domain/data/staff';
 
 import { tr } from '../../i18n';
 const BODY: Partial<Record<PanelId, (save: GameSave) => React.ReactNode>> = {
@@ -44,7 +51,13 @@ const BODY: Partial<Record<PanelId, (save: GameSave) => React.ReactNode>> = {
   season: (s) => <SeasonPanel save={s} />,
   royal: (s) => <RoyalPanel save={s} />,
   village: (s) => <VillagePanel save={s} />,
+  staff: (s) => <StaffPanel save={s} />,
+  kingdom: (s) => <KingdomPanel save={s} />,
+  gazette: (s) => <GazettePanel save={s} />,
 };
+
+/** "A e B", "A, B e C". */
+const joinLabels = (xs: string[]) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')}${tr(' e ')}${xs[xs.length - 1]}`);
 
 export function SidePanel() {
   const save = useGameStore((s) => s.save)!;
@@ -74,7 +87,7 @@ export function SidePanel() {
       <div className="side-head">
         <h2 className="side-title">
           {group && <span className="side-area"><Icon e={group.icon} /> {group.label}</span>}
-          {shown.length > 1 ? (shown.includes('royal') ? tr('Vila e Concurso Real') : shown.map((p) => panelLabel(p)).join(tr(' e '))) : panelTitle(panel)}
+          {shown.length > 1 ? joinLabels(shown.map((p) => (p === 'royal' ? tr('Concurso Real') : panelLabel(p)))) : panelTitle(panel)}
         </h2>
         <button className="icon-btn" onClick={() => dispatch({ type: 'CLOSE_PANEL' })} aria-label={tr('Voltar ao início')} title={tr('Voltar ao início (Esc)')}>×</button>
       </div>
@@ -132,6 +145,7 @@ function HomePanel({ save }: { save: GameSave }) {
   const repeat = repeatBatches(save);
   const last = save.lastBrew ? RECIPES_BY_ID[save.lastBrew.recipeId] : null;
 
+  const perkRoles = STAFF_ROLES.filter((r) => save.upgrades.includes(r.id) && pendingPerks(save, r.id) > 0);
   let next: Next = null;
   // Durante o tutorial quem guia é o cartão do tutorial: o Início não sugere outro caminho.
   if (tutorial) next = null;
@@ -146,6 +160,10 @@ function HomePanel({ save }: { save: GameSave }) {
     next = { icon: '🌿', title: tr('Os ingredientes estão acabando'), label: tr('Comprar ingredientes'), act: () => go('ingredients') };
   } else if (stock === 0) {
     next = { icon: '🧪', title: tr('As prateleiras estão vazias'), label: tr('Ver prateleiras'), act: () => go('shelves') };
+  } else if (gazetteUnread(save) && save.phase === 'preparacao') {
+    next = { icon: '📜', title: tr('A Gazeta da Vila chegou'), label: tr('Ler o jornal'), act: () => go('gazette') };
+  } else if (perkRoles.length > 0) {
+    next = { icon: '✨', title: tr('{0} subiu de nível: escolha o caminho', staffName(save, perkRoles[0].id)), label: tr('Ver a equipe'), act: () => go('staff') };
   } else if (save.order && potionStock(save, save.order.recipeId) < save.order.qty) {
     next = { icon: '📜', title: tr('Pedido especial: {0}/{1} {2}', potionStock(save, save.order.recipeId), save.order.qty, RECIPES_BY_ID[save.order.recipeId].shortName), label: tr('Ver pedido'), act: () => go('orders') };
   }

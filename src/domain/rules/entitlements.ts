@@ -2,7 +2,7 @@
 // Toda pergunta "o jogador tem o item X?" passa por `owns`. Hoje a resposta vem só do save
 // (itens ganhos jogando). No futuro, compras de uma loja de apps entram pela mesma porta
 // (ver src/monetization/), sem mudar nenhuma regra do jogo.
-import { CATALOG_BY_ID, DEFAULT_DECOR, type DecorSlot } from '../data/catalog';
+import { BUNDLES, CATALOG_BY_ID, DEFAULT_DECOR, type DecorSlot } from '../data/catalog';
 import type { GameSave } from '../models/types';
 import { fail, type Draft } from './context';
 
@@ -44,6 +44,21 @@ export function placeDecor(d: Draft, itemId: string): boolean {
   if (!it || !owns(s, itemId)) return fail(d, tr('Você ainda não tem este item.'));
   if (s.decor[it.slot] === itemId) return false;
   s.decor = { ...s.decor, [it.slot]: itemId };
+  return true;
+}
+
+/**
+ * Compra confirmada pela loja de pagamento (pacote E6). Só chega aqui com as compras ligadas:
+ * o provedor confirma e o jogo despacha GRANT_PURCHASE. Pacotes entregam todos os itens de uma vez.
+ */
+export function grantPurchase(d: Draft, id: string): boolean {
+  const bundle = BUNDLES.find((b) => b.id === id);
+  const ids = bundle ? bundle.items : [id];
+  const known = ids.filter((x) => CATALOG_BY_ID[x] || x === 'passe-apoiador');
+  const fresh = known.filter((x) => !owns(d.s, x));
+  if (!fresh.length) return false;
+  d.s.owned = [...d.s.owned, ...fresh];
+  for (const itemId of fresh) d.events.push({ type: 'ITEM_GRANTED', itemId, source: 'compra' });
   return true;
 }
 

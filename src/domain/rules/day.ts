@@ -20,6 +20,11 @@ import { gainReputation, gainXp, xpForLevel } from './progression';
 import { noteDay } from './records';
 import { royalNewDay } from './royal';
 
+import { closeStaffDay } from './staff';
+import { closeBranches } from './kingdom';
+import { familiarsOnClose, hatchEggs } from './familiars';
+import { advanceMoment, printGazette, rollMoment } from './gazette';
+
 import { tr } from '../../i18n';
 export function freshStats(s: GameSave): DayStats {
   return {
@@ -51,6 +56,10 @@ export function closeDay(d: Draft): boolean {
   // Estreia generosa: quem atendeu ao menos alguns clientes no dia 1 fecha no nível 2.
   // Um dia parado não é premiado: o nível vem pelo caminho normal.
   if (s.day === 1 && s.level < 2 && s.stats.served >= DEBUT_LEVEL_SERVED) gainXp(d, xpForLevel(2) - s.xp);
+  // Evoluções: experiência do dia da equipe, filiais e familiares.
+  const staffOfDay = closeStaffDay(d);
+  const branches = closeBranches(d);
+  familiarsOnClose(d);
   const st = s.stats;
   const report: DayReport = {
     day: s.day,
@@ -58,7 +67,7 @@ export function closeDay(d: Draft): boolean {
     ingredientCost: st.ingredientCost,
     orderRewards: st.orderRewards,
     maintenance,
-    profit: st.revenue + st.orderRewards - st.ingredientCost - maintenance,
+    profit: st.revenue + st.orderRewards + branches - st.ingredientCost - maintenance,
     salesByRecipe: { ...st.salesByRecipe },
     customersServed: st.served,
     customersLost: st.lost,
@@ -69,9 +78,14 @@ export function closeDay(d: Draft): boolean {
     helperWork: { ...st.helperWork },
     lostByRecipe: { ...(st.lostByRecipe ?? {}) },
     level: st.levelStart,
+    ...(staffOfDay ? { staffOfDay } : {}),
+    ...(branches ? { branches } : {}),
   };
   const records = noteDay(d, report);
-  if (records.length) report.records = records;
+  if (records.length) {
+    report.records = records;
+    s.evo.news = [...s.evo.news, ...records.map((r) => ({ kind: 'record' as const, ref: r }))].slice(-20);
+  }
   rivalOnClose(d, report);
   s.reports = [...s.reports, report].slice(-30);
   s.phase = 'fechamento';
@@ -91,6 +105,7 @@ export function startNextDay(d: Draft): boolean {
   s.clockMin = OPEN_MIN;
   s.customers = [];
   s.stats = freshStats(s);
+  s.evo.dayWork = {};
   // O corvo faz a entrega da manhã logo que o dia começa.
   s.helpers.ravenInMs = 1500;
   s.helpers.golemInMs = 0;
@@ -116,6 +131,9 @@ export function startNextDay(d: Draft): boolean {
   royalNewDay(d);
   if (seasonOf(s.day).id !== seasonOf(s.day - 1).id) d.events.push({ type: 'SEASON_STARTED', season: seasonOf(s.day).id });
   ensureGoals(s);
+  hatchEggs(d);
+  printGazette(s);
+  rollMoment(d);
   d.events.push({ type: 'DAY_STARTED', day: s.day, event: s.event });
   return true;
 }
@@ -175,6 +193,7 @@ export function advance(d: Draft, ms: number): boolean {
   s.clockMin = Math.min(CLOSE_MIN, s.clockMin + (ms / 1000) * GAME_MIN_PER_SECOND * clockFactor(s));
   advanceCustomers(d, ms);
   advanceHelpers(d, ms);
+  advanceMoment(d, ms);
   if (s.clockMin >= CLOSE_MIN) closeDay(d);
   return true;
 }

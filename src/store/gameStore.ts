@@ -26,9 +26,12 @@ import { funnel } from '../analytics/funnel';
 import { ROYAL_CHAPTERS } from '../domain/data/royal';
 import { STIR_LEVEL } from '../domain/rules/quality';
 import { STAGE_NAMES, VILLAGE_BY_ID } from '../domain/data/village';
+import { CITIES_BY_ID, BRANCH_SIZES } from '../domain/data/kingdom';
+import { FAMILIARS_BY_ID } from '../domain/data/familiars';
+import { staffName } from '../domain/rules/staff';
 
 export type PanelId =
-  | 'ingredients' | 'production' | 'recipes' | 'orders' | 'report' | 'shelves' | 'counter' | 'door' | 'upgrades' | 'grimoire' | 'album' | 'street' | 'goals' | 'season' | 'royal' | 'village';
+  | 'ingredients' | 'production' | 'recipes' | 'orders' | 'report' | 'shelves' | 'counter' | 'door' | 'upgrades' | 'grimoire' | 'album' | 'street' | 'goals' | 'season' | 'royal' | 'village' | 'staff' | 'kingdom' | 'gazette';
 
 export interface HoverInfo {
   id: string;
@@ -277,14 +280,40 @@ export const useGameStore = create<StoreState>()(
           return e.win
             ? toast(tr('🏆 Você venceu a Madame Vesper na semana ({0} × {1})! +{2} moedas e um mimo da despensa dela.', Math.round(e.me), Math.round(e.her), e.coins), 'gold')
             : toast(tr('A Madame Vesper venceu a semana ({0} × {1}). Revanche amanhã!', Math.round(e.her), Math.round(e.me)), 'warn');
+        case 'STAFF_LEVEL': {
+          const s = get().save;
+          const who = s ? staffName(s, e.staffId) : e.staffId;
+          return toast(e.perk ? tr('🏅 {0} chegou ao nível {1}! Escolha o caminho na Equipe.', who, e.level) : tr('🏅 {0} chegou ao nível {1}!', who, e.level), 'gold');
+        }
+        case 'STAFF_COURSE': {
+          const s = get().save;
+          return toast(tr('🎓 {0} fez o curso na Guilda: pode chegar ao nível {1}.', s ? staffName(s, e.staffId) : e.staffId, e.cap), 'ok');
+        }
+        case 'BRANCH_OPENED': {
+          const c = CITIES_BY_ID[e.cityId];
+          return c ? toast(tr('🏰 {0} em {1}!', BRANCH_SIZES[e.size - 1], c.name), 'gold') : undefined;
+        }
+        case 'EGG_FOUND':
+          return toast(tr('🥚 Um ovo misterioso foi para o ninho da loja.'), 'gold');
+        case 'FAMILIAR_HATCHED': {
+          const f = FAMILIARS_BY_ID[e.familiarId];
+          if (!f) return e.crystals ? toast(tr('🥚 O ovo virou {0} cristais de luar.', e.crystals), 'ok') : undefined;
+          return toast(e.shiny ? tr('✨ Nasceu um {0} brilhante!', f.name) : tr('🥚 Nasceu: {0}!', f.name), 'gold');
+        }
+        case 'MOMENT_STARTED':
+          return toast(e.kind === 'estrela' ? tr('🌠 Uma estrela cadente na janela! Toque nela.') : e.kind === 'dragao' ? tr('🌠 Um dragão viajante pousou no balcão! Toque nele.') : tr('🌠 Uma borboleta arco-íris entrou na loja! Toque nela.'), 'gold');
+        case 'MOMENT_CAUGHT':
+          return toast(e.egg ? tr('✨ O dragão deixou um ovo de presente!') : e.coins ? tr('✨ Sorte no caixa: +{0} moedas e reputação.', e.coins) : tr('✨ Pedido feito: +{0} cristais de luar.', e.crystals), 'gold');
         case 'EXPEDITION_SENT': {
           const x = EXPEDITIONS_BY_ID[e.dest];
+          if (e.byExplorer) return toast(tr('🎒 A exploradora partiu para {0}. Volta {1}.', x.name, x.days === 1 ? tr('amanhã') : tr('em {0} dias', x.days)), 'ok');
           return toast(tr('🐦‍⬛ O corvo partiu para {0}. Volta {1}.', x.name, x.days === 1 ? tr('amanhã') : tr('em {0} dias', x.days)), 'ok');
         }
         case 'EXPEDITION_BACK': {
           const x = EXPEDITIONS_BY_ID[e.dest];
           const units = e.items.reduce((n, i) => n + i.qty, 0);
           const f = e.find ? FINDS_BY_ID[e.find] : null;
+          if (e.byExplorer) return toast(tr('🎒 A exploradora voltou de {0} com {1} ingredientes{2}', x.name, units, f ? tr(' e um achado: {0} {1}!', f.icon, f.name) : '.'), 'gold');
           return toast(tr('🐦‍⬛ O corvo voltou de {0} com {1} ingredientes{2}', x.name, units, f ? tr(' e um achado: {0} {1}!', f.icon, f.name) : '.'), 'gold');
         }
         case 'FIND': {
