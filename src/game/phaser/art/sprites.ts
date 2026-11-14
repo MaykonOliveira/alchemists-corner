@@ -55,3 +55,6 @@ export const LANTERNS = [
   { x: 107, y: 30 },
   { x: 289, y: 26 },
 ];
+
+/** Topo da cabeça de cada ajudante (quadro parado), para chapéus do uniforme e insígnias. */
+export const HEADS: Record<string, { x: number; y: number; w: number }> = layout.heads;

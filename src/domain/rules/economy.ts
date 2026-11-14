@@ -9,6 +9,8 @@ import { MOON_MARKET_EXTRA, seasonalStock } from './street';
 import { villageBonus } from './villageBonus';
 import { clampQualities } from './quality';
 
+import { famBonus, perkCount, staffLevel } from './evoCore';
+import { WAGE_PER_LEVEL } from '../data/staff';
 import { tr } from '../../i18n';
 export const PRICE_MIN_FACTOR = 0.8;
 export const PRICE_MAX_FACTOR = 1.3;
@@ -24,12 +26,12 @@ export function priceRange(s: GameSave, recipeId: string) {
 
 /** Preço de um ingrediente no fornecedor (com o desconto do talento "Amigo do fornecedor"). */
 export const ingredientPrice = (s: GameSave, ingredientId: string) =>
-  Math.max(1, Math.round(INGREDIENTS_BY_ID[ingredientId].price * (1 - talentBonus(s, 'fornecedor-amigo')) * (1 - villageBonus(s, 'fornecedor'))));
+  Math.max(1, Math.round(INGREDIENTS_BY_ID[ingredientId].price * (1 - talentBonus(s, 'fornecedor-amigo')) * (1 - villageBonus(s, 'fornecedor')) * (1 - famBonus(s, 'fornecedor'))));
 
 export const getPrice = (s: GameSave, recipeId: string) => s.prices[recipeId] ?? RECIPES_BY_ID[recipeId].basePrice;
 
 export const potionCapacity = (s: GameSave) =>
-  16 + (has(s, 'prateleira-extra') ? 12 : 0) + (has(s, 'despensa-encantada') ? 12 : 0);
+  16 + (has(s, 'prateleira-extra') ? 12 : 0) + (has(s, 'despensa-encantada') ? 12 : 0) + Math.round(famBonus(s, 'prateleira'));
 export const ingredientCapacity = (s: GameSave) =>
   40 + (has(s, 'armario-organizado') ? 30 : 0) + (has(s, 'despensa-encantada') ? 40 : 0);
 /** Espaço de cada receita na prateleira: não dá para encher a loja de uma poção só (auditoria P0.4). */
@@ -44,8 +46,10 @@ export const staffOn = (s: GameSave, id: string) => has(s, id) && !s.helpers.off
 
 /** Refeitório da equipe: comida quente no fundo da loja, salários 40% menores. */
 export const CANTEEN_DISCOUNT = 0.4;
-export const helperWages = (s: GameSave) =>
-  Math.round(s.upgrades.reduce((n, id) => n + (UPGRADES_BY_ID[id]?.upkeep ?? 0), 0) * (has(s, 'refeitorio') ? 1 - CANTEEN_DISCOUNT : 1));
+/** Salário de um ajudante: sobe 10% a cada nível de carreira (E7: o salário volta a pesar). */
+export const helperWage = (s: GameSave, id: string) =>
+  (UPGRADES_BY_ID[id]?.upkeep ?? 0) * (1 + WAGE_PER_LEVEL * (staffLevel(s, id) - 1)) * (has(s, 'refeitorio') ? 1 - CANTEEN_DISCOUNT : 1);
+export const helperWages = (s: GameSave) => Math.round(s.upgrades.reduce((n, id) => n + helperWage(s, id), 0));
 
 /** Custo de manutenção cobrado no fechamento (aluguel, lenha, velas e salários). Informado antes de fechar. */
 export const maintenanceCost = (s: GameSave) => 10 + 5 * (s.level - 1) + 3 * s.upgrades.length + helperWages(s);
@@ -221,7 +225,9 @@ export function harvestGreenhouse(d: Draft) {
   // O gnomo cuida dos canteiros: a estufa rende o dobro e ele ainda traz um punhado do ingrediente mais raro.
   const gnome = staffOn(s, GNOME);
   const gift = gnome ? gnomeGift(s) : null;
-  const yieldList = [...GREENHOUSE_YIELD.map((it) => ({ ...it, qty: it.qty * (gnome ? 2 : 1) })), ...(gift ? [{ ingredientId: gift, qty: GNOME_GIFT_QTY }] : [])];
+  const extra = gnome ? perkCount(s, GNOME, 'b') : 0;
+  const giftQty = GNOME_GIFT_QTY + (gnome ? 2 * perkCount(s, GNOME, 'a') : 0);
+  const yieldList = [...GREENHOUSE_YIELD.map((it) => ({ ...it, qty: it.qty * (gnome ? 2 : 1) + extra })), ...(gift ? [{ ingredientId: gift, qty: giftQty }] : [])];
   for (const it of yieldList) {
     const qty = Math.min(it.qty, room);
     if (qty <= 0) break;

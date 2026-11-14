@@ -2,7 +2,11 @@ import { INGREDIENTS_BY_ID } from '../data/ingredients';
 import { RECIPES, RECIPES_BY_ID } from '../data/recipes';
 import type { GameSave } from '../models/types';
 import { fail, type Draft } from './context';
-import { addPotions, countPotions, has, potionCapacity, potionStock, shelfPerRecipe } from './economy';
+import { addPotions, countPotions, has, potionCapacity, staffOn, potionStock, shelfPerRecipe } from './economy';
+import { famBonus, perkCount } from './evoCore';
+
+/** Salamandra do forno (E2): mora embaixo do caldeirão. */
+export const SALAMANDER = 'salamandra';
 import { addMastery, talentBonus } from './mastery';
 import { gainXp } from './progression';
 import { grantCrystals } from './entitlements';
@@ -22,7 +26,8 @@ const MS_PER_BREW_MIN = 360;
 
 export function brewDurationMs(s: GameSave, recipeId: string, batches: number) {
   const r = RECIPES_BY_ID[recipeId];
-  const speed = (has(s, 'caldeirao-reforcado') ? 0.7 : 1) * (1 - talentBonus(s, 'maos-ageis'));
+  const speed = (has(s, 'caldeirao-reforcado') ? 0.7 : 1) * (1 - talentBonus(s, 'maos-ageis'))
+    * (staffOn(s, SALAMANDER) ? 0.85 - 0.05 * perkCount(s, SALAMANDER, 'a') : 1) * (1 - famBonus(s, 'preparo'));
   return Math.round(r.durationMin * MS_PER_BREW_MIN * (1 + 0.8 * (batches - 1)) * speed);
 }
 

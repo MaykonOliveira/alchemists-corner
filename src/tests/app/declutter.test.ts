@@ -52,7 +52,8 @@ describe('navegação em dois níveis', () => {
   it('o Grimório mora em Melhorias e o Concurso na Vila', () => {
     expect(tabOf('grimoire')).toBe('upgrades');
     expect(tabOf('royal')).toBe('village');
-    expect(panelsInTab('village')).toEqual(['village', 'royal']);
+    expect(panelsInTab('village')).toEqual(['village', 'royal', 'kingdom']);
+    expect(tabOf('staff')).toBe('upgrades');
     expect(panelsInTab('goals')).toEqual(['goals']);
     expect(tabOf('shelves')).toBe('shelves');
   });

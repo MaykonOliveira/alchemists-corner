@@ -21,6 +21,7 @@ import { REGULARS_BY_ID } from '../data/world';
 import { BALL_NOBLE_BOOST } from '../data/royal';
 import { royalChapter, royalOnLost, royalOnSale, royalWon } from './royal';
 
+import { famBonus, perkCount } from './evoCore';
 import { tr } from '../../i18n';
 export const MAX_CUSTOMERS = 3;
 /** Clientes que cabem no balcão (o balcão duplo abre espaço para mais um). */
@@ -30,7 +31,7 @@ export const NEGOTIATION_MARGIN = 1.2;
 
 export function nextSpawnDelay(s: GameSave, random: () => number) {
   const event = s.event ? DAY_EVENTS[s.event].spawnFactor : 1;
-  const sign = (has(s, 'letreiro-novo') ? 0.75 : 1) * (has(s, 'sino-encantado') ? 0.9 : 1) * (has(s, 'balcao-duplo') ? 0.9 : 1) * (staffOn(s, BARD) ? 1 - BARD_CROWD : 1);
+  const sign = (has(s, 'letreiro-novo') ? 0.75 : 1) * (has(s, 'sino-encantado') ? 0.9 : 1) * (has(s, 'balcao-duplo') ? 0.9 : 1) * (staffOn(s, BARD) ? 1 - BARD_CROWD - 0.05 * perkCount(s, BARD, 'a') : 1) * (1 - famBonus(s, 'clientes'));
   const fame = (1 + Math.min(s.reputation, 400) / 800) * (1 + talentBonus(s, 'fama')) * (1 + talentBonus(s, 'renome')) * (1 + villageBonus(s, 'movimento'));
   return Math.round((16000 * event * sign) / fame * (0.7 + random() * 0.6));
 }
@@ -214,14 +215,14 @@ export const BARD_PATIENCE = 0.25;
 export const BARD_PRICE = 1.03;
 
 /** Multiplicador de paciência (sino encantado, bardo e talento "Freguesia fiel"). */
-export const patienceFactor = (s: GameSave) => (has(s, 'sino-encantado') ? 1.3 : 1) * (staffOn(s, BARD) ? 1 + BARD_PATIENCE : 1) * (1 + talentBonus(s, 'freguesia')) * (1 + villageBonus(s, 'paciencia'));
+export const patienceFactor = (s: GameSave) => (has(s, 'sino-encantado') ? 1.3 : 1) * (staffOn(s, BARD) ? 1 + BARD_PATIENCE + 0.08 * perkCount(s, BARD, 'b') : 1) * (1 + famBonus(s, 'paciencia')) * (1 + talentBonus(s, 'freguesia')) * (1 + villageBonus(s, 'paciencia'));
 
 /** Preço máximo que o cliente aceita por uma poção. */
 export function maxPriceFor(s: GameSave, c: Customer, recipeId: string) {
   const r = RECIPES_BY_ID[recipeId];
   const substitute = recipeId !== c.wantedRecipeId;
   const fame = 1 + Math.min(s.reputation, 240) / 800;
-  const decor = (has(s, 'prateleira-extra') ? 1.03 : 1) * (has(s, 'iluminacao-aconchegante') ? 1.04 : 1) * (has(s, 'vitral-arcano') ? 1.05 : 1) * (has(s, 'torre-alquimista') ? 1.08 : 1) * (staffOn(s, BARD) ? BARD_PRICE : 1);
+  const decor = (has(s, 'prateleira-extra') ? 1.03 : 1) * (has(s, 'iluminacao-aconchegante') ? 1.04 : 1) * (has(s, 'vitral-arcano') ? 1.05 : 1) * (has(s, 'torre-alquimista') ? 1.08 : 1) * (staffOn(s, BARD) ? BARD_PRICE : 1) * (1 + famBonus(s, 'preco'));
   const skill = (1 + masteryStars(s, recipeId) * STAR_BONUS) * (1 + talentBonus(s, 'labia')) * (1 + talentBonus(s, 'toque-de-ouro')) * (1 + villageBonus(s, 'preco'));
   const season = r.category === seasonCategory(s) ? SEASON_PRICE_BONUS : 1;
   const event = eventCategoryFactor(s, recipeId);

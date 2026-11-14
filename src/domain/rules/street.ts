@@ -13,6 +13,8 @@ import { gainReputation } from './progression';
 import { findPage } from './legends';
 import { seasonOf } from './world';
 
+import { perkCount } from './evoCore';
+
 import { tr } from '../../i18n';
 // ------------------------------------------------------------- estação
 
@@ -171,7 +173,8 @@ export function returnExpedition(d: Draft) {
   const loot: { ingredientId: string; qty: number }[] = [];
   for (const [id, min, max, lvl] of info.loot) {
     if (s.level < lvl || !INGREDIENTS_BY_ID[id]) continue;
-    const qty = min + Math.floor(r() * (max - min + 1));
+    // Exploradora com Mochila funda (carreira): 30% mais por escolha.
+    const qty = Math.round((min + Math.floor(r() * (max - min + 1))) * (ex.byExplorer ? 1 + 0.3 * perkCount(s, 'exploradora', 'a') : 1));
     if (qty > 0) loot.push({ ingredientId: id, qty });
   }
   if (info.id === 'floresta') {
@@ -180,11 +183,13 @@ export function returnExpedition(d: Draft) {
   }
   const items = addIngredients(s, loot);
   const missing = info.finds.filter((f) => !s.finds.includes(f));
-  const find = missing.length && r() < FIND_CHANCE ? pick(missing, r) : null;
+  const findChance = FIND_CHANCE + (ex.byExplorer ? 0.1 * perkCount(s, 'exploradora', 'b') : 0);
+  const find = missing.length && r() < findChance ? pick(missing, r) : null;
   if (find) s.finds = [...s.finds, find];
   s.expeditionsDone += 1;
-  s.helpers.ravenInMs = 1500;
-  d.events.push({ type: 'EXPEDITION_BACK', dest: info.id, items, find });
+  if (!ex.byExplorer) s.helpers.ravenInMs = 1500;
+  d.events.push({ type: 'EXPEDITION_BACK', dest: info.id, items, find, ...(ex.byExplorer ? { byExplorer: true } : {}) });
+  if (ex.byExplorer) s.evo.news = [...s.evo.news, { kind: 'expedition' as const, ref: info.id, n: items.reduce((n, it) => n + it.qty, 0) }].slice(-20);
 }
 
 /** Achado entregue pelo Visitante Misterioso. */

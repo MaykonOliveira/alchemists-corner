@@ -21,6 +21,7 @@ import ui_icons as UI
 import legends as LG  # registra as receitas lendárias em items.py
 import village as VI
 import portraits as PO
+import evolution as EV
 from room import draw_room, window_front_sprite, WINDOW_FRONT_POS, WINDOW_GLASS
 from customers import customer_sheet, LOOKS, FW, FH, FRAMES
 
@@ -77,6 +78,20 @@ def storefront(shop, en=False):
     return cv
 
 
+HEAD_FRAMES = ('raven-0', 'apprentice-idle-0', 'golem-idle-0', 'owl-0', 'gnome-idle-0', 'bard-0', 'fairy-0', 'salamander-0',
+               'peddler-0', 'explorer-0', 'ghost-0')
+
+
+def head_of(cv):
+    """Topo da cabeça (linha mais alta com pixels) e o centro dela, para os chapéus e as insígnias na cena."""
+    for y in range(cv.h):
+        xs = [x for x in range(cv.w) if cv.opaque(x, y)]
+        if xs:
+            rows = [x for yy in range(y, min(cv.h, y + 3)) for x in range(cv.w) if cv.opaque(x, yy)]
+            return {'x': round(sum(rows) / len(rows)), 'y': y, 'w': cv.w}
+    return {'x': cv.w // 2, 'y': 0, 'w': cv.w}
+
+
 def save(cv, name):
     check_palette(cv.im, name)
     cv.im.save(os.path.join(OUT, name), optimize=True)
@@ -115,6 +130,7 @@ def main():
         'golem-idle-0': H.golem('idle', 0), 'golem-idle-1': H.golem('idle', 1), 'golem-serve': H.golem('serve'),
         'golem-nap': H.golem('nap'),
         **SF.frames(),
+        **EV.frames(),
     }
     for k, cv in helper_frames.items():
         shop[k] = cv
@@ -138,6 +154,8 @@ def main():
     shop.update(DE.frames())
     # Concurso Real (fase 4)
     shop.update(RO.frames())
+    # Evoluções (E1 a E6): insígnias, familiares, momentos, temas e chapéus
+    shop.update(EV.moment_outlines(EV.extras()))
     for k in ('cauldron-2', 'counter-wing'):
         shop[f'{k}-outline'] = outline_mask(shop[k])
     for rid in I.LIQ:
@@ -159,6 +177,7 @@ def main():
     icons.update({f'helper-{h}': SF.portrait(h) for h in SF.PORTRAITS})
     icons['rival-vesper'] = SE.rival_portrait()
     icons.update(PO.portraits())
+    icons.update(EV.icons())
     icons.update({f'trophy-{i}': RO.trophy_icon(i) for i in range(5)})
     # Ícones da interface no lugar dos emojis (pacote V2).
     icons.update(UI.frames())
@@ -180,6 +199,7 @@ def main():
               'expansion': {k: {'x': x, 'y': y} for k, (x, y) in X.POS.items()},
               'decor': {k: {'x': x, 'y': y} for k, (x, y) in DE.POS.items()},
               'royal': {k: {'x': x, 'y': y} for k, (x, y) in RO.POS.items()},
+              'heads': {k: head_of(shop[k]) for k in HEAD_FRAMES},
               'window': {'front': {'x': WINDOW_FRONT_POS[0], 'y': WINDOW_FRONT_POS[1]},
                          'glass': dict(zip(('x', 'y', 'w', 'h'), WINDOW_GLASS))}}
     with open(os.path.join(OUT, 'layout.json'), 'w') as fh:
@@ -194,6 +214,8 @@ def main():
     save(vsheet, 'village.png')
     with open(os.path.join(OUT, 'village.json'), 'w') as fh:
         json.dump({'w': VI.W, 'h': VI.H, 'cols': 5, 'rows': names}, fh, indent=1)
+    # Mapa do reino (pacote E3).
+    save(EV.kingdom_map(), 'kingdom-map.png')
     # Quadros da história de abertura (pacote G).
     for name, cv in ST.frames().items():
         save(cv, f'{name}.png')

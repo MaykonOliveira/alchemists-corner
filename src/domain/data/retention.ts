@@ -48,6 +48,17 @@ export const TRACK_REWARDS: TrackReward[] = [
   c(350), k(6), c(400), k(10), { kind: 'item', id: 'toldo-dourado' },
 ];
 
+/**
+ * Linha do apoiador no Livro da estação (pacote E6): uma segunda fileira só de cosméticos para quem
+ * comprar o passe. A fileira grátis continua inteira e nada some se o jogador faltar.
+ * Só vale com as compras ligadas: hoje ninguém tem o passe.
+ */
+export const SUPPORTER_PASS = 'passe-apoiador';
+export const SUPPORTER_TRACK: { tier: number; id: string }[] = [
+  { tier: 10, id: 'uniforme-cartola' },
+  { tier: 20, id: 'tema-dourado' },
+];
+
 export const TRACK_NAMES: Record<SeasonId, string> = {
   primavera: tr('Temporada das Flores'), verao: tr('Temporada do Sol'), outono: tr('Temporada das Folhas'), inverno: tr('Temporada da Neve'),
 };

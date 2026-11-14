@@ -6,7 +6,7 @@
 // confirma a compra e o jogo só precisa despachar um comando que acrescenta o id em `owned`.
 // As regras do jogo não mudam, e nada que dá vantagem (moedas, XP, rival) entra no catálogo.
 
-import { CATALOG, type CatalogItem } from '../domain/data/catalog';
+import { BUNDLES, CATALOG, type CatalogItem } from '../domain/data/catalog';
 
 import { tr } from '../i18n';
 export const PURCHASES_ENABLED = false;
@@ -46,6 +46,17 @@ export function sellableItems(): CatalogItem[] {
   if (!PURCHASES_ENABLED) return [];
   return CATALOG.filter((i) => i.price !== null);
 }
+
+/** Pacotes da vitrine (pacote E6). Vazio enquanto as compras estão desligadas. */
+export function sellableBundles(): typeof BUNDLES {
+  return PURCHASES_ENABLED ? BUNDLES : [];
+}
+
+/**
+ * Itens que só vêm da vitrine (fonte 'apoio') aparecem no jogo apenas com as compras ligadas,
+ * ou para quem já tem. Assim ninguém vê um item que não consegue ganhar.
+ */
+export const showcaseVisible = (source: string, owned: boolean) => source !== 'apoio' || owned || PURCHASES_ENABLED;
 
 /**
  * Princípios que valem para qualquer monetização futura deste jogo:

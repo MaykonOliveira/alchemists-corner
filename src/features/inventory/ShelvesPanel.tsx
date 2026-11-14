@@ -1,6 +1,7 @@
 import { RECIPES_BY_ID } from '../../domain/data/recipes';
 import type { GameSave } from '../../domain/models/types';
-import { countPotions, getPrice, potionCapacity, potionStock, priceRange, recipeCost, shelfPerRecipe } from '../../domain/rules/economy';
+import { countPotions, getPrice, potionCapacity, potionStock, priceRange, recipeCost, shelfPerRecipe, staffOn } from '../../domain/rules/economy';
+import { FAIRY } from '../../domain/rules/staff';
 import { potionsPerBatch } from '../../domain/rules/alchemy';
 import { masteryStars } from '../../domain/rules/mastery';
 import { Stars } from '../../ui/Stars';
@@ -31,6 +32,7 @@ export function ShelvesPanel({ save }: { save: GameSave }) {
       <More label={tr('Como o preço funciona')}><p className="card-text small">{tr('Mais caro rende mais, mas clientes com pouco dinheiro recusam.')}</p></More>
       <ul className="list">
         {save.knownRecipes.map((id) => {
+          const fairy = staffOn(save, FAIRY);
           const stock = potionStock(save, id);
           const stack = save.potions.find((p) => p.recipeId === id);
           const { min, max, base } = priceRange(save, id);
@@ -66,6 +68,12 @@ export function ShelvesPanel({ save }: { save: GameSave }) {
                 <span className={`tag ${label.tone}`}>{label.text}</span>
                 <span className="muted">{tr('base ')}{base}{tr(' · custo ≈ ')}{unitCost}</span>
               </div>
+              {fairy && (
+                <label className="toggle small">
+                  <input type="checkbox" checked={save.evo.fairy.locked.includes(id)} onChange={(e) => dispatch({ type: 'LOCK_PRICE', recipeId: id, locked: e.target.checked })} />
+                  {save.evo.fairy.locked.includes(id) ? tr('Preço travado (a fada não mexe)') : tr('A fada cuida deste preço')}
+                </label>
+              )}
               {stack && (
                 <label className="toggle small">
                   <input type="checkbox" checked={stack.forSale} onChange={(e) => dispatch({ type: 'SET_FOR_SALE', recipeId: id, forSale: e.target.checked })} />{tr('Expor à venda')}</label>

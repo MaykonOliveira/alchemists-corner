@@ -5,6 +5,8 @@ import type { GameSave } from '../../domain/models/types';
 import { ACHIEVEMENTS, currentSeason, daysToNextSeason, giftLabel, regularState, SEASON_START_DAY } from '../../domain/rules/world';
 import { PotionName } from '../../ui/widgets';
 import { Icon } from '../../ui/Icon';
+import { FAMILIARS } from '../../domain/data/familiars';
+import { useGameStore } from '../../store/gameStore';
 
 
 import { tr } from '../../i18n';
@@ -13,6 +15,46 @@ function Hearts({ n }: { n: number }) {
     <span className="hearts" aria-label={tr('{0} de {1} corações', n, MAX_HEARTS)}>
       {Array.from({ length: MAX_HEARTS }, (_, i) => <span key={i} className={i < n ? 'heart-on' : 'heart-off'}>{i < n ? '♥\uFE0E' : '♡'}</span>)}
     </span>
+  );
+}
+
+/** Familiares mágicos (pacote E4): o ninho, os que já nasceram e as silhuetas dos que faltam. */
+function Familiars({ save }: { save: GameSave }) {
+  const dispatch = useGameStore((s) => s.dispatch);
+  const evo = save.evo;
+  if (!evo.familiars.length && !evo.eggs.length && save.day < 4) return null;
+  return (
+    <>
+      <h3 className="mini-title"><Icon e="🥚" />{tr(' Familiares mágicos')}</h3>
+      <p className="card-text small muted">{tr('Ovos aparecem em expedições, recordes, conquistas e na visita do dragão viajante. Chocam no ninho da loja. Dois familiares ficam ativos por vez, cada um com um bônus.')}</p>
+      {evo.eggs.length > 0 && (
+        <p className="card nest small">
+          <Icon e="🪺" /> {tr('No ninho: ')}
+          {evo.eggs.map((e, i) => <span key={e.id}>{i > 0 && ' · '}{e.hatchDay <= save.day + 1 ? tr('choca amanhã') : tr('choca em {0} dias', e.hatchDay - save.day)}</span>)}
+        </p>
+      )}
+      <ul className="familiar-grid">
+        {FAMILIARS.map((f) => {
+          const have = evo.familiars.includes(f.id);
+          const shiny = evo.shiny.includes(f.id);
+          const active = evo.activeFamiliars.includes(f.id);
+          return (
+            <li key={f.id} className={`card familiar ${have ? '' : 'card-locked'} ${active ? 'familiar-active' : ''} ${shiny ? 'familiar-shiny' : ''}`}>
+              <SpriteIcon name={`fam-${f.id}${shiny ? '-shiny' : ''}`} size={32} muted={!have} />
+              <span className="familiar-body">
+                <b>{have ? f.name : '???'}</b>{shiny && <span className="charm">{tr(' ✦ brilhante')}</span>}
+                <span className="small muted">{have ? f.text : f.hint}</span>
+              </span>
+              {have && (
+                <button className={`btn btn-small ${active ? '' : 'btn-primary'}`} onClick={() => dispatch({ type: 'SET_FAMILIAR', familiarId: f.id, on: !active })}>
+                  {active ? tr('Descansar') : tr('Ativar')}
+                </button>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </>
   );
 }
 
@@ -33,6 +75,8 @@ export function AlbumPanel({ save }: { save: GameSave }) {
           <p className="muted small">{left === 1 ? tr('Muda amanhã.') : tr('Faltam {0} dias para a próxima estação.', left)}</p>
         </div>
       </div>
+
+      <Familiars save={save} />
 
       <h3 className="mini-title">{tr('Fregueses fiéis')}</h3>
       <p className="card-text small muted">{tr('Eles voltam sempre pedindo o de sempre. Cada vez que você entrega a favorita, ganham um coração. Com ')}{TIP_HEARTS}{tr(' corações deixam gorjeta; com ')}{MAX_HEARTS}{tr(' viram amigos e trazem um presente.')}</p>

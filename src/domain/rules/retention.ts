@@ -5,17 +5,19 @@ import { DAY_EVENTS } from '../data/orders';
 import { RECIPES, RECIPES_BY_ID } from '../data/recipes';
 import { REGULARS_BY_ID, SEASONS } from '../data/world';
 import {
-  DEBUT, LETTERS, SEASON_FESTS, TRACK_DAYS, TRACK_NAMES, TRACK_POINTS, TRACK_REWARDS, TRACK_STEP, VISIT_GIFTS,
+  DEBUT, LETTERS, SUPPORTER_PASS, SUPPORTER_TRACK, SEASON_FESTS, TRACK_DAYS, TRACK_NAMES, TRACK_POINTS, TRACK_REWARDS, TRACK_STEP, VISIT_GIFTS,
 } from '../data/retention';
 import type { AwayReport, Customer, GameEvent, GameSave } from '../models/types';
 import { nextId, type Draft } from './context';
 import { advanceBrew, startBrew } from './alchemy';
-import { getPrice, takePotions } from './economy';
+import { getPrice, staffOn, takePotions } from './economy';
 import { grantCrystals, grantItem } from './entitlements';
 import { APPRENTICE, apprenticePlan, GOLEM, helperActive } from './helpers';
 import { gainXp } from './progression';
 import { addIngredients, weekOf } from './street';
 import { daysToNextSeason, seasonOf } from './world';
+
+import { perkCount } from './evoCore';
 
 import { tr } from '../../i18n';
 // ------------------------------------------------------------------ datas reais
@@ -191,6 +193,9 @@ export function tomorrowPreview(s: GameSave): PreviewLine[] {
 /** Tempo mínimo fora para a loja trabalhar sozinha, e o máximo que conta. */
 export const AWAY_MIN_MS = 10 * 60_000;
 export const AWAY_MAX_MS = 8 * 3_600_000;
+/** Limites com o gerente noturno (sem ele: 8 preparos e 24 vendas). */
+export const AWAY_NIGHT_BREWS = 20;
+export const AWAY_NIGHT_SALES = 60;
 /** Vendas pela janela por hora (golem) e preparos por hora (aprendiz), fora do jogo. */
 export const AWAY_SALES_PER_HOUR = 3;
 export const AWAY_BREWS_PER_HOUR = 1.5;
@@ -210,8 +215,12 @@ export function simulateAway(d: Draft, awayMs: number): AwayReport | null {
   const apprentice = s.phase !== 'fechamento' && helperActive(s, APPRENTICE);
   const golem = helperActive(s, GOLEM);
   report.helpers = apprentice || golem;
-  const totalBrews = apprentice ? Math.min(8, Math.floor(hours * AWAY_BREWS_PER_HOUR)) : 0;
-  const totalSales = golem ? Math.min(24, Math.floor(hours * AWAY_SALES_PER_HOUR)) : 0;
+  // Gerente noturno (E2): a loja trabalha bem mais enquanto você está fora.
+  const night = staffOn(s, 'gerente-noturno');
+  const brewCap = night ? AWAY_NIGHT_BREWS + 3 * perkCount(s, 'gerente-noturno', 'b') : 8;
+  const salesCap = night ? AWAY_NIGHT_SALES + 10 * perkCount(s, 'gerente-noturno', 'a') : 24;
+  const totalBrews = apprentice ? Math.min(brewCap, Math.floor(hours * AWAY_BREWS_PER_HOUR * (night ? 2.5 : 1))) : 0;
+  const totalSales = golem ? Math.min(salesCap, Math.floor(hours * AWAY_SALES_PER_HOUR * (night ? 2.5 : 1))) : 0;
   const xpBefore = s.xp;
   let brews = 0;
   let sales = 0;
@@ -315,6 +324,8 @@ export function addTrackPoints(d: Draft, n: number) {
     else if (!grantItem(d, r.id, 'trilha')) s.crystals += 10;
     s.track = { ...s.track, tier: s.track.tier + 1 };
     d.events.push({ type: 'TRACK_TIER', tier: s.track.tier, reward: trackRewardLabel(s.track.tier - 1) });
+    // Linha do apoiador: só cosméticos, para quem tem o passe.
+    if (s.owned.includes(SUPPORTER_PASS)) for (const r2 of SUPPORTER_TRACK) if (r2.tier === s.track.tier) grantItem(d, r2.id, 'apoio');
   }
 }
 

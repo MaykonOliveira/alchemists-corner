@@ -2,7 +2,11 @@ import { RECIPES_BY_ID } from '../../domain/data/recipes';
 import { helperRoot, UPGRADES } from '../../domain/data/upgrades';
 import type { GameSave, ShopUpgrade } from '../../domain/models/types';
 import { APPRENTICE, apprenticePlan, BARD, GNOME, GOLEM, golemDelayMs, helperActive, OWL, RAVEN } from '../../domain/rules/helpers';
-import { gnomeGift } from '../../domain/rules/economy';
+import { gnomeGift, helperWage } from '../../domain/rules/economy';
+import { pendingPerks, perkCount, staffLevel } from '../../domain/rules/evoCore';
+import { EXPLORER, FAIRY, NIGHT_MANAGER, PEDDLER, peddlerPlan } from '../../domain/rules/staff';
+import { SALAMANDER } from '../../domain/rules/alchemy';
+import { EXPEDITIONS_BY_ID } from '../../domain/data/street';
 import { INGREDIENTS_BY_ID } from '../../domain/data/ingredients';
 import { useGameStore } from '../../store/gameStore';
 import { SpriteIcon } from '../../ui/SpriteIcon';
@@ -10,6 +14,7 @@ import { Coins, More } from '../../ui/widgets';
 import { Icon } from '../../ui/Icon';
 
 import { tr } from '../../i18n';
+const STRATEGY_LABEL = { volume: tr('vender muito'), lucro: tr('lucro alto'), fama: tr('fama na vila') } as const;
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
 /** Frase curta sobre o que o ajudante está fazendo agora. */
@@ -40,6 +45,17 @@ function helperStatus(save: GameSave, id: string): string {
     return tr('Esperando uma charada ou um pedido especial. Hoje: {0}.', plural((w.riddles ?? 0) + (w.orders ?? 0), tr('tarefa'), tr('tarefas')));
   }
   if (id === BARD) return save.phase === 'expediente' ? tr('Tocando na porta: mais clientes e mais paciência.') : tr('Afinando o alaúde para a loja abrir.');
+  if (id === FAIRY) return tr('Cuidando dos preços ({0}). Preços travados por você: {1}.', STRATEGY_LABEL[save.evo.fairy.strategy], save.evo.fairy.locked.length);
+  if (id === PEDDLER) {
+    const plan = peddlerPlan(save);
+    return save.phase !== 'expediente' ? tr('Engraxando a carroça para a feira.') : plan ? tr('Vai levar {0} {1} para a praça.', plan.qty, RECIPES_BY_ID[plan.recipeId].shortName) : tr('Prateleiras em ordem: nada sobrando para a praça.');
+  }
+  if (id === EXPLORER) {
+    const ex = save.expedition;
+    return ex?.byExplorer ? tr('Em expedição: {0}. Volta no dia {1}.', EXPEDITIONS_BY_ID[ex.dest]?.name ?? ex.dest, ex.returnDay) : tr('Arrumando a mochila para a próxima expedição.');
+  }
+  if (id === SALAMANDER) return save.brew || save.brew2 ? tr('Soprando o fogo do caldeirão.') : tr('Cochilando nas brasas.');
+  if (id === NIGHT_MANAGER) return tr('Cuida da loja enquanto você está fora: até {0} vendas e {1} preparos.', 60 + 10 * perkCount(save, NIGHT_MANAGER, 'a'), 20 + 3 * perkCount(save, NIGHT_MANAGER, 'b'));
   return '';
 }
 
@@ -64,11 +80,16 @@ function UpgradeCard({ save, u }: { save: GameSave; u: ShopUpgrade }) {
       {(helper || (owned && !helper) || locked) && (
         <More label={owned ? tr('O que faz') : tr('Detalhes')}>
           <p className="card-text small">{u.effect}</p>
-          {helper && <p className="card-text small muted">{tr('Salário: ')}{u.upkeep}{tr(' moedas por dia, pago no fechamento.')}</p>}
+          {helper && <p className="card-text small muted">{tr('Salário: ')}{owned ? Math.round(helperWage(save, u.id)) : u.upkeep}{tr(' moedas por dia, pago no fechamento.')}</p>}
         </More>
       )}
       <div className="card-foot">
         <Coins n={u.cost} />
+        {owned && helper && (
+          <button className="link-btn small staff-link" onClick={() => dispatch({ type: 'OPEN_PANEL', panel: 'staff' })}>
+            {tr('Nv {0}', staffLevel(save, u.id))}{pendingPerks(save, u.id) > 0 ? ' ✦' : ''}
+          </button>
+        )}
         {owned && helper ? (
           <label className="switch">
             <input type="checkbox" checked={on} onChange={(e) => dispatch({ type: 'SET_HELPER', upgradeId: u.id, on: e.target.checked })} />

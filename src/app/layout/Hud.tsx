@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { seasonOf } from '../../domain/rules/world';
-import { levelProgress, masterRank, MASTER_STEP_XP, MAX_LEVEL, reputationTitle, xpForLevel } from '../../domain/rules/progression';
+import { masterRank, MASTER_STEP_XP, MAX_LEVEL, reputationTitle, xpForLevel } from '../../domain/rules/progression';
 import { dayProgress, formatClock, TIME_OF_DAY_LABEL, timeOfDay } from '../../domain/rules/time';
 import { autoFast, useGameStore } from '../../store/gameStore';
 import { CoinIcon, StarIcon } from '../../ui/icons';
@@ -37,10 +37,11 @@ export function Hud() {
   // XP dentro do nível atual (ou do grau de Mestre), em número, para o jogador saber quanto falta.
   const xpStart = isMaster ? xpForLevel(MAX_LEVEL) + masterRank(save.xp) * MASTER_STEP_XP : xpForLevel(save.level);
   const xpSpan = isMaster ? MASTER_STEP_XP : xpForLevel(save.level + 1) - xpStart;
-  const xpIn = save.xp - xpStart;
+  // Nunca negativo: um save com nível e XP desencontrados mostra 0 em vez de "-25380" (pacote E7).
+  const xpIn = Math.max(0, Math.min(xpSpan, save.xp - xpStart));
 
   const season = seasonOf(save.day);
-  const xpPct = levelProgress(save.xp) * 100;
+  const xpPct = (xpIn / Math.max(1, xpSpan)) * 100;
   const levelShort = isMaster ? `M${masterRank(save.xp)}` : tr('Nv {0}', save.level);
 
   return (
@@ -92,8 +93,8 @@ export function Hud() {
         <span className={`hud-label ${isMaster ? 'hud-master' : ''}`}>
           {isMaster ? tr('Mestre {0}', masterRank(save.xp)) : tr('Nível {0}', save.level)}
         </span>
-        <span className="bar bar-xp" aria-label={tr('Experiência: {0}%', Math.round(levelProgress(save.xp) * 100))}>
-          <span style={{ width: `${levelProgress(save.xp) * 100}%` }} />
+        <span className="bar bar-xp" aria-label={tr('Experiência: {0}%', Math.round(xpPct))}>
+          <span style={{ width: `${xpPct}%` }} />
         </span>
         <span className="hud-xp">{xpIn}/{xpSpan} XP</span>
       </div>

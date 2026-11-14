@@ -4,7 +4,7 @@ import type { CatalogItem } from '../../domain/data/catalog';
 import { Icon } from '../../ui/Icon';
 
 const FRAMES = atlas.frames as Record<string, { frame: { x: number; y: number; w: number; h: number } }>;
-const DEFAULT_ICON: Record<string, string> = { tapete: '🟦', quadro: '🖼️', luminaria: '🕯️', planta: '🌿', toldo: '⛱️' };
+const DEFAULT_ICON: Record<string, string> = { tapete: '🟦', quadro: '🖼️', luminaria: '🕯️', planta: '🌿', toldo: '⛱️', tema: '🎉', uniforme: '🎩' };
 
 /** Miniatura de um item de decoração, recortada do spritesheet da loja. */
 export function DecorThumb({ item, size = 40 }: { item: CatalogItem; size?: number }) {

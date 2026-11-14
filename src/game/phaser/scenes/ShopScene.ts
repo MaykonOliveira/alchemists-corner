@@ -12,6 +12,8 @@ import { DECOR_POS, EXPANSION, GARLAND_BULBS, LANTERNS, LATEGAME, ROYAL_POS, SHE
 import { decorAt } from '../../../domain/rules/entitlements';
 import { CatView } from '../entities/Cat';
 import { HelperViews } from '../entities/Helpers';
+import { EvoViews } from '../entities/Evolution';
+import { CITIES } from '../../../domain/data/kingdom';
 import { Visitor, type Mood } from '../entities/Visitor';
 import { HOTSPOTS, type HotspotDef } from '../interaction/hotspots';
 
@@ -88,6 +90,7 @@ export class ShopScene extends Phaser.Scene {
   private decorGlows: Phaser.GameObjects.Image[] = [];
   private royalLayer: Phaser.GameObjects.GameObject[] = [];
   private helpers!: HelperViews;
+  private evo!: EvoViews;
   private cat!: CatView;
   private advanceAcc = 0;
   private seasonFxAt = 0;
@@ -139,7 +142,9 @@ export class ShopScene extends Phaser.Scene {
 
     this.helpers = new HelperViews(this, this.reduceMotion);
     this.cat = new CatView(this, this.reduceMotion);
+    this.evo = new EvoViews(this, this.reduceMotion);
     this.renderUpgrades(save);
+    this.evo.sync(save);
     this.renderDecor(save);
     this.renderRoyal(save);
     this.renderShelves(save);
@@ -159,6 +164,13 @@ export class ShopScene extends Phaser.Scene {
       sub((s) => s.save?.upgrades, () => this.store.save && this.renderUpgrades(this.store.save)),
       sub((s) => s.save?.order, (o) => this.badge.setVisible(!!o)),
       sub((s) => s.save?.decor, () => this.store.save && this.renderDecor(this.store.save)),
+      sub((s) => s.save?.evo, () => {
+        const save = this.store.save;
+        if (!save) return;
+        this.evo.sync(save);
+        this.helpers.dress(save);
+        this.goldSign(save);
+      }),
       sub((s) => s.save?.royal?.chapter, () => this.store.save && this.renderRoyal(this.store.save)),
       sub((s) => s.save?.upgrades.includes('letreiro-novo'), () => this.store.save && this.renderRoyal(this.store.save)),
       sub((s) => s.save?.event, () => this.store.save && this.renderDecor(this.store.save)),
@@ -556,6 +568,7 @@ export class ShopScene extends Phaser.Scene {
         this.upgradeLayer.push(g);
       }
     }
+    this.goldSign(save);
   }
 
   // -------------------------------------------------------------- Concurso Real
@@ -584,7 +597,16 @@ export class ShopScene extends Phaser.Scene {
   // -------------------------------------------------------------- decoração
 
   /** Decoração escolhida pelo jogador (fase 3) e bandeirinhas na festa da estação. */
+  /** Rede do Reino completa (pacote E3): o letreiro da loja fica dourado. */
+  private goldSign(save: GameSave) {
+    const gold = Object.keys(save.evo.branches).length >= CITIES.length;
+    const signs = [this.sign, ...this.upgradeLayer.filter((o): o is Phaser.GameObjects.Image => o instanceof Phaser.GameObjects.Image && o.texture.key === 'shop-sign')];
+    signs.forEach((img) => (gold ? img.setTint(0xffeaa0) : img.clearTint()));
+  }
+
   private renderDecor(save: GameSave) {
+    this.evo?.sync(save);
+    this.helpers?.dress(save);
     this.decorLayer.forEach((o) => o.destroy());
     this.decorLayer = [];
     this.decorGlows = [];
@@ -737,6 +759,7 @@ export class ShopScene extends Phaser.Scene {
 
   private onGameEvent(e: GameEvent) {
     this.helpers.onEvent(e);
+    this.evo.onEvent(e);
     switch (e.type) {
       case 'GOLEM_DISMISSED':
         this.leaveReasons.set(e.customerId, 'neutro');
@@ -922,6 +945,7 @@ export class ShopScene extends Phaser.Scene {
 
     for (const v of this.visitors.values()) v.update(time);
     this.helpers.update(time);
+    this.evo.update(time);
     this.cat.update(time);
     this.seasonFx(time);
     this.rareWindow(time);

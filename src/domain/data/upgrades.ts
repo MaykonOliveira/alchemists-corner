@@ -46,6 +46,17 @@ export const UPGRADES: ShopUpgrade[] = [
     effect: tr('Decifra a charada do Cliente misterioso (se a poção está na prateleira) e entrega o pedido especial assim que o estoque fica pronto. Você continua ganhando os cristais e a recompensa.') },
   { id: 'bardo-da-porta', name: tr('Bardo da porta'), cost: 6000, category: 'ajudante', requiredLevel: 12, upkeep: 35,
     effect: tr('Toca alaúde na entrada: 15% mais clientes, 25% mais paciência na fila e todo mundo paga 3% a mais, de bom humor.') },
+  // Funcionários do pacote E2: o que ainda pedia clique repetido ganha alguém para cuidar.
+  { id: 'mascate', name: tr('Mascate da praça'), cost: 3500, category: 'ajudante', requiredLevel: 8, upkeep: 20,
+    effect: tr('Quando uma poção lota a prateleira, ele leva o excesso numa carroça e vende na praça por 70% da etiqueta. Acaba a prateleira cheia.') },
+  { id: 'fada-contadora', name: tr('Fada contadora'), cost: 5000, category: 'ajudante', requiredLevel: 9, upkeep: 30,
+    effect: tr('Ajusta os preços sozinha pela procura do dia, seguindo a estratégia que você escolher na Equipe. Preço travado por você ela não mexe.') },
+  { id: 'exploradora', name: tr('Exploradora'), cost: 6000, category: 'ajudante', requiredLevel: 11, requires: 'corvo-entregador', upkeep: 30,
+    effect: tr('Parte em expedição sozinha toda manhã, para o destino com o achado que falta no álbum. O corvo fica em casa trabalhando.') },
+  { id: 'salamandra', name: tr('Salamandra do forno'), cost: 7000, category: 'ajudante', requiredLevel: 13, upkeep: 35,
+    effect: tr('Mora embaixo do caldeirão: todo preparo fica 15% mais rápido e os preparos da equipe saem Finos, às vezes Primorosos.') },
+  { id: 'gerente-noturno', name: tr('Gerente noturno'), cost: 9000, category: 'ajudante', requiredLevel: 15, upkeep: 40,
+    effect: tr('Um fantasma de lampião que cuida da loja enquanto você está fora: até 60 vendas e 20 preparos, em vez de 24 e 8.') },
   // Treino da equipe (pacote X): cada ajudante pode evoluir uma vez no fim de jogo.
   { id: 'corvo-veloz', name: tr('Corvo veloz'), cost: 9000, category: 'treino', requiredLevel: 15, requires: 'corvo-entregador',
     effect: tr('O corvo confere o armário duas vezes por hora e não cobra mais a taxa da viagem.') },
