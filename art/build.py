@@ -9,6 +9,7 @@ from pix import Canvas, check_palette, outline_mask
 import objects as O
 import items as I
 import helpers as H
+import staff as SF
 import lategame as L
 import expansion as X
 import cat as CAT
@@ -113,12 +114,14 @@ def main():
         'apprentice-stir-2': H.apprentice('stir', 2), 'apprentice-nap': H.apprentice('nap'),
         'golem-idle-0': H.golem('idle', 0), 'golem-idle-1': H.golem('idle', 1), 'golem-serve': H.golem('serve'),
         'golem-nap': H.golem('nap'),
+        **SF.frames(),
     }
     for k, cv in helper_frames.items():
         shop[k] = cv
         shop[f'{k}-outline'] = outline_mask(cv)
     shop.update({'raven-fly-0': H.raven_fly(0), 'raven-fly-1': H.raven_fly(1), 'raven-carry-0': H.raven_fly(0, True),
-                 'raven-carry-1': H.raven_fly(1, True), 'parcel': H.parcel(), 'perch': H.perch(), 'zz': H.zz()})
+                 'raven-carry-1': H.raven_fly(1, True), 'parcel': H.parcel(), 'perch': H.perch(), 'zz': H.zz(),
+                 'note-0': SF.note(0), 'note-1': SF.note(1)})
     # Melhorias do late game
     shop.update({'greenhouse': L.greenhouse(), 'alembic': L.alembic(), 'cabinet-runes': L.cabinet_runes(),
                  'vitral': L.vitral(), 'bell-0': L.bell(0), 'bell-1': L.bell(1),
@@ -153,6 +156,7 @@ def main():
     icons = {f'potion-{r}': I.potion_icon(r) for r in I.LIQ}
     icons.update({f'ingredient-{i}': I.ingredient_icon(i) for i in I.INGREDIENTS})
     icons.update({f'helper-{h}': H.portrait(h) for h in ('corvo-entregador', 'aprendiz', 'golem-balconista')})
+    icons.update({f'helper-{h}': SF.portrait(h) for h in SF.PORTRAITS})
     icons['rival-vesper'] = SE.rival_portrait()
     icons.update(PO.portraits())
     icons.update({f'trophy-{i}': RO.trophy_icon(i) for i in range(5)})

@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import type { GameEvent, GameSave } from '../../../domain/models/types';
-import { APPRENTICE, GOLEM, RAVEN, helperActive } from '../../../domain/rules/helpers';
+import { APPRENTICE, BARD, GNOME, GOLEM, OWL, RAVEN, helperActive } from '../../../domain/rules/helpers';
 import { useGameStore } from '../../../store/gameStore';
 
 import { tr } from '../../../i18n';
@@ -11,11 +11,20 @@ const WINDOW = { x: 76, y: 46 };
 const APPRENTICE_POS = { x: 82, y: 116, depth: 175 };
 /** Entre o caldeirão e o balcão, virado para os clientes (o desenho olha para a esquerda e é espelhado). */
 const GOLEM_POS = { x: 118, y: 120, depth: 154 };
+/** Coruja na prateleirinha embaixo do quadro de avisos. */
+const OWL_POS = { x: 250, y: 62, depth: 141 };
+/** Gnomo ao lado do vaso, regando (o regador fica à esquerda). */
+const GNOME_POS = { x: 128, y: 181, depth: 200 };
+/** Bardo à direita da porta. */
+const BARD_POS = { x: 340, y: 92, depth: 150 };
 
 const LABELS: Record<string, string> = {
   [RAVEN]: tr('Corvo entregador'),
   [APPRENTICE]: tr('Aprendiz de alquimia'),
   [GOLEM]: tr('Golem balconista'),
+  [OWL]: tr('Coruja sábia'),
+  [GNOME]: tr('Gnomo jardineiro'),
+  [BARD]: tr('Bardo da porta'),
 };
 
 interface HelperSprite {
@@ -36,6 +45,7 @@ export class HelperViews {
   private ravenAway = false;
   private golemServeUntil = 0;
   private hopUntil = 0;
+  private noteAt = 0;
 
   constructor(private readonly scene: Phaser.Scene, private readonly reduceMotion: () => boolean) {}
 
@@ -49,6 +59,9 @@ export class HelperViews {
       [RAVEN, RAVEN_POS, 141, 'raven-0'],
       [APPRENTICE, APPRENTICE_POS, APPRENTICE_POS.depth, 'apprentice-idle-0'],
       [GOLEM, GOLEM_POS, GOLEM_POS.depth, 'golem-idle-0'],
+      [OWL, OWL_POS, OWL_POS.depth, 'owl-0'],
+      [GNOME, GNOME_POS, GNOME_POS.depth, 'gnome-idle-0'],
+      [BARD, BARD_POS, BARD_POS.depth, 'bard-0'],
     ];
     for (const [id, pos, depth, tex] of wanted) {
       const owned = save.upgrades.includes(id);
@@ -148,6 +161,12 @@ export class HelperViews {
     });
   }
 
+  /** Nota musical que sobe do alaúde e some. */
+  private floatNote(x: number, y: number, frame: number) {
+    const n = this.scene.add.image(x, y, `note-${frame}`).setDepth(985);
+    this.scene.tweens.add({ targets: n, y: y - 18, x: x - 6 + frame * 12, alpha: 0, duration: 1600, ease: 'Sine.Out', onComplete: () => n.destroy() });
+  }
+
   private sparkle(x: number, y: number) {
     if (this.reduceMotion()) return;
     for (let i = 0; i < 8; i++) {
@@ -184,6 +203,23 @@ export class HelperViews {
         if (sleeping) this.setFrame(view, 'golem-nap');
         else if (time < this.golemServeUntil) this.setFrame(view, 'golem-serve');
         else this.setFrame(view, !calm && Math.floor(time / 800) % 2 ? 'golem-idle-1' : 'golem-idle-0');
+      } else if (view.id === OWL) {
+        // Com um Cliente misterioso na loja, a coruja fica pensando na charada.
+        if (sleeping) this.setFrame(view, 'owl-nap');
+        else if (save.customers.some((c) => c.mystery)) this.setFrame(view, 'owl-think');
+        else this.setFrame(view, !calm && time % 3600 < 180 ? 'owl-1' : 'owl-0');
+      } else if (view.id === GNOME) {
+        if (sleeping) this.setFrame(view, 'gnome-nap');
+        else if (!calm && time % 7000 < 2400) this.setFrame(view, `gnome-water-${Math.floor(time / 250) % 2}`);
+        else this.setFrame(view, !calm && time % 3100 < 160 ? 'gnome-idle-1' : 'gnome-idle-0');
+      } else if (view.id === BARD) {
+        const playing = !sleeping && save.phase === 'expediente';
+        if (sleeping) this.setFrame(view, 'bard-nap');
+        else this.setFrame(view, playing && !calm ? `bard-${Math.floor(time / 320) % 2}` : 'bard-0');
+        if (playing && !calm && time > this.noteAt) {
+          this.noteAt = time + 1400;
+          this.floatNote(view.sprite.x + 4, view.sprite.y + 14, Math.floor(time / 1400) % 2);
+        }
       }
     }
   }

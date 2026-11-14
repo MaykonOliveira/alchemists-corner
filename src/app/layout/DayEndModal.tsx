@@ -165,11 +165,13 @@ export function DayEndModal() {
               : <>{tr('Disputa da semana: você ')}{r.rival.me} × {r.rival.her}{tr(' Vesper.')}</>}</span>
           </p>
         )}
-        {r.helperWork && (r.helperWork.brews + r.helperWork.served + r.helperWork.deliveries > 0) && (
+        {r.helperWork && (r.helperWork.brews + r.helperWork.served + r.helperWork.deliveries + (r.helperWork.riddles ?? 0) + (r.helperWork.orders ?? 0) > 0) && (
           <p className="card-text small">{tr('Ajudantes: ')}{[
               r.helperWork.deliveries > 0 && tr('o corvo fez {0} entrega{1}', r.helperWork.deliveries, r.helperWork.deliveries > 1 ? 's' : ''),
               r.helperWork.brews > 0 && tr('o aprendiz cuidou de {0} preparo{1}', r.helperWork.brews, r.helperWork.brews > 1 ? 's' : ''),
               r.helperWork.served > 0 && tr('o golem vendeu {0} poç{1}', r.helperWork.served, r.helperWork.served > 1 ? tr('ões') : tr('ão')),
+              (r.helperWork.riddles ?? 0) > 0 && tr('a coruja decifrou a charada'),
+              (r.helperWork.orders ?? 0) > 0 && tr('a coruja entregou o pedido especial'),
             ].filter(Boolean).join(', ')}{tr('. Salários: ')}{r.wages ?? 0}{tr(' moedas (já na manutenção).')}</p>
         )}
         {sales.length > 0 && (

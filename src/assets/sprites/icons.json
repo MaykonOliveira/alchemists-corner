@@ -1,7 +1,7 @@
 {
  "size": 16,
  "width": 128,
- "height": 288,
+ "height": 304,
  "icons": {
   "potion-cura-simples": [
    0,
@@ -171,409 +171,421 @@
    16,
    80
   ],
-  "rival-vesper": [
+  "helper-gnomo-jardineiro": [
    32,
+   80
+  ],
+  "helper-coruja-sabia": [
+   48,
+   80
+  ],
+  "helper-bardo-da-porta": [
+   64,
+   80
+  ],
+  "rival-vesper": [
+   80,
    80
   ],
   "face-aventureiro-feliz": [
-   48,
+   96,
    80
   ],
   "face-aventureiro-neutro": [
-   64,
+   112,
    80
   ],
   "face-aventureiro-bravo": [
-   80,
-   80
+   0,
+   96
   ],
   "face-estudioso-feliz": [
-   96,
-   80
+   16,
+   96
   ],
   "face-estudioso-neutro": [
-   112,
-   80
+   32,
+   96
   ],
   "face-estudioso-bravo": [
-   0,
+   48,
    96
   ],
   "face-morador-feliz": [
-   16,
+   64,
    96
   ],
   "face-morador-neutro": [
-   32,
+   80,
    96
   ],
   "face-morador-bravo": [
-   48,
+   96,
    96
   ],
   "face-viajante-feliz": [
-   64,
+   112,
    96
   ],
   "face-viajante-neutro": [
-   80,
-   96
+   0,
+   112
   ],
   "face-viajante-bravo": [
-   96,
-   96
+   16,
+   112
   ],
   "face-nobre-feliz": [
-   112,
-   96
+   32,
+   112
   ],
   "face-nobre-neutro": [
-   0,
+   48,
    112
   ],
   "face-nobre-bravo": [
-   16,
+   64,
    112
   ],
   "face-dona-celia-feliz": [
-   32,
+   80,
    112
   ],
   "face-dona-celia-neutro": [
-   48,
+   96,
    112
   ],
   "face-dona-celia-bravo": [
-   64,
+   112,
    112
   ],
   "face-bram-feliz": [
-   80,
-   112
+   0,
+   128
   ],
   "face-bram-neutro": [
-   96,
-   112
+   16,
+   128
   ],
   "face-bram-bravo": [
-   112,
-   112
+   32,
+   128
   ],
   "face-lia-feliz": [
-   0,
+   48,
    128
   ],
   "face-lia-neutro": [
-   16,
+   64,
    128
   ],
   "face-lia-bravo": [
-   32,
+   80,
    128
   ],
   "face-tobias-feliz": [
-   48,
+   96,
    128
   ],
   "face-tobias-neutro": [
-   64,
+   112,
    128
   ],
   "face-tobias-bravo": [
-   80,
-   128
+   0,
+   144
   ],
   "face-vovo-ze-feliz": [
-   96,
-   128
+   16,
+   144
   ],
   "face-vovo-ze-neutro": [
-   112,
-   128
+   32,
+   144
   ],
   "face-vovo-ze-bravo": [
-   0,
+   48,
    144
   ],
   "face-condessa-feliz": [
-   16,
+   64,
    144
   ],
   "face-condessa-neutro": [
-   32,
+   80,
    144
   ],
   "face-condessa-bravo": [
-   48,
+   96,
    144
   ],
   "trophy-0": [
-   64,
+   112,
    144
   ],
   "trophy-1": [
-   80,
-   144
+   0,
+   160
   ],
   "trophy-2": [
-   96,
-   144
+   16,
+   160
   ],
   "trophy-3": [
-   112,
-   144
+   32,
+   160
   ],
   "trophy-4": [
-   0,
+   48,
    160
   ],
   "ui-home": [
-   16,
+   64,
    160
   ],
   "ui-cauldron": [
-   32,
+   80,
    160
   ],
   "ui-bell": [
-   48,
+   96,
    160
   ],
   "ui-target": [
-   64,
+   112,
    160
   ],
   "ui-map": [
-   80,
-   160
+   0,
+   176
   ],
   "ui-leaf": [
-   96,
-   160
+   16,
+   176
   ],
   "ui-fire": [
-   112,
-   160
+   32,
+   176
   ],
   "ui-book": [
-   0,
+   48,
    176
   ],
   "ui-books": [
-   16,
+   64,
    176
   ],
   "ui-flask": [
-   32,
+   80,
    176
   ],
   "ui-scroll": [
-   48,
+   96,
    176
   ],
   "ui-hammer": [
-   64,
+   112,
    176
   ],
   "ui-sparkle": [
-   80,
-   176
+   0,
+   192
   ],
   "ui-chart": [
-   96,
-   176
+   16,
+   192
   ],
   "ui-crown": [
-   112,
-   176
+   32,
+   192
   ],
   "ui-houses": [
-   0,
+   48,
    192
   ],
   "ui-castle": [
-   16,
+   64,
    192
   ],
   "ui-moon": [
-   32,
+   80,
    192
   ],
   "ui-medal": [
-   48,
+   96,
    192
   ],
   "ui-gift": [
-   64,
+   112,
    192
   ],
   "ui-ribbon": [
-   80,
-   192
+   0,
+   208
   ],
   "ui-party": [
-   96,
-   192
+   16,
+   208
   ],
   "ui-swords": [
-   112,
-   192
+   32,
+   208
   ],
   "ui-cat": [
-   0,
+   48,
    208
   ],
   "ui-flower": [
-   16,
+   64,
    208
   ],
   "ui-letter": [
-   32,
+   80,
    208
   ],
   "ui-spoon": [
-   48,
+   96,
    208
   ],
   "ui-camera": [
-   64,
+   112,
    208
   ],
   "ui-heart": [
-   80,
-   208
+   0,
+   224
   ],
   "ui-hourglass": [
-   96,
-   208
+   16,
+   224
   ],
   "ui-horn": [
-   112,
-   208
+   32,
+   224
   ],
   "ui-coin": [
-   0,
+   48,
    224
   ],
   "ui-question": [
-   16,
+   64,
    224
   ],
   "ui-lock": [
-   32,
+   80,
    224
   ],
   "ui-cloak": [
-   48,
+   96,
    224
   ],
   "ui-hat": [
-   64,
+   112,
    224
   ],
   "ui-basket": [
-   80,
-   224
+   0,
+   240
   ],
   "ui-face-happy": [
-   96,
-   224
+   16,
+   240
   ],
   "ui-face-meh": [
-   112,
-   224
+   32,
+   240
   ],
   "ui-face-angry": [
-   0,
+   48,
    240
   ],
   "ui-face-sick": [
-   16,
+   64,
    240
   ],
   "ui-speaker": [
-   32,
+   80,
    240
   ],
   "ui-note": [
-   48,
+   96,
    240
   ],
   "ui-drop": [
-   64,
+   112,
    240
   ],
   "ui-gem": [
-   80,
-   240
+   0,
+   256
   ],
   "ui-star": [
-   96,
-   240
+   16,
+   256
   ],
   "ui-lantern": [
-   112,
-   240
+   32,
+   256
   ],
   "ui-door": [
-   0,
+   48,
    256
   ],
   "ui-orb": [
-   16,
+   64,
    256
   ],
   "ui-sun": [
-   32,
+   80,
    256
   ],
   "ui-snow": [
-   48,
+   96,
    256
   ],
   "ui-autumn": [
-   64,
-   256
-  ],
-  "ui-tree": [
-   80,
-   256
-  ],
-  "ui-mountain": [
-   96,
-   256
-  ],
-  "ui-egg": [
    112,
    256
   ],
-  "ui-key": [
+  "ui-tree": [
    0,
    272
   ],
-  "ui-bridge": [
+  "ui-mountain": [
    16,
    272
   ],
-  "ui-hand": [
+  "ui-egg": [
    32,
    272
   ],
-  "ui-check": [
+  "ui-key": [
    48,
    272
   ],
-  "ui-frame": [
+  "ui-bridge": [
    64,
    272
   ],
-  "ui-gear": [
+  "ui-hand": [
    80,
    272
   ],
-  "ui-fast": [
+  "ui-check": [
    96,
    272
+  ],
+  "ui-frame": [
+   112,
+   272
+  ],
+  "ui-gear": [
+   0,
+   288
+  ],
+  "ui-fast": [
+   16,
+   288
   ]
  }
 }

@@ -4,8 +4,9 @@ import { RECIPES_BY_ID } from '../data/recipes';
 import type { Customer, GameSave, HelperWork } from '../models/types';
 import { freeCauldron, maxBatches, potionsPerBatch, startBrew } from './alchemy';
 import { fail, type Draft } from './context';
-import { dismissCustomer, knownSymptom, serveCustomer } from './customers';
-import { applyPurchase, countIngredients, has, ingredientCapacity, ingredientPrice, potionStock, supplierLeft } from './economy';
+import { dismissCustomer, priceVerdict, reservedForOrder, serveCustomer, suits } from './customers';
+import { deliverOrder } from './orders';
+import { applyPurchase, countIngredients, has, ingredientCapacity, ingredientPrice, potionStock, staffOn, supplierLeft } from './economy';
 
 import { tr } from '../../i18n';
 // ---------------------------------------------------------------------------
@@ -41,7 +42,16 @@ export const emptyHelperWork = (): HelperWork => ({ brews: 0, served: 0, deliver
 
 /** Ajudante contratado e trabalhando (não está descansando). */
 export const helperActive = (s: GameSave, id: string) =>
-  has(s, id) && !s.helpers.off.includes(id) && !(id === RAVEN && s.expedition);
+  staffOn(s, id) && !(id === RAVEN && s.expedition);
+
+/** Funcionários novos: gnomo (estufa), coruja (charadas e pedido especial) e bardo (porta). */
+export { GNOME } from './economy';
+export { BARD } from './customers';
+export const OWL = 'coruja-sabia';
+/** Coruja: tempo pensando na charada antes de responder (dá a vez ao jogador). */
+export const OWL_THINK_MS = 6_000;
+/** Golem: clientes especiais (capítulo da história do freguês, visita) esperam mais antes de ele atender. */
+export const GOLEM_SPECIAL_DELAY_MS = 9_000;
 
 export function setHelper(d: Draft, upgradeId: string, on: boolean): boolean {
   const s = d.s;
@@ -92,9 +102,18 @@ export const FAST_RAVEN = 'corvo-veloz';
 export const DEDICATED_APPRENTICE = 'aprendiz-dedicado';
 export const POLISHED_GOLEM = 'golem-polido';
 
+/** Segunda evolução (mestres da equipe). */
+export const GUILD_RAVEN = 'corvo-da-guilda';
+export const PRODIGY_APPRENTICE = 'aprendiz-prodigio';
+export const CRYSTAL_GOLEM = 'golem-de-cristal';
+/** Desconto que o corvo da guilda consegue no fornecedor. */
+export const GUILD_DISCOUNT = 0.2;
+
 const ravenFee = (s: GameSave) => (has(s, FAST_RAVEN) ? 0 : RAVEN_FEE);
 const apprenticeTarget = (s: GameSave) => (has(s, DEDICATED_APPRENTICE) ? 10 : APPRENTICE_TARGET);
 const apprenticeMaxBatches = (s: GameSave) => (has(s, DEDICATED_APPRENTICE) ? 5 : APPRENTICE_MAX_BATCHES);
+/** Quantos clientes o golem atende antes de descansar as engrenagens. */
+const golemPerTurn = (s: GameSave) => (has(s, CRYSTAL_GOLEM) ? 2 : 1);
 /** Espera mínima do cliente antes de o golem atender (o golem polido é mais rápido). */
 export const golemDelayMs = (s: GameSave) => (has(s, POLISHED_GOLEM) ? 2_500 : GOLEM_DELAY_MS);
 const golemCooldownMs = (s: GameSave) => (has(s, POLISHED_GOLEM) ? 1_200 : GOLEM_COOLDOWN_MS);
@@ -109,6 +128,13 @@ function runRaven(d: Draft, ms: number) {
   let cost = 0;
   const fee = ravenFee(s);
   for (const it of items) cost += applyPurchase(s, it.ingredientId, it.qty);
+  // Corvo da guilda: conhece o fornecedor e volta com o troco.
+  if (has(s, GUILD_RAVEN)) {
+    const back = Math.round(cost * GUILD_DISCOUNT);
+    s.coins += back;
+    s.stats.ingredientCost -= back;
+    cost -= back;
+  }
   s.coins -= fee;
   s.stats.ingredientCost += fee;
   s.stats.helperWork.deliveries += 1;
@@ -145,52 +171,99 @@ function runApprentice(d: Draft) {
   if (!startBrew(d, plan.recipeId, plan.batches)) return;
   for (const e of d.events.slice(from)) if (e.type === 'BREW_STARTED') e.by = 'aprendiz';
   // O aprendiz não tem o toque de mestre: o preparo dele sai Comum.
-  for (const job of [d.s.brew, d.s.brew2]) if (job && job.elapsedMs === 0 && job.hits === undefined) job.byHelper = true;
+  // O aprendiz prodígio já mexe como gente grande: o preparo dele sai Fino.
+  for (const job of [d.s.brew, d.s.brew2]) {
+    if (job && job.elapsedMs === 0 && job.hits === undefined) {
+      job.byHelper = true;
+      if (has(d.s, PRODIGY_APPRENTICE)) job.hits = 2;
+    }
+  }
   d.s.stats.helperWork.brews += 1;
 }
 
 // -------------------------------------------------------------------- golem
 
 /**
- * Clientes que o golem atende: quem pede uma poção pelo nome (inclusive o freguês fiel que pede
- * "o de sempre") e quem conta um sintoma que já está no caderno de diagnósticos.
- * Charadas, sintomas novos, capítulos da história dos fregueses e visitas especiais ficam com o jogador.
+ * Clientes que o golem atende: todos, menos a charada do Cliente misterioso (essa é da coruja).
+ * Sintomas: com o golem trabalhando a loja reconhece qualquer problema (ver golemReads).
+ * Capítulos da história dos fregueses e visitas especiais também, mas ele espera mais: dá a vez a você.
  */
-export const golemServes = (s: GameSave, c: Customer) =>
-  !c.mystery && !c.vip && c.chapter === undefined && (!c.symptom || knownSymptom(s, c));
+export const golemServes = (_s: GameSave, c: Customer) => !c.mystery;
 
-/** A poção que o golem entrega: exatamente a pedida (ele não sugere trocas), ou null. */
+/** Cliente especial: o golem espera mais antes de atender, para o jogador poder fazer isso. */
+const special = (c: Customer) => c.chapter !== undefined || !!c.vip;
+export const golemWaitFor = (s: GameSave, c: Customer) => (special(c) ? Math.max(GOLEM_SPECIAL_DELAY_MS, golemDelayMs(s)) : golemDelayMs(s));
+
+/**
+ * A poção que o golem entrega: a pedida (ou a do sintoma) se houver; senão uma parecida da mesma
+ * família que o cliente aceita, deixando de lado o que está guardado para o pedido especial.
+ */
 export function golemChoice(s: GameSave, c: Customer): string | null {
   if (!golemServes(s, c)) return null;
-  const stack = s.potions.find((p) => p.recipeId === c.wantedRecipeId && p.forSale && p.quantity > 0);
-  return stack ? stack.recipeId : null;
+  const forSale = s.potions.filter((p) => p.forSale && p.quantity - reservedForOrder(s, p.recipeId) > 0).map((p) => p.recipeId);
+  if (forSale.includes(c.wantedRecipeId)) return c.wantedRecipeId;
+  // Capítulo da história: o freguês precisa daquela poção, não de uma parecida.
+  if (c.chapter !== undefined) return null;
+  const similar = forSale.filter((id) => id !== c.wantedRecipeId && suits(c, id));
+  if (!similar.length) return null;
+  if (c.vip) return similar.sort((a, b) => RECIPES_BY_ID[b].basePrice - RECIPES_BY_ID[a].basePrice)[0];
+  const rank = { sim: 0, negocia: 1, nao: 2 } as const;
+  return similar.sort((a, b) => rank[priceVerdict(s, c, a)] - rank[priceVerdict(s, c, b)] || RECIPES_BY_ID[b].basePrice - RECIPES_BY_ID[a].basePrice)[0];
 }
 
 function runGolem(d: Draft, ms: number) {
   const s = d.s;
   s.helpers.golemInMs = Math.max(0, s.helpers.golemInMs - ms);
   if (s.helpers.golemInMs > 0 || s.phase !== 'expediente') return;
-  for (const c of s.customers) {
-    // Quem não é do golem (charada, sintoma novo, capítulo de freguês, visita) ou já está negociando com você, fica com você.
-    if (!golemServes(s, c) || c.offer || c.waitedMs < golemDelayMs(s)) continue;
-    const from = d.events.length;
-    {
-      const recipeId = golemChoice(s, c);
-      if (!recipeId) {
-        if (c.waitedMs < c.patienceMs * GOLEM_DISMISS_AT) continue;
-        dismissCustomer(d, c.id);
-        d.events.push({ type: 'GOLEM_DISMISSED', customerId: c.id });
-        s.helpers.golemInMs = golemCooldownMs(s);
-        return;
-      }
-      serveCustomer(d, c.id, recipeId, { golem: true });
+  let done = 0;
+  for (const c of [...s.customers]) {
+    if (done >= golemPerTurn(s)) break;
+    // A charada fica com a coruja (ou com você); quem já está negociando com você, fica com você.
+    if (!golemServes(s, c) || c.offer || c.waitedMs < golemWaitFor(s, c)) continue;
+    const recipeId = golemChoice(s, c);
+    if (!recipeId) {
+      if (c.waitedMs < c.patienceMs * GOLEM_DISMISS_AT) continue;
+      dismissCustomer(d, c.id);
+      d.events.push({ type: 'GOLEM_DISMISSED', customerId: c.id });
+      done += 1;
+      continue;
     }
+    const from = d.events.length;
+    serveCustomer(d, c.id, recipeId, { golem: true });
     const sold = d.events.slice(from).filter((e) => e.type === 'SALE');
     for (const e of sold) if (e.type === 'SALE') e.by = 'golem';
     s.stats.helperWork.served += sold.length;
-    s.helpers.golemInMs = golemCooldownMs(s);
-    return;
+    done += 1;
   }
+  if (done) s.helpers.golemInMs = golemCooldownMs(s);
+}
+
+// -------------------------------------------------------------------- coruja
+
+/** A coruja decifra a charada (se a poção está na prateleira) e entrega o pedido especial quando ele fica pronto. */
+function runOwl(d: Draft) {
+  const s = d.s;
+  if (s.phase !== 'expediente') return false;
+  let busy = false;
+  for (const c of [...s.customers]) {
+    if (!c.mystery || c.waitedMs < OWL_THINK_MS) continue;
+    if (!s.potions.some((p) => p.recipeId === c.wantedRecipeId && p.forSale && p.quantity > 0)) continue;
+    const from = d.events.length;
+    serveCustomer(d, c.id, c.wantedRecipeId);
+    for (const e of d.events.slice(from)) if (e.type === 'SALE') e.by = 'coruja';
+    s.stats.helperWork.riddles = (s.stats.helperWork.riddles ?? 0) + 1;
+    busy = true;
+  }
+  const o = s.order;
+  if (o && potionStock(s, o.recipeId) >= o.qty) {
+    const from = d.events.length;
+    if (deliverOrder(d)) {
+      for (const e of d.events.slice(from)) if (e.type === 'ORDER_DONE') e.by = 'coruja';
+      s.stats.helperWork.orders = (s.stats.helperWork.orders ?? 0) + 1;
+      busy = true;
+    }
+  }
+  return busy;
 }
 
 /** Avança os ajudantes. Retorna true se algum está trabalhando (o estado mudou). */
@@ -211,5 +284,6 @@ export function advanceHelpers(d: Draft, ms: number): boolean {
     runGolem(d, ms);
     busy = true;
   }
+  if (helperActive(s, OWL)) busy = runOwl(d) || busy;
   return busy;
 }

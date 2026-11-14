@@ -27,6 +27,7 @@ export const EMOJI_ICON: Record<string, string> = {
   '🌲': 'ui-tree', '🏔': 'ui-mountain', '🥚': 'ui-egg', '🪺': 'ui-egg', '🗝': 'ui-key',
   '🪶': 'ingredient-pluma-grifo', '🌉': 'ui-bridge', '✋': 'ui-hand', '👆': 'ui-hand', '✅': 'ui-check',
   '🟦': 'ui-frame', '🖼': 'ui-frame', '⚙': 'ui-gear', '⏩': 'ui-fast',
+  '🗿': 'helper-golem-balconista', '🦉': 'helper-coruja-sabia', '🪕': 'helper-bardo-da-porta', '🍄': 'helper-gnomo-jardineiro',
 };
 
 /** Um emoji isolado, com seletor de variação e sequências com ZWJ (ex.: 🐦‍⬛). */

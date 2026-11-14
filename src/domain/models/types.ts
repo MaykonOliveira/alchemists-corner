@@ -122,6 +122,9 @@ export interface HelperWork {
   served: number;
   deliveries: number;
   delivered: number;
+  /** Coruja: charadas resolvidas e pedidos especiais entregues. */
+  riddles?: number;
+  orders?: number;
 }
 
 /** Estado dos ajudantes automáticos. */
@@ -501,7 +504,7 @@ export type GameEvent =
   | { type: 'BREW_STARTED'; recipeId: string; batches: number; by?: 'aprendiz'; slot?: 2 }
   | { type: 'BREW_DONE'; recipeId: string; qty: number; slot?: 2; quality?: 2 | 3 }
   | { type: 'CUSTOMER_ARRIVED'; customerId: string }
-  | { type: 'SALE'; customerId: string; recipeId: string; price: number; substitute: boolean; by?: 'golem'; quality?: 2 | 3; diagnosed?: boolean }
+  | { type: 'SALE'; customerId: string; recipeId: string; price: number; substitute: boolean; by?: 'golem' | 'coruja'; quality?: 2 | 3; diagnosed?: boolean }
   | { type: 'RAVEN_DELIVERY'; items: { ingredientId: string; qty: number }[]; cost: number; fee: number }
   | { type: 'GOLEM_DISMISSED'; customerId: string }
   | { type: 'HELPER_TOGGLED'; upgradeId: string; on: boolean }
@@ -510,7 +513,7 @@ export type GameEvent =
   | { type: 'CUSTOMER_LEFT'; customerId: string; reason: 'paciencia' | 'preco' | 'recusou-oferta' | 'fechou' | 'atendido' }
   | { type: 'LEVEL_UP'; level: number; recipes: string[]; gift?: { coins: number; crystals: number; items: { ingredientId: string; qty: number }[] } }
   | { type: 'ORDER_NEW'; orderId: string }
-  | { type: 'ORDER_DONE'; orderId: string; coins: number }
+  | { type: 'ORDER_DONE'; orderId: string; coins: number; by?: 'coruja' }
   | { type: 'ORDER_EXPIRED'; orderId: string }
   | { type: 'CONTRACT_OFFERED'; contractId: string }
   | { type: 'CONTRACT_ACCEPTED'; contractId: string }

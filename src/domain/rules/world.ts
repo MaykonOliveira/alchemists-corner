@@ -7,6 +7,7 @@ import type { Customer, GameSave, RegularState } from '../models/types';
 import type { Draft } from './context';
 import { countIngredients, has, ingredientCapacity } from './economy';
 import { APPRENTICE, GOLEM, RAVEN } from './helpers';
+import { HELPER_IDS } from '../data/upgrades';
 import { masteredRecipes } from './mastery';
 import { gainReputation, masterRank } from './progression';
 import { TALENTS } from '../data/talents';
@@ -112,6 +113,8 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'lendas', name: tr('Guardião das lendas'), icon: '📜', text: tr('Descubra as seis receitas lendárias.'), done: (s) => RECIPES.filter((r) => r.legend).every((r) => s.knownRecipes.includes(r.id)) },
   { id: 'maestria', name: tr('Mão de mestre'), icon: '✨', text: tr('Domine uma receita (5 estrelas).'), done: (s) => masteredRecipes(s) >= 1 },
   { id: 'equipe', name: tr('Equipe completa'), icon: '🐦', text: tr('Contrate o corvo, o aprendiz e o golem.'), done: (s) => [RAVEN, APPRENTICE, GOLEM].every((id) => has(s, id)) },
+  { id: 'equipe-lendaria', name: tr('Equipe lendária'), icon: '🦉', text: tr('Contrate os seis ajudantes: corvo, aprendiz, golem, gnomo, coruja e bardo.'), done: (s) => HELPER_IDS.every((id) => has(s, id)) },
+  { id: 'mestres', name: tr('Mestres da equipe'), icon: '🎓', text: tr('Leve o corvo, o aprendiz e o golem à segunda evolução.'), done: (s) => ['corvo-da-guilda', 'aprendiz-prodigio', 'golem-de-cristal'].every((id) => has(s, id)) },
   { id: 'primeiro-contrato', name: tr('Palavra cumprida'), icon: '📜', text: tr('Cumpra um contrato.'), done: (s) => s.contractsDone >= 1 },
   { id: 'dez-contratos', name: tr('Fornecedor real'), icon: '🏰', text: tr('Cumpra 10 contratos.'), done: (s) => s.contractsDone >= 10 },
   { id: 'torre', name: tr('Torre de pedra'), icon: '🔭', text: tr('Conclua a expansão da loja.'), done: (s) => has(s, 'torre-alquimista') },

@@ -4,7 +4,7 @@ import { MAX_HEARTS } from '../../domain/data/world';
 import { regularOf, regularState } from '../../domain/rules/world';
 import { RECIPES_BY_ID } from '../../domain/data/recipes';
 import type { Customer, GameSave } from '../../domain/models/types';
-import { knownSymptom, suits } from '../../domain/rules/customers';
+import { knownSymptom, suits, symptomSource } from '../../domain/rules/customers';
 import { getPrice } from '../../domain/rules/economy';
 import { useGameStore } from '../../store/gameStore';
 import { CoinIcon } from '../../ui/icons';
@@ -84,7 +84,7 @@ function Serve({ save, c }: { save: GameSave; c: Customer }) {
       </div>
       <p className="speech">“{c.remark ?? wanted.request}”</p>
       <p className="card-text small">
-        {c.mystery ? <>{tr('Cliente misterioso: decifre a charada. Acertar paga ')}<strong>{tr('3× o preço')}</strong>{tr(' e deixa cristais.')}</> : known ? <><Icon e="📖" />{tr(' Este problema está no caderno: é ')}<strong>{wanted.name}</strong>{tr('. O golem também resolve sozinho.')}</> : c.symptom ? <>{tr('Conta o problema: escolha a poção certa. Acertar em cheio rende ')}<strong>{tr('gorjeta')}</strong>{tr('; uma parecida paga menos.')}</> : <>{tr('Quer: ')}<strong>{wanted.name}</strong> · {a.description}</>}
+        {c.mystery ? <>{tr('Cliente misterioso: decifre a charada. Acertar paga ')}<strong>{tr('3× o preço')}</strong>{tr(' e deixa cristais.')}</> : known ? symptomSource(save, c) === 'golem' ? <><Icon e="🗿" />{tr(' O golem reconhece este problema: é ')}<strong>{wanted.name}</strong>{tr('. Se você não atender, ele atende.')}</> : <><Icon e="📖" />{tr(' Este problema está no caderno: é ')}<strong>{wanted.name}</strong>{tr('. O golem também resolve sozinho.')}</> : c.symptom ? <>{tr('Conta o problema: escolha a poção certa. Acertar em cheio rende ')}<strong>{tr('gorjeta')}</strong>{tr('; uma parecida paga menos.')}</> : <>{tr('Quer: ')}<strong>{wanted.name}</strong> · {a.description}</>}
       </p>
 
       {c.offer ? (
