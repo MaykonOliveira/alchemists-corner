@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { touchable } from '../art/hires';
 import { useGameStore } from '../../../store/gameStore';
 
 import { tr } from '../../../i18n';
@@ -30,7 +31,7 @@ export class CatView {
     this.sprite = scene.add.image(0, 0, 'cat-sit-0').setOrigin(0.5, 1);
     this.zz = scene.add.image(0, 0, 'zz').setDepth(980).setVisible(false);
     this.place(this.spot.x, this.spot.y);
-    this.sprite.setInteractive({ useHandCursor: true, pixelPerfect: true });
+    this.sprite.setInteractive(touchable(scene, this.sprite.texture.key));
     this.sprite.on('pointerover', () => {
       this.outline.setVisible(true);
       this.store.dispatch({ type: 'SET_HOVER', hover: { id: 'cat', label: tr('Gato da loja (faça carinho)'), x: this.sprite.x, y: this.sprite.y - this.sprite.height } });

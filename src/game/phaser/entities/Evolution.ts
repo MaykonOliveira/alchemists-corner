@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { touchable } from '../art/hires';
 import type { GameEvent, GameSave, MomentKind } from '../../../domain/models/types';
 import { FAMILIARS_BY_ID } from '../../../domain/data/familiars';
 import { decorAt } from '../../../domain/rules/entitlements';
@@ -65,7 +66,7 @@ export class EvoViews {
       const shiny = save.evo.shiny.includes(id);
       const home = FAM_SPOTS[i];
       const sprite = this.scene.add.image(home.x, home.y, `fam-${id}${shiny ? '-shiny' : ''}-0`).setOrigin(0.5, 1).setDepth(home.y + 10);
-      sprite.setInteractive({ useHandCursor: true, pixelPerfect: true });
+      sprite.setInteractive(touchable(this.scene, sprite.texture.key));
       const label = `${FAMILIARS_BY_ID[id].name}${shiny ? ` · ${tr('brilhante')}` : ''}`;
       sprite.on('pointerover', () => this.store.dispatch({ type: 'SET_HOVER', hover: { id: `fam-${id}`, label, x: sprite.x, y: sprite.y - sprite.height } }));
       sprite.on('pointerout', () => { if (this.store.ui.hover?.id === `fam-${id}`) this.store.dispatch({ type: 'SET_HOVER', hover: null }); });

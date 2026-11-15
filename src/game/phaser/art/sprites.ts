@@ -9,25 +9,36 @@ import estudiosoUrl from '../../../assets/sprites/customer-estudioso.png';
 import moradorUrl from '../../../assets/sprites/customer-morador.png';
 import viajanteUrl from '../../../assets/sprites/customer-viajante.png';
 import nobreUrl from '../../../assets/sprites/customer-nobre.png';
+import vRoomUrl from '../../../assets/sprites/vector/room.png';
+import vShopUrl from '../../../assets/sprites/vector/shop.png';
+import vShopAtlas from '../../../assets/sprites/vector/shop.json';
+import vAventureiroUrl from '../../../assets/sprites/vector/customer-aventureiro.png';
+import vEstudiosoUrl from '../../../assets/sprites/vector/customer-estudioso.png';
+import vMoradorUrl from '../../../assets/sprites/vector/customer-morador.png';
+import vViajanteUrl from '../../../assets/sprites/vector/customer-viajante.png';
+import vNobreUrl from '../../../assets/sprites/vector/customer-nobre.png';
 import type { CustomerArchetype } from '../../../domain/models/types';
+import { VECTOR } from '../../../app/skin';
 
 // Dimensões do mundo lógico (PRD 6.3).
 export const WORLD_W = 384;
 export const WORLD_H = 216;
 
-export const ROOM_URL = roomUrl;
-export const SHOP_ATLAS = { url: shopUrl, data: shopAtlas };
+/**
+ * Pixels de textura por unidade do mundo. No visual vetorial os spritesheets vêm ampliados (art/vector),
+ * mas a cena continua trabalhando nas mesmas 384×216 unidades.
+ */
+export const ART_SCALE = VECTOR ? Number(vShopAtlas.meta.scale) : 1;
+
+export const ROOM_URL = VECTOR ? vRoomUrl : roomUrl;
+export const SHOP_ATLAS = VECTOR ? { url: vShopUrl, data: vShopAtlas } : { url: shopUrl, data: shopAtlas };
 
 export const CUSTOMER_W = layout.customer.w;
 export const CUSTOMER_H = layout.customer.h;
 export const CUSTOMER_FRAMES = layout.customer.frames; // 0 parado, 1 e 2 caminhando
-export const CUSTOMER_URLS: Record<CustomerArchetype, string> = {
-  aventureiro: aventureiroUrl,
-  estudioso: estudiosoUrl,
-  morador: moradorUrl,
-  viajante: viajanteUrl,
-  nobre: nobreUrl,
-};
+export const CUSTOMER_URLS: Record<CustomerArchetype, string> = VECTOR
+  ? { aventureiro: vAventureiroUrl, estudioso: vEstudiosoUrl, morador: vMoradorUrl, viajante: vViajanteUrl, nobre: vNobreUrl }
+  : { aventureiro: aventureiroUrl, estudioso: estudiosoUrl, morador: moradorUrl, viajante: viajanteUrl, nobre: nobreUrl };
 
 /** Posições das melhorias do late game (estufa, alambique, runas, vitral e sino). */
 export const LATEGAME: Record<'greenhouse' | 'alembic' | 'cabinet-runes' | 'vitral' | 'bell', { x: number; y: number }> = layout.lategame;

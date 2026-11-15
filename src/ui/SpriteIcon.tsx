@@ -1,6 +1,11 @@
 // Ícones da interface recortados do spritesheet src/assets/sprites/icons.png (fontes em art/).
 import iconsUrl from '../assets/sprites/icons.png';
+import vIconsUrl from '../assets/sprites/vector/icons.png';
 import sheet from '../assets/sprites/icons.json';
+import { VECTOR } from '../app/skin';
+
+// No visual vetorial a folha tem a mesma grade, só que desenhada em alta resolução.
+const SHEET_URL = VECTOR ? vIconsUrl : iconsUrl;
 
 type IconName = keyof typeof sheet.icons;
 
@@ -27,7 +32,7 @@ export function SpriteIcon({ name, size = 16, title, muted }: Props) {
       style={{
         width: px,
         height: px,
-        backgroundImage: `url(${iconsUrl})`,
+        backgroundImage: `url(${SHEET_URL})`,
         backgroundSize: `${sheet.width * scale}px ${sheet.height * scale}px`,
         backgroundPosition: `-${pos[0] * scale}px -${pos[1] * scale}px`,
       }}
